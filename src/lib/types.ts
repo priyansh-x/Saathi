@@ -2,7 +2,7 @@
 
 export type Relation = "Amma" | "Aai" | "Nani" | "Papa" | "Appa";
 
-export type Language = "Hindi" | "Marathi" | "Tamil" | "Kannada";
+export type Language = "Hindi" | "English" | "Marathi" | "Tamil" | "Kannada";
 
 export type CallFlag =
   | "meds_taken"

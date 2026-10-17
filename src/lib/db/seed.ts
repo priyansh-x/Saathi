@@ -1,0 +1,351 @@
+import { EXAMPLE_TOKEN } from "@/lib/config";
+import { query } from "@/lib/db/client";
+import { istDayOffset, istStamp, istStampFromOffset } from "@/lib/time";
+
+export { EXAMPLE_TOKEN };
+
+export async function ensureSeed() {
+  const existing = await query<{ n: number }>("select count(*)::int as n from parents");
+  if ((existing[0]?.n ?? 0) > 0) return;
+  await seed();
+}
+
+export async function seed() {
+  await query("delete from alert_events");
+  await query("delete from alerts");
+  await query("delete from dose_logs");
+  await query("delete from call_attempts");
+  await query("delete from calls");
+  await query("delete from schedules");
+  await query("delete from medicines");
+  await query("delete from consents");
+  await query("delete from memory_notes");
+  await query("delete from outbound_messages");
+  await query("delete from webhook_events");
+  await query("delete from magic_links");
+  await query("delete from contacts");
+  await query("delete from parents");
+
+  await query(`insert into parents values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, [
+    "parent_kamla",
+    "Kamla Sharma",
+    "Kamla",
+    "Delhi",
+    "Asia/Kolkata",
+    "98100 22118",
+    "hi,en",
+    "08:30",
+    false,
+    false,
+    true,
+  ]);
+  await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+    "contact_rohit",
+    "parent_kamla",
+    "child",
+    "Rohit Sharma",
+    "Rohit",
+    "98765 44110",
+    "en",
+    true,
+  ]);
+  await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+    "contact_sunita",
+    "parent_kamla",
+    "neighbour",
+    "Sunita",
+    "Sunita",
+    "98111 77821",
+    "hi",
+    true,
+  ]);
+  await query(`insert into medicines values ($1,$2,$3,$4,$5,$6,$7)`, [
+    "med_amlo",
+    "parent_kamla",
+    "Amlodipine",
+    "5mg",
+    "small white tablet",
+    "after breakfast",
+    true,
+  ]);
+  await query(`insert into medicines values ($1,$2,$3,$4,$5,$6,$7)`, [
+    "med_met",
+    "parent_kamla",
+    "Metformin",
+    "500mg",
+    "larger white tablet",
+    "after lunch",
+    true,
+  ]);
+  await query(`insert into schedules values ($1,$2,$3,$4)`, ["sch_amlo", "med_amlo", "08:45", true]);
+  await query(`insert into schedules values ($1,$2,$3,$4)`, ["sch_met", "med_met", "13:30", true]);
+  await query(`insert into consents values ($1,$2,$3,$4,$5,$6,$7)`, [
+    "con_child",
+    "parent_kamla",
+    "child_written",
+    true,
+    "2026-10-10T08:00:00+05:30",
+    "Rohit typed yes on the form",
+    true,
+  ]);
+  await query(`insert into consents values ($1,$2,$3,$4,$5,$6,$7)`, [
+    "con_voice",
+    "parent_kamla",
+    "parent_voice",
+    true,
+    "2026-10-10T08:12:00+05:30",
+    "haan, 2026-10-10 08:12 IST",
+    true,
+  ]);
+  await query(`insert into magic_links values ($1,$2,$3,$4)`, [
+    EXAMPLE_TOKEN,
+    "parent_kamla",
+    "2027-01-01T00:00:00+05:30",
+    true,
+  ]);
+
+  for (let i = 0; i < 30; i += 1) {
+    const day = istDayOffset(i - 29);
+    const slot = i % 7;
+    const isToday = i === 29;
+    const callId = `call_${day}`;
+
+    if (slot === 3 || slot === 6) {
+      await seedMissedDay(day, callId, slot === 6, i);
+      continue;
+    }
+
+    const skipped = slot === 2 && !isToday;
+    const alertDay = slot === 5 || isToday;
+    await seedCompletedDay(day, callId, { skipped, alertDay, openAlert: isToday });
+  }
+}
+
+async function seedMissedDay(day: string, callId: string, fullLadder: boolean, i: number) {
+  await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
+    callId,
+    "parent_kamla",
+    istStamp(day, 8, 30),
+    istStamp(day, 8, 31),
+    0,
+    "missed",
+    "No answer.",
+    "कोई नहीं उठा।",
+    null,
+    null,
+    null,
+    null,
+    null,
+    true,
+  ]);
+  const results = fullLadder
+    ? ["no_answer", "no_answer", "no_answer", "no_answer", "escalated"]
+    : ["no_answer", "no_answer"];
+  const offsets = fullLadder ? [0, 10, 25, 45, 60] : [0, 10];
+  for (let idx = 0; idx < results.length; idx += 1) {
+    await query(`insert into call_attempts values ($1,$2,$3,$4,$5,$6)`, [
+      `att_${day}_${idx}`,
+      callId,
+      istStampFromOffset(day, 8, 30, offsets[idx]),
+      offsets[idx],
+      results[idx],
+      true,
+    ]);
+  }
+  await query(`insert into dose_logs values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+    `dl_${day}_amlo`,
+    "parent_kamla",
+    callId,
+    "med_amlo",
+    day,
+    "not_asked",
+    null,
+    true,
+  ]);
+  await query(`insert into dose_logs values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+    `dl_${day}_met`,
+    "parent_kamla",
+    callId,
+    "med_met",
+    day,
+    "not_asked",
+    null,
+    true,
+  ]);
+  if (!fullLadder) return;
+  const alertId = `alert_miss_${day}`;
+  const acked = i < 28;
+  const resolved = i < 26;
+  await query(`insert into alerts values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, [
+    alertId,
+    "parent_kamla",
+    callId,
+    "MISSED",
+    "act",
+    "No answer after the morning ladder.",
+    istStamp(day, 9, 30),
+    acked ? istStamp(day, 9, 40) : null,
+    acked ? "Rohit" : null,
+    resolved ? istStamp(day, 10, 0) : null,
+    false,
+    "ladder",
+    true,
+  ]);
+  await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
+    `ae_${day}_notify`,
+    alertId,
+    istStamp(day, 9, 30),
+    "notified",
+    "Saathi",
+    "Rohit and Sunita ji",
+    true,
+  ]);
+  if (acked) {
+    await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
+      `ae_${day}_ack`,
+      alertId,
+      istStamp(day, 9, 40),
+      "acked",
+      "Rohit",
+      "I'm going",
+      true,
+    ]);
+  }
+}
+
+async function seedCompletedDay(
+  day: string,
+  callId: string,
+  opts: { skipped: boolean; alertDay: boolean; openAlert: boolean },
+) {
+  const quote = opts.alertDay
+    ? "Seene mein dard ho raha hai."
+    : opts.skipped
+      ? "Goli bhool gayi. Abhi leti hoon."
+      : "Neend theek thi.";
+  const summaryEn = opts.skipped
+    ? "Kamla forgot the morning tablet and said she would take it now."
+    : opts.alertDay
+      ? "Kamla said she has pain in her chest."
+      : "Kamla slept well and took Amlodipine.";
+  const summaryHi = opts.skipped
+    ? "गोली भूल गईं।"
+    : opts.alertDay
+      ? "सीने में दर्द बताया।"
+      : "नींद ठीक थी, गोली ले ली।";
+
+  await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
+    callId,
+    "parent_kamla",
+    istStamp(day, 8, 30),
+    istStamp(day, 8, 34),
+    210,
+    "completed",
+    summaryEn,
+    summaryHi,
+    quote,
+    "hi",
+    JSON.stringify([
+      { speaker: "agent", hi: "नमस्ते कमला जी।", en: "Namaste Kamla ji." },
+      { speaker: "parent", hi: quote, en: quote },
+    ]),
+    null,
+    null,
+    true,
+  ]);
+  await query(`insert into call_attempts values ($1,$2,$3,$4,$5,$6)`, [
+    `att_${day}_0`,
+    callId,
+    istStamp(day, 8, 30),
+    0,
+    "answered",
+    true,
+  ]);
+  await query(`insert into dose_logs values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+    `dl_${day}_amlo`,
+    "parent_kamla",
+    callId,
+    "med_amlo",
+    day,
+    opts.skipped ? "not_taken" : "taken",
+    opts.skipped ? "bhool gayi" : "le li",
+    true,
+  ]);
+  await query(`insert into dose_logs values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+    `dl_${day}_met`,
+    "parent_kamla",
+    callId,
+    "med_met",
+    day,
+    "not_asked",
+    null,
+    true,
+  ]);
+  await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+    `out_${day}`,
+    "parent_kamla",
+    "whatsapp",
+    "daily_briefing_en",
+    "98765 44110",
+    summaryEn,
+    istStamp(day, 8, 36),
+    "example",
+    true,
+  ]);
+  if (opts.skipped) {
+    await query(`insert into memory_notes values ($1,$2,$3,$4,$5,$6)`, [
+      `mem_${day}`,
+      "parent_kamla",
+      callId,
+      "follow_up",
+      "Forgot Amlodipine; said she would take it after the call.",
+      true,
+    ]);
+  }
+  if (!opts.alertDay) return;
+  const alertId = `alert_${day}`;
+  await query(`insert into alerts values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, [
+    alertId,
+    "parent_kamla",
+    callId,
+    "EMERGENCY",
+    "act",
+    quote,
+    istStamp(day, 8, 33),
+    opts.openAlert ? null : istStamp(day, 8, 40),
+    opts.openAlert ? null : "Rohit",
+    opts.openAlert ? null : istStamp(day, 9, 10),
+    false,
+    "mid_call",
+    true,
+  ]);
+  await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
+    `ae_${day}_notify`,
+    alertId,
+    istStamp(day, 8, 33),
+    "notified",
+    "Saathi",
+    "Rohit and Sunita ji",
+    true,
+  ]);
+  if (!opts.openAlert) {
+    await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
+      `ae_${day}_ack`,
+      alertId,
+      istStamp(day, 8, 40),
+      "acked",
+      "Rohit",
+      "I'm going",
+      true,
+    ]);
+    await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
+      `ae_${day}_res`,
+      alertId,
+      istStamp(day, 9, 10),
+      "resolved",
+      "Rohit",
+      "She's confirmed OK",
+      true,
+    ]);
+  }
+}

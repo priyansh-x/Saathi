@@ -1,21 +1,9 @@
 import type { Metadata } from "next";
-import { Figtree, Fraunces, Geist_Mono, Noto_Sans_Devanagari } from "next/font/google";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { Inter, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 
-const figtree = Figtree({
-  variable: "--font-figtree",
-  subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -26,22 +14,15 @@ const devanagari = Noto_Sans_Devanagari({
 });
 
 export const metadata: Metadata = {
-  title: "Daily voice check-in",
-  description:
-    "A voice agent that calls Indian parents on the phone they already own, then briefs the child. See prd.md.",
+  title: "Saathi",
+  description: "A morning phone call for Indian parents. Companionship and reminders — never diagnosis.",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${figtree.variable} ${fraunces.variable} ${geistMono.variable} ${devanagari.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col">
-        <SiteHeader />
-        <div className="flex flex-1 flex-col">{children}</div>
-        <SiteFooter />
-      </body>
+    <html lang="en" className={`${inter.variable} ${devanagari.variable} h-full`}>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }
