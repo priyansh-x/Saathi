@@ -1,3 +1,4 @@
+/** Copy lives in docs/saathi/product/whatsapp_templates.md. These names are the shipped Meta templates. */
 export type TemplateName =
   | "hello_world"
   | "daily_briefing_en"

@@ -60,7 +60,7 @@ Real `POST /call` needs `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `MOCK_BOLNA=0`, and t
 
 After a mock completed call, Settings shows the logged briefing. Chest-pain also logs safety + neighbour responder. **I'm on it** on Alert detail (or Settings) is first-ack-wins and broadcasts the ack update.
 
-`WHATSAPP_TEMPLATES_APPROVED=0` uses `hello_world` + email fallback for real sends. Priyansh submits Utility templates.
+`WHATSAPP_TEMPLATES_APPROVED=0` uses `hello_world` + email fallback for real sends. Priyansh submits Utility templates. Live inbound checks `X-Hub-Signature-256` against `WHATSAPP_APP_SECRET`. `POST /api/demo/whatsapp/inbound` is a fixture button tap (mock only).
 
 ## Phase 4 (ladder + pilot)
 
