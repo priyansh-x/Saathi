@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { runMockScenario, type MockScenario } from "@/lib/bolna/mock-run";
+import { isMockBolna } from "@/lib/config";
 import { setPaused } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
@@ -24,6 +26,13 @@ export default async function SettingsPage({
     "use server";
     await setPaused(parentId, nextPaused);
     redirect(`/d/${token}/settings?lang=${lang}`);
+  }
+
+  async function runMock(formData: FormData) {
+    "use server";
+    const scenario = String(formData.get("scenario") || "good") as MockScenario;
+    await runMockScenario(scenario, parentId);
+    redirect(`/d/${token}?lang=${lang}`);
   }
 
   return (
@@ -68,6 +77,40 @@ export default async function SettingsPage({
         </button>
       </form>
       <p className="mt-6 text-sm text-muted-foreground">{t.settingsHint}</p>
+      {isMockBolna() ? (
+        <form action={runMock} className="mt-8 space-y-3">
+          <p className="text-sm font-medium">{lang === "hi" ? "मॉक कॉल (उदाहरण)" : "Mock Bolna (EXAMPLE)"}</p>
+          <p className="text-sm text-muted-foreground">
+            {lang === "hi"
+              ? "असली फ़ोन नहीं बजता। टूल और वेबहुक यहीं चलते हैं।"
+              : "Does not dial. Runs tools and the webhook against this household."}
+          </p>
+          <button
+            type="submit"
+            name="scenario"
+            value="good"
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border"
+          >
+            {lang === "hi" ? "अच्छी सुबह" : "Good morning"}
+          </button>
+          <button
+            type="submit"
+            name="scenario"
+            value="chest"
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-white"
+          >
+            {lang === "hi" ? "सीने में दर्द" : "Chest-pain line"}
+          </button>
+          <button
+            type="submit"
+            name="scenario"
+            value="late"
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border"
+          >
+            {lang === "hi" ? "देर से अलर्ट" : "Late extraction alert"}
+          </button>
+        </form>
+      ) : null}
     </FamilyFrame>
   );
 }

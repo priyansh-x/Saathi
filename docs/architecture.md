@@ -38,10 +38,21 @@ Tables: parents, contacts, medicines, schedules, calls, call_attempts, dose_logs
 
 When `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set, swap the driver (Phase 1 still runs on PGlite if they are empty).
 
-## Outbound (Phase 2+)
+## Outbound (Phase 2)
 
-One gateway. Never dial/send outside `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.  
+One gateway (`src/lib/outbound.ts`). Never dial/send outside `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.  
 `MOCK_BOLNA=1` and `MOCK_WHATSAPP=1` by default.
+
+| Route | Job |
+| --- | --- |
+| `POST /api/tools/*` | Mid-call tools, Bearer `SAATHI_TOOL_TOKEN` |
+| `POST /api/webhooks/bolna` | Store every delivery; process `status=completed` |
+| `POST /api/cron/tick` | Place today's calls (own scheduler) |
+| `POST /api/demo/bolna` | Mock scenarios when `MOCK_BOLNA=1` |
+
+Agent config: `scripts/bolna/agent.json`. Sync: `npm run bolna:sync` (dry-run without a key).
+
+Trial verification still pending — write results into `docs/saathi/engineering/bolna_api_notes.md`. Do not invent them.
 
 ## What not to add
 

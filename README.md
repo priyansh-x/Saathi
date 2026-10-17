@@ -38,6 +38,20 @@ No Bolna or WhatsApp keys needed. Local data is PGlite at `.data/saathi`. Set `S
 
 Fictional only, labelled **EXAMPLE DATA**: Kamla Sharma (Delhi), Rohit, neighbour Sunita ji. Do not call a real parent without Priyansh’s go-ahead.
 
+## Phase 2 (mock Bolna)
+
+`MOCK_BOLNA=1` by default. No real dial.
+
+```bash
+npm test
+npm run bolna:sync    # dry-run without BOLNA_API_KEY
+```
+
+Settings → mock buttons: good morning, chest-pain line, late extraction.  
+Or `POST /api/demo/bolna` with `{ "scenario": "chest" }`.
+
+Real `POST /call` needs `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `MOCK_BOLNA=0`, and the number on `ALLOWED_PHONE_NUMBERS`. Trial notes stay empty until Priyansh runs them.
+
 ## Later phases
 
-2 Bolna · 3 WhatsApp · 4 missed-call ladder + kill switch. See `prd.md` and `docs/saathi/`.
+3 WhatsApp · 4 missed-call ladder + kill switch. See `prd.md` and `docs/saathi/`.

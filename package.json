@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start --port 43147",
     "lint": "eslint",
-    "seed": "npx --yes tsx src/lib/db/seed-cli.ts"
+    "seed": "npx --yes tsx src/lib/db/seed-cli.ts",
+    "test": "npx --yes tsx --test src/lib/bolna/phase2.test.ts src/lib/outbound.test.ts",
+    "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

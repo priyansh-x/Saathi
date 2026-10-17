@@ -15,6 +15,8 @@ async function open() {
   await db.waitReady;
   const sql = readFileSync(schemaPath(), "utf8");
   await db.exec(sql);
+  const phase2 = path.join(process.cwd(), "src/lib/db/migrations/002_phase2.sql");
+  await db.exec(readFileSync(phase2, "utf8"));
   return db;
 }
 
@@ -33,4 +35,12 @@ export async function query<T>(sql: string, params: unknown[] = []) {
   const db = await getDb();
   const result = await db.query<T>(sql, params);
   return result.rows;
+}
+
+export async function closeDb() {
+  if (globalForDb.saathiDb) {
+    await globalForDb.saathiDb.close();
+    globalForDb.saathiDb = undefined;
+    globalForDb.saathiReady = undefined;
+  }
 }
