@@ -47,11 +47,24 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
   const doses = await dosesOnDay(parentId, day);
   const act = await openActAlerts(parentId);
   const status = todayStatus({
-    call: { ...call, parent_id: parentId, started_at: `${day}T08:30:00+05:30`, ended_at: null, duration_sec: null, summary_en: null, summary_hi: null, mood_quote_lang: null, transcript_json: null } as CallRow,
+    paused: parent.paused,
+    call: {
+      ...call,
+      parent_id: parentId,
+      started_at: `${day}T08:30:00+05:30`,
+      ended_at: null,
+      duration_sec: null,
+      summary_en: null,
+      summary_hi: null,
+      mood_quote_lang: null,
+      transcript_json: null,
+    } as CallRow,
     doses,
     actAlerts: act,
+    nowMin: 12 * 60,
+    callTimeMin: 8 * 60 + 30,
   });
-  const label = status === "act" ? "Act now" : status === "look" ? "Needs a look" : "Good";
+  const label = status === "act" ? "Act now" : status === "look" || status === "trying" ? "Needs a look" : "Good";
   const url = await magicUrl(parentId);
   return sendFamilyMessage({
     parentId,

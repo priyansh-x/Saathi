@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { Bell, CalendarDays, House, Settings } from "lucide-react";
+import { AlertTriangle, Bell, CalendarDays, House, Settings } from "lucide-react";
 import type { AlertRow } from "@/lib/db/types";
 import { messages, type Lang } from "@/lib/i18n/messages";
-import { productName } from "@/lib/time";
+import { categoryWords, humanQuote } from "@/lib/today";
+import { formatFriendlyTime, formatHeaderDate, formatUpdated } from "@/lib/time";
 
-export function ExampleRibbon({ lang }: { lang: Lang }) {
+export function ExamplePill({ lang }: { lang: Lang }) {
   return (
-    <p className="bg-amber-soft px-4 py-2 text-center text-sm font-medium text-amber-ink">
+    <span className="rounded-full bg-amber-soft px-2 py-0.5 text-[11px] font-medium text-amber-ink">
       {messages[lang].example}
-    </p>
+    </span>
   );
 }
 
@@ -23,22 +24,51 @@ export function ActBanner({
 }) {
   if (alerts.length === 0) return null;
   const first = alerts[0];
+  const extra = alerts.length > 1 ? ` · ${alerts.length}` : "";
+  const { hh, mm } = (() => {
+    const time = first.created_at.includes("T") ? first.created_at.slice(11, 16) : "";
+    return { hh: time.slice(0, 2), mm: time.slice(3, 5) };
+  })();
+  const clock = hh ? `${Number(hh) % 12 || 12}:${mm} ${Number(hh) < 12 ? "AM" : "PM"}` : formatFriendlyTime(first.created_at, lang);
   return (
     <Link
       href={`/d/${token}/alerts/${first.id}?lang=${lang}`}
-      className="block bg-alert px-4 py-3 text-sm text-white"
+      className="mx-4 mt-2 flex min-h-11 items-center justify-between rounded-2xl bg-alert px-3 py-2 text-sm text-white"
     >
-      <span className="font-medium">{messages[lang].act}</span>
-      <span className="mt-1 block opacity-95">“{first.quote}”</span>
+      <span>
+        <AlertTriangle className="mr-1 inline size-4" aria-hidden />
+        {messages[lang].act} · {categoryWords(first.category, lang)} · {clock}
+        {extra}
+      </span>
+      <span className="font-medium">
+        {messages[lang].open} ›
+      </span>
     </Link>
   );
 }
 
-export function TopBar({ lang }: { lang: Lang }) {
+export function TopBar({
+  lang,
+  example,
+  updatedAt,
+}: {
+  lang: Lang;
+  example?: boolean;
+  updatedAt?: string | null;
+}) {
   const next = lang === "en" ? "hi" : "en";
+  const t = messages[lang];
   return (
-    <header className="flex items-center justify-between px-4 py-3">
-      <p className="text-lg font-semibold">{productName()}</p>
+    <header className="flex items-start justify-between gap-3 px-4 py-3">
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+          <span>{t.maa}</span>
+          {example ? <ExamplePill lang={lang} /> : null}
+        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {formatHeaderDate(lang)} · {t.updated} {formatUpdated(updatedAt, lang).replace(/^Today |^आज /, "")}
+        </p>
+      </div>
       <Link
         href={`?lang=${next}`}
         className="inline-flex h-11 min-w-11 items-center justify-center rounded-2xl border border-border px-3 text-sm"
@@ -87,6 +117,7 @@ export function FamilyFrame({
   alerts,
   active,
   children,
+  updatedAt,
 }: {
   token: string;
   lang: Lang;
@@ -94,12 +125,12 @@ export function FamilyFrame({
   alerts: AlertRow[];
   active: string;
   children: React.ReactNode;
+  updatedAt?: string | null;
 }) {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[480px] flex-col">
-      {example ? <ExampleRibbon lang={lang} /> : null}
-      <ActBanner token={token} lang={lang} alerts={alerts} />
-      <TopBar lang={lang} />
+      <TopBar lang={lang} example={example} updatedAt={updatedAt} />
+      {active !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
       <div className="flex-1 px-4 pb-8">{children}</div>
       <TabBar token={token} lang={lang} active={active} />
     </div>
@@ -140,7 +171,7 @@ export function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <div className="mx-auto w-full max-w-[480px] space-y-3 px-4 py-10">
+    <div className="mx-auto max-w-[480px] space-y-3 px-4 py-10">
       <p>{messages[lang].loadError}</p>
       <button
         type="button"
@@ -152,3 +183,5 @@ export function ErrorState({
     </div>
   );
 }
+
+export { humanQuote };

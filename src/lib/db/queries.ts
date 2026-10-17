@@ -52,11 +52,19 @@ export async function attemptsFor(callId: string) {
 
 export async function dosesOnDay(parentId: string, day: string) {
   return query<DoseLog>(
-    `select d.id, m.id as medicine_id, d.schedule_date, coalesce(d.status, 'not_asked') as status, d.said, m.name, m.dose, m.meal
+    `select distinct on (m.id)
+        coalesce(d.id, m.id) as id,
+        m.id as medicine_id,
+        coalesce(d.schedule_date, $2) as schedule_date,
+        coalesce(d.status, 'not_asked') as status,
+        d.said,
+        m.name,
+        m.dose,
+        m.meal
      from medicines m
      left join dose_logs d on d.medicine_id = m.id and d.schedule_date = $2
      where m.parent_id = $1
-     order by m.name`,
+     order by m.id, d.id desc`,
     [parentId, day],
   );
 }
@@ -106,17 +114,7 @@ export async function historyDays(parentId: string, days: number) {
   return { calls: rows, doses };
 }
 
-export function todayStatus(args: {
-  call: CallRow | null;
-  doses: DoseLog[];
-  actAlerts: AlertRow[];
-}) {
-  if (args.actAlerts.length > 0) return "act" as const;
-  if (!args.call) return "look" as const;
-  if (args.call.status === "missed") return "look" as const;
-  if (args.doses.some((d) => d.status === "not_taken")) return "look" as const;
-  return "good" as const;
-}
+export { todayStatus } from "@/lib/today";
 
 export async function resolveAlert(id: string) {
   const existing = await alertById(id);
