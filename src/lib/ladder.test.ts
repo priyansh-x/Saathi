@@ -4,7 +4,8 @@ import { closeDb, query } from "./db/client";
 import { seed } from "./db/seed";
 import { advanceLadder } from "./ladder";
 import { placeMorningCall } from "./bolna/place";
-import { deleteFamily } from "./delete-family";
+import { parentByToken } from "./db/queries";
+import { deleteFamily, leftoverParentRows } from "./delete-family";
 import { hasPilotConsent } from "./consent";
 import { runMockScenario } from "./bolna/mock-run";
 import { ackAlert } from "./whatsapp/ack";
@@ -97,7 +98,7 @@ describe("pilot gates", () => {
 });
 
 describe("delete family", () => {
-  it("removes the parent row", async () => {
+  it("removes every row that names the parent and writes an anonymous deleted event", async () => {
     await query(`insert into parents values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, [
       "parent_tmp",
       "Tmp",
@@ -111,8 +112,27 @@ describe("delete family", () => {
       false,
       true,
     ]);
+    await query(`insert into magic_links values ($1,$2,$3,$4)`, [
+      "tmp-desk",
+      "parent_tmp",
+      "2099-01-01T00:00:00+05:30",
+      false,
+    ]);
+    await query(`insert into contacts (id, parent_id, role, full_name, first_name, phone, locale, is_example) values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+      "contact_tmp",
+      "parent_tmp",
+      "child",
+      "Tmp Child",
+      "Tmp",
+      "90000 00001",
+      "en",
+      false,
+    ]);
     await deleteFamily("parent_tmp");
-    const rows = await query<{ n: number }>(`select count(*)::int as n from parents where id = 'parent_tmp'`);
-    assert.equal(rows[0]?.n, 0);
+    const leftover = await leftoverParentRows("parent_tmp");
+    assert.equal(Object.values(leftover).every((n) => n === 0), true);
+    const events = await query<{ kind: string }>(`select kind from deleted_events where kind = 'family_deleted'`);
+    assert.ok(events.length >= 1);
+    assert.equal(await parentByToken("tmp-desk"), null);
   });
 });

@@ -164,3 +164,9 @@ create table if not exists magic_links (
   expires_at text not null,
   is_example boolean not null default false
 );
+
+create table if not exists deleted_events (
+  id text primary key,
+  at text not null,
+  kind text not null
+);
