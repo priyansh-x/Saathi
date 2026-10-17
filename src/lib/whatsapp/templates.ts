@@ -8,7 +8,9 @@ export type TemplateName =
   | "responder_en"
   | "responder_hi"
   | "alert_ack_update_en"
-  | "alert_ack_update_hi";
+  | "alert_ack_update_hi"
+  | "consent_declined_en"
+  | "consent_declined_hi";
 
 export function renderTemplate(name: TemplateName, vars: string[]) {
   const v = (i: number) => vars[i] ?? "—";
@@ -31,5 +33,9 @@ export function renderTemplate(name: TemplateName, vars: string[]) {
       return `${v(0)} is on it (${v(1)}). Saathi will not keep pinging.`;
     case "alert_ack_update_hi":
       return `${v(0)} देख रहे हैं (${v(1)})। साथी दोबारा नहीं पूछेगा।`;
+    case "consent_declined_en":
+      return `${v(0)} said no to the daily Saathi call. Morning calls are paused. In an emergency call 112.`;
+    case "consent_declined_hi":
+      return `${v(0)} ने रोज़ की साथी कॉल मना कर दी। सुबह की कॉल रुक गई। आपात में 112 मिलाएँ।`;
   }
 }

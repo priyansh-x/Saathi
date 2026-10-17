@@ -9,7 +9,9 @@ create table if not exists parents (
   call_time text not null,
   paused boolean not null default false,
   recording_consent boolean not null default false,
-  is_example boolean not null default false
+  is_example boolean not null default false,
+  consent_status text not null default 'pending',
+  consent_at text
 );
 
 create table if not exists contacts (

@@ -130,6 +130,13 @@ export default async function SettingsPage({
       <section className="mt-8 space-y-2">
         <h2 className="text-lg font-semibold">{t.privacySection}</h2>
         <p>
+          {data.parent.consent_status === "given"
+            ? `${t.firstCallGiven}${data.parent.consent_at ? ` · ${formatFriendlyTime(data.parent.consent_at, lang)}` : ""}`
+            : data.parent.consent_status === "declined"
+              ? t.firstCallDeclined
+              : t.firstCallPending}
+        </p>
+        <p>
           {voice?.granted
             ? `${t.recordingYes} ${formatFriendlyTime(voice.at, lang).replace(/, .+$/, "").replace(/^Today |^आज /, "· ")}`
             : t.recordingNo}

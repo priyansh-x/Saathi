@@ -23,6 +23,8 @@ async function open() {
   await db.exec(readFileSync(mood, "utf8"));
   const contactsEmail = path.join(process.cwd(), "src/lib/db/migrations/005_contacts_email.sql");
   await db.exec(readFileSync(contactsEmail, "utf8"));
+  const parentConsent = path.join(process.cwd(), "src/lib/db/migrations/006_parent_consent.sql");
+  await db.exec(readFileSync(parentConsent, "utf8"));
   return db;
 }
 

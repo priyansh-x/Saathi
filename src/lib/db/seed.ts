@@ -40,6 +40,11 @@ export async function seed() {
     false,
     true,
   ]);
+  await query(`update parents set consent_status = $2, consent_at = $3 where id = $1`, [
+    "parent_kamla",
+    "given",
+    "2026-10-10T08:12:00+05:30",
+  ]);
   await query(`insert into family_config values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
     "parent_kamla",
     10,
