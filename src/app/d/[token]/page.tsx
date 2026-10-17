@@ -114,7 +114,7 @@ export default async function TodayPage({
         <div className="mt-4 space-y-2">
           {state === "act" ? (
             <Link
-              href={`/d/${token}/alerts/${alert?.id}?lang=${lang}`}
+              href={`/d/${token}/alerts/${alert?.id}?lang=${lang}&from=today`}
               className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-base text-white"
             >
               {t.openAlert}
@@ -135,13 +135,13 @@ export default async function TodayPage({
           )}
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
             {state === "scheduled" && data.yesterday ? (
-              <Link href={`/d/${token}/calls/${data.yesterday.id}?lang=${lang}`} className="underline-offset-2 hover:underline">
+              <Link href={`/d/${token}/calls/${data.yesterday.id}?lang=${lang}&from=today`} className="underline-offset-2 hover:underline">
                 {t.seeYesterday}
               </Link>
             ) : null}
             {state === "good" || state === "look" ? (
               data.call ? (
-                <Link href={`/d/${token}/calls/${data.call.id}?lang=${lang}`} className="underline-offset-2 hover:underline">
+                <Link href={`/d/${token}/calls/${data.call.id}?lang=${lang}&from=today`} className="underline-offset-2 hover:underline">
                   {t.seeTodaysCall}
                 </Link>
               ) : null

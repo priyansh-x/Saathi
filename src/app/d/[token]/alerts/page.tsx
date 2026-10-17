@@ -40,7 +40,7 @@ export default async function AlertsPage({
             return (
               <li key={alert.id}>
                 <Link
-                  href={`/d/${token}/alerts/${alert.id}?lang=${lang}`}
+                  href={`/d/${token}/alerts/${alert.id}?lang=${lang}&from=alerts`}
                   className="block rounded-2xl border border-border bg-card px-4 py-3"
                 >
                   <div className="flex flex-wrap items-center gap-2">

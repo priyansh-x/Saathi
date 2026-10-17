@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Check } from "lucide-react";
-import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { BackLink, ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
 import { alertById, alertEvents, resolveAlert } from "@/lib/db/queries";
 import { alertLife, alertQuoteLine, alertTitle, eventLine, statusPill } from "@/lib/alerts";
@@ -14,10 +14,12 @@ export default async function AlertDetailPage({
   searchParams,
 }: {
   params: Promise<{ token: string; id: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; from?: string }>;
 }) {
   const { token, id } = await params;
-  const lang = readLang((await searchParams).lang);
+  const sp = await searchParams;
+  const lang = readLang(sp.lang);
+  const from = sp.from;
   const data = await loadFamily(token);
   if (!data) return <ExpiredLink />;
   const alert = await alertById(id);
@@ -62,13 +64,17 @@ export default async function AlertDetailPage({
       alerts={data.actAlerts}
       active="alerts"
       updatedAt={alert.created_at}
+      extraQuery={{ from }}
     >
-      <Link
-        href={`/d/${token}/alerts?lang=${lang}`}
-        className="inline-flex min-h-11 items-center text-sm font-medium"
+      <BackLink
+        href={
+          from === "today"
+            ? `/d/${token}${qs({ lang })}`
+            : `/d/${token}/alerts${qs({ lang })}`
+        }
       >
-        {t.backAlerts}
-      </Link>
+        {from === "today" ? t.backToday : t.backAlertsShort}
+      </BackLink>
 
       <ol className="mt-4 grid grid-cols-3 gap-2 text-xs">
         {[

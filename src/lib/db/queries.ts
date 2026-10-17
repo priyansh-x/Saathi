@@ -117,7 +117,11 @@ export async function historyDays(parentId: string, days: number) {
     `select * from dose_logs where parent_id = $1 order by schedule_date desc`,
     [parentId],
   );
-  return { calls: rows, doses };
+  const alerts = await query<AlertRow>(
+    `select * from alerts where parent_id = $1 order by created_at desc`,
+    [parentId],
+  );
+  return { calls: rows, doses, alerts };
 }
 
 export { todayStatus } from "@/lib/today";

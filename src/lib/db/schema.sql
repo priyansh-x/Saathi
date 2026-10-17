@@ -55,7 +55,8 @@ create table if not exists calls (
   transcript_json text,
   recording_url text,
   bolna_execution_id text,
-  is_example boolean not null default false
+  is_example boolean not null default false,
+  mood text
 );
 
 create table if not exists call_attempts (

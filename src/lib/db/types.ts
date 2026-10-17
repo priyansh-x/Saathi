@@ -46,6 +46,7 @@ export type CallRow = {
   summary_hi: string | null;
   mood_quote: string | null;
   mood_quote_lang: string | null;
+  mood?: "cheerful" | "okay" | "low" | "unclear" | null;
   transcript_json: string | null;
 };
 
