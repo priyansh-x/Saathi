@@ -1,3 +1,5 @@
+The marketing site lives in [`landing/`](./landing/) (`npm run dev` there on port 43211).
+
 # Saathi
 
 Working name for a morning phone call to an Indian parent, on the phone they already own. The child gets a short WhatsApp briefing. Companionship and reminders — never diagnosis. Easy to rename via `PRODUCT_NAME`.
