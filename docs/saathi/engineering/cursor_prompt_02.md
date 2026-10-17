@@ -1,4 +1,4 @@
-# Cursor prompt 02: land the stack, then make Saathi easy to follow
+# Cursor prompt 02: make Saathi easy to follow
 
 > Paste everything below into Cursor. Written Sat 17 Oct 2026 IST for repo `priyansh-x/x`. Demo due Mon 26 Oct, submission Sat 31 Oct.
 
@@ -7,37 +7,122 @@
 You are continuing **Saathi**: a daily AI morning call to an Indian parent (Bolna), a WhatsApp briefing to the child, and escalation to child + neighbour. Specs live in `docs/saathi/` (product, voice, engineering). `docs/saathi/product/cursor_design_brief.md` wins on any UI conflict. Read `AGENTS.md` and `node_modules/next/dist/docs/` before touching routes.
 
 ## Where things stand
-- **On `main`:** PR #1 (walkable slice + the team's full `docs/saathi/` specs, commit 244bbf9).
-- **Reviewed, merged into the stack, NOT yet on `main`:** PRs #3 → #4 → #5 were merged (merge commits) into `cursor/saathi-phase-1-cbc6`. That branch is open as **PR #2** and now holds Phase 1–4: family desk at `/d/[token]` (Today/History/Alerts/Alert detail/Call detail/Settings), PGlite/Supabase data layer with EXAMPLE seed (Kamla Sharma / Rohit / Sunita ji), mock Bolna tools + webhook + cron tick, mock WhatsApp briefing + first-ack-wins, missed-call ladder, consent gate, delete, kill switch, one outbound gate (`src/lib/outbound.ts`).
-- **PR #2 has merge conflicts with `main`**: add/add conflicts in `docs/saathi/*` (main has the team's full spec files; the branch has its own copies).
+- **Everything is on `main`** (merge commit 1a5ba85): PRs #1-#5, i.e. Phases 1-4: family desk at `/d/[token]` (Today/History/Alerts/Alert detail/Call detail/Settings), PGlite/Supabase data layer with EXAMPLE seed (Kamla Sharma / Rohit / Sunita ji), mock Bolna tools + webhook + cron tick, mock WhatsApp briefing + first-ack-wins, missed-call ladder, consent gate, delete, kill switch, one outbound gate (`src/lib/outbound.ts`). The `docs/saathi/` conflicts were resolved in favour of the team's latest specs.
 
-### Task 0 (do first, one small PR or a push to PR #2)
-Merge `main` into `cursor/saathi-phase-1-cbc6`. For every file under `docs/saathi/`, **keep main's version** (the team's originals, incl. wireframe PNGs). Keep the branch's version of everything else. Run `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`; all must pass. Then tell Priyansh PR #2 is ready to merge. Do not merge it yourself.
+### Task 0 (do first)
+Pull `main`, then run `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`. Fix anything the merge broke in a small PR before starting the UI work.
 
-## UI/UX fixes (Saathi Product to refine)
-*Product's own fix list is pending. When it lands in `docs/saathi/product/`, it overrides this section. These come from the engineering review of the merged code.*
+## UI/UX fixes (Saathi Product, round 1)
+*From Saathi Product's review of `main` @ 1a5ba85 (`docs/saathi/product/ux_review_round1.md`, with 390×844 screenshots). This replaces the earlier engineering-only list. `cursor_design_brief.md` still wins on conflicts.*
 
-The core problem: the desk shows a lot but doesn't tell Rohit **what's going on and what to do**. Too many same-weight cards, jargon, half-translated Hindi, and a Settings page that is really a dev console. Fix in this order. Check every screen at **390 px width**.
+**Goal:** an anxious child opening the link from WhatsApp understands **Today in 3 seconds**: one status card, one sentence, one primary action. Keep the IA to exactly **Today / History / Alerts / Settings**; add no new tabs. Ship as 4 small PRs in this order (A → D), each with EN + हिं screenshots at 390×844 and at 200% text.
 
-1. **Today = one answer in 3 seconds** (`src/app/d/[token]/page.tsx`)
-   - Top card: status word + icon (Good ✓ / Needs a look ! / Act now ⚠), one plain sentence ("Maa answered at 8:32 IST and took her morning medicines."), and the time of the *actual* call, not the scheduled `call_time`.
-   - Medicines collapse into **one** card with a checklist (row per dose: name, dose, Taken ✓ / Not taken – / Not sure ? / Not asked yet ·), not one card per dose.
-   - Mood quote in one card with the caption. Hide rows that have no data. Don't show empty boxes.
-   - **One** primary button: "Call Maa" (`tel:`). "See today's call" becomes a text link, not a second full-width button.
-   - Acceptance: the status, sentence and primary button all fit above the fold at 390×844. No ISO dates, no raw enum values.
-2. **Missed-call ladder in plain words.** Replace `T / +10 · missed / escalated` with a vertical timeline: "8:30 Called, no answer", "8:40 Calling again", … "9:30 Asking Sunita ji to check". Future steps greyed with their planned time. Translate every step. Drop the word "ladder"/"सीढ़ी" from the UI.
-3. **Header stack is too tall.** EXAMPLE ribbon + red banner + top bar + status card push content down (`src/components/family/chrome.tsx`). Make EXAMPLE a small pill in the top bar. Keep the red Act-now banner on other tabs, but on Today the status card *is* the alert, so don't render it twice.
-4. **Settings is a dev console** (`src/app/d/[token]/settings/page.tsx`, 220 lines). Split it: family Settings shows only Maa's details, call time, neighbour, pause, consent status, "Delete our data" (with a confirm step). Move mock Bolna/WhatsApp scenarios, outbound log, mock ack and the kill-switch notice to `/demo/controls`, which only renders when mock mode is on and is clearly labelled EXAMPLE. Rewrite copy like "Pause writes to the household" / "रोक डेटाबेस में लिखी जाती है" into plain words ("Saathi won't call Maa until you turn this back on.").
-5. **Hindi/English toggle working everywhere.**
-   - Move every inline `lang === "hi" ? … : …` string (Today, Settings, chrome, ExpiredLink, LoadingState, alert/call pages) into `src/lib/i18n/messages.ts`. Add a test that `en` and `hi` have the same keys.
-   - Set `<html lang>` to `hi` or `en`. Apply `font-devanagari` + line-height 1.6 to the whole page in Hindi, not just the quote.
-   - Remember the choice (cookie) so it doesn't depend on `?lang=` surviving every link. Toggle must keep the current page.
-   - Acceptance: switch to हिं on every screen, and no English is left except names and numbers.
-6. **Navigation.** Tab bar fixed to the bottom with safe-area padding, labels ≥13 px, `aria-current="page"`, Alerts tab shows a count badge when something is open. Call detail and Alert detail get a back link ("← Today"). Content gets bottom padding so the tab bar never covers the last button.
-7. **Alerts.** Alert detail order: her quote and time → who was told → who said "I'm going" (acknowledged) → "She's confirmed OK" (resolved) button. Acknowledged and resolved look different. The Alerts list shows open first, with plain status words.
-8. **History.** 7/30-day calendar with a dot per day (call + meds) and labelled cells (`aria-label="Mon 12 Oct: answered, all medicines taken"`). Mood strip has the caption. No streaks, no guilt copy. Empty state: "Saathi's first call will show here."
-9. **States and basics on every screen:** empty, loading, error (+ Retry). Touch targets ≥44 px (primary 48 px full width). Body ≥16 px. Colour is never the only signal. No horizontal scroll at 200% zoom. Times carry "IST".
-10. **Onboarding** (`src/app/onboard/page.tsx`): one question per step with a progress line, plain consent copy, all inputs ≥44 px.
+### PR A: Today and status truth (highest priority)
+Files: `src/app/d/[token]/page.tsx`, `src/lib/db/queries.ts` (`todayStatus`), `src/lib/status.ts`, `src/components/family/chrome.tsx`, `src/lib/i18n/messages.ts`.
+1. **Explicit day states.** Replace `todayStatus` with: `scheduled` (no call yet, before call time + 10 min) · `trying` (missed, retries in progress) · `good` · `look` · `act` (open Act-now alert, or the missed sequence escalated) · `paused` · `skipped`. A not-yet-called day must **never** be amber. The answered time is the call's real `started_at` (+ duration), not `parent.call_time`.
+2. **One status hero card** (the only big thing): icon + level word (never colour alone) + a headline built from data + a sub-line + **one** primary button chosen by state:
+
+   | State | Chip | Headline (EN) | Headline (हिं) | Primary | Secondary (text link) |
+   |---|---|---|---|---|---|
+   | scheduled | grey clock "Later today" | "Today's call is at 8:30 AM IST" | "आज की कॉल सुबह 8:30 बजे (IST) है" | none (show yesterday's one-line summary) | "See yesterday" |
+   | good | green ✓ "Good" | "Maa is doing well today" | "माँ आज ठीक हैं" | Call Maa | "See today's call" |
+   | look | amber ! "Needs a look" | names the thing: "Maa missed her sugar tablet" | "माँ ने शुगर की गोली नहीं ली" | Call Maa | "See today's call" |
+   | trying | amber ! "Needs a look" | "Trying to reach Maa: 2 tries since 8:30 AM" | "माँ से बात नहीं हो पाई: 8:30 से 2 बार कोशिश" | Call Maa | "She's OK" · "Ask Sunita ji now" |
+   | act | red ⚠ "Act now" | the alert in words + her quote: "Maa said she has chest pain · 8:33 AM" | "माँ ने सीने में दर्द बताया · 8:33" | **Open alert** (→ detail) | Call Maa |
+   | paused | grey ⏸ "Paused" | "Calls are paused until you turn them back on" | "आप चालू करें तब तक कॉल बंद हैं" | Resume calls | — |
+
+   Sub-line examples: "Picked up 8:32 AM IST · 4 min" / "Sunita ji is going (9:14)" / "Nobody has replied yet". In `act`, show who's on it inside the hero.
+3. **Below the hero, at most 3 cards, hiding any with no data:** "Medicines today" (**one** card, a row per dose: name as the family wrote it, morning/night, pill Taken ✓ / Not taken – / Not sure ? / Not asked yet ·, deduped by medicine + slot) → "In her words" (quote + "from today's call"; never repeat a quote already in the hero; the mood caption only here, without "…") → "This week" (7 day tiles, tap → History).
+4. **Missed-call steps in plain words** inside the `trying` hero: a vertical list with clock times ("8:30 Called, no answer ✕", "8:40 Called again ✕", "**8:55 Next try**", grey "9:30 Ask Sunita ji to check"). Never show the words "ladder", "सीढ़ी", "T", "+25" or raw results.
+5. **Chrome:** EXAMPLE becomes a small pill in the top bar. The top bar reads `Maa · Sat 17 Oct · Updated 8:34 AM IST` + `EN | हिं`. **Do not render the Act-now banner on Today.** On other tabs it's a one-line strip "⚠ Act now · Chest pain · 8:33 AM · Open ›", with a count if more than one alert is open.
+
+**Acceptance (PR A):**
+- At 390×844, the chip, headline, sub-line and primary button are fully visible without scrolling in every state. Seed or mock one fixture per state and screenshot each, EN + हिं.
+- Exactly one filled primary button on Today.
+- The alert quote appears once on Today.
+- Before the call time, Today is grey "Later today", not amber.
+- After the Settings→demo "Missed" scenario, Today shows `trying` with the step list, and nothing on the page says "Call answered".
+- After "Good morning", there are no duplicate medicine rows.
+- No ISO dates or enum words anywhere on Today.
+
+### PR B: Alerts you can act on
+Files: `src/app/d/[token]/alerts/page.tsx`, `alerts/[id]/page.tsx`, `src/lib/db/queries.ts` (`resolveAlert`), `src/lib/whatsapp/ack.ts`.
+1. **List:** open alerts first, then the rest newest first. Each row: severity chip (⚠ Act now / ! Check in) + category in words ("Chest pain", "Couldn't reach Maa", "Missed medicine 2 days") + a **status pill**: Open (red outline) · "Sunita ji is going · 9:14" (amber) · "Maa is OK · Rohit 9:31" (green) · "False alarm" (grey) + friendly time. Resolved alerts never show a red chip. Only words Maa actually said go in quote marks; system events are plain text.
+2. **Detail order:**
+   - "← Alerts" at the top.
+   - A 3-step tracker: *Alert raised → Someone is going → Maa confirmed OK* (done ✓ / current / grey).
+   - Her quote + time.
+   - "Who we told" (names, channel).
+   - A vertical timeline in words ("9:14 Sunita ji: I'm going").
+   - Actions for an open alert: **I'm on it** (primary, hidden once anyone acks) · **Maa is OK** (replaces "Resolve") · **False alarm** (text button).
+   - Acknowledged = amber, resolved = green; they must look different.
+3. Record the **real** actor (the token's contact) and the real time on ack/resolve. Remove the hard-coded `"Rohit"` and the 12:00 timestamp.
+
+**Acceptance (PR B):**
+- From the list, a viewer can tell open vs someone-going vs OK without opening an alert and without colour (the words are in the pill).
+- Tapping I'm on it → the pill becomes "<name> is going · hh:mm" on the list, the detail, and the Today hero.
+- Tapping Maa is OK → the banner disappears on every tab.
+- The timeline contains no enum words.
+
+### PR C: Navigation, History, Call detail
+Files: `src/components/family/chrome.tsx`, `history/page.tsx`, `calls/[id]/page.tsx`.
+1. **Tab bar:** `position: fixed` at the bottom with `padding-bottom: env(safe-area-inset-bottom)`. Content gets `pb-24` so nothing hides under it. Icon + label ≥13 px. The active tab has `aria-current="page"`, a bold label and a 2 px top indicator (not colour only). Alerts shows a numeric badge when alerts are open.
+2. **Back links:** every detail page has a 44 px "← Today / History / Alerts" at top-left, returning to the tab you came from.
+3. **History:**
+   - A summary line first ("Answered 6 of 7 calls · 12 of 14 medicines").
+   - The calendar has Mon–Sun headers, month labels, and the date at ≥13 px.
+   - Each cell shows a call glyph (✓ filled answered / ✕ hollow missed / – skipped) plus "2/2" meds text (amber when short; count **all** medicines, not just `med_amlo`) and a small red dot on alert days.
+   - A legend always visible under the grid.
+   - `aria-label` per cell ("Tue 13 Oct: call answered, 2 of 2 medicines").
+   - Mood is a 3-row labelled dot strip (Cheerful / Okay / Low, hollow = Not clear) from the stored mood field (**no keyword matching on quotes**), with the caption. No streaks, no guilt copy.
+4. **Call detail:**
+   - Header "Wed 14 Oct · 8:32 AM IST · 4 min · Hindi".
+   - A "Summary" label with 3–5 bullets.
+   - **One** medicines card.
+   - "In her words".
+   - Transcript collapsed ("Show full conversation").
+   - The audio line as is.
+
+**Acceptance (PR C):**
+- On History (7 days), Call detail and Alert detail at 390×844, the tab bar sits at the bottom edge with no gap.
+- On Today, the last control is fully tappable above the bar.
+- A first-time viewer can read a History cell using only the on-screen legend.
+- The 7↔30 toggle and EN↔हिं keep each other's query params.
+
+### PR D: Settings for families, demo tools elsewhere, Hindi everywhere
+Files: `settings/page.tsx`, new `src/app/demo/controls/page.tsx`, `src/lib/i18n/messages.ts`, `src/app/layout.tsx`, `chrome.tsx` (`ExpiredLink`, `LoadingState`).
+1. **Settings shows only:**
+   - Call: time in IST + your time, days, language in words ("Hindi, English"), what Saathi calls her.
+   - Medicines (list + "Saathi only reminds, never changes doses").
+   - Family & neighbour, with opt-in status ✓ Ready / ⏳ Waiting / ✕ Declined.
+   - Pause ("Saathi won't call Maa until you turn this back on").
+   - Privacy: recording consent "Yes, Maa agreed on 10 Oct", delete.
+   - About: "Saathi is a companion and reminder service, not a medical or emergency service. In an emergency call 112."
+   - Values are read-only, with "Change on WhatsApp" links.
+2. **Delete needs a confirm step:** a sheet or second screen with plain consequences + "Yes, delete everything" (red) + Cancel. Never one tap.
+3. **Move to `/demo/controls`:** the mock Bolna scenarios, the outbound log, "Pretend Rohit tapped I'm on it", "Record Maa's voice haan" and the kill-switch notice. The page renders only when `MOCK_BOLNA=1` or `MOCK_WHATSAPP=1` (404 otherwise), carries an EXAMPLE header, and Settings links to it with a small "Demo controls (EXAMPLE)" link only in mock mode.
+4. **i18n:**
+   - Every string moves to `messages.ts`: no inline `lang === "hi" ? …`. Add a unit test that `en` and `hi` have identical keys.
+   - `<html lang>` follows the choice. Save the choice in a cookie.
+   - The toggle keeps the path and all query params.
+   - In Hindi, apply `font-devanagari` and line-height 1.6 to the whole page.
+   - `ExpiredLink` is bilingual and says "Type LINK in your Saathi WhatsApp chat for a fresh link". Don't offer the example desk to a real token.
+5. **Friendly formats everywhere:** replace `formatWhen` ISO output with "Today 8:33 AM IST" / "Wed 14 Oct, 8:33 AM IST", plus "· 11:03 PM ET (Tue)" when the viewer's zone isn't IST.
+
+**Acceptance (PR D):**
+- Settings at 390 px is ≤ 2 screens long and has no mock, log or enum content.
+- Delete can't happen in one tap.
+- `/demo/controls` 404s with mocks off.
+- Switch to हिं on every route: no English is left except names, numbers and "Saathi".
+- `grep -rn 'lang === "hi"' src/app src/components` returns nothing.
+- No `YYYY-MM-DD` appears in any rendered page.
+
+### Applies to every PR
+- Tokens only from `globals.css` (no new colours). Body ≥16 px. Touch targets ≥44 px, primary buttons 48 px full width. One filled primary button per screen.
+- Status is always icon + word + colour.
+- Every screen has empty, loading and error states. Wrap data sections in `<Suspense>` with the existing skeletons; this also clears the "uncached data during prerendering" dev errors on History, Alerts and Settings.
+- Varied EXAMPLE seed (fall, couldn't reach, missed medicine 2 days, false alarm) instead of the same chest-pain alert every week, still `is_example=true`.
+- Lighthouse accessibility ≥95 on Today, History and Alert detail. No horizontal scroll at 200% text.
 
 ## Remaining work (current phase → next phase)
 Phases 1–4 exist in mock form. To reach the 26 Oct demo:
