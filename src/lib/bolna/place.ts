@@ -3,21 +3,21 @@ import { promptVariables } from "@/lib/bolna/summary";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
 import { gateOutbound } from "@/lib/outbound";
-import { istDayKey, istStamp } from "@/lib/time";
+import { istDayBounds, istDayKey, istStamp, parseHhMm } from "@/lib/time";
 
 export async function minutesUsedToday() {
-  const day = istDayKey();
+  const { start, end } = istDayBounds(istDayKey());
   const rows = await query<{ secs: number }>(
-    `select coalesce(sum(duration_sec),0)::int as secs from calls where started_at like $1`,
-    [`${day}%`],
+    `select coalesce(sum(duration_sec),0)::int as secs from calls where started_at >= $1 and started_at < $2`,
+    [start, end],
   );
   return Math.ceil((rows[0]?.secs ?? 0) / 60);
 }
 
 export async function placeMorningCall(parentId: string) {
   if (killSwitchOn()) return { ok: false as const, reason: "kill_switch" };
-  const parents = await query<{ phone: string; paused: boolean; first_name: string }>(
-    `select phone, paused, first_name from parents where id = $1`,
+  const parents = await query<{ phone: string; paused: boolean; first_name: string; call_time: string }>(
+    `select phone, paused, first_name, call_time from parents where id = $1`,
     [parentId],
   );
   const parent = parents[0];
@@ -46,10 +46,11 @@ export async function placeMorningCall(parentId: string) {
 
   if (isMockBolna()) {
     const executionId = `mock_${parentId}_${istDayKey()}_${Date.now()}`;
+    const callMin = parseHhMm(parent.call_time || "08:30");
     await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
       executionId,
       parentId,
-      istStamp(istDayKey(), 8, 30),
+      istStamp(istDayKey(), Math.floor(callMin / 60), callMin % 60),
       null,
       null,
       "in_progress",

@@ -51,6 +51,24 @@ export function cronSecret() {
   return process.env.CRON_SECRET || (isMockBolna() ? "dev-cron" : "");
 }
 
+/** Refuse live mode without real secrets. No `dev-*` fallbacks when MOCK_*=0. */
+export function assertLiveSecrets() {
+  if (!isMockBolna()) {
+    const missing = ["BOLNA_API_KEY", "SAATHI_TOOL_TOKEN", "CRON_SECRET"].filter((key) => !process.env[key]);
+    if (missing.length) {
+      throw new Error(`MOCK_BOLNA=0 requires ${missing.join(", ")}. No dev-* fallbacks.`);
+    }
+  }
+  if (!isMockWhatsapp()) {
+    const missing = ["WHATSAPP_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_VERIFY_TOKEN"].filter(
+      (key) => !process.env[key],
+    );
+    if (missing.length) {
+      throw new Error(`MOCK_WHATSAPP=0 requires ${missing.join(", ")}. No dev-* fallbacks.`);
+    }
+  }
+}
+
 export function bolnaBaseUrl() {
   return process.env.BOLNA_BASE_URL || "https://api.bolna.ai";
 }

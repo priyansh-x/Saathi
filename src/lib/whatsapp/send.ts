@@ -39,6 +39,16 @@ export async function logOutbound(row: {
   ]);
 }
 
+async function familyEmail(parentId: string) {
+  const rows = await query<{ email: string | null }>(
+    `select email from contacts
+     where parent_id = $1 and role = 'child' and email is not null and trim(email) <> ''
+     limit 1`,
+    [parentId],
+  );
+  return rows[0]?.email?.trim().toLowerCase() || "";
+}
+
 async function sendEmailFallback(args: {
   parentId: string;
   toHint: string;
@@ -47,7 +57,7 @@ async function sendEmailFallback(args: {
   idempotencyKey: string;
   reason: string;
 }): Promise<SendResult> {
-  const email = (process.env.ALLOWED_EMAILS || "").split(",")[0]?.trim() || "dev@local";
+  const email = await familyEmail(args.parentId);
   const gate = gateOutbound("email", email);
   const id = messageId(`email_${args.template}`, args.idempotencyKey);
   const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);

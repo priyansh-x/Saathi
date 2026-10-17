@@ -25,7 +25,7 @@ export default async function SettingsPage({
   const t = messages[lang];
   const parentId = data.parent.id;
   const nextPaused = !data.parent.paused;
-  const actor = data.child?.first_name || "Rohit";
+  const actor = data.child?.first_name || data.child?.full_name || "family";
   const openAlertId = data.actAlerts[0]?.id ?? "";
 
   async function togglePause() {

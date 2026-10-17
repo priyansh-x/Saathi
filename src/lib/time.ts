@@ -22,6 +22,12 @@ export function istDayOffset(offset: number, from = new Date()) {
   return formatDay(ist);
 }
 
+/** Inclusive start / exclusive end for an IST calendar day. */
+export function istDayBounds(day: string) {
+  const next = istDayOffset(1, new Date(`${day}T12:00:00+05:30`));
+  return { start: `${day}T00:00:00+05:30`, end: `${next}T00:00:00+05:30` };
+}
+
 function formatDay(ist: Date) {
   const y = ist.getFullYear();
   const m = String(ist.getMonth() + 1).padStart(2, "0");

@@ -5,7 +5,7 @@ import { ensureSeed } from "@/lib/db/seed";
 import { readJson } from "@/lib/http";
 import { advanceLadder } from "@/lib/ladder";
 import { runMockScenario } from "@/lib/bolna/mock-run";
-import { istDayKey } from "@/lib/time";
+import { istDayBounds, istDayKey } from "@/lib/time";
 
 export async function POST(req: Request) {
   await connection();
@@ -16,10 +16,10 @@ export async function POST(req: Request) {
   if (body?.start) {
     return Response.json(await runMockScenario("missed", parentId));
   }
-  const day = istDayKey();
+  const { start, end } = istDayBounds(istDayKey());
   const open = await query<{ id: string }>(
-    `select id from calls where parent_id = $1 and started_at like $2 order by started_at desc limit 1`,
-    [parentId, `${day}%`],
+    `select id from calls where parent_id = $1 and started_at >= $2 and started_at < $3 order by started_at desc limit 1`,
+    [parentId, start, end],
   );
   if (!open[0]) return Response.json({ ok: false, error: "no_call" }, { status: 404 });
   return Response.json(
