@@ -65,6 +65,12 @@ Trial verification still pending — write results into `docs/saathi/engineering
 
 A completed call writes a child briefing. `raise_alert` writes safety_alert + responder. Ack broadcasts `alert_ack_update`.
 
+## Escalation + pilot (Phase 4)
+
+Missed-call ladder (per-family `family_config`): T, +10, +25, soft notice +30, last try +45, child+neighbour +60 if nobody acked. Busy/declined ≠ unreachable.
+
+`SAATHI_KILL_SWITCH=1` stops `/api/cron/tick`, dialling, and sending. Real calls need child written consent + parent voice haan. Settings can delete all of Maa's data. `VOICE_ALERT_CHILD=1` queues an optional child voice alert on EMERGENCY only.
+
 ## What not to add
 
 - A second component library

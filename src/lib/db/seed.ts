@@ -23,6 +23,7 @@ export async function seed() {
   await query("delete from outbound_messages");
   await query("delete from webhook_events");
   await query("delete from magic_links");
+  await query("delete from family_config");
   await query("delete from contacts");
   await query("delete from parents");
 
@@ -36,6 +37,16 @@ export async function seed() {
     "hi,en",
     "08:30",
     false,
+    false,
+    true,
+  ]);
+  await query(`insert into family_config values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+    "parent_kamla",
+    10,
+    25,
+    30,
+    45,
+    60,
     false,
     true,
   ]);
