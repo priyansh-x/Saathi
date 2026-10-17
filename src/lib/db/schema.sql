@@ -11,7 +11,8 @@ create table if not exists parents (
   recording_consent boolean not null default false,
   is_example boolean not null default false,
   consent_status text not null default 'pending',
-  consent_at text
+  consent_at text,
+  consent_later_count integer not null default 0
 );
 
 create table if not exists contacts (

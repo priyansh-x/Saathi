@@ -131,6 +131,9 @@ export const messages = {
     firstCallPending: "First-call consent: waiting for Maa's spoken yes or no.",
     firstCallGiven: "First-call consent: given",
     firstCallDeclined: "First-call consent: declined. Morning calls are paused.",
+    firstCallLaterRetry: "First-call consent: she asked to decide later. Saathi will try once more tomorrow morning.",
+    firstCallLaterStopped:
+      "First-call consent: still waiting. She did not say yes or no on two mornings, so Saathi has stopped calling.",
     deleteData: "Delete all of Maa's data",
     deleteConfirmTitle: "Delete everything?",
     deleteConfirmBody: "This removes Maa's calls, medicines, alerts and the family desk. It cannot be undone.",
@@ -290,6 +293,9 @@ export const messages = {
     firstCallPending: "पहली कॉल की सहमति: माँ के हाँ या नहीं का इंतज़ार।",
     firstCallGiven: "पहली कॉल की सहमति: मिल गई",
     firstCallDeclined: "पहली कॉल की सहमति: मना किया। सुबह की कॉल रुकी हैं।",
+    firstCallLaterRetry: "पहली कॉल की सहमति: बाद में तय करेंगी। साथी कल सुबह एक बार और कोशिश करेगा।",
+    firstCallLaterStopped:
+      "पहली कॉल की सहमति: अभी इंतज़ार। दो सुबह हाँ या नहीं नहीं मिला, इसलिए साथी ने कॉल रोक दी हैं।",
     deleteData: "माँ का सारा डेटा मिटाएँ",
     deleteConfirmTitle: "सब मिटा दें?",
     deleteConfirmBody: "कॉल, दवा, अलर्ट और डेस्क हट जाएँगे। वापस नहीं आएगा।",

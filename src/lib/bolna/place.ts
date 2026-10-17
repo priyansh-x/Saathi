@@ -30,14 +30,16 @@ export async function placeMorningCall(parentId: string, clock: Date = new Date(
     call_time: string;
     languages: string;
     consent_status: string;
+    consent_later_count: number;
   }>(
-    `select phone, paused, first_name, call_time, languages, consent_status from parents where id = $1`,
+    `select phone, paused, first_name, call_time, languages, consent_status, consent_later_count from parents where id = $1`,
     [parentId],
   );
   const parent = parents[0];
   if (!parent) return { ok: false as const, reason: "unknown_parent" };
   if (parent.paused) return { ok: false as const, reason: "paused" };
   if (parent.consent_status === "declined") return { ok: false as const, reason: "declined" };
+  if ((parent.consent_later_count ?? 0) >= 2) return { ok: false as const, reason: "consent_later" };
   if (!isMockBolna() && !(await hasPilotConsent(parentId))) {
     return { ok: false as const, reason: "consent" };
   }

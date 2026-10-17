@@ -32,9 +32,13 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
   await ensureSeed();
   const day = istDayKey(now);
   const { start, end } = istDayBounds(day);
-  const parents = await query<{ id: string; paused: boolean; consent_status: string; call_time: string }>(
-    `select id, paused, consent_status, call_time from parents`,
-  );
+  const parents = await query<{
+    id: string;
+    paused: boolean;
+    consent_status: string;
+    call_time: string;
+    consent_later_count: number;
+  }>(`select id, paused, consent_status, call_time, consent_later_count from parents`);
   const results = [];
   for (const parent of parents) {
     if (parent.paused) {
@@ -43,6 +47,10 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
     }
     if (parent.consent_status === "declined") {
       results.push({ parent_id: parent.id, skipped: "declined" });
+      continue;
+    }
+    if ((parent.consent_later_count ?? 0) >= 2) {
+      results.push({ parent_id: parent.id, skipped: "consent_later" });
       continue;
     }
     const open = await query<{ id: string; started_at: string; status: string }>(
