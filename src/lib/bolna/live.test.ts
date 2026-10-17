@@ -5,6 +5,7 @@ import { seed } from "../db/seed";
 import { nowIstStamp } from "../time";
 import { processBolnaWebhook } from "./webhook";
 import { parseBolnaTranscript, transcriptHasParent } from "./transcript";
+import { canPlaceLiveCall, parseTestCallArgs, plannedTestCall } from "./test-call-cli";
 
 process.env.MOCK_BOLNA = "1";
 process.env.MOCK_WHATSAPP = "1";
@@ -83,5 +84,25 @@ describe("Bolna webhook live rules", () => {
     assert.match(rows[0]?.started_at ?? "", /\+05:30$/);
     assert.match(rows[0]?.ended_at ?? "", /\+05:30$/);
     assert.equal(rows[0]?.started_at.includes("Z"), false);
+  });
+});
+
+describe("test-call CLI", () => {
+  it("needs --yes, MOCK_BOLNA=0 and an allowlisted number", () => {
+    const parsed = parseTestCallArgs(["+91 90000 00000", "--yes"]);
+    assert.equal(parsed.yes, true);
+    assert.equal(parsed.phone, "+919000000000");
+    assert.equal(canPlaceLiveCall(parsed.phone, false).ok, false);
+    assert.equal(canPlaceLiveCall(parsed.phone, true).ok, false);
+
+    const prevMock = process.env.MOCK_BOLNA;
+    const prevAllow = process.env.ALLOWED_PHONE_NUMBERS;
+    process.env.MOCK_BOLNA = "0";
+    process.env.ALLOWED_PHONE_NUMBERS = "+919000000000";
+    assert.equal(canPlaceLiveCall("+919000000000", true).ok, true);
+    assert.equal(canPlaceLiveCall("+910000000001", true).ok, false);
+    assert.equal(plannedTestCall("+910000000001").allowlisted, false);
+    process.env.MOCK_BOLNA = prevMock;
+    process.env.ALLOWED_PHONE_NUMBERS = prevAllow;
   });
 });

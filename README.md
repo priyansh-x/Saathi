@@ -52,7 +52,7 @@ npm run bolna:sync    # dry-run without BOLNA_API_KEY
 Settings → mock buttons: good morning, chest-pain line, late extraction.  
 Or `POST /api/demo/bolna` with `{ "scenario": "chest" }`.
 
-Real `POST /call` needs `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `MOCK_BOLNA=0`, and the number on `ALLOWED_PHONE_NUMBERS`. `npm run bolna:test-call` is a dry run unless `SAATHI_CONFIRM_LIVE_CALL=1`. Do not run a live call unless Priyansh says go. Trial notes stay empty until then.
+Real `POST /call` needs `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `MOCK_BOLNA=0`, and the number on `ALLOWED_PHONE_NUMBERS`. `npx tsx scripts/bolna/test-call.ts +91XXXXXXXXXX` is a dry run unless `--yes` is passed and mocks are off. Do not run a live call unless Priyansh says go. Trial notes stay empty until then.
 
 ## Phase 3 (mock WhatsApp)
 

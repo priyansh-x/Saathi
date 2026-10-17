@@ -1,21 +1,28 @@
 /**
  * One allowlisted Bolna call. Do not run a live dial unless Priyansh says go.
  *
- * Default: print the intended payload and exit without fetch.
- * A real POST /call needs MOCK_BOLNA=0, Bolna secrets, an allowlisted parent,
- * and SAATHI_CONFIRM_LIVE_CALL=1.
+ * Usage: npx tsx scripts/bolna/test-call.ts +91XXXXXXXXXX --yes
+ * Default (no --yes, or MOCK_BOLNA still on): print the intended payload and exit without fetch.
  */
+import { canPlaceLiveCall, parseTestCallArgs, plannedTestCall } from "../../src/lib/bolna/test-call-cli.ts";
+
 async function main() {
-  const live = process.env.SAATHI_CONFIRM_LIVE_CALL === "1" && process.env.MOCK_BOLNA === "0";
-  if (!live) {
+  const { yes, phone } = parseTestCallArgs(process.argv.slice(2));
+  const live = canPlaceLiveCall(phone, yes);
+  if (!live.ok) {
+    const plan = plannedTestCall(phone || "+91");
     console.log(
       JSON.stringify(
         {
           dry_run: true,
-          reason: "SAATHI_CONFIRM_LIVE_CALL is not 1 or MOCK_BOLNA is on",
-          post: "/call",
-          omits: ["from_phone_number"],
-          timestamps: "+05:30 only, never Z",
+          reason: live.reason,
+          phone: phone || null,
+          yes,
+          post: plan.post,
+          to: plan.to,
+          allowlisted: plan.allowlisted,
+          omits: plan.omits,
+          timestamps: plan.timestamps,
         },
         null,
         2,
@@ -23,11 +30,22 @@ async function main() {
     );
     return;
   }
-  const { placeMorningCall } = await import("../../src/lib/bolna/place.ts");
+
+  const { query } = await import("../../src/lib/db/client.ts");
   const { closeDb } = await import("../../src/lib/db/client.ts");
   const { ensureSeed } = await import("../../src/lib/db/seed.ts");
+  const { placeMorningCall } = await import("../../src/lib/bolna/place.ts");
   await ensureSeed();
-  const result = await placeMorningCall(process.env.SAATHI_TEST_PARENT_ID || "parent_kamla");
+  const parents = await query<{ id: string }>(`select id from parents where regexp_replace(phone, '[^0-9+]', '', 'g') = $1`, [
+    live.to,
+  ]);
+  const parentId = parents[0]?.id;
+  if (!parentId) {
+    console.error(JSON.stringify({ ok: false, reason: "no_parent_for_number", to: live.to }));
+    await closeDb();
+    process.exit(1);
+  }
+  const result = await placeMorningCall(parentId);
   console.log(JSON.stringify(result, null, 2));
   await closeDb();
   if (!result.ok) process.exit(1);
