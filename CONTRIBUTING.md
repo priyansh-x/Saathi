@@ -16,6 +16,14 @@ npm run lint
 
 New env names go in `.env.example` with no values.
 
+## Phase 3 test plan
+
+- `npm test` includes WhatsApp briefing + first-ack-wins + allowlist.
+- Settings → Good morning → Outbound list shows a child briefing (EXAMPLE).
+- Chest-pain → Alert detail → I'm on it. Second tap is a no-op. Ack broadcast is logged.
+- `MOCK_WHATSAPP=0` without allowlist refuses a send.
+- Env: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_TEMPLATES_APPROVED`, `EMAIL_API_KEY`, `MOCK_WHATSAPP`, `ALLOWED_PHONE_NUMBERS`, `ALLOWED_EMAILS`.
+
 ## Phase 2 test plan
 
 - `npm test` — dose/alert idempotency, webhook replay ×3 → one call, late extraction → one alert, allowlist + kill switch.

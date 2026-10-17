@@ -9,6 +9,22 @@ export function isMockBolna() {
   return (process.env.MOCK_BOLNA ?? "1") !== "0";
 }
 
+export function isMockWhatsapp() {
+  return (process.env.MOCK_WHATSAPP ?? "1") !== "0";
+}
+
+export function templatesApproved() {
+  return process.env.WHATSAPP_TEMPLATES_APPROVED === "1";
+}
+
+export function publicBaseUrl() {
+  return (process.env.PUBLIC_BASE_URL || "http://127.0.0.1:43147").replace(/\/$/, "");
+}
+
+export function whatsappVerifyToken() {
+  return process.env.WHATSAPP_VERIFY_TOKEN || (isMockWhatsapp() ? "dev-wa-verify" : "");
+}
+
 export function killSwitchOn() {
   return process.env.SAATHI_KILL_SWITCH === "1";
 }

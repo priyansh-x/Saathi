@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { runMockScenario, type MockScenario } from "@/lib/bolna/mock-run";
-import { isMockBolna } from "@/lib/config";
+import { isMockBolna, isMockWhatsapp } from "@/lib/config";
 import { setPaused } from "@/lib/db/queries";
+import { ackAlert } from "@/lib/whatsapp/ack";
+import { recentOutbound } from "@/lib/whatsapp/send";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
 import { formatIstTime } from "@/lib/time";
@@ -21,6 +23,8 @@ export default async function SettingsPage({
   const t = messages[lang];
   const parentId = data.parent.id;
   const nextPaused = !data.parent.paused;
+  const actor = data.child?.first_name || "Rohit";
+  const openAlertId = data.actAlerts[0]?.id ?? "";
 
   async function togglePause() {
     "use server";
@@ -34,6 +38,14 @@ export default async function SettingsPage({
     await runMockScenario(scenario, parentId);
     redirect(`/d/${token}?lang=${lang}`);
   }
+
+  async function mockAck() {
+    "use server";
+    if (openAlertId) await ackAlert(openAlertId, actor);
+    redirect(`/d/${token}/alerts/${openAlertId}?lang=${lang}`);
+  }
+
+  const outbound = await recentOutbound(parentId, 8);
 
   return (
     <FamilyFrame
@@ -108,6 +120,33 @@ export default async function SettingsPage({
             className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border"
           >
             {lang === "hi" ? "देर से अलर्ट" : "Late extraction alert"}
+          </button>
+        </form>
+      ) : null}
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold">{lang === "hi" ? "भेजे गए संदेश" : "Outbound (EXAMPLE)"}</h2>
+        {outbound.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {lang === "hi" ? "अभी कोई संदेश नहीं।" : "No messages logged yet."}
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {outbound.map((row) => (
+              <li key={row.id} className="rounded-2xl border border-border bg-card px-4 py-3 text-sm">
+                <p className="font-medium">
+                  {row.channel} · {row.template} · {row.status}
+                </p>
+                <p className="mt-1 text-muted-foreground">{row.to_phone}</p>
+                <p className="mt-2 whitespace-pre-wrap">{row.body}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      {isMockWhatsapp() && data.actAlerts[0] ? (
+        <form action={mockAck} className="mt-6">
+          <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-white">
+            {lang === "hi" ? "रोहित ने कहा — मैं जा रहा हूँ" : "Pretend Rohit tapped I'm on it"}
           </button>
         </form>
       ) : null}

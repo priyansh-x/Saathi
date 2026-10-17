@@ -52,6 +52,14 @@ Or `POST /api/demo/bolna` with `{ "scenario": "chest" }`.
 
 Real `POST /call` needs `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `MOCK_BOLNA=0`, and the number on `ALLOWED_PHONE_NUMBERS`. Trial notes stay empty until Priyansh runs them.
 
-## Later phases
+## Phase 3 (mock WhatsApp)
 
-3 WhatsApp · 4 missed-call ladder + kill switch. See `prd.md` and `docs/saathi/`.
+`MOCK_WHATSAPP=1` by default. No Meta send.
+
+After a mock completed call, Settings shows the logged briefing. Chest-pain also logs safety + neighbour responder. **I'm on it** on Alert detail (or Settings) is first-ack-wins and broadcasts the ack update.
+
+`WHATSAPP_TEMPLATES_APPROVED=0` uses `hello_world` + email fallback for real sends. Priyansh submits Utility templates.
+
+## Later
+
+Phase 4: missed-call ladder + kill switch. See `prd.md` and `docs/saathi/`.

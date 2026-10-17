@@ -133,6 +133,8 @@ export async function raiseAlert(input: {
       "Rohit and Sunita ji",
       true,
     ]);
+    const { notifyAlert } = await import("@/lib/whatsapp/notify");
+    await notifyAlert(input.parent_id, { id: alertId, quote: input.quote, created_at: nowIst() });
   }
   return { ok: true as const, alert_id: alertId, replay: !remembered.fresh };
 }
@@ -149,17 +151,34 @@ export async function relayMessage(input: { call_sid: string; parent_id: string;
   const id = `out_relay_${key}`;
   const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);
   if (!existing[0]) {
-    await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
-      id,
-      input.parent_id,
-      "whatsapp",
-      "family_relay",
-      "queued",
-      input.message,
-      nowIst(),
-      "queued_phase3",
-      true,
-    ]);
+    const { sendFamilyMessage } = await import("@/lib/whatsapp/send");
+    const contacts = await query<{ phone: string; locale: string }>(
+      `select phone, locale from contacts where parent_id = $1 and role = 'child'`,
+      [input.parent_id],
+    );
+    const child = contacts[0];
+    if (child) {
+      await sendFamilyMessage({
+        parentId: input.parent_id,
+        toPhone: child.phone,
+        locale: child.locale === "hi" ? "hi" : "en",
+        intended: "daily_briefing_en",
+        vars: ["Kamla", "08:30", "Needs a look", "—", input.message, ""],
+        idempotencyKey: id,
+      });
+    } else {
+      await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+        id,
+        input.parent_id,
+        "whatsapp",
+        "family_relay",
+        "queued",
+        input.message,
+        nowIst(),
+        "queued",
+        true,
+      ]);
+    }
   }
   return { ok: true as const };
 }
