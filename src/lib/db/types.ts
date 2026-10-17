@@ -16,6 +16,7 @@ export type Parent = {
   is_example: boolean;
   consent_status: "pending" | "given" | "declined";
   consent_at: string | null;
+  consent_later_count: number;
 };
 
 export type Contact = {

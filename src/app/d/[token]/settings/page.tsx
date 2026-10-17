@@ -134,7 +134,11 @@ export default async function SettingsPage({
             ? `${t.firstCallGiven}${data.parent.consent_at ? ` · ${formatFriendlyTime(data.parent.consent_at, lang)}` : ""}`
             : data.parent.consent_status === "declined"
               ? t.firstCallDeclined
-              : t.firstCallPending}
+              : (data.parent.consent_later_count ?? 0) >= 2
+                ? t.firstCallLaterStopped
+                : (data.parent.consent_later_count ?? 0) === 1
+                  ? t.firstCallLaterRetry
+                  : t.firstCallPending}
         </p>
         <p>
           {voice?.granted

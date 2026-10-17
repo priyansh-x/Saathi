@@ -10,7 +10,9 @@ export type TemplateName =
   | "alert_ack_update_en"
   | "alert_ack_update_hi"
   | "consent_declined_en"
-  | "consent_declined_hi";
+  | "consent_declined_hi"
+  | "consent_later_en"
+  | "consent_later_hi";
 
 export function renderTemplate(name: TemplateName, vars: string[]) {
   const v = (i: number) => vars[i] ?? "—";
@@ -37,5 +39,9 @@ export function renderTemplate(name: TemplateName, vars: string[]) {
       return `${v(0)} said no to the daily Saathi call. Morning calls are paused. In an emergency call 112.`;
     case "consent_declined_hi":
       return `${v(0)} ने रोज़ की साथी कॉल मना कर दी। सुबह की कॉल रुक गई। आपात में 112 मिलाएँ।`;
+    case "consent_later_en":
+      return `${v(0)} has not said yes or no to the daily Saathi call after two mornings. Saathi will not call again until you decide. In an emergency call 112.`;
+    case "consent_later_hi":
+      return `${v(0)} ने दो सुबह हाँ या नहीं नहीं कहा। आप तय करें तब तक साथी फ़ोन नहीं करेगा। आपात में 112 मिलाएँ।`;
   }
 }

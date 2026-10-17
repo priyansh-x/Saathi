@@ -44,6 +44,75 @@ describe("first-call consent", () => {
     assert.equal(placed.ok, false);
   });
 
+  it("keeps pending on later and retries once the next morning", async () => {
+    await seed();
+    await query(
+      `update parents set consent_status = 'pending', consent_at = null, paused = false, consent_later_count = 0 where id = 'parent_kamla'`,
+    );
+    const later = await recordSpokenConsent({ call_sid: "c_later_1", parent_id: "parent_kamla", answer: "later" });
+    assert.equal(later.status, "pending");
+    assert.equal(later.later_count, 1);
+    assert.equal(later.paused, false);
+    const parent = await query<{ consent_status: string; paused: boolean; consent_later_count: number }>(
+      `select consent_status, paused, consent_later_count from parents where id = 'parent_kamla'`,
+    );
+    assert.equal(parent[0]?.consent_status, "pending");
+    assert.equal(parent[0]?.paused, false);
+    assert.equal(parent[0]?.consent_later_count, 1);
+    const outbound = await query<{ n: number }>(
+      `select count(*)::int as n from outbound_messages where parent_id = 'parent_kamla' and template like 'consent_later%'`,
+    );
+    assert.equal(outbound[0]?.n, 0);
+
+    const executionId = `later1_${Date.now()}`;
+    await processBolnaWebhook(
+      {
+        status: "completed",
+        conversation_duration: 20,
+        transcript: "assistant: may I call\nuser: baad mein",
+        extracted_data: { summary_en: "She hesitated.", mood_quote: "baad mein" },
+        context_details: { recipient_data: { parent_id: "parent_kamla" } },
+      },
+      executionId,
+    );
+    const words = await query<{ summary_en: string | null; mood_quote: string | null; transcript_json: string | null }>(
+      `select summary_en, mood_quote, transcript_json from calls where bolna_execution_id = $1`,
+      [executionId],
+    );
+    assert.equal(words[0]?.summary_en, null);
+    assert.equal(words[0]?.mood_quote, null);
+    assert.equal(words[0]?.transcript_json, null);
+
+    const nextMorning = new Date("2026-10-18T03:00:00.000Z");
+    const retry = await placeMorningCall("parent_kamla", nextMorning);
+    assert.equal(retry.ok, true);
+  });
+
+  it("stops calling and tells the child after a second later", async () => {
+    await seed();
+    await query(
+      `update parents set consent_status = 'pending', consent_at = null, paused = false, consent_later_count = 0 where id = 'parent_kamla'`,
+    );
+    await recordSpokenConsent({ call_sid: "c_later_a", parent_id: "parent_kamla", answer: "later" });
+    const twice = await recordSpokenConsent({ call_sid: "c_later_b", parent_id: "parent_kamla", answer: "later" });
+    assert.equal(twice.status, "pending");
+    assert.equal(twice.later_count, 2);
+    assert.equal(twice.paused, false);
+    const parent = await query<{ consent_status: string; paused: boolean; consent_later_count: number }>(
+      `select consent_status, paused, consent_later_count from parents where id = 'parent_kamla'`,
+    );
+    assert.equal(parent[0]?.consent_status, "pending");
+    assert.equal(parent[0]?.paused, false);
+    assert.equal(parent[0]?.consent_later_count, 2);
+    const outbound = await query<{ n: number }>(
+      `select count(*)::int as n from outbound_messages where parent_id = 'parent_kamla' and template like 'consent_later%'`,
+    );
+    assert.ok((outbound[0]?.n ?? 0) >= 1);
+    const placed = await placeMorningCall("parent_kamla", new Date("2026-10-19T03:00:00.000Z"));
+    assert.equal(placed.ok, false);
+    if (!placed.ok) assert.equal(placed.reason, "consent_later");
+  });
+
   it("does not keep summary, quote, or transcript until consent is given", async () => {
     await seed();
     await query(`update parents set consent_status = 'pending', consent_at = null where id = 'parent_kamla'`);
