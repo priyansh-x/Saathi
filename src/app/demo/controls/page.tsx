@@ -3,6 +3,7 @@ import { ExamplePill } from "@/components/family/chrome";
 import { resetToday, runMockScenario, type MockScenario } from "@/lib/bolna/mock-run";
 import { EXAMPLE_TOKEN, isMockBolna, isMockWhatsapp, killSwitchOn } from "@/lib/config";
 import { recordConsent } from "@/lib/consent";
+import { resolveAlert } from "@/lib/db/queries";
 import { WALK_COPY, exampleWhatsappPreviews } from "@/lib/demo-walk";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
@@ -10,11 +11,15 @@ import { advanceLadder } from "@/lib/ladder";
 import { ackAlert } from "@/lib/whatsapp/ack";
 import { recentOutbound } from "@/lib/whatsapp/send";
 
-function Preview({ title, body }: { title: string; body: string }) {
+function PhonePreview({ title, body }: { title: string; body: string }) {
   return (
-    <article className="rounded-2xl border border-border bg-card px-4 py-3 text-sm">
-      <p className="text-xs font-medium text-muted-foreground">{title}</p>
-      <p className="mt-2 whitespace-pre-wrap">{body}</p>
+    <article className="overflow-hidden rounded-[28px] border border-border bg-[#111] p-1.5">
+      <div className="overflow-hidden rounded-[22px] bg-[#efe7dc]">
+        <p className="bg-[#075e54] px-3 py-2 text-[12px] font-medium text-white">{title} · EXAMPLE</p>
+        <div className="p-3">
+          <p className="rounded-[14px] rounded-tl-[4px] bg-white px-3 py-2 text-sm whitespace-pre-wrap">{body}</p>
+        </div>
+      </div>
     </article>
   );
 }
@@ -33,7 +38,8 @@ export default async function DemoControlsPage({
   if (!data) notFound();
   const parentId = data.parent.id;
   const callId = data.call?.id ?? "";
-  const actor = data.child?.first_name || data.child?.full_name || "family";
+  const neighbour = data.neighbour?.first_name || data.neighbour?.full_name || "Sunita";
+  const child = data.child?.first_name || data.child?.full_name || "family";
   const openAlertId = data.actAlerts[0]?.id ?? "";
   const outbound = await recentOutbound(parentId, 8);
   const previews = exampleWhatsappPreviews();
@@ -53,10 +59,16 @@ export default async function DemoControlsPage({
     redirect(`/demo/controls?lang=${lang}&walk=red&step=played`);
   }
 
-  async function ackChest() {
+  async function neighbourGoing() {
     "use server";
-    if (openAlertId) await ackAlert(openAlertId, actor);
-    redirect(`/demo/controls?lang=${lang}&walk=red&step=acked`);
+    if (openAlertId) await ackAlert(openAlertId, neighbour);
+    redirect(`/demo/controls?lang=${lang}&walk=red&step=going`);
+  }
+
+  async function maaOk() {
+    "use server";
+    if (openAlertId) await resolveAlert(openAlertId, child, "resolved");
+    redirect(`/demo/controls?lang=${lang}&walk=red&step=ok`);
   }
 
   async function startMissed() {
@@ -81,7 +93,7 @@ export default async function DemoControlsPage({
 
   async function mockAck() {
     "use server";
-    if (openAlertId) await ackAlert(openAlertId, actor);
+    if (openAlertId) await ackAlert(openAlertId, child);
     redirect(`/d/${EXAMPLE_TOKEN}/alerts/${openAlertId}?lang=${lang}`);
   }
 
@@ -103,14 +115,14 @@ export default async function DemoControlsPage({
         <a className="underline" href={desk}>
           {t.openToday}
         </a>
-        {openAlertId ? (
-          <>
-            {" · "}
-            <a className="underline" href={`/d/${EXAMPLE_TOKEN}/alerts/${openAlertId}?lang=${lang}`}>
-              {t.openAlerts}
-            </a>
-          </>
-        ) : null}
+        {" · "}
+        <a className="underline" href={`/d/${EXAMPLE_TOKEN}/alerts?lang=${lang}`}>
+          {t.openAlerts}
+        </a>
+        {" · "}
+        <a className="underline" href={`/d/${EXAMPLE_TOKEN}/history?lang=${lang}`}>
+          {t.openHistory}
+        </a>
       </p>
       <form action={reset} className="mt-6">
         <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border">
@@ -127,25 +139,33 @@ export default async function DemoControlsPage({
           </button>
         </form>
         {walk === "red" && step === "played" ? <p className="mt-3 text-sm">{t.doneRed}</p> : null}
-        {walk === "red" && step === "acked" ? <p className="mt-3 text-sm">{t.doneAck}</p> : null}
+        {walk === "red" && step === "going" ? <p className="mt-3 text-sm">{t.doneNeighbour}</p> : null}
+        {walk === "red" && step === "ok" ? <p className="mt-3 text-sm">{t.doneOk}</p> : null}
         <div className="mt-4 space-y-3">
           <p className="text-sm font-medium">{t.preview}</p>
-          <Preview title={`${t.child} · EN`} body={previews.safety_en} />
-          <Preview title={`${t.child} · हिं`} body={previews.safety_hi} />
-          <Preview title={`${t.neighbour} · हिं`} body={previews.responder_hi} />
+          <PhonePreview title={`${t.child} · EN`} body={previews.safety_en} />
+          <PhonePreview title={`${t.child} · हिं`} body={previews.safety_hi} />
+          <PhonePreview title={`${t.neighbour} · हिं`} body={previews.responder_hi} />
         </div>
         {isMockWhatsapp() && openAlertId ? (
-          <form action={ackChest} className="mt-4">
+          <form action={neighbourGoing} className="mt-4">
             <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border">
-              {t.redAck}
+              {t.redNeighbour}
             </button>
           </form>
         ) : null}
-        {walk === "red" && step === "acked" ? (
+        {walk === "red" && (step === "going" || step === "ok") ? (
           <div className="mt-4 space-y-3">
-            <Preview title={t.ack} body={previews.ack_en} />
-            <Preview title={`${t.ack} · हिं`} body={previews.ack_hi} />
+            <PhonePreview title={t.ack} body={previews.ack_en} />
+            <PhonePreview title={`${t.ack} · हिं`} body={previews.ack_hi} />
           </div>
+        ) : null}
+        {isMockWhatsapp() && openAlertId && walk === "red" && step === "going" ? (
+          <form action={maaOk} className="mt-4">
+            <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-white">
+              {t.redOk}
+            </button>
+          </form>
         ) : null}
       </section>
 
@@ -158,35 +178,20 @@ export default async function DemoControlsPage({
           </button>
         </form>
         <form action={jumpLadder} className="mt-3 space-y-3">
-          <button
-            type="submit"
-            name="elapsed"
-            value="30"
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border"
-          >
+          <button type="submit" name="elapsed" value="30" className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border">
             {t.missedSoft}
           </button>
-          <button
-            type="submit"
-            name="elapsed"
-            value="45"
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border"
-          >
+          <button type="submit" name="elapsed" value="45" className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border">
             {t.missedLast}
           </button>
-          <button
-            type="submit"
-            name="elapsed"
-            value="60"
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border"
-          >
+          <button type="submit" name="elapsed" value="60" className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border">
             {t.missedEsc}
           </button>
         </form>
         {walk === "missed" && step === "60" ? <p className="mt-3 text-sm">{t.doneMissed}</p> : null}
         <div className="mt-4 space-y-3">
-          <Preview title={`${t.child} · ${t.preview}`} body={previews.missed_soft_en} />
-          <Preview title={`${t.neighbour} · ${t.preview}`} body={previews.neighbour_missed_en} />
+          <PhonePreview title={`${t.child} · ${t.preview}`} body={previews.missed_soft_en} />
+          <PhonePreview title={`${t.neighbour} · ${t.preview}`} body={previews.neighbour_missed_en} />
         </div>
       </section>
 
