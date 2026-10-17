@@ -1,90 +1,67 @@
-The marketing site lives in [`landing/`](./landing/) (`npm run dev` there on port 43211).
-
 # Saathi
 
-Working name for a morning phone call to an Indian parent, on the phone they already own. The child gets a short WhatsApp briefing. Companionship and reminders — never diagnosis. Easy to rename via `PRODUCT_NAME`.
+Saathi is a morning phone call for an Indian parent, on the phone they already own. The child gets a short WhatsApp briefing. Companionship and reminders — never diagnosis.
 
-Built for the Bolna × YC Voice AI Buildathon. Product specs in [docs/saathi/](./docs/saathi/) win when they disagree with older notes.
+Two apps live in this repo:
 
-## Phase 1 (this slice)
+| App | Directory | Dev server |
+| --- | --- | --- |
+| Family desk | repo root | `npm run dev` → http://127.0.0.1:43147 |
+| Marketing landing | `landing/` | `cd landing && npm run dev` → http://127.0.0.1:43211 |
 
-Family web view from a magic link, seeded Postgres-shaped data, product chrome.
-
-| Route | Job |
-| --- | --- |
-| `/` | One screen, one CTA |
-| `/onboard` | Household form + consent |
-| `/d/example-kamla` | Today |
-| `/d/example-kamla/history` | 7 / 30 calendar |
-| `/d/example-kamla/alerts` | Alert list + detail |
-| `/d/example-kamla/settings` | Read-only + pause |
-| `/demo/call` | Offline scripted call (judge fallback) |
-| `/demo/controls` | Two-minute EXAMPLE walks: red flag and missed ladder |
+EXAMPLE household: open `/d/example-kamla`. Fictional only, labelled EXAMPLE. Specs in [`docs/saathi/`](./docs/saathi/).
 
 ## Run locally
 
 ```bash
 npm install
 cp .env.example .env.local
-npm run dev          # http://127.0.0.1:43147
-npm run seed         # reset the Kamla Sharma example
-npm run lint
-```
-
-No Bolna or WhatsApp keys needed. Local data is PGlite at `.data/saathi`. Set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` later to swap the driver.
-
-## Env (Phase 1)
-
-`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `MAGIC_LINK_SECRET`, `PRODUCT_NAME`. Names only in `.env.example`.
-
-## Demo data
-
-Fictional only, labelled **EXAMPLE DATA**: Kamla Sharma (Delhi), Rohit, neighbour Sunita ji. Do not call a real parent without Priyansh’s go-ahead.
-
-## Phase 2 (mock Bolna)
-
-`MOCK_BOLNA=1` by default. No real dial.
-
-```bash
+npm run dev          # family desk, port 43147
+npm run seed         # reset Kamla Sharma EXAMPLE
 npm test
-npm run bolna:sync    # dry-run without BOLNA_API_KEY
+npm run lint
+
+cd landing && npm install && npm run dev   # landing, port 43211
 ```
 
-Settings → mock buttons: good morning, chest-pain line, late extraction.  
-Or `POST /api/demo/bolna` with `{ "scenario": "chest" }`.
+Local data is PGlite at `.data/saathi`.
 
-Real `POST /call` needs `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `MOCK_BOLNA=0`, and the number on `ALLOWED_PHONE_NUMBERS`. `npx tsx scripts/bolna/test-call.ts +91XXXXXXXXXX` is a dry run unless `--yes` is passed and mocks are off. Do not run a live call unless Priyansh says go. Trial notes stay empty until then.
+## Mocks and allowlist
 
-## Phase 3 (mock WhatsApp)
+`MOCK_BOLNA=1` and `MOCK_WHATSAPP=1` by default. Nothing dials or sends on install, deploy, or `npm run dev`. Cron is authenticated and **not** enabled on deploy.
 
-`MOCK_WHATSAPP=1` by default. No Meta send.
+Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`. Kill switch: `SAATHI_KILL_SWITCH=1`.
 
-After a mock completed call, Settings shows the logged briefing. Chest-pain also logs safety + neighbour responder. **I'm on it** on Alert detail (or Settings) is first-ack-wins and broadcasts the ack update.
+## Env (names only)
 
-`WHATSAPP_TEMPLATES_APPROVED=0` uses `hello_world` + email fallback for real sends. Priyansh submits Utility templates. Live inbound checks `X-Hub-Signature-256` against `WHATSAPP_APP_SECRET`. `POST /api/demo/whatsapp/inbound` is a fixture button tap (mock only).
+| Name | Default | Used for |
+| --- | --- | --- |
+| `MOCK_BOLNA` | `1` | Mock dials. Never set to `0` unless Priyansh says go. |
+| `MOCK_WHATSAPP` | `1` | Mock WhatsApp. Same rule. |
+| `SAATHI_KILL_SWITCH` | `0` | Stops cron, dials, and sends. |
+| `ALLOWED_PHONE_NUMBERS` | empty | Live allowlist. |
+| `ALLOWED_EMAILS` | empty | Live email fallback allowlist. |
+| `BOLNA_API_KEY` / `BOLNA_AGENT_ID` / `BOLNA_BASE_URL` | empty | Live Bolna. |
+| `SAATHI_TOOL_TOKEN` | empty (dev fallback when mocked) | Mid-call tools. |
+| `BOLNA_WEBHOOK_SECRET` | empty | Live Bolna webhook. |
+| `CRON_SECRET` | empty (dev fallback when mocked) | `POST /api/cron/tick`. |
+| `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_VERIFY_TOKEN` / `WHATSAPP_APP_SECRET` | empty | Live WhatsApp. |
+| `WHATSAPP_TEMPLATES_APPROVED` | `0` | Real templates vs `hello_world`. |
+| `PUBLIC_BASE_URL` | `http://127.0.0.1:43147` | Magic links and tool URLs. |
+| `PRODUCT_NAME` | `Saathi` | Rename without a rewrite. |
+| `MAGIC_LINK_SECRET` | empty | Desk tokens. |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | empty | Optional later driver. |
 
-## Phase 4 (ladder + pilot)
+Full list: [`.env.example`](./.env.example). Never commit values.
 
-Settings → **Missed-call ladder** walks T / +10 / +25 / +30 soft notice / +45 / +60 neighbour+child if nobody acked.
+## First real call (runbook)
 
-`SAATHI_KILL_SWITCH=1` stops cron, dials, and sends. Real calls need consent (child written + Maa's haan). **Delete all of Maa's data** wipes the household.
+Nothing reaches a real person without Priyansh's explicit go-ahead.
 
-## UX round 1 (PR D)
+1. Keep `MOCK_BOLNA=1` and `MOCK_WHATSAPP=1`. Walk `/demo/controls` and `/d/example-kamla`.
+2. Put **only** Priyansh's numbers on `ALLOWED_PHONE_NUMBERS` (and emails on `ALLOWED_EMAILS`).
+3. Dry run, no `--yes`: `npx tsx scripts/bolna/test-call.ts +91XXXXXXXXXX`
+4. Stop. Do not pass `--yes`. Do not set `MOCK_*=0`. Do not enable cron.
+5. A live `--yes` call happens only when Priyansh is on the line and says go.
 
-Settings is family-only: call, medicines, family, pause, privacy, about. Delete needs a confirm screen. Mock Bolna, outbound log, kill-switch and “Record haan” live at `/demo/controls` (404 when mocks are off). `en` and `hi` share the same keys. `<html lang>` follows the cookie.
-
-## UX round 1 (PR B)
-
-Alerts list open first. Each row has a worded pill: Open / someone is going / Maa is OK / False alarm. Detail has a 3-step tracker, “I'm on it”, “Maa is OK”, and False alarm. Ack uses the real child name and time.
-
-## UX round 1 (PR C)
-
-Tab bar is fixed to the bottom with a safe-area inset. History has a Mon–Sun calendar, a visible legend, medicine counts for every tablet, and a stored-mood strip (no quote keyword matching). Call detail has a dated header, summary bullets, one medicines card, her words, and a collapsed transcript. EN↔हिं keeps `days` and `from`.
-
-## UX round 1 (PR A)
-
-Today is one hero card: scheduled / trying / good / look / act / paused / skipped. A morning with no call yet stays grey "Later today", never amber. Medicines are one card. Settings → Missed shows a trying step list (no "ladder" / "T" / "+25").
-
-## Later
-
-See `prd.md` and `docs/saathi/`. Live Bolna/WhatsApp still need Priyansh's allowlist and keys.
+If you are not Priyansh, you are done at step 3.
