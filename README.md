@@ -37,7 +37,16 @@ npm run build
 
 ## Current slice
 
-Repo and docs are in place. The web app is a scaffold with shadcn primitives. Implement against `prd.md` §10 and `docs/user-flows.md` — do not start from a blank product idea.
+Walkable product (scripted voice, not live Bolna yet):
+
+1. `/` — what it is
+2. `/onboard` — one household + consent
+3. `/call` — answer as the parent, or let it ring
+4. `/family` — OK / Watch / Emergency / Missed briefings
+
+```bash
+npm run dev    # http://127.0.0.1:43147
+```
 
 ## Demo data
 

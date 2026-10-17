@@ -48,3 +48,4 @@ export type CallRecord = {
 
 export const STORAGE_HOUSEHOLD = "checkin-household";
 export const STORAGE_LAST_CALL = "checkin-last-call";
+export const STORAGE_CALL_LOG = "checkin-call-log";
