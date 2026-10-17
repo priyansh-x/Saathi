@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { AlertRow, CallRow, DoseLog } from "./db/types";
-import { dedupeDoses, todayStatus } from "./today";
+import { dedupeDoses, humanQuote, todayStatus } from "./today";
 
 function call(status: CallRow["status"]): CallRow {
   return {
@@ -151,9 +151,21 @@ describe("todayStatus", () => {
     );
   });
 
-  it("dedupes medicine rows by medicine and slot", () => {
+  it("dedupes medicine rows by medicine id", () => {
     const rows = dedupeDoses([dose("not_asked", "a"), dose("taken", "b")]);
     assert.equal(rows.length, 1);
     assert.equal(rows[0]?.status, "taken");
+  });
+
+  it("never treats a system miss line as her words", () => {
+    assert.equal(
+      humanQuote({
+        ...actAlert,
+        category: "MISSED",
+        source: "ladder",
+        quote: "No answer after the morning ladder.",
+      }),
+      null,
+    );
   });
 });

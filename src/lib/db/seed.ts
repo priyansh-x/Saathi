@@ -199,7 +199,7 @@ async function seedMissedDay(day: string, callId: string, fullLadder: boolean, i
     callId,
     "MISSED",
     "act",
-    "No answer after the morning ladder.",
+    "Couldn't reach Maa after the morning calls.",
     istStamp(day, 9, 30),
     acked ? istStamp(day, 9, 40) : null,
     acked ? "Rohit" : null,

@@ -53,8 +53,7 @@ export function statusTone(state: DayState): "good" | "look" | "act" | "neutral"
 export function dedupeDoses(doses: DoseLog[]) {
   const seen = new Map<string, DoseLog>();
   for (const dose of doses) {
-    const slot = dose.meal || "morning";
-    const key = `${dose.medicine_id}::${slot}`;
+    const key = dose.medicine_id || dose.name || dose.id;
     const prev = seen.get(key);
     if (!prev || (dose.id && prev.id && dose.id > prev.id)) seen.set(key, dose);
   }
@@ -66,7 +65,7 @@ export function humanQuote(alert: AlertRow | null) {
   if (alert.source === "ladder" || alert.category === "MISSED") return null;
   const q = alert.quote?.trim();
   if (!q) return null;
-  if (q.toLowerCase().includes("ladder") || q.toLowerCase().includes("no answer after")) return null;
+  if (/ladder|सीढ़ी|\bno answer after\b/i.test(q)) return null;
   return q;
 }
 

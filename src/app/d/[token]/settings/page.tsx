@@ -147,7 +147,7 @@ export default async function SettingsPage({
             value="missed"
             className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border"
           >
-            {lang === "hi" ? "छूटी कॉल की सीढ़ी" : "Missed-call ladder"}
+            {lang === "hi" ? "सुबह कॉल नहीं उठी" : "Missed morning"}
           </button>
           <button
             type="submit"

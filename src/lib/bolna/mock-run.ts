@@ -10,10 +10,13 @@ async function resetToday(parentId: string) {
   const day = istDayKey();
   const like = `${day}%`;
   await query(
-    `delete from alert_events where alert_id in (select id from alerts where parent_id = $1 and created_at like $2)`,
+    `delete from alert_events where alert_id in (select id from alerts where parent_id = $1 and (created_at like $2 or resolved_at is null))`,
     [parentId, like],
   );
-  await query(`delete from alerts where parent_id = $1 and created_at like $2`, [parentId, like]);
+  await query(`delete from alerts where parent_id = $1 and (created_at like $2 or resolved_at is null)`, [
+    parentId,
+    like,
+  ]);
   await query(
     `delete from call_attempts where call_id in (select id from calls where parent_id = $1 and started_at like $2)`,
     [parentId, like],
