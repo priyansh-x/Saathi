@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "../db/client";
-import { ensureSeed } from "../db/seed";
+import { seed } from "../db/seed";
 import { runMockScenario } from "../bolna/mock-run";
 import { ackAlert } from "./ack";
 import { gateOutbound } from "../outbound";
@@ -12,7 +12,7 @@ process.env.SAATHI_KILL_SWITCH = "0";
 process.env.WHATSAPP_TEMPLATES_APPROVED = "1";
 
 before(async () => {
-  await ensureSeed();
+  await seed();
 });
 
 after(async () => {

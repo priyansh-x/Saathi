@@ -129,7 +129,7 @@ export async function advanceLadder(args: {
         call_sid: args.callId,
         parent_id: args.parentId,
         category: "MISSED",
-        quote: "No answer after the morning ladder.",
+        quote: "Couldn't reach Maa after the morning calls.",
         source: "ladder",
       });
       await recordAttempt(args.callId, step.offset, "escalated");

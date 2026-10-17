@@ -16,6 +16,14 @@ npm run lint
 
 New env names go in `.env.example` with no values.
 
+## PR A test plan (Today)
+
+- Before 8:40 IST with no call today: grey "Later today", not amber.
+- Settings → Missed: hero is Needs a look + step times; page never says "Call answered" or "ladder".
+- Settings → Good morning: one Amlodipine row; quote once.
+- Open chest-pain seed: hero is Act now with her quote; no Act-now banner above it.
+- `npm test` includes `todayStatus` states.
+
 ## Phase 4 test plan
 
 - `npm test` includes ladder, busy≠unreachable, consent gate, kill switch, delete.

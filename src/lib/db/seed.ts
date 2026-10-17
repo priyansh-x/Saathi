@@ -127,8 +127,14 @@ export async function seed() {
     }
 
     const skipped = slot === 2 && !isToday;
-    const alertDay = slot === 5 || isToday;
-    await seedCompletedDay(day, callId, { skipped, alertDay, openAlert: isToday });
+    const variant = isToday ? "chest" : slot === 5 ? (i % 2 === 0 ? "fall" : "false") : slot === 1 ? "missed_med" : "ok";
+    const alertDay = variant !== "ok";
+    await seedCompletedDay(day, callId, {
+      skipped,
+      alertDay: alertDay || isToday,
+      openAlert: isToday,
+      variant: isToday ? "chest" : variant,
+    });
   }
 }
 
@@ -193,7 +199,7 @@ async function seedMissedDay(day: string, callId: string, fullLadder: boolean, i
     callId,
     "MISSED",
     "act",
-    "No answer after the morning ladder.",
+    "Couldn't reach Maa after the morning calls.",
     istStamp(day, 9, 30),
     acked ? istStamp(day, 9, 40) : null,
     acked ? "Rohit" : null,
@@ -227,23 +233,40 @@ async function seedMissedDay(day: string, callId: string, fullLadder: boolean, i
 async function seedCompletedDay(
   day: string,
   callId: string,
-  opts: { skipped: boolean; alertDay: boolean; openAlert: boolean },
+  opts: {
+    skipped: boolean;
+    alertDay: boolean;
+    openAlert: boolean;
+    variant?: "ok" | "chest" | "fall" | "false" | "missed_med";
+  },
 ) {
-  const quote = opts.alertDay
-    ? "Seene mein dard ho raha hai."
-    : opts.skipped
-      ? "Goli bhool gayi. Abhi leti hoon."
-      : "Neend theek thi.";
-  const summaryEn = opts.skipped
-    ? "Kamla forgot the morning tablet and said she would take it now."
-    : opts.alertDay
-      ? "Kamla said she has pain in her chest."
-      : "Kamla slept well and took Amlodipine.";
-  const summaryHi = opts.skipped
-    ? "गोली भूल गईं।"
-    : opts.alertDay
-      ? "सीने में दर्द बताया।"
-      : "नींद ठीक थी, गोली ले ली।";
+  const variant = opts.variant ?? (opts.alertDay ? "chest" : opts.skipped ? "ok" : "ok");
+  const quote =
+    variant === "chest"
+      ? "Seene mein dard ho raha hai."
+      : variant === "fall"
+        ? "Bathroom mein phisal gayi."
+        : opts.skipped || variant === "missed_med"
+          ? "Goli bhool gayi. Abhi leti hoon."
+          : "Neend theek thi.";
+  const summaryEn =
+    variant === "fall"
+      ? "Kamla said she slipped in the bathroom."
+      : variant === "false"
+        ? "A scare that the family later marked as a false alarm."
+        : opts.skipped || variant === "missed_med"
+          ? "Kamla forgot the morning tablet and said she would take it now."
+          : variant === "chest"
+            ? "Kamla said she has pain in her chest."
+            : "Kamla slept well and took Amlodipine.";
+  const summaryHi =
+    variant === "fall"
+      ? "बाथरूम में फिसल गईं।"
+      : opts.skipped || variant === "missed_med"
+        ? "गोली भूल गईं।"
+        : variant === "chest"
+          ? "सीने में दर्द बताया।"
+          : "नींद ठीक थी, गोली ले ली।";
 
   await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
     callId,
@@ -313,21 +336,26 @@ async function seedCompletedDay(
       true,
     ]);
   }
-  if (!opts.alertDay) return;
+  if (variant === "ok") return;
+  const isFalseAlarm = opts.variant === "false";
   const alertId = `alert_${day}`;
+  const category = variant === "fall" ? "FALL" : variant === "missed_med" ? "MISSED_MED" : isFalseAlarm ? "FALSE" : "EMERGENCY";
+  const level = variant === "missed_med" ? "look" : "act";
+  const resolved = !opts.openAlert || isFalseAlarm;
+  const acked = resolved || isFalseAlarm;
   await query(`insert into alerts values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, [
     alertId,
     "parent_kamla",
     callId,
-    "EMERGENCY",
-    "act",
-    quote,
+    category,
+    level,
+    isFalseAlarm || variant === "missed_med" ? "" : quote,
     istStamp(day, 8, 33),
-    opts.openAlert ? null : istStamp(day, 8, 40),
-    opts.openAlert ? null : "Rohit",
-    opts.openAlert ? null : istStamp(day, 9, 10),
+    acked ? istStamp(day, 8, 40) : null,
+    acked ? "Rohit" : null,
+    resolved ? istStamp(day, 9, 10) : null,
     false,
-    "mid_call",
+    isFalseAlarm ? "false_alarm" : "mid_call",
     true,
   ]);
   await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [

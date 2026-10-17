@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "./db/client";
-import { ensureSeed } from "./db/seed";
+import { seed } from "./db/seed";
 import { advanceLadder } from "./ladder";
 import { placeMorningCall } from "./bolna/place";
 import { deleteFamily } from "./delete-family";
@@ -15,7 +15,7 @@ process.env.MOCK_WHATSAPP = "1";
 process.env.SAATHI_KILL_SWITCH = "0";
 
 before(async () => {
-  await ensureSeed();
+  await seed();
 });
 
 after(async () => {
@@ -24,7 +24,7 @@ after(async () => {
 
 describe("missed ladder", () => {
   it("walks T / +10 / +25 / +30 / +45 / +60 and alerts if nobody acked", async () => {
-    const result = await runMockScenario("missed");
+    const result = await runMockScenario("missed_full");
     assert.ok("actions" in result);
     if ("actions" in result) {
       assert.ok(result.actions.includes("soft_notice"));
@@ -76,6 +76,7 @@ describe("pilot gates", () => {
   it("refuses a real dial without consent", async () => {
     process.env.MOCK_BOLNA = "0";
     process.env.SAATHI_KILL_SWITCH = "0";
+    await seed();
     const ok = await hasPilotConsent("parent_kamla");
     assert.equal(ok, true);
     await query(`delete from consents where parent_id = 'parent_kamla'`);

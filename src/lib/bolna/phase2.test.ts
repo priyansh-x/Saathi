@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
-import { ensureSeed } from "../db/seed";
+import { seed } from "../db/seed";
 import { closeDb, query } from "../db/client";
 import { logMedicine, raiseAlert, saveMemoryNote } from "./tools";
 import { processBolnaWebhook } from "./webhook";
@@ -11,7 +11,7 @@ process.env.MOCK_BOLNA = "1";
 process.env.SAATHI_KILL_SWITCH = "0";
 
 before(async () => {
-  await ensureSeed();
+  await seed();
 });
 
 after(async () => {

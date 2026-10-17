@@ -4,10 +4,30 @@ import { query } from "@/lib/db/client";
 import { advanceLadder } from "@/lib/ladder";
 import { istDayKey, istStamp } from "@/lib/time";
 
-export type MockScenario = "good" | "chest" | "late" | "replay" | "missed" | "skip";
+export type MockScenario = "good" | "chest" | "late" | "replay" | "missed" | "missed_full" | "skip";
+
+async function resetToday(parentId: string) {
+  const day = istDayKey();
+  const like = `${day}%`;
+  await query(
+    `delete from alert_events where alert_id in (select id from alerts where parent_id = $1 and (created_at like $2 or resolved_at is null))`,
+    [parentId, like],
+  );
+  await query(`delete from alerts where parent_id = $1 and (created_at like $2 or resolved_at is null)`, [
+    parentId,
+    like,
+  ]);
+  await query(
+    `delete from call_attempts where call_id in (select id from calls where parent_id = $1 and started_at like $2)`,
+    [parentId, like],
+  );
+  await query(`delete from dose_logs where parent_id = $1 and schedule_date = $2`, [parentId, day]);
+  await query(`delete from calls where parent_id = $1 and started_at like $2`, [parentId, like]);
+}
 
 export async function runMockScenario(scenario: MockScenario, parentId = "parent_kamla") {
   const executionId = `mock_${scenario}_${Date.now()}`;
+  await resetToday(parentId);
   if (scenario === "good") {
     await logMedicine({
       call_sid: executionId,
@@ -127,7 +147,7 @@ export async function runMockScenario(scenario: MockScenario, parentId = "parent
     );
   }
 
-  if (scenario === "missed") {
+  if (scenario === "missed" || scenario === "missed_full") {
     const day = istDayKey();
     await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
       executionId,
@@ -145,7 +165,11 @@ export async function runMockScenario(scenario: MockScenario, parentId = "parent
       executionId,
       true,
     ]);
-    return advanceLadder({ parentId, callId: executionId, elapsedMin: 60 });
+    return advanceLadder({
+      parentId,
+      callId: executionId,
+      elapsedMin: scenario === "missed_full" ? 60 : 20,
+    });
   }
 
   const replayId = `mock_replay_${Date.now()}`;

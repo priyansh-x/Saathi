@@ -1,10 +1,21 @@
 import Link from "next/link";
+import { AlertTriangle, Check, Clock, Minus, Pause } from "lucide-react";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
-import { attemptsFor } from "@/lib/db/queries";
+import { setPaused } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
-import { statusClasses, statusLabel } from "@/lib/status";
-import { formatIstTime, formatWhen } from "@/lib/time";
+import { redirect } from "next/navigation";
+import { resolveAlert } from "@/lib/db/queries";
+import {
+  doseMark,
+  heroCopy,
+  humanQuote,
+  reachSteps,
+  slotLabel,
+  type DayState,
+} from "@/lib/today";
+import { weekdayShort } from "@/lib/time";
+import { statusClasses } from "@/lib/status";
 
 export default async function TodayPage({
   params,
@@ -18,8 +29,43 @@ export default async function TodayPage({
   const data = await loadFamily(token);
   if (!data) return <ExpiredLink />;
   const t = messages[lang];
-  const attempts = data.call ? await attemptsFor(data.call.id) : [];
   const tel = data.parent.phone.replace(/\s/g, "");
+  const neighbourTel = data.neighbour?.phone.replace(/\s/g, "") ?? "";
+  const state = data.status as DayState;
+  const alert = data.actAlerts[0] ?? null;
+  const copy = heroCopy({
+    state,
+    lang,
+    callTime: data.parent.call_time,
+    call: data.call,
+    doses: data.doses,
+    alert,
+    attempts: data.attempts,
+    neighbourName: data.neighbour?.first_name || "Sunita",
+    ackedBy: alert?.acked_by ?? null,
+    ackedAt: alert?.acked_at ?? null,
+  });
+  const steps = reachSteps({ attempts: data.attempts, plan: data.plan, callTime: data.parent.call_time });
+  const quote = data.call?.mood_quote;
+  const quoteInHero = Boolean(humanQuote(alert) && state === "act");
+  const showQuote = quote && !quoteInHero;
+  const weekDays = data.week.calls;
+  const parentId = data.parent.id;
+  const updatedAt = alert?.created_at || data.call?.ended_at || data.call?.started_at;
+
+  async function resume() {
+    "use server";
+    await setPaused(parentId, false);
+    redirect(`/d/${token}?lang=${lang}`);
+  }
+
+  async function markOk() {
+    "use server";
+    if (alert) await resolveAlert(alert.id);
+    redirect(`/d/${token}?lang=${lang}`);
+  }
+
+  const Icon = state === "paused" ? Pause : state === "scheduled" || state === "skipped" ? Clock : state === "good" ? Check : state === "act" ? AlertTriangle : AlertTriangle;
 
   return (
     <FamilyFrame
@@ -28,83 +74,162 @@ export default async function TodayPage({
       example={data.parent.is_example}
       alerts={data.actAlerts}
       active="today"
+      updatedAt={updatedAt}
     >
-      <section className={`rounded-2xl px-4 py-4 ${statusClasses(data.status)}`}>
-        <p className="tabular text-sm opacity-80">{formatIstTime(data.parent.call_time)}</p>
-        <h1 className="mt-1 text-2xl font-semibold">{statusLabel(data.status, lang)}</h1>
-        <p className="mt-2 text-sm">
-          {data.call?.status === "completed"
-            ? lang === "hi"
-              ? `${data.parent.first_name} से बात हुई।`
-              : `Saathi spoke with ${data.parent.first_name}.`
-            : data.call?.status === "missed"
-              ? t.missed
-              : t.emptyToday}
+      <section className={`rounded-2xl px-4 py-4 ${statusClasses(state)}`}>
+        <p className="flex items-center gap-2 text-sm font-medium">
+          <Icon className="size-4" aria-hidden />
+          <span>{copy.chip}</span>
         </p>
+        <h1 className={`mt-2 text-xl font-semibold leading-snug ${lang === "hi" ? "font-devanagari" : ""}`}>
+          {copy.headline}
+        </h1>
+        {copy.sub ? <p className="mt-2 text-sm opacity-90">{copy.sub}</p> : null}
+
+        {state === "trying" ? (
+          <ol className="mt-3 space-y-1.5 text-sm">
+            {steps.map((step) => {
+              const mark = step.done ? (step.ok ? "✓" : "✕") : "";
+              const label =
+                step.kind === "neighbour"
+                  ? t.askNeighbourCheck
+                  : step.kind === "next"
+                    ? t.nextTry
+                    : step.atMin === 0
+                      ? t.calledNoAnswer
+                      : t.calledAgain;
+              return (
+                <li
+                  key={step.atMin}
+                  className={`tabular ${step.current ? "font-semibold" : step.done ? "" : "opacity-60"}`}
+                >
+                  {step.clock} {label} {mark}
+                </li>
+              );
+            })}
+          </ol>
+        ) : null}
+
+        <div className="mt-4 space-y-2">
+          {state === "act" ? (
+            <Link
+              href={`/d/${token}/alerts/${alert?.id}?lang=${lang}`}
+              className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-base text-white"
+            >
+              {t.openAlert}
+            </Link>
+          ) : state === "paused" ? (
+            <form action={resume}>
+              <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-base text-white">
+                {t.resumeCalls}
+              </button>
+            </form>
+          ) : state === "scheduled" ? null : (
+            <a
+              href={`tel:${tel}`}
+              className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-base text-white"
+            >
+              {t.callMaa}
+            </a>
+          )}
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {state === "scheduled" && data.yesterday ? (
+              <Link href={`/d/${token}/calls/${data.yesterday.id}?lang=${lang}`} className="underline-offset-2 hover:underline">
+                {t.seeYesterday}
+              </Link>
+            ) : null}
+            {state === "good" || state === "look" ? (
+              data.call ? (
+                <Link href={`/d/${token}/calls/${data.call.id}?lang=${lang}`} className="underline-offset-2 hover:underline">
+                  {t.seeTodaysCall}
+                </Link>
+              ) : null
+            ) : null}
+            {state === "trying" ? (
+              <>
+                <form action={markOk}>
+                  <button type="submit" className="underline-offset-2 hover:underline">
+                    {t.shesOk}
+                  </button>
+                </form>
+                {neighbourTel ? (
+                  <a href={`tel:${neighbourTel}`} className="underline-offset-2 hover:underline">
+                    {t.askNeighbourNow}
+                  </a>
+                ) : null}
+              </>
+            ) : null}
+            {state === "act" ? (
+              <a href={`tel:${tel}`} className="underline-offset-2 hover:underline">
+                {t.callMaa}
+              </a>
+            ) : null}
+          </div>
+        </div>
       </section>
 
+      {state === "scheduled" && data.yesterday ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          {lang === "hi" ? data.yesterday.summary_hi : data.yesterday.summary_en}
+        </p>
+      ) : null}
+
       <ul className="mt-5 space-y-3">
-        <li className="rounded-2xl border border-border bg-card px-4 py-3">
-          <p className="text-sm text-muted-foreground">
-            {data.call?.status === "completed" ? t.answered : data.call ? t.missed : t.notYet}
-          </p>
-          <p className="tabular mt-1">{formatIstTime(data.parent.call_time)}</p>
-        </li>
-        {attempts.length > 0 && (data.call?.status === "missed" || attempts.length > 1) ? (
+        {data.doses.length > 0 ? (
           <li className="rounded-2xl border border-border bg-card px-4 py-3">
-            <p className="text-sm text-muted-foreground">{t.ladder}</p>
-            <ol className="mt-2 space-y-1 text-sm">
-              {attempts.map((a) => (
-                <li key={a.id} className="tabular">
-                  {a.offset_min === 0 ? "T" : `+${a.offset_min}`} · {formatWhen(a.attempted_at)} · {a.result}
-                  {a.result === "escalated" ? ` · ${t.neighbourAsked}` : ""}
+            <p className="text-sm text-muted-foreground">{t.medicinesToday}</p>
+            <ul className="mt-2 space-y-2">
+              {data.doses.map((dose) => (
+                <li key={`${dose.medicine_id}-${dose.meal}`} className="flex items-baseline justify-between gap-3">
+                  <span>
+                    {dose.name}{" "}
+                    <span className="text-sm text-muted-foreground">{slotLabel(dose.meal, lang)}</span>
+                  </span>
+                  <span className="text-sm">{doseMark(dose.status, lang)}</span>
                 </li>
               ))}
-            </ol>
+            </ul>
           </li>
         ) : null}
-        {data.doses.map((dose) => (
-          <li key={dose.medicine_id || dose.id} className="rounded-2xl border border-border bg-card px-4 py-3">
-            <p>
-              {dose.name} {dose.dose}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {dose.status === "taken"
-                ? `${t.taken} ✓`
-                : dose.status === "not_taken"
-                  ? `${t.notTaken} –`
-                  : dose.status === "not_sure"
-                    ? `${t.notSure} ?`
-                    : `${t.notAsked} ·`}
-            </p>
-          </li>
-        ))}
-        {data.call?.mood_quote ? (
+
+        {showQuote ? (
           <li className="rounded-2xl border border-border bg-card px-4 py-3">
-            <p className="font-devanagari text-lg leading-[1.6]">“{data.call.mood_quote}”</p>
-            <p className="mt-2 text-sm text-muted-foreground">{t.moodCaption}</p>
+            <p className="text-sm text-muted-foreground">{t.inHerWords}</p>
+            <p className="font-devanagari mt-1 text-lg leading-[1.6]">“{quote}”</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t.fromTodaysCall}. {t.moodCaption}
+            </p>
           </li>
         ) : null}
+
+        <li className="rounded-2xl border border-border bg-card px-4 py-3">
+          <p className="text-sm text-muted-foreground">{t.thisWeek}</p>
+          <ol className="mt-2 grid grid-cols-7 gap-1">
+            {Array.from({ length: 7 }, (_, i) => {
+              const offset = i - 6;
+              const dayKey = data.day;
+              const [y, m, d] = dayKey.split("-").map(Number);
+              const dt = new Date(y, m - 1, d + offset);
+              const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+              const call = weekDays.find((c) => c.started_at.startsWith(key));
+              const href = call ? `/d/${token}/history?lang=${lang}&days=7` : `/d/${token}/history?lang=${lang}&days=7`;
+              return (
+                <li key={key}>
+                  <Link
+                    href={href}
+                    className="flex min-h-11 flex-col items-center justify-center rounded-lg text-xs"
+                  >
+                    <span className="text-muted-foreground">{weekdayShort(key, lang)}</span>
+                    <span aria-hidden className="text-base">
+                      {call?.status === "completed" ? "✓" : call?.status === "missed" ? "✕" : <Minus className="size-3" />}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+        </li>
       </ul>
-
-      {data.parent.paused ? (
-        <p className="mt-5 rounded-2xl bg-amber-soft px-4 py-3 text-amber-ink">{t.paused}</p>
-      ) : null}
-
-      <a
-        href={`tel:${tel}`}
-        className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-base text-white"
-      >
-        {t.callMaa} · {data.parent.phone}
-      </a>
-      {data.call ? (
-        <Link
-          href={`/d/${token}/calls/${data.call.id}?lang=${lang}`}
-          className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border"
-        >
-          {lang === "hi" ? "कॉल देखें" : "Call detail"}
-        </Link>
-      ) : null}
     </FamilyFrame>
   );
 }
