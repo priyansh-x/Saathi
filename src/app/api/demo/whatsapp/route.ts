@@ -17,5 +17,5 @@ export async function POST(req: Request) {
     (await query<{ id: string }>(`select id from alerts where acked_at is null and resolved_at is null order by created_at desc limit 1`))[0]
       ?.id;
   if (!alertId) return Response.json({ ok: false, error: "no_open_alert" }, { status: 404 });
-  return Response.json(await ackAlert(alertId, body?.actor ?? "Rohit"));
+  return Response.json(await ackAlert(alertId, body?.actor ?? "family"));
 }
