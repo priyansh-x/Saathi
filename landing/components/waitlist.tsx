@@ -82,43 +82,44 @@ export function WaitlistProvider({ children }: { children: React.ReactNode }) {
         className="w-[min(100%-32px,32rem)] rounded-[20px] border border-border bg-bg-elevated p-6 text-ink shadow-[var(--shadow-mock)] backdrop:bg-ink/35 open:animate-[dialog-in_0.3s_var(--ease)]"
         aria-labelledby="waitlist-title"
       >
-        <h2 id="waitlist-title" className="text-[22px] font-medium tracking-tight">
+        <h2 id="waitlist-title" className="text-[22px] font-semibold tracking-tight">
           {t.title}
         </h2>
+        <p className="mt-1 text-[15px] text-ink-2">{t.intro}</p>
         {done ? (
-          <p className="mt-4 text-[17px] leading-relaxed text-ink-2">{t.thanks}</p>
+          <p className="mt-4 text-[17px] leading-relaxed text-ink-2" role="status">{t.thanks}</p>
         ) : (
           <form className="mt-5 space-y-3" onSubmit={onSubmit}>
             <label className="block text-sm">
               {t.name}
-              <input name="name" maxLength={200} className="mt-1 h-12 w-full rounded-2xl border border-border bg-bg px-3" />
+              <input name="name" maxLength={200} className="input mt-1.5" />
             </label>
             <label className="block text-sm">
               {t.contact}
-              <input name="contact" required maxLength={200} className="mt-1 h-12 w-full rounded-2xl border border-border bg-bg px-3" />
+              <input name="contact" required maxLength={200} className="input mt-1.5" />
             </label>
             <label className="block text-sm">
               {t.location}
-              <input name="location" maxLength={200} className="mt-1 h-12 w-full rounded-2xl border border-border bg-bg px-3" />
+              <input name="location" maxLength={200} className="input mt-1.5" />
             </label>
             <label className="block text-sm">
               {t.parentCity}
-              <input name="parentCity" maxLength={200} className="mt-1 h-12 w-full rounded-2xl border border-border bg-bg px-3" />
+              <input name="parentCity" maxLength={200} className="input mt-1.5" />
             </label>
             <label className="block text-sm">
               {t.parentLang}
-              <select name="parentLanguage" className="mt-1 h-12 w-full rounded-2xl border border-border bg-bg px-3">
+              <select name="parentLanguage" className="input mt-1.5">
                 {t.langs.map((l) => (
                   <option key={l}>{l}</option>
                 ))}
               </select>
             </label>
             <label className="flex items-start gap-3 text-sm">
-              <input type="checkbox" name="pilotInterest" className="mt-1 size-4" />
+              <input type="checkbox" name="pilotInterest" className="mt-1 size-4 accent-[var(--accent)]" />
               {t.interest}
             </label>
             <label className="flex items-start gap-3 text-sm">
-              <input type="checkbox" name="consent" required className="mt-1 size-4" />
+              <input type="checkbox" name="consent" required className="mt-1 size-4 accent-[var(--accent)]" />
               {t.consent}
             </label>
             <div className="absolute -left-[9999px]" aria-hidden>

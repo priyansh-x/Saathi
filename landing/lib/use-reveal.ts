@@ -26,10 +26,11 @@ export function useInView(ref: RefObject<HTMLElement | null>, threshold = 0.35) 
   return on;
 }
 
+/** Marks `[data-reveal]` and `.draw` nodes with `data-in` once they scroll into view. */
 export function useReveal() {
   useEffect(() => {
     document.documentElement.classList.add("js");
-    const nodes = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    const nodes = document.querySelectorAll<HTMLElement>("[data-reveal], .draw, [data-stagger]");
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -39,7 +40,7 @@ export function useReveal() {
           }
         }
       },
-      { threshold: 0.35 },
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
     );
     nodes.forEach((n) => io.observe(n));
     return () => io.disconnect();
