@@ -17,6 +17,8 @@ async function open() {
   await db.exec(sql);
   const phase2 = path.join(process.cwd(), "src/lib/db/migrations/002_phase2.sql");
   await db.exec(readFileSync(phase2, "utf8"));
+  const phase4 = path.join(process.cwd(), "src/lib/db/migrations/003_phase4.sql");
+  await db.exec(readFileSync(phase4, "utf8"));
   return db;
 }
 

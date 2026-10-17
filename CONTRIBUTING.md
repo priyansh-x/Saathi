@@ -16,6 +16,14 @@ npm run lint
 
 New env names go in `.env.example` with no values.
 
+## Phase 4 test plan
+
+- `npm test` includes ladder, busy≠unreachable, consent gate, kill switch, delete.
+- Settings → Missed-call ladder → Today shows T…+60 and Act now if nobody acked.
+- `SAATHI_KILL_SWITCH=1` then `POST /api/cron/tick` returns `halted`.
+- Delete all of Maa's data → `/` and the example token 404s until you `npm run seed`.
+- Env: `SAATHI_KILL_SWITCH`, `VOICE_ALERT_CHILD`, `LADDER_*`.
+
 ## Phase 3 test plan
 
 - `npm test` includes WhatsApp briefing + first-ack-wins + allowlist.

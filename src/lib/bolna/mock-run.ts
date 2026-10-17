@@ -1,7 +1,10 @@
 import { logMedicine, raiseAlert, saveMemoryNote } from "@/lib/bolna/tools";
 import { processBolnaWebhook } from "@/lib/bolna/webhook";
+import { query } from "@/lib/db/client";
+import { advanceLadder } from "@/lib/ladder";
+import { istDayKey, istStamp } from "@/lib/time";
 
-export type MockScenario = "good" | "chest" | "late" | "replay";
+export type MockScenario = "good" | "chest" | "late" | "replay" | "missed" | "skip";
 
 export async function runMockScenario(scenario: MockScenario, parentId = "parent_kamla") {
   const executionId = `mock_${scenario}_${Date.now()}`;
@@ -91,6 +94,58 @@ export async function runMockScenario(scenario: MockScenario, parentId = "parent
       },
       executionId,
     );
+  }
+
+  if (scenario === "skip") {
+    await logMedicine({
+      call_sid: executionId,
+      parent_id: parentId,
+      medicine_name: "Amlodipine",
+      status: "not_taken",
+      said: "bhool gayi",
+    });
+    await saveMemoryNote({
+      call_sid: executionId,
+      parent_id: parentId,
+      kind: "follow_up",
+      note: "Forgot Amlodipine; said she would take it after the call.",
+    });
+    return processBolnaWebhook(
+      {
+        id: executionId,
+        status: "completed",
+        conversation_duration: 130,
+        transcript: "agent: goli\nuser: Goli bhool gayi. Abhi leti hoon.",
+        extracted_data: {
+          medicines: [{ name: "Amlodipine", status: "not_taken", said: "bhool gayi" }],
+          mood_quote: "Goli bhool gayi. Abhi leti hoon.",
+          summary_en: "Kamla forgot the morning tablet and said she would take it now.",
+        },
+        context_details: { recipient_data: { parent_id: parentId } },
+      },
+      executionId,
+    );
+  }
+
+  if (scenario === "missed") {
+    const day = istDayKey();
+    await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
+      executionId,
+      parentId,
+      istStamp(day, 8, 30),
+      istStamp(day, 8, 31),
+      0,
+      "in_progress",
+      "No answer.",
+      "कोई नहीं उठा।",
+      null,
+      null,
+      null,
+      null,
+      executionId,
+      true,
+    ]);
+    return advanceLadder({ parentId, callId: executionId, elapsedMin: 60 });
   }
 
   const replayId = `mock_replay_${Date.now()}`;

@@ -29,6 +29,20 @@ export function killSwitchOn() {
   return process.env.SAATHI_KILL_SWITCH === "1";
 }
 
+export function voiceAlertChild() {
+  return process.env.VOICE_ALERT_CHILD === "1";
+}
+
+export function defaultLadder() {
+  return {
+    retry_10: Number(process.env.LADDER_RETRY_10 || 10),
+    retry_25: Number(process.env.LADDER_RETRY_25 || 25),
+    soft_30: Number(process.env.LADDER_SOFT_30 || 30),
+    last_45: Number(process.env.LADDER_LAST_45 || 45),
+    escalate_60: Number(process.env.LADDER_ESCALATE_60 || 60),
+  };
+}
+
 export function toolToken() {
   return process.env.SAATHI_TOOL_TOKEN || (isMockBolna() ? "dev-tool-token" : "");
 }

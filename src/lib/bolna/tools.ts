@@ -83,14 +83,14 @@ export async function logMedicine(input: {
 }
 
 export function alertLevel(category: string) {
-  if (category === "EMERGENCY") return "act" as const;
+  if (category === "EMERGENCY" || category === "MISSED") return "act" as const;
   return "look" as const;
 }
 
 export async function raiseAlert(input: {
   call_sid: string;
   parent_id: string;
-  category: "EMERGENCY" | "URGENT" | "ATTENTION";
+  category: "EMERGENCY" | "URGENT" | "ATTENTION" | "MISSED";
   quote: string;
   late?: boolean;
   source?: string;
@@ -135,6 +135,10 @@ export async function raiseAlert(input: {
     ]);
     const { notifyAlert } = await import("@/lib/whatsapp/notify");
     await notifyAlert(input.parent_id, { id: alertId, quote: input.quote, created_at: nowIst() });
+    if (input.category === "EMERGENCY") {
+      const { optionalChildVoiceAlert } = await import("@/lib/voice-alert");
+      await optionalChildVoiceAlert(input.parent_id, alertId);
+    }
   }
   return { ok: true as const, alert_id: alertId, replay: !remembered.fresh };
 }

@@ -1,5 +1,6 @@
 import { dailyBudgetMinutes, isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
 import { promptVariables } from "@/lib/bolna/summary";
+import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
 import { gateOutbound } from "@/lib/outbound";
 import { istDayKey, istStamp } from "@/lib/time";
@@ -22,6 +23,9 @@ export async function placeMorningCall(parentId: string) {
   const parent = parents[0];
   if (!parent) return { ok: false as const, reason: "unknown_parent" };
   if (parent.paused) return { ok: false as const, reason: "paused" };
+  if (!isMockBolna() && !(await hasPilotConsent(parentId))) {
+    return { ok: false as const, reason: "consent" };
+  }
   const used = await minutesUsedToday();
   if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
   const gate = gateOutbound("call", parent.phone);

@@ -60,6 +60,12 @@ After a mock completed call, Settings shows the logged briefing. Chest-pain also
 
 `WHATSAPP_TEMPLATES_APPROVED=0` uses `hello_world` + email fallback for real sends. Priyansh submits Utility templates.
 
+## Phase 4 (ladder + pilot)
+
+Settings → **Missed-call ladder** walks T / +10 / +25 / +30 soft notice / +45 / +60 neighbour+child if nobody acked.
+
+`SAATHI_KILL_SWITCH=1` stops cron, dials, and sends. Real calls need consent (child written + Maa's haan). **Delete all of Maa's data** wipes the household.
+
 ## Later
 
-Phase 4: missed-call ladder + kill switch. See `prd.md` and `docs/saathi/`.
+See `prd.md` and `docs/saathi/`. Live Bolna/WhatsApp still need Priyansh's allowlist and keys.
