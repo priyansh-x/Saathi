@@ -5,6 +5,13 @@ import { query } from "@/lib/db/client";
 import { gateOutbound } from "@/lib/outbound";
 import { istDayBounds, istDayKey, istStamp, parseHhMm } from "@/lib/time";
 
+/** Bolna `agent_data.language` follows the parent's first listed language. */
+export function bolnaAgentLanguage(languages: string | null | undefined) {
+  const first = (languages || "hi").split(",")[0]?.trim().toLowerCase();
+  if (first === "en" || first === "english") return "en";
+  return first || "hi";
+}
+
 export async function minutesUsedToday() {
   const { start, end } = istDayBounds(istDayKey());
   const rows = await query<{ secs: number }>(
@@ -16,8 +23,14 @@ export async function minutesUsedToday() {
 
 export async function placeMorningCall(parentId: string) {
   if (killSwitchOn()) return { ok: false as const, reason: "kill_switch" };
-  const parents = await query<{ phone: string; paused: boolean; first_name: string; call_time: string }>(
-    `select phone, paused, first_name, call_time from parents where id = $1`,
+  const parents = await query<{
+    phone: string;
+    paused: boolean;
+    first_name: string;
+    call_time: string;
+    languages: string;
+  }>(
+    `select phone, paused, first_name, call_time, languages from parents where id = $1`,
     [parentId],
   );
   const parent = parents[0];
@@ -37,7 +50,7 @@ export async function placeMorningCall(parentId: string) {
     agent_id: process.env.BOLNA_AGENT_ID,
     recipient_phone_number: gate.to,
     user_data: userData,
-    agent_data: { language: "hi" },
+    agent_data: { language: bolnaAgentLanguage(parent.languages) },
     max_duration: maxCallSeconds(),
   };
   if ("from_phone_number" in payload) {
