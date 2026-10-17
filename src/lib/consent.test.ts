@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { processBolnaWebhook } from "./bolna/webhook";
 import { closeDb, query } from "./db/client";
-import { seed } from "./db/seed";
+import { ensureSeed, seed } from "./db/seed";
 import { recordSpokenConsent } from "./consent";
 import { placeMorningCall } from "./bolna/place";
 
@@ -65,5 +65,13 @@ describe("first-call consent", () => {
     assert.equal(row[0]?.summary_en, null);
     assert.equal(row[0]?.mood_quote, null);
     assert.equal(row[0]?.transcript_json, null);
+  });
+
+  it("backfills given from a spoken haan left pending on an old database", async () => {
+    await seed();
+    await query(`update parents set consent_status = 'pending', consent_at = null where id = 'parent_kamla'`);
+    await ensureSeed();
+    const row = await query<{ consent_status: string }>(`select consent_status from parents where id = 'parent_kamla'`);
+    assert.equal(row[0]?.consent_status, "given");
   });
 });
