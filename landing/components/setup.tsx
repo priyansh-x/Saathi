@@ -1,88 +1,110 @@
-"use client";
-
+import Image from "next/image";
 import { Check, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { content } from "@/lib/content";
 import { Eyebrow } from "./chrome";
+import setupImg from "@/public/images/setup-child-phone.jpg";
 
 export function Setup() {
   const t = content.setup;
-  const [phone, setPhone] = useState(0);
-  const [ticks, setTicks] = useState(0);
-
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      const later = window.setTimeout(() => setTicks(t.rows.length), 0);
-      return () => window.clearTimeout(later);
-    }
-    const id = window.setInterval(() => {
-      setTicks((n) => (n >= t.rows.length ? n : n + 1));
-    }, 400);
-    return () => window.clearInterval(id);
-  }, [t.rows.length]);
-
   return (
-    <section id="setup" className="section">
+    <section id="setup" className="section bg-bg-elevated">
       <div className="container-site">
         <Eyebrow n={t.eyebrowN} label={t.eyebrow} />
         <div className="mt-6 grid items-end gap-6 md:grid-cols-12">
           <h2 className="h2 md:col-span-7" data-reveal>
             {t.h2a}
             <br />
-            <span className="accent-word">{t.h2b}</span>
+            <span className="serif-line">{t.h2b}</span>
           </h2>
-          <p className="text-[18px] text-ink-2 md:col-span-5">{t.sub}</p>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center gap-2">
-          <span className="text-sm text-ink-2">Her phone:</span>
-          {t.phones.map((p, i) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPhone(i)}
-              className={`rounded-full px-3 py-2 text-sm ${i === phone ? "bg-ink text-bg" : "border border-border"}`}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-8 grid gap-4 rounded-[28px] border border-border bg-bg-elevated p-5 shadow-[var(--shadow-mock)] md:grid-cols-3 md:p-8">
-          <ul className="space-y-2 text-sm">
-            {t.rows.map((row, i) => (
-              <li key={row} className="flex items-start gap-2 rounded-2xl border border-border px-3 py-2">
-                <Check className={`mt-0.5 size-4 ${i < ticks ? "text-good" : "text-border"}`} />
-                {row}
-              </li>
-            ))}
-          </ul>
-          <div className="grid place-items-center rounded-2xl bg-dark p-6 text-center text-dark-ink">
-            <p className="font-mono text-[11px] uppercase text-dark-accent">Saathi</p>
-            <p className="mt-2 text-lg">A morning call. Her number. Her yes.</p>
-          </div>
-          <div className="rounded-[28px] border border-border bg-bg p-4">
-            <p className="font-medium">{t.voiceTitle}</p>
-            <div className="mt-4 flex items-center gap-3 rounded-full border border-border px-3 py-2">
-              <Play className="size-4" />
-              <span className="h-1 flex-1 rounded-full bg-border">
-                <span className="block h-1 w-1/3 rounded-full bg-accent" />
-              </span>
-              <span className="font-mono text-[11px]">{t.voiceBar}</span>
+          <div className="md:col-span-5" data-reveal>
+            <p className="sub">{t.sub}</p>
+            <div className="mt-4 flex gap-2">
+              {t.phones.map((p) => (
+                <span key={p} className="chip !pl-3">
+                  {p}
+                </span>
+              ))}
             </div>
           </div>
         </div>
 
-        <ol className="mt-6 flex flex-wrap gap-2 text-sm">
-          {t.steps.map((s) => (
-            <li key={s.label} className="rounded-full border border-border px-3 py-2">
-              {s.label}
-              {s.state ? <span className="ml-2 text-ink-2">· {s.state}</span> : null}
-            </li>
-          ))}
-        </ol>
-        <p className="mt-4 max-w-2xl text-ink-2">{t.consent}</p>
+        <div className="mt-12 grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:items-stretch">
+          <div className="art relative min-h-[360px] lg:min-h-[560px]" data-reveal>
+            <Image
+              src={setupImg}
+              alt={t.imageAlt}
+              fill
+              placeholder="blur"
+              sizes="(min-width: 1024px) 640px, 100vw"
+              className="object-cover object-[30%_center]"
+            />
+            <div className="float absolute bottom-4 left-4 right-4 rounded-[20px] bg-bg-elevated/95 p-4 shadow-[var(--shadow-float)] backdrop-blur sm:left-auto sm:w-[300px]">
+              <p className="text-[13px] font-medium">{t.voiceTitle}</p>
+              <div className="mt-3 flex items-center gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-white">
+                  <Play className="ml-0.5 size-3.5 fill-current" strokeWidth={1.5} aria-hidden />
+                </span>
+                <span className="flex h-7 flex-1 items-center gap-[2px]" aria-hidden>
+                  {Array.from({ length: 30 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className={`flex-1 rounded-full ${i < 11 ? "bg-accent" : "bg-ink-3/40"}`}
+                      style={{ height: `${6 + ((i * 37) % 20)}px` }}
+                    />
+                  ))}
+                </span>
+                <span className="font-mono text-[11px] text-ink-3">{t.voiceClock}</span>
+              </div>
+              <p className="mt-2 text-[12px] text-ink-3">{t.voiceBar}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <div className="mock-card p-5 md:p-6" data-reveal aria-label="Example: setup form">
+              <div className="flex items-center justify-between">
+                <p className="text-[15px] font-semibold">Set up Maa&apos;s calls</p>
+                <span className="text-[12px] text-ink-3">Example</span>
+              </div>
+              <dl className="mt-4 space-y-2.5">
+                {t.form.map((row, i) => (
+                  <div
+                    key={row.label}
+                    className="rounded-[14px] border border-border bg-bg px-3.5 py-2.5"
+                    data-reveal
+                    style={{ "--rd": `${i * 70}ms` } as CSSProperties}
+                  >
+                    <dt className="text-[11px] font-medium uppercase tracking-[0.06em] text-ink-3">{row.label}</dt>
+                    <dd className="mt-0.5 text-[15px]">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            <ol className="mock-card grid gap-4 p-5 md:p-6" data-reveal>
+              {t.steps.map((s, i) => {
+                const done = s.state === "Done";
+                const waiting = s.state === "Waiting";
+                return (
+                  <li key={s.label} className="flex items-center gap-3 text-[15px]">
+                    <span
+                      className={`grid size-7 shrink-0 place-items-center rounded-full text-[12px] font-medium ${
+                        done ? "bg-good text-white" : waiting ? "ring-pulse border border-accent text-accent" : "border border-border text-ink-3"
+                      }`}
+                    >
+                      {done ? <Check className="size-3.5" strokeWidth={2.5} aria-hidden /> : i + 1}
+                    </span>
+                    <span className={`flex-1 ${s.state ? "" : "text-ink-3"}`}>{s.label}</span>
+                    {s.state ? (
+                      <span className={`text-[12px] ${done ? "text-good" : "text-accent"}`}>{s.state}</span>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
+        <p className="mt-6 max-w-2xl text-[15px] text-ink-2">{t.consent}</p>
       </div>
     </section>
   );

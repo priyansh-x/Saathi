@@ -1,39 +1,18 @@
-"use client";
-
-import { Bell } from "lucide-react";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Bell, MessageSquareText, PhoneMissed, StickyNote } from "lucide-react";
+import type { CSSProperties } from "react";
 import { content } from "@/lib/content";
 import { Eyebrow } from "./chrome";
+import nightImg from "@/public/images/problem-night-child.jpg";
+
+const appIcon = {
+  Reminder: Bell,
+  Calls: PhoneMissed,
+  Notes: StickyNote,
+} as const;
 
 export function Problem() {
   const t = content.problem;
-  const [n, setN] = useState(1);
-  const [clock, setClock] = useState("11:42");
-
-  useEffect(() => {
-    const tick = () => {
-      const d = new Date();
-      setClock(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
-    };
-    tick();
-    const c = window.setInterval(tick, 1000);
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      const later = window.setTimeout(() => setN(t.notifications.length), 0);
-      return () => {
-        window.clearInterval(c);
-        window.clearTimeout(later);
-      };
-    }
-    const loop = window.setInterval(() => {
-      setN((x) => (x >= t.notifications.length ? 1 : x + 1));
-    }, 2000);
-    return () => {
-      window.clearInterval(c);
-      window.clearInterval(loop);
-    };
-  }, [t.notifications.length]);
-
   return (
     <section id="problem" className="section">
       <div className="container-site">
@@ -42,42 +21,71 @@ export function Problem() {
           <h2 className="h2 md:col-span-7" data-reveal>
             {t.h2a}
             <br />
-            <span className="accent-word">{t.h2b}</span>
+            <span className="serif-line text-ink-2">{t.h2b}</span>
           </h2>
-          <p className="text-[18px] text-ink-2 md:col-span-5">{t.sub}</p>
+          <p className="sub md:col-span-5" data-reveal>
+            {t.sub}
+          </p>
         </div>
-        <p className="mt-4 max-w-2xl text-sm text-ink-2">{t.whyNow}</p>
 
-        <div className="mx-auto mt-10 max-w-sm md:mt-14" data-reveal>
-          <div
-            className="overflow-hidden rounded-[44px] border border-border bg-dark p-5 text-dark-ink shadow-[var(--shadow-mock)]"
-            aria-label="Example: a night of unanswered questions"
-          >
-            <p className="text-center font-mono text-5xl tabular-nums">{clock}</p>
-            <p className="mt-1 text-center text-sm text-dark-muted">Saturday</p>
-            <ol className="mt-6 max-h-72 space-y-2 overflow-hidden" data-loop aria-hidden>
-              {t.notifications.slice(0, n).map((note, i) => (
-                <li
-                  key={note}
-                  className="flex gap-3 rounded-2xl bg-dark-elevated px-3 py-2 text-sm"
-                  style={{ animation: "stack-in 0.45s var(--ease) both" }}
-                >
-                  <Bell className="mt-0.5 size-4 shrink-0 text-dark-accent" />
-                  <span>
-                    {note}
-                    <span className="ml-2 font-mono text-[11px] text-dark-muted">{8 + i}:1{i}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
+        <figure className="mt-12 md:mt-16" data-reveal>
+          <div className="art relative aspect-[4/5] bg-dark sm:aspect-[16/10] md:aspect-[16/8.5]">
+            <Image
+              src={nightImg}
+              alt={t.imageAlt}
+              fill
+              placeholder="blur"
+              sizes="(min-width: 1216px) 1160px, 100vw"
+              className="object-cover object-[30%_center]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-dark/70 via-dark/10 to-transparent md:bg-gradient-to-l md:from-dark/80 md:via-dark/30" />
+
+            <div
+              className="absolute inset-x-4 bottom-4 sm:inset-x-auto sm:bottom-auto sm:right-6 sm:top-6 sm:w-[340px] md:right-10 md:top-10"
+              data-stagger
+              aria-label="Example: a day of unanswered questions"
+            >
+              <div className="hidden text-center text-white sm:block">
+                <p className="text-[13px] font-medium opacity-80">{t.lockDate}</p>
+                <p className="text-[56px] font-semibold leading-none tracking-tight">{t.lockTime}</p>
+              </div>
+              <ol className="mt-4 space-y-2">
+                {t.notifications.map((n, i) => {
+                  const Icon = appIcon[n.app as keyof typeof appIcon] ?? MessageSquareText;
+                  return (
+                    <li
+                      key={n.title}
+                      className={`notif flex items-center gap-3 rounded-[18px] bg-[rgba(255,252,248,0.82)] p-3 shadow-lg backdrop-blur-md ${i > 2 ? "hidden sm:flex" : ""}`}
+                      style={{ "--i": i } as CSSProperties}
+                    >
+                      <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-accent-soft text-accent">
+                        <Icon className="size-4" strokeWidth={1.75} aria-hidden />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between text-[11px] uppercase tracking-[0.06em] text-ink-3">
+                          {n.app}
+                          <span className="font-mono normal-case tracking-normal">{n.time}</span>
+                        </span>
+                        <span className="block truncate text-[14px] font-medium text-ink">{n.title}</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
           </div>
-          <p className="example-tag mt-3 text-center">{t.caption}</p>
-        </div>
+          <figcaption className="mt-3 flex flex-wrap justify-between gap-2 text-[13px] text-ink-3">
+            <span>{t.caption}</span>
+            <span>Illustration · example notifications</span>
+          </figcaption>
+        </figure>
+
       </div>
-      <p className="h2 mx-auto mt-20 max-w-5xl px-5 text-center" data-reveal>
+
+      <p className="h2 mx-auto mt-24 px-5 text-center md:mt-32" data-reveal>
         {t.closerA}
         <br />
-        <span className="accent-word">{t.closerB}</span>
+        <span className="serif-line accent-phrase">{t.closerB}</span>
       </p>
     </section>
   );

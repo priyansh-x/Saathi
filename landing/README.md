@@ -9,7 +9,7 @@ cp .env.example .env.local   # names only; site runs without Supabase
 npm run dev                  # http://127.0.0.1:43211
 ```
 
-Waitlist POSTs to `/api/waitlist`. With `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` it inserts a row. Otherwise it appends `.data/waitlist.json` (gitignored). It never emails, texts or dials.
+Waitlist POSTs to `/api/waitlist`. With `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` it inserts a row. In production without `SUPABASE_URL` it returns 503 (no local file on Vercel). Locally without Supabase it appends `.data/waitlist.json` (gitignored). It never emails, texts or dials.
 
 ```sql
 create table waitlist (
