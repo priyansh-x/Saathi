@@ -174,17 +174,12 @@ export function FamilyFrame({
   );
 }
 
-export function ExpiredLink() {
+export function ExpiredLink({ lang = "en" }: { lang?: Lang }) {
+  const t = messages[lang];
   return (
     <main className="mx-auto max-w-[480px] px-4 py-16">
-      <h1 className="text-2xl font-semibold">Link expired or unknown</h1>
-      <p className="mt-3 text-muted-foreground">Ask for a new WhatsApp link, or open the example desk.</p>
-      <Link
-        href="/d/example-kamla"
-        className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-white"
-      >
-        Open example desk
-      </Link>
+      <h1 className="text-2xl font-semibold">{t.linkExpired}</h1>
+      <p className="mt-3 text-muted-foreground">{t.linkExpiredHint}</p>
     </main>
   );
 }
@@ -192,7 +187,7 @@ export function ExpiredLink() {
 export function LoadingState({ lang = "en" }: { lang?: Lang }) {
   return (
     <div className="mx-auto w-full max-w-[480px] px-4 py-10">
-      <p className="text-sm text-muted-foreground">{lang === "hi" ? "खुल रहा है…" : "Opening…"}</p>
+      <p className="text-sm text-muted-foreground">{messages[lang].opening}</p>
       <div className="mt-4 h-28 animate-pulse rounded-2xl bg-card" />
       <div className="mt-3 h-16 animate-pulse rounded-2xl bg-card" />
       <div className="mt-3 h-16 animate-pulse rounded-2xl bg-card" />

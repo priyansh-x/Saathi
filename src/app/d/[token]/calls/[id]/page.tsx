@@ -38,7 +38,7 @@ async function CallBody({
   days?: string;
 }) {
   const data = await loadFamily(token);
-  if (!data) return <ExpiredLink />;
+  if (!data) return <ExpiredLink lang={lang} />;
   const call = await callById(id);
   const t = messages[lang];
   const extraQuery = { from, days };
@@ -128,7 +128,6 @@ async function CallBody({
           </ol>
         )}
       </details>
-
       <p className="mt-4 text-sm text-muted-foreground">
         {data.parent.recording_consent ? t.audioConsentOn : t.audioConsentOff}
       </p>

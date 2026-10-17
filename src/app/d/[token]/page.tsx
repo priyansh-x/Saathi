@@ -3,7 +3,7 @@ import { AlertTriangle, Check, Clock, Minus, Pause } from "lucide-react";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { setPaused } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
-import { messages } from "@/lib/i18n/messages";
+import { messages, pickLocale } from "@/lib/i18n/messages";
 import { redirect } from "next/navigation";
 import { resolveAlert } from "@/lib/db/queries";
 import {
@@ -27,7 +27,7 @@ export default async function TodayPage({
   const { token } = await params;
   const lang = readLang((await searchParams).lang);
   const data = await loadFamily(token);
-  if (!data) return <ExpiredLink />;
+  if (!data) return <ExpiredLink lang={lang} />;
   const t = messages[lang];
   const tel = data.parent.phone.replace(/\s/g, "");
   const neighbourTel = data.neighbour?.phone.replace(/\s/g, "") ?? "";
@@ -82,7 +82,7 @@ export default async function TodayPage({
           <Icon className="size-4" aria-hidden />
           <span>{copy.chip}</span>
         </p>
-        <h1 className={`mt-2 text-xl font-semibold leading-snug ${lang === "hi" ? "font-devanagari" : ""}`}>
+        <h1 className="mt-2 text-xl font-semibold leading-snug">
           {copy.headline}
         </h1>
         {copy.sub ? <p className="mt-2 text-sm opacity-90">{copy.sub}</p> : null}
@@ -171,7 +171,7 @@ export default async function TodayPage({
 
       {state === "scheduled" && data.yesterday ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          {lang === "hi" ? data.yesterday.summary_hi : data.yesterday.summary_en}
+          {pickLocale(lang, data.yesterday.summary_en, data.yesterday.summary_hi)}
         </p>
       ) : null}
 

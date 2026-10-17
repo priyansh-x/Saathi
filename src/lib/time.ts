@@ -116,7 +116,21 @@ export function formatFriendlyTime(iso: string, lang: "en" | "hi" = "en", viewer
         : `Today ${clock}`
       : `${weekdayLabel} ${d} ${MONTH_EN[mo - 1]}, ${clock}`;
   if (!viewerZone || viewerZone === IST) return core;
-  return `${core} · shown in ${viewerZone}`;
+  const view = new Date(`${iso.replace(" ", "T")}`);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: viewerZone,
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  }).formatToParts(Number.isNaN(view.getTime()) ? new Date() : view);
+  const viewHour = parts.find((p) => p.type === "hour")?.value;
+  const viewMin = parts.find((p) => p.type === "minute")?.value;
+  const dayPeriod = parts.find((p) => p.type === "dayPeriod")?.value;
+  const tz = parts.find((p) => p.type === "timeZoneName")?.value || viewerZone;
+  const wd = parts.find((p) => p.type === "weekday")?.value;
+  return `${core} · ${viewHour}:${viewMin} ${dayPeriod} ${tz} (${wd})`;
 }
 
 export function formatHeaderDate(lang: "en" | "hi", date = new Date()) {

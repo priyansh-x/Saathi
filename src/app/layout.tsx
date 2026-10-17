@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Inter, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 
@@ -20,10 +22,26 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean }) {
   return (
-    <html lang="en" className={`${inter.variable} ${devanagari.variable} h-full`}>
+    <html
+      lang={hi ? "hi" : "en"}
+      className={`${inter.variable} ${devanagari.variable} h-full ${hi ? "font-devanagari" : ""}`}
+    >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
+  );
+}
+
+async function HtmlFromCookie({ children }: { children: ReactNode }) {
+  const hi = (await cookies()).get("saathi_lang")?.value === "hi";
+  return <HtmlShell hi={hi}>{children}</HtmlShell>;
+}
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<HtmlShell>{children}</HtmlShell>}>
+      <HtmlFromCookie>{children}</HtmlFromCookie>
+    </Suspense>
   );
 }
