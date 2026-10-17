@@ -1,5 +1,5 @@
 import { placeMorningCall } from "@/lib/bolna/place";
-import { killSwitchOn } from "@/lib/config";
+import { isMockBolna, killSwitchOn } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { ensureSeed } from "@/lib/db/seed";
 import { advanceLadder } from "@/lib/ladder";
@@ -10,6 +10,18 @@ const WINDOW_END = parseHhMm("11:00");
 export function inMorningWindow(now: Date, callTime: string) {
   const mins = minutesNowIst(now);
   return mins >= parseHhMm(callTime || "08:30") && mins < WINDOW_END;
+}
+
+/** Fake clock from the cron body is mock-only. Live ticks always use wall time. */
+export function resolveTickClock(
+  body: { elapsed_min?: number; now?: string },
+  mock = isMockBolna(),
+): { now: Date; elapsedMin?: number } {
+  if (!mock) return { now: new Date() };
+  return {
+    now: body.now ? new Date(body.now) : new Date(),
+    elapsedMin: body.elapsed_min,
+  };
 }
 
 export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {

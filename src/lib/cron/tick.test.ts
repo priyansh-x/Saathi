@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "../db/client";
 import { seed } from "../db/seed";
-import { inMorningWindow, runDailyTick } from "./tick";
+import { inMorningWindow, resolveTickClock, runDailyTick } from "./tick";
 
 process.env.MOCK_BOLNA = "1";
 process.env.MOCK_WHATSAPP = "1";
@@ -22,6 +22,17 @@ after(async () => {
 });
 
 describe("daily tick window", () => {
+  it("ignores body now and elapsed_min unless MOCK_BOLNA=1", () => {
+    const fake = "2020-01-01T00:00:00.000Z";
+    const mocked = resolveTickClock({ now: fake, elapsed_min: 99 }, true);
+    assert.equal(mocked.now.toISOString(), fake);
+    assert.equal(mocked.elapsedMin, 99);
+    const live = resolveTickClock({ now: fake, elapsed_min: 99 }, false);
+    assert.notEqual(live.now.toISOString(), fake);
+    assert.equal(live.elapsedMin, undefined);
+    assert.ok(Math.abs(live.now.getTime() - Date.now()) < 5000);
+  });
+
   it("is a half-open IST morning window from call time to 11:00", () => {
     assert.equal(inMorningWindow(IN_WINDOW, "08:30"), true);
     assert.equal(inMorningWindow(BEFORE_WINDOW, "08:30"), false);

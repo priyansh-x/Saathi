@@ -18,7 +18,7 @@ curl -X POST http://127.0.0.1:43147/api/cron/tick \
   -d '{}'
 ```
 
-Optional JSON: `{ "now": "2026-10-17T03:00:00.000Z", "elapsed_min": 30 }` for fake-clock tests. `now` is a UTC instant; IST is derived as `+05:30`.
+Optional JSON, **only when `MOCK_BOLNA=1`**: `{ "now": "2026-10-17T03:00:00.000Z", "elapsed_min": 30 }` for fake-clock tests. `now` is a UTC instant; IST is derived as `+05:30`. If mocks are off, `now` and `elapsed_min` are ignored and the tick uses wall time.
 
 ## Vercel Cron (not turned on)
 
