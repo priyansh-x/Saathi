@@ -1,4 +1,30 @@
 import { query } from "@/lib/db/client";
+import { nowIstStamp } from "@/lib/time";
+
+const PARENT_TABLES = [
+  "alerts",
+  "calls",
+  "consents",
+  "contacts",
+  "dose_logs",
+  "family_config",
+  "magic_links",
+  "medicines",
+  "memory_notes",
+  "outbound_messages",
+  "tool_call_logs",
+] as const;
+
+export async function leftoverParentRows(parentId: string) {
+  const leftover: Record<string, number> = {};
+  for (const table of PARENT_TABLES) {
+    const rows = await query<{ n: number }>(`select count(*)::int as n from ${table} where parent_id = $1`, [parentId]);
+    leftover[table] = rows[0]?.n ?? 0;
+  }
+  const parents = await query<{ n: number }>(`select count(*)::int as n from parents where id = $1`, [parentId]);
+  leftover.parents = parents[0]?.n ?? 0;
+  return leftover;
+}
 
 export async function deleteFamily(parentId: string) {
   const calls = await query<{ id: string }>(`select id from calls where parent_id = $1`, [parentId]);
@@ -25,5 +51,11 @@ export async function deleteFamily(parentId: string) {
   await query(`delete from contacts where parent_id = $1`, [parentId]);
   await query(`delete from family_config where parent_id = $1`, [parentId]);
   await query(`delete from tool_call_logs where parent_id = $1`, [parentId]);
+  await query(`delete from webhook_events where payload like $1`, [`%${parentId}%`]);
   await query(`delete from parents where id = $1`, [parentId]);
+  await query(`insert into deleted_events values ($1,$2,$3)`, [
+    `del_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+    nowIstStamp(),
+    "family_deleted",
+  ]);
 }
