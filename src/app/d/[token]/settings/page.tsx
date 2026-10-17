@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { FamilyFrame } from "@/components/family/chrome";
+import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { setPaused } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
@@ -15,6 +15,7 @@ export default async function SettingsPage({
   const { token } = await params;
   const lang = readLang((await searchParams).lang);
   const data = await loadFamily(token);
+  if (!data) return <ExpiredLink />;
   const t = messages[lang];
   const parentId = data.parent.id;
   const nextPaused = !data.parent.paused;

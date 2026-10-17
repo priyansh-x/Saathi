@@ -46,6 +46,6 @@ export type CallRecord = {
   transcript: TranscriptLine[];
 };
 
-export const STORAGE_HOUSEHOLD = "checkin-household";
-export const STORAGE_LAST_CALL = "checkin-last-call";
-export const STORAGE_CALL_LOG = "checkin-call-log";
+export const STORAGE_HOUSEHOLD = "saathi-household";
+export const STORAGE_LAST_CALL = "saathi-last-call";
+export const STORAGE_CALL_LOG = "saathi-call-log";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FamilyFrame } from "@/components/family/chrome";
+import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
 import { statusClasses, statusLabel } from "@/lib/status";
@@ -15,6 +15,7 @@ export default async function AlertsPage({
   const { token } = await params;
   const lang = readLang((await searchParams).lang);
   const data = await loadFamily(token);
+  if (!data) return <ExpiredLink />;
   const t = messages[lang];
 
   return (

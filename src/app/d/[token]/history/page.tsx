@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FamilyFrame } from "@/components/family/chrome";
+import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { historyDays } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
@@ -17,6 +17,7 @@ export default async function HistoryPage({
   const lang = readLang(sp.lang);
   const days = sp.days === "7" ? 7 : 30;
   const data = await loadFamily(token);
+  if (!data) return <ExpiredLink />;
   const hist = await historyDays(data.parent.id, 30);
   const t = messages[lang];
   const keys = Array.from({ length: days }, (_, i) => istDayOffset(-(days - 1 - i)));

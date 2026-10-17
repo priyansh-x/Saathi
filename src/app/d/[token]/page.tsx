@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FamilyFrame } from "@/components/family/chrome";
+import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { attemptsFor } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
@@ -16,6 +16,7 @@ export default async function TodayPage({
   const { token } = await params;
   const lang = readLang((await searchParams).lang);
   const data = await loadFamily(token);
+  if (!data) return <ExpiredLink />;
   const t = messages[lang];
   const attempts = data.call ? await attemptsFor(data.call.id) : [];
   const tel = data.parent.phone.replace(/\s/g, "");

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FamilyFrame } from "@/components/family/chrome";
+import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { alertById, alertEvents, resolveAlert } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
@@ -16,6 +16,7 @@ export default async function AlertDetailPage({
   const { token, id } = await params;
   const lang = readLang((await searchParams).lang);
   const data = await loadFamily(token);
+  if (!data) return <ExpiredLink />;
   const alert = await alertById(id);
   if (!alert) {
     return (

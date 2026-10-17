@@ -1,5 +1,4 @@
 import { connection } from "next/server";
-import { notFound } from "next/navigation";
 import {
   alertsFor,
   callOnDay,
@@ -20,7 +19,7 @@ export function readLang(value?: string): Lang {
 export async function loadFamily(token: string) {
   await connection();
   const parent = await parentByToken(token);
-  if (!parent) notFound();
+  if (!parent) return null;
   const [contacts, medicines, actAlerts, allAlerts] = await Promise.all([
     contactsFor(parent.id),
     medicinesFor(parent.id),
