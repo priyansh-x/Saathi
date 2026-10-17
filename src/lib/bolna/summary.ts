@@ -1,6 +1,7 @@
 import { contactsFor, medicinesFor } from "@/lib/db/queries";
 import { query } from "@/lib/db/client";
 import { formatHeaderDate, istDayKey } from "@/lib/time";
+import { fillConsentSpokenLines, loadConsentSpokenLines } from "@/lib/voice/consent-line";
 
 export async function lastCallSummary(parentId: string) {
   const day = istDayKey();
@@ -33,18 +34,29 @@ export async function promptVariables(parentId: string) {
   const parent = parents[0];
   const contacts = await contactsFor(parentId);
   const child = contacts.find((c) => c.role === "child");
+  const neighbour = contacts.find((c) => c.role === "neighbour");
+  const names = {
+    parent_name: parent?.first_name ?? "",
+    child_name: child?.first_name ?? "",
+    neighbour_name: neighbour?.first_name ?? "",
+    address_term: parent?.first_name ? `${parent.first_name} ji` : "ji",
+  };
+  const spoken = fillConsentSpokenLines(loadConsentSpokenLines(), names);
   const meds = await medicinesFor(parentId);
   const medicines = meds
     .map((m, i) => `${i + 1}. id=${m.id} | ${m.name} (${m.dose}) | ${m.meal}, ${m.appearance}`)
     .join("\n");
   return {
     parent_id: parentId,
-    parent_name: parent?.first_name ?? "",
-    parent_first_name: parent?.first_name ?? "",
-    address_term: parent?.first_name ? `${parent.first_name} ji` : "ji",
+    parent_name: names.parent_name,
+    parent_first_name: names.parent_name,
+    address_term: names.address_term,
     preferred_language: parent?.languages?.includes("hi") ? "Hindi" : "English",
-    child_name: child?.first_name ?? "",
-    child_first_name: child?.first_name ?? "",
+    child_name: names.child_name,
+    child_first_name: names.child_name,
+    neighbour_name: names.neighbour_name,
+    consent_line_hi: spoken.hi,
+    consent_line_en: spoken.en,
     child_relation: "beta",
     timezone: parent?.timezone ?? "Asia/Kolkata",
     call_date: formatHeaderDate("en"),
