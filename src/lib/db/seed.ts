@@ -50,7 +50,7 @@ export async function seed() {
     false,
     true,
   ]);
-  await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+  await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
     "contact_rohit",
     "parent_kamla",
     "child",
@@ -59,8 +59,9 @@ export async function seed() {
     "98765 44110",
     "en",
     true,
+    "rohit@example.invalid",
   ]);
-  await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+  await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
     "contact_sunita",
     "parent_kamla",
     "neighbour",
@@ -69,6 +70,7 @@ export async function seed() {
     "98111 77821",
     "hi",
     true,
+    null,
   ]);
   await query(`insert into medicines values ($1,$2,$3,$4,$5,$6,$7)`, [
     "med_amlo",

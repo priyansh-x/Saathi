@@ -24,6 +24,7 @@ export type Contact = {
   first_name: string;
   phone: string;
   locale: string;
+  email: string | null;
 };
 
 export type Medicine = {

@@ -20,7 +20,8 @@ create table if not exists contacts (
   first_name text not null,
   phone text not null,
   locale text not null default 'en',
-  is_example boolean not null default false
+  is_example boolean not null default false,
+  email text
 );
 
 create table if not exists medicines (

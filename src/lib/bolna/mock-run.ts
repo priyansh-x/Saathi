@@ -2,27 +2,28 @@ import { logMedicine, raiseAlert, saveMemoryNote } from "@/lib/bolna/tools";
 import { processBolnaWebhook } from "@/lib/bolna/webhook";
 import { query } from "@/lib/db/client";
 import { advanceLadder } from "@/lib/ladder";
-import { istDayKey, istStamp } from "@/lib/time";
+import { istDayBounds, istDayKey, istStamp, istStampFromOffset } from "@/lib/time";
 
 export type MockScenario = "good" | "chest" | "late" | "replay" | "missed" | "missed_full" | "skip";
 
 async function resetToday(parentId: string) {
   const day = istDayKey();
-  const like = `${day}%`;
+  const { start, end } = istDayBounds(day);
   await query(
-    `delete from alert_events where alert_id in (select id from alerts where parent_id = $1 and (created_at like $2 or resolved_at is null))`,
-    [parentId, like],
+    `delete from alert_events where alert_id in (select id from alerts where parent_id = $1 and ((created_at >= $2 and created_at < $3) or resolved_at is null))`,
+    [parentId, start, end],
   );
-  await query(`delete from alerts where parent_id = $1 and (created_at like $2 or resolved_at is null)`, [
+  await query(`delete from alerts where parent_id = $1 and ((created_at >= $2 and created_at < $3) or resolved_at is null)`, [
     parentId,
-    like,
+    start,
+    end,
   ]);
   await query(
-    `delete from call_attempts where call_id in (select id from calls where parent_id = $1 and started_at like $2)`,
-    [parentId, like],
+    `delete from call_attempts where call_id in (select id from calls where parent_id = $1 and started_at >= $2 and started_at < $3)`,
+    [parentId, start, end],
   );
   await query(`delete from dose_logs where parent_id = $1 and schedule_date = $2`, [parentId, day]);
-  await query(`delete from calls where parent_id = $1 and started_at like $2`, [parentId, like]);
+  await query(`delete from calls where parent_id = $1 and started_at >= $2 and started_at < $3`, [parentId, start, end]);
 }
 
 export async function runMockScenario(scenario: MockScenario, parentId = "parent_kamla") {
@@ -149,11 +150,13 @@ export async function runMockScenario(scenario: MockScenario, parentId = "parent
 
   if (scenario === "missed" || scenario === "missed_full") {
     const day = istDayKey();
+    const parent = await query<{ call_time: string }>(`select call_time from parents where id = $1`, [parentId]);
+    const [hh, mm] = (parent[0]?.call_time || "08:30").split(":").map((n) => Number(n));
     await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
       executionId,
       parentId,
-      istStamp(day, 8, 30),
-      istStamp(day, 8, 31),
+      istStamp(day, hh || 8, mm || 30),
+      istStampFromOffset(day, hh || 8, mm || 30, 1),
       0,
       "in_progress",
       "No answer.",

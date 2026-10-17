@@ -6,7 +6,7 @@ import { query } from "@/lib/db/client";
 import { ensureSeed } from "@/lib/db/seed";
 import { unauthorized } from "@/lib/http";
 import { advanceLadder } from "@/lib/ladder";
-import { istDayKey } from "@/lib/time";
+import { istDayBounds, istDayKey } from "@/lib/time";
 
 export async function POST(req: Request) {
   await connection();
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
   }
   await ensureSeed();
   const day = istDayKey();
+  const { start, end } = istDayBounds(day);
   const body = (await req.json().catch(() => ({}))) as { elapsed_min?: number };
   const elapsed = body.elapsed_min;
   const parents = await query<{ id: string; paused: boolean }>(
@@ -25,9 +26,9 @@ export async function POST(req: Request) {
   for (const parent of parents) {
     const open = await query<{ id: string; started_at: string; status: string }>(
       `select id, started_at, status from calls
-       where parent_id = $1 and started_at like $2 and status in ('missed','in_progress')
+       where parent_id = $1 and started_at >= $2 and started_at < $3 and status in ('missed','in_progress')
        order by started_at desc limit 1`,
-      [parent.id, `${day}%`],
+      [parent.id, start, end],
     );
     if (open[0]) {
       const mins =
@@ -40,8 +41,8 @@ export async function POST(req: Request) {
       continue;
     }
     const existing = await query<{ n: number }>(
-      `select count(*)::int as n from calls where parent_id = $1 and started_at like $2 and status in ('completed','no_conversation')`,
-      [parent.id, `${day}%`],
+      `select count(*)::int as n from calls where parent_id = $1 and started_at >= $2 and started_at < $3 and status in ('completed','no_conversation')`,
+      [parent.id, start, end],
     );
     if ((existing[0]?.n ?? 0) > 0) {
       results.push({ parent_id: parent.id, skipped: "already_called" });

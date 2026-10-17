@@ -3,7 +3,7 @@ import { query } from "@/lib/db/client";
 import type { AlertRow, CallRow, Contact, Parent } from "@/lib/db/types";
 import { EXAMPLE_TOKEN, publicBaseUrl } from "@/lib/config";
 import { todayStatus } from "@/lib/db/queries";
-import { formatIstTime, istDayKey } from "@/lib/time";
+import { formatIstTime, istDayKey, istStamp, nowIstStamp, parseHhMm } from "@/lib/time";
 import { sendFamilyMessage } from "@/lib/whatsapp/send";
 
 async function magicUrl(parentId: string) {
@@ -44,6 +44,7 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
   const { parent, child } = await household(parentId);
   if (!parent || !child) return { ok: false as const, reason: "missing_child" };
   const day = istDayKey();
+  const callMin = parseHhMm(parent.call_time || "08:30");
   const doses = await dosesOnDay(parentId, day);
   const act = await openActAlerts(parentId);
   const status = todayStatus({
@@ -51,7 +52,7 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
     call: {
       ...call,
       parent_id: parentId,
-      started_at: `${day}T08:30:00+05:30`,
+      started_at: istStamp(day, Math.floor(callMin / 60), callMin % 60),
       ended_at: null,
       duration_sec: null,
       summary_en: null,
@@ -62,7 +63,7 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
     doses,
     actAlerts: act,
     nowMin: 12 * 60,
-    callTimeMin: 8 * 60 + 30,
+    callTimeMin: callMin,
   });
   const label = status === "act" ? "Act now" : status === "look" || status === "trying" ? "Needs a look" : "Good";
   const url = await magicUrl(parentId);
@@ -125,7 +126,7 @@ export async function notifyAlert(parentId: string, alert: Pick<AlertRow, "id" |
 
 export async function broadcastAck(parentId: string, alertId: string, actor: string) {
   const { child, neighbour } = await household(parentId);
-  const when = formatIstTime("08:40");
+  const when = formatIstTime(nowIstStamp().slice(11, 16));
   const targets = [child, neighbour].filter(Boolean) as Contact[];
   const results = [];
   for (const person of targets) {

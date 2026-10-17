@@ -10,7 +10,7 @@ import type {
   Medicine,
   Parent,
 } from "@/lib/db/types";
-import { nowIstStamp } from "@/lib/time";
+import { istDayBounds, nowIstStamp } from "@/lib/time";
 
 export async function parentByToken(token: string) {
   await ensureSeed();
@@ -36,9 +36,10 @@ export async function medicinesFor(parentId: string) {
 }
 
 export async function callOnDay(parentId: string, day: string) {
+  const { start, end } = istDayBounds(day);
   const rows = await query<CallRow>(
-    `select * from calls where parent_id = $1 and started_at like $2 order by started_at desc limit 1`,
-    [parentId, `${day}%`],
+    `select * from calls where parent_id = $1 and started_at >= $2 and started_at < $3 order by started_at desc limit 1`,
+    [parentId, start, end],
   );
   return rows[0] ?? null;
 }
