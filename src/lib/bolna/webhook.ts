@@ -55,10 +55,14 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
   const noConvo = duration <= 0 || !transcriptHasParent(payload.transcript);
   const callId = already[0]?.id ?? executionId;
   const started = already[0]?.started_at ?? at;
-  const summaryEn = noConvo ? "No conversation." : (payload.extracted_data?.summary_en ?? "Morning call completed.");
-  const summaryHi = noConvo ? "बात नहीं हुई।" : (payload.extracted_data?.summary_hi ?? null);
-  const quote = noConvo ? null : (payload.extracted_data?.mood_quote ?? null);
-  const transcript = transcriptJson(payload.transcript);
+  const consent = await query<{ consent_status: string }>(`select consent_status from parents where id = $1`, [
+    parentId,
+  ]);
+  const keepWords = consent[0]?.consent_status === "given";
+  const summaryEn = keepWords ? (noConvo ? "No conversation." : (payload.extracted_data?.summary_en ?? "Morning call completed.")) : null;
+  const summaryHi = keepWords ? (noConvo ? "बात नहीं हुई।" : (payload.extracted_data?.summary_hi ?? null)) : null;
+  const quote = keepWords && !noConvo ? (payload.extracted_data?.mood_quote ?? null) : null;
+  const transcript = keepWords && !noConvo ? transcriptJson(payload.transcript) : null;
 
   if (already[0]) {
     await query(

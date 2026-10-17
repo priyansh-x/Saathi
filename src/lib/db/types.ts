@@ -14,6 +14,8 @@ export type Parent = {
   paused: boolean;
   recording_consent: boolean;
   is_example: boolean;
+  consent_status: "pending" | "given" | "declined";
+  consent_at: string | null;
 };
 
 export type Contact = {

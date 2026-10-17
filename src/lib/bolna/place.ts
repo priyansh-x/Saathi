@@ -29,13 +29,15 @@ export async function placeMorningCall(parentId: string) {
     first_name: string;
     call_time: string;
     languages: string;
+    consent_status: string;
   }>(
-    `select phone, paused, first_name, call_time, languages from parents where id = $1`,
+    `select phone, paused, first_name, call_time, languages, consent_status from parents where id = $1`,
     [parentId],
   );
   const parent = parents[0];
   if (!parent) return { ok: false as const, reason: "unknown_parent" };
   if (parent.paused) return { ok: false as const, reason: "paused" };
+  if (parent.consent_status === "declined") return { ok: false as const, reason: "declined" };
   if (!isMockBolna() && !(await hasPilotConsent(parentId))) {
     return { ok: false as const, reason: "consent" };
   }

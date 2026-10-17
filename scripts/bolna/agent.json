@@ -104,6 +104,22 @@
       "api_token": "Bearer {{SAATHI_TOOL_TOKEN}}"
     },
     {
+      "name": "record_consent",
+      "description": "Record whether the parent said yes or no to daily morning calls. Flat params only. answer is yes or no.",
+      "endpoint": "{{PUBLIC_BASE_URL}}/api/tools/record_consent",
+      "method": "POST",
+      "api_token": "Bearer {{SAATHI_TOOL_TOKEN}}",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "answer": { "type": "string", "enum": ["yes", "no"] },
+          "parent_id": { "type": "string" },
+          "call_sid": { "type": "string" }
+        },
+        "required": ["answer"]
+      }
+    },
+    {
       "name": "save_memory_note",
       "description": "Remember a follow-up or a stop request.",
       "endpoint": "{{PUBLIC_BASE_URL}}/api/tools/save_memory_note",
