@@ -6,7 +6,19 @@ export { EXAMPLE_TOKEN };
 
 export async function ensureSeed() {
   const existing = await query<{ n: number }>("select count(*)::int as n from parents");
-  if ((existing[0]?.n ?? 0) > 0) return;
+  if ((existing[0]?.n ?? 0) > 0) {
+    await query(
+      `update parents
+       set consent_status = 'given',
+           consent_at = c.at
+       from consents c
+       where c.parent_id = parents.id
+         and c.kind = 'parent_voice'
+         and c.granted = true
+         and parents.consent_status = 'pending'`,
+    );
+    return;
+  }
   await seed();
 }
 
