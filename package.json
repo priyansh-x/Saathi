@@ -1,15 +1,19 @@
 {
-  "name": "voice-check-in",
+  "name": "saathi",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 43147",
     "build": "next build",
     "start": "next start --port 43147",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "npx --yes tsx src/lib/db/seed-cli.ts",
+    "test": "npx --yes tsx --test --test-concurrency=1 src/lib/bolna/phase2.test.ts src/lib/outbound.test.ts src/lib/whatsapp/phase3.test.ts src/lib/ladder.test.ts",
+    "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@electric-sql/pglite": "^0.5.10",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
     "lucide-react": "^1.58.0",

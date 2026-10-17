@@ -13,7 +13,7 @@ import type { Household, Language, Relation } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const relations: Relation[] = ["Amma", "Aai", "Nani", "Papa", "Appa"];
-const languages: Language[] = ["Hindi", "Marathi", "Tamil", "Kannada"];
+const languages: Language[] = ["Hindi", "English", "Marathi", "Tamil", "Kannada"];
 
 const empty: Household = {
   childName: "",
@@ -68,13 +68,14 @@ export default function OnboardPage() {
     }
     setSaving(true);
     writeHousehold(form);
-    router.push("/family");
+    router.push("/d/example-kamla");
+    // Form copy is kept for consent practice. Family desk reads the database, not this write.
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10">
+    <main className="mx-auto w-full max-w-[480px] px-4 py-10">
       <p className="text-sm text-muted-foreground">Once. About four minutes.</p>
-      <h1 className="mt-2 font-heading text-3xl tracking-tight">Who should we call?</h1>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight">Who should we call?</h1>
       <p className="mt-3 text-muted-foreground">
         You fill this in. They only have to pick up. Hindi is the voice we ship first;
         English sits under every line so you can follow.
@@ -86,7 +87,7 @@ export default function OnboardPage() {
           className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           onClick={() => setDraft(DEMO_HOUSEHOLD)}
         >
-          Fill Kamala’s demo household
+          Fill Kamla’s example household
         </button>
       </div>
 
@@ -118,14 +119,14 @@ export default function OnboardPage() {
               id="parentName"
               value={form.parentName}
               onChange={(e) => set("parentName", e.target.value)}
-              placeholder="Kamala Iyer"
+              placeholder="Kamla Sharma"
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="What you call them" htmlFor="relation">
               <select
                 id="relation"
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+                className="h-12 w-full rounded-2xl border border-input bg-transparent px-3 text-base"
                 value={form.relation}
                 onChange={(e) => set("relation", e.target.value as Relation)}
               >
@@ -137,7 +138,7 @@ export default function OnboardPage() {
             <Field label="Language of the call" htmlFor="language">
               <select
                 id="language"
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+                className="h-12 w-full rounded-2xl border border-input bg-transparent px-3 text-base"
                 value={form.language}
                 onChange={(e) => set("language", e.target.value as Language)}
               >
@@ -153,7 +154,7 @@ export default function OnboardPage() {
                 id="parentPhone"
                 value={form.parentPhone}
                 onChange={(e) => set("parentPhone", e.target.value)}
-                placeholder="98450 22118"
+                placeholder="98100 22118"
               />
             </Field>
             <Field label="City" htmlFor="city">
@@ -161,7 +162,7 @@ export default function OnboardPage() {
                 id="city"
                 value={form.city}
                 onChange={(e) => set("city", e.target.value)}
-                placeholder="Coimbatore"
+                placeholder="Delhi"
               />
             </Field>
           </div>
@@ -191,7 +192,7 @@ export default function OnboardPage() {
                 id="neighborName"
                 value={form.neighborName}
                 onChange={(e) => set("neighborName", e.target.value)}
-                placeholder="Lakshmi"
+                placeholder="Sunita"
               />
             </Field>
             <Field label="Neighbour’s phone" htmlFor="neighborPhone">
@@ -208,7 +209,7 @@ export default function OnboardPage() {
         <label className="flex items-start gap-3 text-sm leading-6">
           <input
             type="checkbox"
-            className="mt-1"
+            className="mt-1 size-5"
             checked={form.parentConsented}
             onChange={(e) => set("parentConsented", e.target.checked)}
           />
@@ -225,7 +226,7 @@ export default function OnboardPage() {
         ) : null}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button type="submit" disabled={saving} className="h-10 px-4">
+          <Button type="submit" disabled={saving} className="h-12 w-full px-4">
             {saving ? "Saving…" : "Save and open family desk"}
           </Button>
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">

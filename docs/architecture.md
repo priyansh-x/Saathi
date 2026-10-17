@@ -1,65 +1,80 @@
 # Architecture
 
-Implements [prd.md](../prd.md). If a sentence here disagrees with the PRD, the PRD wins.
+Product specs in [docs/saathi/](./saathi/) win over this file when they disagree. Working name: **Saathi**.
 
 ## Surfaces
 
 ```
-Parent  -- PSTN or web-call -->  Bolna agent -- flags + transcript --> this app
-Child   -- browser ---------->  Next.js (onboard / family / call)
-Child   <-- WhatsApp later --  two-line briefing
-Neighbour <-- ping only on miss or emergency
+Parent  -- PSTN -->  Bolna agent (Phase 2)
+Child   -- WhatsApp briefing (Phase 3) + /d/[token] magic-link web view
+Neighbour -- alert only (Phase 3–4)
 ```
 
-The parent never opens this website. Judges will. Build the site for the child and for a demo of the call.
+The parent never opens this website.
 
-## Repo
-
-```
-prd.md                 product source of truth
-docs/                  how to build it
-src/app/               Next.js routes
-src/components/ui/     shadcn primitives (Button, Card, Input, …)
-src/lib/types.ts       household + call contracts from the PRD
-```
-
-### Routes to add (PRD §12)
+## Routes (Phase 1)
 
 | Route | Job |
 | --- | --- |
-| `/` | Short explanation + start / hear a call |
-| `/onboard` | One household form + consent |
-| `/family` | Last outcome, week strip, contacts |
-| `/call` | Scripted call first; Bolna web/PSTN when keys exist |
+| `/` | One screen, one CTA |
+| `/onboard` | Household form + consent |
+| `/d/[token]` | Today (family web view) |
+| `/d/[token]/history` | 7 / 30 calendar |
+| `/d/[token]/alerts` | Alert list |
+| `/d/[token]/alerts/[id]` | Alert detail |
+| `/d/[token]/calls/[id]` | Call detail |
+| `/d/[token]/settings` | Read-only settings |
+| `/demo/call` | Offline scripted simulator (judge fallback) |
+| `/family`, `/call` | Redirect into `/d/example-kamla` or `/demo/call` |
 
-## Data (slice 1)
+## Data
 
-No database. Persist one household and the last call in `localStorage` using the types in `src/lib/types.ts`.
+Postgres-shaped schema (Supabase in prod). Local: PGlite file `.data/saathi`.  
+Source of truth is the database. **localStorage is not used for the family view.** `/demo/call` may keep a local transcript as an offline judge fallback.
 
-Promote to a Route Handler + file/SQLite only if two browsers must share state for a live Bolna webhook.
+Tables: parents, contacts, medicines, schedules, calls, call_attempts, dose_logs, alerts, alert_events, memory_notes, consents, outbound_messages, webhook_events, magic_links.
 
-## Voice boundary
+`is_example=true` on seed rows. UI shows **EXAMPLE DATA**.
 
-| In this repo | In Bolna |
+When `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set, swap the driver (Phase 1 still runs on PGlite if they are empty).
+
+## Outbound (Phase 2)
+
+One gateway (`src/lib/outbound.ts`). Never dial/send outside `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.  
+`MOCK_BOLNA=1` and `MOCK_WHATSAPP=1` by default.
+
+| Route | Job |
 | --- | --- |
-| Household context (names, meds, language) | Agent prompt + voice |
-| “Call now” button | `POST /call` or web-call session |
-| Outcome, flags, transcript display | Speech in/out, barge-in, hangup |
-| Missed / retry *policy* | Actual retry + calling-hour guardrails |
+| `POST /api/tools/*` | Mid-call tools, Bearer `SAATHI_TOOL_TOKEN` |
+| `POST /api/webhooks/bolna` | Store every delivery; process `status=completed` |
+| `POST /api/cron/tick` | Place today's calls (own scheduler) |
+| `POST /api/demo/bolna` | Mock scenarios when `MOCK_BOLNA=1` |
 
-Until `BOLNA_API_KEY` is set, `/call` must still walk the four outcomes with a scripted Hindi conversation and English sidecar (PRD F4–F9).
+Agent config: `scripts/bolna/agent.json`. Sync: `npm run bolna:sync` (dry-run without a key).
 
-## Briefing
+Trial verification still pending — write results into `docs/saathi/engineering/bolna_api_notes.md`. Do not invent them.
 
-v1: render a WhatsApp-shaped card in `/family`.  
-v2: send a real message if a provider is configured.
+## WhatsApp (Phase 3)
 
-Never make the default briefing a full transcript.
+`MOCK_WHATSAPP=1` by default. Until `WHATSAPP_TEMPLATES_APPROVED=1`, we send `hello_world` (or email fallback) and still log the intended Utility copy.
+
+| Route | Job |
+| --- | --- |
+| `GET/POST /api/webhooks/whatsapp` | Verify + quick-reply acks. First ack wins. |
+| `POST /api/demo/whatsapp` | Mock “I'm on it” |
+
+A completed call writes a child briefing. `raise_alert` writes safety_alert + responder. Ack broadcasts `alert_ack_update`.
+
+## Escalation + pilot (Phase 4)
+
+Missed-call ladder (per-family `family_config`): T, +10, +25, soft notice +30, last try +45, child+neighbour +60 if nobody acked. Busy/declined ≠ unreachable.
+
+`SAATHI_KILL_SWITCH=1` stops `/api/cron/tick`, dialling, and sending. Real calls need child written consent + parent voice haan. Settings can delete all of Maa's data. `VOICE_ALERT_CHILD=1` queues an optional child voice alert on EMERGENCY only.
 
 ## What not to add
 
-- Auth, user accounts, Postgres, Redis
 - A second component library
-- Wearable / location / camera features
-- A parent-facing mobile app
-- Medical advice in the agent prompt
+- FastAPI / extra services
+- Diagnosis or dose advice
+- Third-party analytics
+- Parent-facing mobile app

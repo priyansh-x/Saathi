@@ -1,53 +1,71 @@
-# Daily voice check-in
+# Saathi
 
-Voice product for Indian parents who live without their children in the house. The agent calls the parent on the phone they already own; the child gets a two-line briefing.
+Working name for a morning phone call to an Indian parent, on the phone they already own. The child gets a short WhatsApp briefing. Companionship and reminders — never diagnosis. Easy to rename via `PRODUCT_NAME`.
 
-Built for the Bolna Symphony Buildathon and YC’s RFS on AI for the aging population. **Name is open.** Read the product, not the folder name.
+Built for the Bolna × YC Voice AI Buildathon. Product specs in [docs/saathi/](./docs/saathi/) win when they disagree with older notes.
 
-## Read first
+## Phase 1 (this slice)
 
-| Doc | What it is |
+Family web view from a magic link, seeded Postgres-shaped data, product chrome.
+
+| Route | Job |
 | --- | --- |
-| [prd.md](./prd.md) | Full PRD: research, problem, flows, requirements, sources |
-| [docs/architecture.md](./docs/architecture.md) | Repo layout, stack, Bolna boundary |
-| [docs/user-flows.md](./docs/user-flows.md) | Click paths to implement |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | How to run and what not to invent |
-
-## Stack
-
-- Next.js 16 (App Router) + TypeScript
-- Tailwind CSS 4 + shadcn/ui
-- Bolna for live voice (optional until keys exist)
-- No auth and no database in slice 1
+| `/` | One screen, one CTA |
+| `/onboard` | Household form + consent |
+| `/d/example-kamla` | Today |
+| `/d/example-kamla/history` | 7 / 30 calendar |
+| `/d/example-kamla/alerts` | Alert list + detail |
+| `/d/example-kamla/settings` | Read-only + pause |
+| `/demo/call` | Offline scripted call (judge fallback) |
 
 ## Run locally
 
 ```bash
 npm install
-cp .env.example .env.local   # optional; demo runs without Bolna
-npm run dev
-```
-
-Dev server: [http://127.0.0.1:43147](http://127.0.0.1:43147)
-
-```bash
+cp .env.example .env.local
+npm run dev          # http://127.0.0.1:43147
+npm run seed         # reset the Kamla Sharma example
 npm run lint
-npm run build
 ```
 
-## Current slice
+No Bolna or WhatsApp keys needed. Local data is PGlite at `.data/saathi`. Set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` later to swap the driver.
 
-Walkable product (scripted voice, not live Bolna yet):
+## Env (Phase 1)
 
-1. `/` — what it is
-2. `/onboard` — one household + consent
-3. `/call` — answer as the parent, or let it ring
-4. `/family` — OK / Watch / Emergency / Missed briefings
-
-```bash
-npm run dev    # http://127.0.0.1:43147
-```
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `MAGIC_LINK_SECRET`, `PRODUCT_NAME`. Names only in `.env.example`.
 
 ## Demo data
 
-Use the fictional household in the PRD (Kamala Iyer, Coimbatore; child Ananya). Do not call a real parent without their consent.
+Fictional only, labelled **EXAMPLE DATA**: Kamla Sharma (Delhi), Rohit, neighbour Sunita ji. Do not call a real parent without Priyansh’s go-ahead.
+
+## Phase 2 (mock Bolna)
+
+`MOCK_BOLNA=1` by default. No real dial.
+
+```bash
+npm test
+npm run bolna:sync    # dry-run without BOLNA_API_KEY
+```
+
+Settings → mock buttons: good morning, chest-pain line, late extraction.  
+Or `POST /api/demo/bolna` with `{ "scenario": "chest" }`.
+
+Real `POST /call` needs `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `MOCK_BOLNA=0`, and the number on `ALLOWED_PHONE_NUMBERS`. Trial notes stay empty until Priyansh runs them.
+
+## Phase 3 (mock WhatsApp)
+
+`MOCK_WHATSAPP=1` by default. No Meta send.
+
+After a mock completed call, Settings shows the logged briefing. Chest-pain also logs safety + neighbour responder. **I'm on it** on Alert detail (or Settings) is first-ack-wins and broadcasts the ack update.
+
+`WHATSAPP_TEMPLATES_APPROVED=0` uses `hello_world` + email fallback for real sends. Priyansh submits Utility templates.
+
+## Phase 4 (ladder + pilot)
+
+Settings → **Missed-call ladder** walks T / +10 / +25 / +30 soft notice / +45 / +60 neighbour+child if nobody acked.
+
+`SAATHI_KILL_SWITCH=1` stops cron, dials, and sends. Real calls need consent (child written + Maa's haan). **Delete all of Maa's data** wipes the household.
+
+## Later
+
+See `prd.md` and `docs/saathi/`. Live Bolna/WhatsApp still need Priyansh's allowlist and keys.
