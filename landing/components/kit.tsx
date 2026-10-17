@@ -29,7 +29,7 @@ export function DeviceFrame({
             <span className="battery" />
           </span>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
     </div>
   );
@@ -49,7 +49,7 @@ export function Waveform({ bars = 14, className = "" }: { bars?: number; classNa
 export function WhatsAppBriefing({ compact = false, className = "" }: { compact?: boolean; className?: string }) {
   const t = content.listen;
   return (
-    <div className={`flex h-full flex-col overflow-hidden bg-wa-bg ${className}`}>
+    <div className={`flex h-full min-h-0 flex-col overflow-hidden bg-wa-bg ${className}`}>
       <div className="flex items-center gap-2.5 bg-wa-head px-3 py-2.5 text-white">
         <ChevronLeft className="size-4 opacity-80" strokeWidth={2} aria-hidden />
         <span className="grid size-8 place-items-center rounded-full bg-white/15 font-deva text-sm" aria-hidden>

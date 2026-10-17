@@ -81,7 +81,6 @@ export function Nav() {
 
 export function Footer() {
   const t = content.footer;
-  const notes = content.problem.notes;
   const product = content.nav.links;
   return (
     <footer className="relative overflow-hidden border-t border-white/5 bg-dark text-dark-ink" data-band="dark">
@@ -105,7 +104,7 @@ export function Footer() {
             {t.emailLabel}
           </a>
         </div>
-        <nav className="text-[14px] md:col-span-2 md:col-start-7" aria-label={t.productTitle}>
+        <nav className="text-[14px] md:col-span-3 md:col-start-8" aria-label={t.productTitle}>
           <p className="font-medium">{t.productTitle}</p>
           <ul className="mt-4 space-y-2.5 text-dark-muted">
             {product.map((l) => (
@@ -142,18 +141,6 @@ export function Footer() {
             </li>
           </ul>
         </nav>
-        <div id="sources" className="text-[14px] md:col-span-2">
-          <p className="font-medium">{t.sources}</p>
-          <ul className="mt-4 space-y-2.5 text-dark-muted">
-            {notes.map((n) => (
-              <li key={n.id}>
-                <a className="hover:text-dark-ink" href={n.href} rel="noreferrer" target="_blank">
-                  {n.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
       <div className="container-site relative flex flex-col gap-3 border-t border-white/10 py-6 text-[13px] text-dark-muted md:flex-row md:items-center md:justify-between">
         <span>{t.copy}</span>

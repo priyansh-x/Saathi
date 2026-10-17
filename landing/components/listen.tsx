@@ -75,9 +75,9 @@ export function Listen() {
             <ExampleTag>{t.tag}</ExampleTag>
           </div>
 
-          <div className="mt-10 grid items-center justify-items-center gap-10 md:grid-cols-[1fr_auto_1fr] md:gap-6">
-            <DeviceFrame dark time="8:04" className="max-w-[300px]">
-              <div className="flex flex-1 flex-col px-5 pb-6 text-dark-ink" aria-label="Example: morning call transcript">
+          <div className="mt-10 grid items-center justify-items-center gap-8 overflow-hidden lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
+            <DeviceFrame dark time="8:04" className="max-w-[260px] lg:max-w-[280px]">
+              <div className="flex h-full min-h-0 flex-col px-4 pb-5 text-dark-ink" aria-label="Example: morning call transcript">
                 <div className="mt-4 text-center">
                   <span className="mx-auto grid size-14 place-items-center rounded-full bg-accent font-deva text-xl text-white">
                     {content.nav.glyph}
@@ -114,8 +114,8 @@ export function Listen() {
               <span className="h-px w-10 bg-border md:h-16 md:w-px" />
             </div>
 
-            <DeviceFrame time="8:06" className="max-w-[300px]">
-              <aside className="flex flex-1 flex-col" aria-label="Example: WhatsApp briefing">
+            <DeviceFrame time="8:06" className="max-w-[260px] lg:max-w-[280px]">
+              <aside className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Example: WhatsApp briefing">
                 <WhatsAppBriefing />
               </aside>
             </DeviceFrame>

@@ -33,13 +33,7 @@ export function Hero() {
       />
       <div className="container-site grid items-center gap-12 lg:grid-cols-[1.02fr_1fr] lg:gap-16">
         <div>
-          <p className="chip rise" style={d(0)}>
-            <span className="ring-pulse grid size-5 place-items-center rounded-full bg-accent text-accent">
-              <span className="size-1.5 rounded-full bg-white" />
-            </span>
-            {t.pill}
-          </p>
-          <h1 className="h1 rise mt-6" style={d(80)}>
+          <h1 className="h1 rise" style={d(0)}>
             {t.h1a}
             <br />
             {t.h1bLead} {t.h1b} <span className="serif-line accent-phrase">{t.h1accent}</span>
@@ -67,8 +61,8 @@ export function Hero() {
           </ul>
         </div>
 
-        <div ref={ref} className="rise relative mx-auto w-full max-w-[600px]" style={d(200)}>
-          <div className="art grain aspect-[4/3.4] shadow-[var(--shadow-mock)]">
+        <div ref={ref} className="rise relative mx-auto w-full max-w-[600px] pt-2" style={d(200)}>
+          <div className="art grain relative aspect-[4/3.2] shadow-[var(--shadow-mock)]">
             <Image
               src={heroImg}
               alt={t.imageAlt}
@@ -78,43 +72,44 @@ export function Hero() {
               sizes="(min-width: 1024px) 600px, 100vw"
               className="object-cover object-[70%_center]"
             />
-          </div>
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-dark/25 via-transparent to-transparent" />
 
-          <div
-            className="float absolute -bottom-8 left-3 w-[min(86%,340px)] rounded-[22px] border border-white/60 bg-bg-elevated/95 p-4 shadow-[var(--shadow-float)] backdrop-blur sm:-left-8"
-            style={{ "--fd": "0s" } as CSSProperties}
-          >
-            <div className="flex items-center gap-3">
-              <span className="ring-pulse grid size-10 shrink-0 place-items-center rounded-full bg-good text-good">
-                <PhoneCall className="size-4 text-white" strokeWidth={2} aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[14px] font-semibold leading-tight">{t.callStatus}</p>
-                <p className="font-mono text-[12px] text-ink-3">
-                  {t.callTitle} · {t.callClock}
-                </p>
+            <div
+              className="float absolute bottom-4 left-3 right-3 w-auto max-w-[340px] rounded-[22px] border border-white/60 bg-bg-elevated/95 p-4 shadow-[var(--shadow-float)] backdrop-blur sm:right-auto"
+              style={{ "--fd": "0s" } as CSSProperties}
+            >
+              <div className="flex items-center gap-3">
+                <span className="ring-pulse grid size-10 shrink-0 place-items-center rounded-full bg-good text-good">
+                  <PhoneCall className="size-4 text-white" strokeWidth={2} aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-semibold leading-tight">{t.callStatus}</p>
+                  <p className="font-mono text-[12px] text-ink-3">
+                    {t.callTitle} · {t.callClock}
+                  </p>
+                </div>
+                <Waveform bars={9} className="text-accent" />
               </div>
-              <Waveform bars={9} className="text-accent" />
+              <div className="mt-3 rounded-[14px] bg-bg-sunk px-3 py-2.5">
+                <p className={`text-[15px] leading-snug ${line.hi ? "font-deva" : ""}`}>
+                  <Crossfade text={line.text} lang={line.hi ? "hi" : "en"} />
+                </p>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.08em] text-ink-3">{line.lang}</p>
+              </div>
             </div>
-            <div className="mt-3 rounded-[14px] bg-bg-sunk px-3 py-2.5">
-              <p className={`text-[15px] leading-snug ${line.hi ? "font-deva" : ""}`}>
-                <Crossfade text={line.text} lang={line.hi ? "hi" : "en"} />
-              </p>
-              <p className="mt-1 text-[11px] uppercase tracking-[0.08em] text-ink-3">{line.lang}</p>
-            </div>
-          </div>
 
-          <div
-            className="float absolute -top-5 right-3 hidden w-[260px] rounded-[18px] rounded-tr-[6px] bg-wa-out p-3 text-[13px] leading-snug shadow-[var(--shadow-float)] sm:block md:-right-6"
-            style={{ "--fd": "-3s" } as CSSProperties}
-          >
-            <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-wa-head">
-              <span className="grid size-4 place-items-center rounded-full bg-wa-head font-deva text-[9px] text-white" aria-hidden>
-                {content.nav.glyph}
-              </span>
-              Saathi · 8:06 AM
-            </p>
-            {t.briefingShort}
+            <div
+              className="float absolute right-3 top-3 hidden w-[min(70%,240px)] rounded-[18px] rounded-tr-[6px] bg-wa-out p-3 text-[13px] leading-snug shadow-[var(--shadow-float)] sm:block"
+              style={{ "--fd": "-3s" } as CSSProperties}
+            >
+              <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-wa-head">
+                <span className="grid size-4 place-items-center rounded-full bg-wa-head font-deva text-[9px] text-white" aria-hidden>
+                  {content.nav.glyph}
+                </span>
+                Saathi · 8:06 AM
+              </p>
+              {t.briefingShort}
+            </div>
           </div>
         </div>
       </div>

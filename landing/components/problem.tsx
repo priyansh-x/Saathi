@@ -80,14 +80,6 @@ export function Problem() {
           </figcaption>
         </figure>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-12" data-reveal>
-          <p className="text-[15px] text-ink-2 md:col-span-6">
-            {t.whyNow}{" "}
-            <a href="#sources" className="text-ink-3 underline underline-offset-2">
-              Sources
-            </a>
-          </p>
-        </div>
       </div>
 
       <p className="h2 mx-auto mt-24 px-5 text-center md:mt-32" data-reveal>

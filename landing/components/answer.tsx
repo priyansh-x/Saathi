@@ -96,8 +96,8 @@ export function Answer() {
 
           <div className="relative mx-auto w-full max-w-[340px]" data-reveal>
             <div className="halo pointer-events-none absolute -inset-16 -z-0 opacity-50" aria-hidden />
-            <DeviceFrame className="relative mx-auto">
-              <div key={cur.id} className="screen-fade flex flex-1 flex-col gap-2.5 overflow-hidden px-3.5 pb-4" aria-label="Example: family Today screen" aria-live="polite">
+            <DeviceFrame className="relative mx-auto max-w-[280px]">
+              <div key={cur.id} className="screen-fade flex h-full min-h-0 flex-col gap-2 overflow-hidden px-3 pb-3" aria-label="Example: family Today screen" aria-live="polite">
                 <div className="flex items-center justify-between pt-1">
                   <div>
                     <p className="text-[18px] font-semibold leading-tight">{t.header}</p>
