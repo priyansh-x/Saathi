@@ -1,6 +1,7 @@
 import { query } from "@/lib/db/client";
 import { hasRaiseAlert, logMedicine, raiseAlert } from "@/lib/bolna/tools";
-import { istDayKey, istStamp } from "@/lib/time";
+import { transcriptHasParent, transcriptJson } from "@/lib/bolna/transcript";
+import { nowIstStamp } from "@/lib/time";
 import type { CallRow } from "@/lib/db/types";
 
 export type BolnaWebhook = {
@@ -20,19 +21,18 @@ export type BolnaWebhook = {
   context_details?: { recipient_data?: { parent_id?: string } };
 };
 
-function hasUserLine(transcript?: string) {
-  if (!transcript) return false;
-  return /(^|\n)\s*user\s*:/i.test(transcript);
-}
-
 export async function processBolnaWebhook(payload: BolnaWebhook, executionId: string) {
   const eventId = `wh_${executionId}_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+  const at = nowIstStamp();
+  if (at.endsWith("Z") || !at.includes("+05:30")) {
+    throw new Error("Bolna timestamps must be IST with +05:30, never Z");
+  }
   await query(`insert into webhook_events values ($1,$2,$3,$4,$5,$6)`, [
     eventId,
     "bolna",
     executionId,
     JSON.stringify(payload),
-    istStamp(istDayKey(), 8, 36),
+    at,
     false,
   ]);
 
@@ -52,16 +52,13 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
   if (!parentId) return { ok: false as const, error: "missing_parent" };
 
   const duration = payload.conversation_duration ?? 0;
-  const noConvo = duration <= 0 || !hasUserLine(payload.transcript);
+  const noConvo = duration <= 0 || !transcriptHasParent(payload.transcript);
   const callId = already[0]?.id ?? executionId;
-  const day = istDayKey();
-  const started = already[0]?.started_at ?? istStamp(day, 8, 30);
+  const started = already[0]?.started_at ?? at;
   const summaryEn = noConvo ? "No conversation." : (payload.extracted_data?.summary_en ?? "Morning call completed.");
   const summaryHi = noConvo ? "बात नहीं हुई।" : (payload.extracted_data?.summary_hi ?? null);
   const quote = noConvo ? null : (payload.extracted_data?.mood_quote ?? null);
-  const transcript = payload.transcript
-    ? JSON.stringify([{ speaker: "parent", hi: payload.transcript, en: payload.transcript }])
-    : null;
+  const transcript = transcriptJson(payload.transcript);
 
   if (already[0]) {
     await query(
@@ -69,7 +66,7 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
        where id = $1`,
       [
         callId,
-        istStamp(day, 8, 34),
+        at,
         Math.round(duration),
         noConvo ? "no_conversation" : "completed",
         summaryEn,
@@ -85,7 +82,7 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
       callId,
       parentId,
       started,
-      istStamp(day, 8, 34),
+      at,
       Math.round(duration),
       noConvo ? "no_conversation" : "completed",
       summaryEn,

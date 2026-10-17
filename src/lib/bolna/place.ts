@@ -32,12 +32,17 @@ export async function placeMorningCall(parentId: string) {
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
 
   const userData = await promptVariables(parentId);
+  // Omit from_phone_number so Bolna uses the account default. Never send a trailing Z.
   const payload = {
     agent_id: process.env.BOLNA_AGENT_ID,
     recipient_phone_number: gate.to,
     user_data: userData,
+    agent_data: { language: "hi" },
     max_duration: maxCallSeconds(),
   };
+  if ("from_phone_number" in payload) {
+    throw new Error("Do not set from_phone_number on POST /call");
+  }
 
   if (isMockBolna()) {
     const executionId = `mock_${parentId}_${istDayKey()}_${Date.now()}`;

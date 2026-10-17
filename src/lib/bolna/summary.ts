@@ -1,6 +1,6 @@
 import { contactsFor, medicinesFor } from "@/lib/db/queries";
 import { query } from "@/lib/db/client";
-import { istDayKey } from "@/lib/time";
+import { formatHeaderDate, istDayKey } from "@/lib/time";
 
 export async function lastCallSummary(parentId: string) {
   const day = istDayKey();
@@ -26,21 +26,32 @@ export async function lastCallSummary(parentId: string) {
 }
 
 export async function promptVariables(parentId: string) {
-  const parents = await query<{ first_name: string; timezone: string }>(
-    `select first_name, timezone from parents where id = $1`,
+  const parents = await query<{ first_name: string; timezone: string; languages: string; call_time: string }>(
+    `select first_name, timezone, languages, call_time from parents where id = $1`,
     [parentId],
   );
   const parent = parents[0];
   const contacts = await contactsFor(parentId);
   const child = contacts.find((c) => c.role === "child");
+  const meds = await medicinesFor(parentId);
+  const medicines = meds
+    .map((m, i) => `${i + 1}. id=${m.id} | ${m.name} (${m.dose}) | ${m.meal}, ${m.appearance}`)
+    .join("\n");
   return {
     parent_id: parentId,
+    parent_name: parent?.first_name ?? "",
     parent_first_name: parent?.first_name ?? "",
+    address_term: parent?.first_name ? `${parent.first_name} ji` : "ji",
+    preferred_language: parent?.languages?.includes("hi") ? "Hindi" : "English",
+    child_name: child?.first_name ?? "",
     child_first_name: child?.first_name ?? "",
+    child_relation: "beta",
     timezone: parent?.timezone ?? "Asia/Kolkata",
+    call_date: formatHeaderDate("en"),
+    call_time: parent?.call_time ?? "08:30",
+    agent_gender: "female",
     last_call_summary: await lastCallSummary(parentId),
-    medicines_due_today: (await medicinesFor(parentId))
-      .map((m) => `${m.name} ${m.appearance} ${m.meal}`)
-      .join("; "),
+    medicines,
+    medicines_due_today: meds.map((m) => `${m.name} ${m.appearance} ${m.meal}`).join("; "),
   };
 }
