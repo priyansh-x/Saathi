@@ -50,7 +50,7 @@ export default async function TodayPage({
           </p>
           <p className="tabular mt-1">{formatIstTime(data.parent.call_time)}</p>
         </li>
-        {attempts.length > 1 ? (
+        {attempts.length > 0 && (data.call?.status === "missed" || attempts.length > 1) ? (
           <li className="rounded-2xl border border-border bg-card px-4 py-3">
             <p className="text-sm text-muted-foreground">{t.ladder}</p>
             <ol className="mt-2 space-y-1 text-sm">

@@ -9,8 +9,38 @@ export function isMockBolna() {
   return (process.env.MOCK_BOLNA ?? "1") !== "0";
 }
 
+export function isMockWhatsapp() {
+  return (process.env.MOCK_WHATSAPP ?? "1") !== "0";
+}
+
+export function templatesApproved() {
+  return process.env.WHATSAPP_TEMPLATES_APPROVED === "1";
+}
+
+export function publicBaseUrl() {
+  return (process.env.PUBLIC_BASE_URL || "http://127.0.0.1:43147").replace(/\/$/, "");
+}
+
+export function whatsappVerifyToken() {
+  return process.env.WHATSAPP_VERIFY_TOKEN || (isMockWhatsapp() ? "dev-wa-verify" : "");
+}
+
 export function killSwitchOn() {
   return process.env.SAATHI_KILL_SWITCH === "1";
+}
+
+export function voiceAlertChild() {
+  return process.env.VOICE_ALERT_CHILD === "1";
+}
+
+export function defaultLadder() {
+  return {
+    retry_10: Number(process.env.LADDER_RETRY_10 || 10),
+    retry_25: Number(process.env.LADDER_RETRY_25 || 25),
+    soft_30: Number(process.env.LADDER_SOFT_30 || 30),
+    last_45: Number(process.env.LADDER_LAST_45 || 45),
+    escalate_60: Number(process.env.LADDER_ESCALATE_60 || 60),
+  };
 }
 
 export function toolToken() {

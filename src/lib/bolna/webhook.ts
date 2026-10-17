@@ -142,6 +142,13 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     ]);
   }
 
+  const { sendDailyBriefing } = await import("@/lib/whatsapp/notify");
+  await sendDailyBriefing(parentId, {
+    id: callId,
+    mood_quote: quote,
+    status: noConvo ? "no_conversation" : "completed",
+  });
+
   await query(`update webhook_events set processed = true where id = $1`, [eventId]);
   return { ok: true as const, call_id: callId, replay: false };
 }

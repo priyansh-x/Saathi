@@ -54,6 +54,23 @@ Agent config: `scripts/bolna/agent.json`. Sync: `npm run bolna:sync` (dry-run wi
 
 Trial verification still pending — write results into `docs/saathi/engineering/bolna_api_notes.md`. Do not invent them.
 
+## WhatsApp (Phase 3)
+
+`MOCK_WHATSAPP=1` by default. Until `WHATSAPP_TEMPLATES_APPROVED=1`, we send `hello_world` (or email fallback) and still log the intended Utility copy.
+
+| Route | Job |
+| --- | --- |
+| `GET/POST /api/webhooks/whatsapp` | Verify + quick-reply acks. First ack wins. |
+| `POST /api/demo/whatsapp` | Mock “I'm on it” |
+
+A completed call writes a child briefing. `raise_alert` writes safety_alert + responder. Ack broadcasts `alert_ack_update`.
+
+## Escalation + pilot (Phase 4)
+
+Missed-call ladder (per-family `family_config`): T, +10, +25, soft notice +30, last try +45, child+neighbour +60 if nobody acked. Busy/declined ≠ unreachable.
+
+`SAATHI_KILL_SWITCH=1` stops `/api/cron/tick`, dialling, and sending. Real calls need child written consent + parent voice haan. Settings can delete all of Maa's data. `VOICE_ALERT_CHILD=1` queues an optional child voice alert on EMERGENCY only.
+
 ## What not to add
 
 - A second component library

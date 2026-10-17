@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { ackAlert } from "@/lib/whatsapp/ack";
 import { alertById, alertEvents, resolveAlert } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
@@ -27,10 +28,17 @@ export default async function AlertDetailPage({
   }
   const events = await alertEvents(id);
   const t = messages[lang];
+  const actor = data.child?.first_name || "Rohit";
 
   async function resolve() {
     "use server";
     await resolveAlert(id);
+    redirect(`/d/${token}/alerts/${id}?lang=${lang}`);
+  }
+
+  async function onIt() {
+    "use server";
+    await ackAlert(id, actor);
     redirect(`/d/${token}/alerts/${id}?lang=${lang}`);
   }
 
@@ -58,9 +66,16 @@ export default async function AlertDetailPage({
           </li>
         ))}
       </ul>
-      {!alert.resolved_at ? (
-        <form action={resolve} className="mt-6">
+      {!alert.acked_at ? (
+        <form action={onIt} className="mt-6">
           <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-white">
+            {lang === "hi" ? "मैं जा रहा हूँ" : "I'm on it"}
+          </button>
+        </form>
+      ) : null}
+      {!alert.resolved_at ? (
+        <form action={resolve} className="mt-3">
+          <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border">
             {t.resolve}
           </button>
         </form>
