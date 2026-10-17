@@ -36,6 +36,11 @@ export function istStamp(day: string, hour: number, minute: number) {
   return `${day}T${hh}:${mm}:00+05:30`;
 }
 
+export function nowIstStamp(date = new Date()) {
+  const ist = istNow(date);
+  return istStamp(istDayKey(date), ist.getHours(), ist.getMinutes());
+}
+
 export function istStampFromOffset(day: string, startHour: number, startMin: number, offsetMin: number) {
   const total = startHour * 60 + startMin + offsetMin;
   return istStamp(day, Math.floor(total / 60), total % 60);

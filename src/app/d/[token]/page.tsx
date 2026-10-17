@@ -51,6 +51,7 @@ export default async function TodayPage({
   const showQuote = quote && !quoteInHero;
   const weekDays = data.week.calls;
   const parentId = data.parent.id;
+  const childName = data.child?.first_name || "family";
   const updatedAt = alert?.created_at || data.call?.ended_at || data.call?.started_at;
 
   async function resume() {
@@ -61,7 +62,7 @@ export default async function TodayPage({
 
   async function markOk() {
     "use server";
-    if (alert) await resolveAlert(alert.id);
+    if (alert) await resolveAlert(alert.id, childName);
     redirect(`/d/${token}?lang=${lang}`);
   }
 

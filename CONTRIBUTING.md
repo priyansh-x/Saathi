@@ -16,6 +16,14 @@ npm run lint
 
 New env names go in `.env.example` with no values.
 
+## PR B test plan (Alerts)
+
+- List: open first; each row has words in the status pill (Open / is going / Maa is OK / False alarm). Resolved rows have no red chip.
+- I'm on it → pill becomes "<name> is going · hh:mm" on list, detail, and Today.
+- Maa is OK → Act-now banner gone on History/Alerts/Settings.
+- Timeline has no raw enum words (`notified`, `acked`).
+- Actor is the token's child, time is now (not 12:00 / Rohit).
+
 ## PR A test plan (Today)
 
 - Before 8:40 IST with no call today: grey "Later today", not amber.

@@ -1,6 +1,6 @@
 import { query } from "@/lib/db/client";
 import { alertById } from "@/lib/db/queries";
-import { nowIst } from "@/lib/bolna/tools";
+import { nowIstStamp } from "@/lib/time";
 import { broadcastAck } from "@/lib/whatsapp/notify";
 
 export async function ackAlert(alertId: string, actor: string) {
@@ -9,7 +9,7 @@ export async function ackAlert(alertId: string, actor: string) {
   if (alert.acked_at) {
     return { ok: true as const, first: false as const, acked_by: alert.acked_by };
   }
-  const at = nowIst();
+  const at = nowIstStamp();
   await query(`update alerts set acked_at = $2, acked_by = $3 where id = $1 and acked_at is null`, [
     alertId,
     at,
