@@ -72,6 +72,10 @@ Settings → **Missed-call ladder** walks T / +10 / +25 / +30 soft notice / +45 
 
 Alerts list open first. Each row has a worded pill: Open / someone is going / Maa is OK / False alarm. Detail has a 3-step tracker, “I'm on it”, “Maa is OK”, and False alarm. Ack uses the real child name and time.
 
+## UX round 1 (PR C)
+
+Tab bar is fixed to the bottom with a safe-area inset. History has a Mon–Sun calendar, a visible legend, medicine counts for every tablet, and a stored-mood strip (no quote keyword matching). Call detail has a dated header, summary bullets, one medicines card, her words, and a collapsed transcript. EN↔हिं keeps `days` and `from`.
+
 ## UX round 1 (PR A)
 
 Today is one hero card: scheduled / trying / good / look / act / paused / skipped. A morning with no call yet stays grey "Later today", never amber. Medicines are one card. Settings → Missed shows a trying step list (no "ladder" / "T" / "+25").

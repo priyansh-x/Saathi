@@ -1,8 +1,8 @@
 const IST = "Asia/Kolkata";
 
-const WEEKDAY_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
-const WEEKDAY_HI = ["रवि", "सोम", "मंगल", "बुध", "गुरु", "शुक्र", "शनि"] as const;
-const MONTH_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+export const WEEKDAY_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+export const WEEKDAY_HI = ["रवि", "सोम", "मंगल", "बुध", "गुरु", "शुक्र", "शनि"] as const;
+export const MONTH_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 
 export function productName() {
   return process.env.PRODUCT_NAME || "Saathi";
@@ -133,4 +133,18 @@ export function formatUpdated(iso: string | null | undefined, lang: "en" | "hi")
 export function weekdayShort(day: string, lang: "en" | "hi") {
   const { weekday } = parseIstParts(`${day}T00:00:00+05:30`);
   return lang === "hi" ? WEEKDAY_HI[weekday] : WEEKDAY_EN[weekday];
+}
+
+export function formatCallHeader(
+  iso: string,
+  durationSec: number | null | undefined,
+  languageLabel: string,
+  lang: "en" | "hi" = "en",
+) {
+  const { mo, d, hh, mm, weekday } = parseIstParts(iso);
+  const weekdayLabel = lang === "hi" ? WEEKDAY_HI[weekday] : WEEKDAY_EN[weekday];
+  const clock = `${formatClock(hh, mm)} IST`;
+  const dur = formatDuration(durationSec);
+  const date = `${weekdayLabel} ${d} ${MONTH_EN[mo - 1]}`;
+  return [date, clock, dur, languageLabel].filter(Boolean).join(" · ");
 }

@@ -157,6 +157,7 @@ async function seedMissedDay(day: string, callId: string, fullLadder: boolean, i
     null,
     true,
   ]);
+  await query(`update calls set mood = $2 where id = $1`, [callId, "unclear"]);
   const results = fullLadder
     ? ["no_answer", "no_answer", "no_answer", "no_answer", "escalated"]
     : ["no_answer", "no_answer"];
@@ -289,6 +290,9 @@ async function seedCompletedDay(
     null,
     true,
   ]);
+  const mood =
+    variant === "chest" || variant === "fall" ? "low" : variant === "missed_med" || opts.skipped ? "okay" : "cheerful";
+  await query(`update calls set mood = $2 where id = $1`, [callId, mood]);
   await query(`insert into call_attempts values ($1,$2,$3,$4,$5,$6)`, [
     `att_${day}_0`,
     callId,

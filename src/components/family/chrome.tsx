@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, Bell, CalendarDays, House, Settings } from "lucide-react";
 import type { AlertRow } from "@/lib/db/types";
+import { qs } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { categoryWords, humanQuote } from "@/lib/today";
 import { formatFriendlyTime, formatHeaderDate, formatUpdated } from "@/lib/time";
@@ -32,7 +33,7 @@ export function ActBanner({
   const clock = hh ? `${Number(hh) % 12 || 12}:${mm} ${Number(hh) < 12 ? "AM" : "PM"}` : formatFriendlyTime(first.created_at, lang);
   return (
     <Link
-      href={`/d/${token}/alerts/${first.id}?lang=${lang}`}
+      href={`/d/${token}/alerts/${first.id}${qs({ lang })}`}
       className="mx-4 mt-2 flex min-h-11 items-center justify-between rounded-2xl bg-alert px-3 py-2 text-sm text-white"
     >
       <span>
@@ -51,10 +52,12 @@ export function TopBar({
   lang,
   example,
   updatedAt,
+  extraQuery,
 }: {
   lang: Lang;
   example?: boolean;
   updatedAt?: string | null;
+  extraQuery?: Record<string, string | undefined>;
 }) {
   const next = lang === "en" ? "hi" : "en";
   const t = messages[lang];
@@ -70,7 +73,7 @@ export function TopBar({
         </p>
       </div>
       <Link
-        href={`?lang=${next}`}
+        href={qs({ ...extraQuery, lang: next })}
         className="inline-flex h-11 min-w-11 items-center justify-center rounded-2xl border border-border px-3 text-sm"
       >
         {lang === "en" ? "हिं" : "EN"}
@@ -79,7 +82,17 @@ export function TopBar({
   );
 }
 
-export function TabBar({ token, lang, active }: { token: string; lang: Lang; active: string }) {
+export function TabBar({
+  token,
+  lang,
+  active,
+  openAlerts = 0,
+}: {
+  token: string;
+  lang: Lang;
+  active: string;
+  openAlerts?: number;
+}) {
   const t = messages[lang];
   const items = [
     { href: `/d/${token}`, key: "today", label: t.today, icon: House },
@@ -88,7 +101,10 @@ export function TabBar({ token, lang, active }: { token: string; lang: Lang; act
     { href: `/d/${token}/settings`, key: "settings", label: t.settings, icon: Settings },
   ];
   return (
-    <nav className="sticky bottom-0 border-t border-border bg-background">
+    <nav
+      className="fixed right-0 bottom-0 left-0 z-20 border-t border-border bg-background"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <ul className="mx-auto grid max-w-[480px] grid-cols-4">
         {items.map((item) => {
           const Icon = item.icon;
@@ -96,10 +112,21 @@ export function TabBar({ token, lang, active }: { token: string; lang: Lang; act
           return (
             <li key={item.key}>
               <Link
-                href={`${item.href}?lang=${lang}`}
-                className={`flex h-16 flex-col items-center justify-center gap-1 text-xs ${on ? "text-primary" : "text-muted-foreground"}`}
+                href={`${item.href}${qs({ lang })}`}
+                aria-current={on ? "page" : undefined}
+                className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[13px] ${
+                  on ? "font-bold text-foreground" : "text-muted-foreground"
+                }`}
               >
-                <Icon className="size-5" aria-hidden />
+                {on ? <span aria-hidden className="absolute inset-x-6 top-0 h-0.5 bg-primary" /> : null}
+                <span className="relative">
+                  <Icon className="size-5" aria-hidden />
+                  {item.key === "alerts" && openAlerts > 0 ? (
+                    <span className="absolute -top-1.5 -right-2 min-w-4 rounded-full bg-alert px-1 text-center text-[10px] leading-4 text-white">
+                      {openAlerts}
+                    </span>
+                  ) : null}
+                </span>
                 {item.label}
               </Link>
             </li>
@@ -107,6 +134,14 @@ export function TabBar({ token, lang, active }: { token: string; lang: Lang; act
         })}
       </ul>
     </nav>
+  );
+}
+
+export function BackLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="inline-flex h-11 min-h-11 items-center text-sm font-medium">
+      {children}
+    </Link>
   );
 }
 
@@ -118,6 +153,7 @@ export function FamilyFrame({
   active,
   children,
   updatedAt,
+  extraQuery,
 }: {
   token: string;
   lang: Lang;
@@ -126,13 +162,14 @@ export function FamilyFrame({
   active: string;
   children: React.ReactNode;
   updatedAt?: string | null;
+  extraQuery?: Record<string, string | undefined>;
 }) {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[480px] flex-col">
-      <TopBar lang={lang} example={example} updatedAt={updatedAt} />
+      <TopBar lang={lang} example={example} updatedAt={updatedAt} extraQuery={extraQuery} />
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
-      <div className="flex-1 px-4 pb-8">{children}</div>
-      <TabBar token={token} lang={lang} active={active} />
+      <div className="flex-1 px-4 pb-24">{children}</div>
+      <TabBar token={token} lang={lang} active={active} openAlerts={alerts.length} />
     </div>
   );
 }
