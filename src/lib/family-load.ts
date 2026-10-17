@@ -39,7 +39,7 @@ export async function loadFamily(token: string) {
     query<LadderPlan>(
       `select retry_10, retry_25, soft_30, last_45, escalate_60 from family_config where parent_id = $1`,
       [parent.id],
-    ),
+    ).catch(() => [] as LadderPlan[]),
   ]);
   const attempts = call ? await attemptsFor(call.id) : [];
   const uniqueDoses = dedupeDoses(doses);
