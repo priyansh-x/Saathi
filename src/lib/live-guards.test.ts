@@ -28,13 +28,13 @@ describe("WhatsApp webhook JSON", () => {
 });
 
 describe("tool api_token", () => {
-  it("accepts Bearer, x-api-token, and ?api_token=", () => {
+  it("accepts Bearer and x-api-token headers, not ?api_token=", () => {
     process.env.MOCK_BOLNA = "1";
     delete process.env.SAATHI_TOOL_TOKEN;
     const token = "dev-tool-token";
     assert.equal(toolAuthorized(new Request("http://local/api/tools/log_medicine", { headers: { authorization: `Bearer ${token}` } })), true);
     assert.equal(toolAuthorized(new Request("http://local/api/tools/log_medicine", { headers: { "x-api-token": token } })), true);
-    assert.equal(toolAuthorized(new Request(`http://local/api/tools/log_medicine?api_token=${token}`)), true);
+    assert.equal(toolAuthorized(new Request(`http://local/api/tools/log_medicine?api_token=${token}`)), false);
     assert.equal(toolAuthorized(new Request("http://local/api/tools/log_medicine")), false);
   });
 });
