@@ -19,7 +19,7 @@ export function SiteEffects() {
     const bands = document.querySelectorAll("[data-band='dark']");
     const io = new IntersectionObserver(
       (entries) => {
-        const over = entries.some((e) => e.isIntersecting && e.intersectionRatio > 0.2 && e.boundingClientRect.top < 80);
+        const over = entries.some((e) => e.intersectionRatio > 0.2 && e.boundingClientRect.top < 80);
         document.documentElement.dataset.navDark = over ? "true" : "false";
       },
       { rootMargin: "-64px 0px -80% 0px", threshold: [0, 0.2, 1] },
@@ -44,15 +44,21 @@ export function SkipLink() {
   );
 }
 
+export function LogoTile({ size = "size-8", text = "text-sm" }: { size?: string; text?: string }) {
+  return (
+    <span className={`grid ${size} place-items-center rounded-lg bg-ink font-deva ${text} text-bg`} aria-hidden>
+      {content.nav.glyph}
+    </span>
+  );
+}
+
 export function Nav() {
   const t = content.nav;
   return (
-    <header className="site-nav sticky top-0 z-40 h-16 border-b border-transparent transition-[background,border-color] duration-250">
+    <header className="site-nav sticky top-0 z-40 h-16 border-b border-transparent transition-[background,border-color] duration-[180ms]">
       <div className="container-site flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 font-medium">
-          <span className="grid size-8 place-items-center rounded-lg bg-accent font-deva text-white" aria-hidden>
-            {t.glyph}
-          </span>
+          <LogoTile />
           <span>{t.logo}</span>
         </Link>
         <nav className="hidden items-center gap-6 text-[15px] md:flex" aria-label="Primary">
@@ -70,31 +76,42 @@ export function Nav() {
 
 export function Footer() {
   const t = content.footer;
+  const notes = content.problem.notes;
   return (
     <footer className="border-t border-border bg-bg">
       <div className="container-site flex flex-col gap-10 py-16 md:flex-row md:items-end md:justify-between">
-        <p className="font-serif text-3xl italic leading-tight text-ink md:text-4xl">
+        <p className="serif-line text-3xl leading-tight md:text-4xl">
           {t.signA}
           <br />
-          <span className="accent-word">{t.signB}</span>
+          {t.signB}
         </p>
         <a
           href={`mailto:${t.email}`}
-          className="grid size-12 place-items-center rounded-full border border-border"
+          className="grid size-12 place-items-center rounded-full border border-border text-ink-2"
           aria-label={`Email ${t.email}`}
         >
-          <Mail className="size-5" />
+          <Mail className="size-5" strokeWidth={1.5} />
         </a>
       </div>
-      <div className="container-site flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border py-6 text-sm text-ink-2">
-        <span className="flex items-center gap-2 font-medium text-ink">
-          <span className="grid size-6 place-items-center rounded-md bg-accent font-deva text-[11px] text-white">स</span>
-          {t.copy}
-        </span>
-        <Link href="/privacy">{t.privacy}</Link>
-        <Link href="/terms">{t.terms}</Link>
-        <span>{t.built}</span>
-        <a href="#sources">{t.sources}</a>
+      <div id="sources" className="container-site flex flex-wrap items-start justify-between gap-6 border-t border-border py-6 text-sm text-ink-2">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <span className="flex items-center gap-2 font-medium text-ink">
+            <LogoTile size="size-6" text="text-[11px]" />
+            {t.copy}
+          </span>
+          <Link href="/privacy">{t.privacy}</Link>
+          <Link href="/terms">{t.terms}</Link>
+          <span>{t.built}</span>
+        </div>
+        <ul className="max-w-md space-y-1">
+          {notes.map((n) => (
+            <li key={n.id}>
+              <a className="underline-offset-2 hover:underline" href={n.href}>
+                {n.text}
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
     </footer>
   );

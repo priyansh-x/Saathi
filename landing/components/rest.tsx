@@ -1,8 +1,11 @@
 "use client";
 
-import { Bell, Check, Layout, MessageCircle, Mic, Phone, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Bell, Layout, MessageCircle, Mic, Minus, Phone, Plus, Users } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Tick, WhatsAppBriefing } from "@/components/kit";
+import { Crossfade } from "@/lib/crossfade";
 import { content } from "@/lib/content";
+import { useInView, usePrefersReducedMotion } from "@/lib/use-reveal";
 import { Eyebrow } from "./chrome";
 import { JoinButton } from "./waitlist";
 
@@ -13,26 +16,25 @@ export function HerWay() {
   return (
     <section className="section pt-8">
       <div className="container-site">
-        <h2 className="h2 max-w-4xl" data-reveal>
+        <h2 className="h2" data-reveal>
           {t.h3a}
           <br />
-          <span className="accent-word">{t.h3b}</span>
+          <span className="serif-line">{t.h3b}</span>
         </h2>
         <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-3 md:overflow-visible">
           {t.cards.map((c) => (
-            <article key={c.name} className="min-w-[80%] snap-start rounded-[24px] border border-border bg-bg-elevated p-5 md:min-w-0">
-              <p className="example-tag">{t.tag}</p>
-              <p className="mt-3 text-xl font-medium">{c.name}</p>
-              <p className="font-mono text-[12px] text-ink-2">
-                {c.lang} · {c.time}
+            <article key={c.name} className="mock-card min-w-[80%] snap-start p-5 md:min-w-0">
+              <p className="text-[13px] text-ink-2">
+                {c.name} · {c.lang} · {c.time}
               </p>
               <p className="font-deva mt-4 text-lg" lang="hi">
                 {c.line}
               </p>
-              <p className="mt-4 text-sm text-ink-2">{t.caption}</p>
+              <p className="example-tag mt-4">{t.tag}</p>
             </article>
           ))}
         </div>
+        <p className="mt-2 text-sm text-ink-2">{t.caption}</p>
       </div>
     </section>
   );
@@ -48,32 +50,31 @@ export function Connect() {
           <h2 className="h2 md:col-span-7" data-reveal>
             {t.h2}
           </h2>
-          <p className="text-[18px] text-ink-2 md:col-span-5">{t.sub}</p>
+          <p className="sub md:col-span-5">{t.sub}</p>
         </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          <ul className="space-y-3">
+        <div className="mt-10 grid gap-8 md:grid-cols-2 md:gap-0">
+          <ul className="space-y-3 md:pr-10">
             <li className="font-medium">{t.maaTitle}</li>
             {t.maa.map((row) => {
               const Icon = icons[row.icon];
               return (
-                <li key={row.text} className="flex gap-3 rounded-2xl border border-border p-3">
-                  <Icon className="size-5 text-accent" />
+                <li key={row.text} className="flex gap-3 py-2">
+                  <Icon className="size-5 text-ink-2" strokeWidth={1.5} />
                   {row.text}
                 </li>
               );
             })}
           </ul>
-          <div className="grid place-items-center rounded-[28px] bg-dark p-8 text-center text-dark-ink">
-            <p className="font-mono text-[11px] uppercase text-dark-accent">Saathi</p>
-            <p className="mt-3 text-xl">{t.node}</p>
-          </div>
-          <ul className="space-y-3">
+          <ul className="space-y-3 border-t border-border pt-8 md:border-t-0 md:border-l md:pt-0 md:pl-10">
             <li className="font-medium">{t.youTitle}</li>
+            <li className="max-w-sm">
+              <WhatsAppBriefing compact />
+            </li>
             {t.you.map((row) => {
               const Icon = icons[row.icon];
               return (
-                <li key={row.text} className="flex gap-3 rounded-2xl border border-border p-3">
-                  <Icon className="size-5 text-accent" />
+                <li key={row.text} className="flex gap-3 py-2">
+                  <Icon className="size-5 text-ink-2" strokeWidth={1.5} />
                   {row.text}
                 </li>
               );
@@ -83,7 +84,7 @@ export function Connect() {
         <ul className="mt-8 flex flex-wrap gap-4 text-sm">
           {t.trust.map((item) => (
             <li key={item} className="flex items-center gap-2">
-              <Check className="size-4 text-good" />
+              <Tick />
               {item}
             </li>
           ))}
@@ -104,7 +105,11 @@ export function Faq() {
           <div className="md:col-span-7">
             {t.items.map((item, i) => (
               <details key={item.q} className="group border-b border-border py-4" open={i === 0}>
-                <summary className="cursor-pointer list-none text-lg font-medium">{item.q}</summary>
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-medium">
+                  {item.q}
+                  <Plus className="size-4 shrink-0 text-ink-2 group-open:hidden" strokeWidth={1.5} aria-hidden />
+                  <Minus className="hidden size-4 shrink-0 text-ink-2 group-open:block" strokeWidth={1.5} aria-hidden />
+                </summary>
                 <p className="mt-2 text-[16px] leading-relaxed text-ink-2">{item.a}</p>
               </details>
             ))}
@@ -118,28 +123,29 @@ export function Faq() {
 export function Finale() {
   const t = content.finale;
   const [i, setI] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
+  const reduced = usePrefersReducedMotion();
+
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setInterval(() => setI((n) => (n + 1) % t.prompts.length), 2800);
+    if (reduced || !inView) return;
+    const id = window.setInterval(() => setI((n) => (n + 1) % t.prompts.length), 3200);
     return () => window.clearInterval(id);
-  }, [t.prompts.length]);
+  }, [inView, reduced, t.prompts.length]);
 
   return (
     <section className="dark-band section-finale bg-dark text-dark-ink" data-band="dark">
       <div className="container-site text-center">
-        <svg className="mx-auto mb-12 h-8 w-full max-w-xl text-dark-ink/20" viewBox="0 0 400 24" aria-hidden>
-          <path d="M0 12 Q 25 2 50 12 T 100 12 T 150 12 T 200 12 T 250 12 T 300 12 T 350 12 T 400 12" fill="none" stroke="currentColor" strokeWidth="1" />
-        </svg>
-        <h2 className="h2 mx-auto max-w-4xl">
+        <h2 className="h2 mx-auto">
           {t.h2a}
           <br />
-          <span className="accent-word">{t.h2b}</span>
+          <span className="serif-line">{t.h2b}</span>
         </h2>
-        <div className="mx-auto mt-10 flex max-w-xl flex-col items-stretch gap-3 rounded-full border border-white/10 bg-dark-elevated p-2 md:flex-row md:items-center">
-          <p className="flex-1 px-4 text-left text-dark-muted">{t.prompts[i]}</p>
-          <JoinButton className="btn w-full md:w-auto">
-            {t.cta} ↗
-          </JoinButton>
+        <div ref={ref} className="mx-auto mt-10 max-w-xl">
+          <p className="min-h-[1.6em] text-dark-muted">
+            <Crossfade text={t.prompts[reduced ? 0 : i]} />
+          </p>
+          <JoinButton className="btn mt-5 w-full md:w-auto">{t.cta}</JoinButton>
         </div>
       </div>
     </section>
@@ -147,21 +153,5 @@ export function Finale() {
 }
 
 export function Sources() {
-  const notes = content.problem.notes;
-  return (
-    <section id="sources" className="border-t border-border py-10">
-      <div className="container-site text-sm text-ink-2">
-        <p className="font-mono text-[11px] uppercase">Sources</p>
-        <ol className="mt-3 list-decimal space-y-1 pl-5">
-          {notes.map((n) => (
-            <li key={n.id}>
-              <a className="underline-offset-2 hover:underline" href={n.href}>
-                {n.text}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
+  return null;
 }

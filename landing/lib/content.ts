@@ -79,8 +79,13 @@ export const content = {
     briefing:
       "✅ Maa is doing well today. Picked up at 8:04 AM and took both tablets (BP, sugar). In her words: “Ghutne ka dard aaj kam hai.”",
     briefingMeta: "Saathi · reply to ask anything · 8:06 AM",
+    briefingFooter: "Saathi · reply to ask anything",
+    briefingTime: "8:06 AM",
     openToday: "Open today",
     messageMaa: "Message Maa",
+    soon: "soon",
+    callClock: "02:14",
+    example: "Example · fictional",
   },
   problem: {
     eyebrowN: "01",
@@ -113,6 +118,7 @@ export const content = {
       "Who checks on her when I travel?",
       "Did she sleep last night?",
     ],
+    times: ["8:10", "9:40", "11:05", "13:20", "16:45", "19:10", "21:30", "23:40"],
     caption: "One day. Eight guesses. No real answer.",
     closerA: "Everything else got an app.",
     closerB: "Maa still trusts a ringing phone.",
@@ -163,6 +169,10 @@ export const content = {
       { title: "The medicine strip sees", body: "3 tablets left" },
     ],
     node: "“Ghutne ka dard kam hai. Dawai le li.” · 8:04 AM",
+    nodeTitle: "Saathi · 8:04 AM",
+    nodeQuote: "“घुटने का दर्द कम है। दवाई ले ली।”",
+    missedRow: "Missed call ×2 · Rohit",
+    stripLabel: "3 tablets left",
     captions: [
       "A blue tick is not a morning.",
       "A missed call is not a check-in.",
@@ -214,6 +224,7 @@ export const content = {
     ],
     voiceTitle: "Tell Maa before the first call",
     voiceBar: "20 s voice note in Hindi",
+    voiceClock: "0:20",
     steps: [
       { label: "You fill the form", state: "Done" },
       { label: "Maa hears your voice note", state: "Done" },

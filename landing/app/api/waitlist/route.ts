@@ -37,6 +37,9 @@ export async function POST(req: Request) {
 
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url && process.env.NODE_ENV === "production") {
+    return Response.json({ ok: false, error: "waitlist_unavailable" }, { status: 503 });
+  }
   if (url && key) {
     const { createClient } = await import("@supabase/supabase-js");
     const sb = createClient(url, key, { auth: { persistSession: false } });

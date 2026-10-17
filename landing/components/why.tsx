@@ -1,42 +1,83 @@
-"use client";
-
+import { CheckCheck } from "lucide-react";
 import { content } from "@/lib/content";
 import { Eyebrow } from "./chrome";
 
+function Strip() {
+  return (
+    <div className="mt-3 flex gap-1" aria-hidden>
+      {Array.from({ length: 10 }).map((_, i) => (
+        <span
+          key={i}
+          className={`h-7 w-4 rounded-[4px] border border-border ${i < 3 ? "bg-ink-2" : "bg-bg"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function Why() {
   const t = content.why;
+  const artefacts = [
+    {
+      title: t.cards[0].title,
+      body: t.cards[0].body,
+      visual: (
+        <p className="mt-3 flex items-center gap-1 text-[15px] text-ink-2">
+          {t.cards[0].body}
+          <CheckCheck className="size-4" strokeWidth={1.5} />
+        </p>
+      ),
+    },
+    {
+      title: t.cards[1].title,
+      body: t.missedRow,
+      visual: <p className="mt-3 text-[15px]">{t.missedRow}</p>,
+    },
+    {
+      title: t.cards[2].title,
+      body: t.cards[2].body,
+      visual: (
+        <p className="mt-3 max-w-[14rem] rounded-[12px] border border-border bg-bg px-3 py-2 text-[15px]">
+          {t.cards[2].body}
+        </p>
+      ),
+    },
+    {
+      title: t.cards[3].title,
+      body: t.stripLabel,
+      visual: (
+        <>
+          <Strip />
+          <p className="mt-2 text-[15px]">{t.stripLabel}</p>
+        </>
+      ),
+    },
+  ];
+
   return (
     <section className="section">
       <div className="container-site">
         <Eyebrow n={t.eyebrowN} label={t.eyebrow} />
-        <h2 className="h2 mt-6 max-w-4xl" data-reveal>
+        <h2 className="h2 mt-6" data-reveal>
           {t.h2a}
           <br />
-          <span className="accent-word">{t.h2b}</span>
+          <span className="serif-line">{t.h2b}</span>
         </h2>
-        <div
-          className="board relative mt-10 aspect-[16/9] overflow-hidden rounded-[28px] border border-border bg-[radial-gradient(circle,_rgba(46,42,38,.08)_1px,_transparent_1px)] bg-[length:18px_18px] shadow-[var(--shadow-mock)]"
-          aria-label="Example: partial signals around one morning"
-          data-reveal
-        >
-          <div className="board-pan absolute inset-0 grid grid-cols-2 grid-rows-2 gap-4 p-4 md:p-8" data-loop>
-            {t.cards.map((c) => (
-              <article key={c.title} className="rounded-2xl border border-border bg-bg-elevated p-4">
-                <p className="font-mono text-[11px] uppercase text-ink-2">{c.title}</p>
-                <p className="mt-2 text-xl font-medium">{c.body}</p>
-              </article>
-            ))}
-          </div>
-          <div className="absolute left-1/2 top-1/2 z-10 w-[min(70%,18rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-accent bg-bg-elevated p-4 text-center shadow-[var(--shadow-mock)]">
-            <p className="font-mono text-[11px] uppercase text-accent">Saathi</p>
-            <p className="font-deva mt-1 text-sm" lang="hi">
-              {t.node}
-            </p>
-          </div>
+        <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="Example: partial signals around one morning">
+          {artefacts.map((c) => (
+            <article key={c.title} className="mock-card p-4">
+              <p className="text-[14px] text-ink-2">{c.title}</p>
+              {c.visual}
+            </article>
+          ))}
         </div>
-        <p className="mx-auto mt-4 w-fit rounded-full border border-border bg-bg-elevated px-3 py-1 font-mono text-[12px] text-ink-2">
-          {t.captions[4]}
-        </p>
+        <article className="mock-card mt-3 p-5">
+          <p className="text-[14px] text-ink-2">{t.nodeTitle}</p>
+          <p className="font-deva mt-2 text-xl" lang="hi">
+            {t.node.split(" · ")[0]}
+          </p>
+          <p className="mt-2 text-sm text-ink-2">{t.captions[4]}</p>
+        </article>
         <p className="mt-6 text-[18px] text-ink-2">{t.close}</p>
       </div>
     </section>

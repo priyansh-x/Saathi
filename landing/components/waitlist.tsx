@@ -79,7 +79,7 @@ export function WaitlistProvider({ children }: { children: React.ReactNode }) {
       {children}
       <dialog
         ref={dialog}
-        className="w-[min(100%-32px,32rem)] rounded-[20px] border border-border bg-bg-elevated p-6 text-ink shadow-[var(--shadow-mock)] backdrop:bg-[rgba(46,42,38,.35)] open:animate-[dialog-in_0.3s_var(--ease)]"
+        className="w-[min(100%-32px,32rem)] rounded-[20px] border border-border bg-bg-elevated p-6 text-ink shadow-[var(--shadow-mock)] backdrop:bg-ink/35 open:animate-[dialog-in_0.3s_var(--ease)]"
         aria-labelledby="waitlist-title"
       >
         <h2 id="waitlist-title" className="text-[22px] font-medium tracking-tight">
