@@ -154,7 +154,7 @@ export default function OnboardPage() {
                 id="parentPhone"
                 value={form.parentPhone}
                 onChange={(e) => set("parentPhone", e.target.value)}
-                placeholder="98450 22118"
+                placeholder="98100 22118"
               />
             </Field>
             <Field label="City" htmlFor="city">
