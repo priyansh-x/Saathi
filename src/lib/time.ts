@@ -135,9 +135,14 @@ export function weekdayShort(day: string, lang: "en" | "hi") {
   return lang === "hi" ? WEEKDAY_HI[weekday] : WEEKDAY_EN[weekday];
 }
 
-export function formatCallHeader(iso: string, durationSec: number | null | undefined, languageLabel: string) {
+export function formatCallHeader(
+  iso: string,
+  durationSec: number | null | undefined,
+  languageLabel: string,
+  lang: "en" | "hi" = "en",
+) {
   const { mo, d, hh, mm, weekday } = parseIstParts(iso);
-  const weekdayLabel = WEEKDAY_EN[weekday];
+  const weekdayLabel = lang === "hi" ? WEEKDAY_HI[weekday] : WEEKDAY_EN[weekday];
   const clock = `${formatClock(hh, mm)} IST`;
   const dur = formatDuration(durationSec);
   const date = `${weekdayLabel} ${d} ${MONTH_EN[mo - 1]}`;

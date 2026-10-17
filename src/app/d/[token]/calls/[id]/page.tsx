@@ -74,7 +74,7 @@ async function CallBody({
     >
       <BackLink href={backHref}>{backLabel}</BackLink>
       <p className="mt-3 tabular text-sm text-muted-foreground">
-        {formatCallHeader(call.started_at, call.duration_sec, callLanguageLabel(lang, spoken))}
+        {formatCallHeader(call.started_at, call.duration_sec, callLanguageLabel(lang, spoken), lang)}
       </p>
 
       <section className="mt-5">
