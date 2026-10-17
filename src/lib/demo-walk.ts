@@ -1,0 +1,98 @@
+import { EXAMPLE_TOKEN, publicBaseUrl } from "@/lib/config";
+import { renderTemplate } from "@/lib/whatsapp/templates";
+
+/** EXAMPLE WhatsApp copy for the two demo walks. Never sent unless mocks are on. */
+export function exampleWhatsappPreviews() {
+  const desk = `${publicBaseUrl()}/d/${EXAMPLE_TOKEN}`;
+  const alert = `${desk}/alerts/example`;
+  return {
+    safety_en: renderTemplate("safety_alert_en", [
+      "Kamla",
+      "Seene mein dard ho raha hai.",
+      "08:33",
+      "Rohit",
+      "Sunita",
+      alert,
+    ]),
+    safety_hi: renderTemplate("safety_alert_hi", [
+      "Kamla",
+      "सीने में दर्द हो रहा है।",
+      "08:33",
+      "Rohit",
+      "Sunita",
+      alert,
+    ]),
+    responder_hi: renderTemplate("responder_hi", ["Kamla", "सीने में दर्द हो रहा है।", "08:33"]),
+    responder_en: renderTemplate("responder_en", ["Kamla", "Seene mein dard ho raha hai.", "08:33"]),
+    ack_en: renderTemplate("alert_ack_update_en", ["Rohit", "8:40 AM IST"]),
+    ack_hi: renderTemplate("alert_ack_update_hi", ["Rohit", "8:40 AM IST"]),
+    missed_soft_en: renderTemplate("daily_briefing_en", [
+      "Kamla",
+      "08:30",
+      "Needs a look",
+      "—",
+      "No answer yet.",
+      desk,
+    ]),
+    neighbour_missed_en: renderTemplate("responder_en", [
+      "Kamla",
+      "Couldn't reach Maa after the morning calls.",
+      "09:30",
+    ]),
+  };
+}
+
+export const WALK_COPY = {
+  en: {
+    title: "Demo walkthroughs",
+    hint: "Two EXAMPLE paths, under two minutes. Mocks only — no real call or WhatsApp.",
+    reset: "Reset today's EXAMPLE household",
+    redTitle: "Red flag: chest pain",
+    redHint: "Play the morning, show the family and neighbour WhatsApp, then first-ack-wins.",
+    redPlay: "1. Play chest-pain morning",
+    redAck: "2. Rohit taps I'm going",
+    missedTitle: "Missed morning ladder",
+    missedHint: "Walk T → +10 → +25 → soft +30 → +45 → neighbour at +60.",
+    missedStart: "1. Start a missed morning",
+    missedSoft: "2. Jump to the +30 soft notice",
+    missedLast: "3. Jump to the last +45 try",
+    missedEsc: "4. Escalate to Sunita ji (+60)",
+    preview: "WhatsApp preview (EXAMPLE)",
+    child: "To Rohit",
+    neighbour: "To Sunita ji",
+    ack: "After first ack",
+    openToday: "Open Today's desk",
+    openAlerts: "Open alerts",
+    outbound: "Logged outbound",
+    outboundEmpty: "No mock messages yet. Play a walk first.",
+    doneRed: "Alert is open. First person to tap wins.",
+    doneAck: "Rohit is on it. Saathi will not keep pinging.",
+    doneMissed: "Neighbour is asked to knock.",
+  },
+  hi: {
+    title: "डेमो वॉकथ्रू",
+    hint: "दो EXAMPLE रास्ते, दो मिनट से कम। केवल मॉक — असली कॉल या व्हाट्सऐप नहीं।",
+    reset: "आज का EXAMPLE घर रीसेट करें",
+    redTitle: "रेड फ़्लैग: सीने में दर्द",
+    redHint: "सुबह चलाएँ, बच्चे और पड़ोसी का व्हाट्सऐप देखें, फिर पहला जवाब जीतता है।",
+    redPlay: "1. सीने के दर्द वाली सुबह",
+    redAck: "2. रोहित ने कहा — मैं जा रहा हूँ",
+    missedTitle: "छूटी सुबह की सीढ़ी",
+    missedHint: "T → +10 → +25 → नरम +30 → +45 → +60 पर पड़ोसी।",
+    missedStart: "1. छूटी सुबह शुरू करें",
+    missedSoft: "2. +30 की नरम सूचना",
+    missedLast: "3. +45 की आख़िरी कोशिश",
+    missedEsc: "4. सुनीता जी तक पहुँचाएँ (+60)",
+    preview: "व्हाट्सऐप पूर्वावलोकन (उदाहरण)",
+    child: "रोहित को",
+    neighbour: "सुनीता जी को",
+    ack: "पहले जवाब के बाद",
+    openToday: "आज का डेस्क खोलें",
+    openAlerts: "अलर्ट खोलें",
+    outbound: "लॉग हुए संदेश",
+    outboundEmpty: "अभी मॉक संदेश नहीं। पहले एक वॉक चलाएँ।",
+    doneRed: "अलर्ट खुला है। पहले टैप करने वाला जीतता है।",
+    doneAck: "रोहित जा रहे हैं। साथी फिर नहीं पूछेगा।",
+    doneMissed: "पड़ोसी से दरवाज़ा खटखटाने को कहा गया।",
+  },
+} as const;

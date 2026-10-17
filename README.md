@@ -19,6 +19,7 @@ Family web view from a magic link, seeded Postgres-shaped data, product chrome.
 | `/d/example-kamla/alerts` | Alert list + detail |
 | `/d/example-kamla/settings` | Read-only + pause |
 | `/demo/call` | Offline scripted call (judge fallback) |
+| `/demo/controls` | Two-minute EXAMPLE walks: red flag and missed ladder |
 
 ## Run locally
 

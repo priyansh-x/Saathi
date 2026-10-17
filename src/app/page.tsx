@@ -27,6 +27,9 @@ export default function Home() {
       <Link href="/demo/call" className="mt-3 inline-flex h-12 w-full items-center justify-center text-sm text-muted-foreground">
         Hear a practice call
       </Link>
+      <Link href="/demo/controls" className="mt-2 inline-flex h-12 w-full items-center justify-center text-sm text-muted-foreground">
+        Run the two-minute EXAMPLE walks
+      </Link>
     </main>
   );
 }

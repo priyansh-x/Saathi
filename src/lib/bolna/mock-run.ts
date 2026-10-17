@@ -6,7 +6,7 @@ import { istDayBounds, istDayKey, istStamp, istStampFromOffset } from "@/lib/tim
 
 export type MockScenario = "good" | "chest" | "late" | "replay" | "missed" | "missed_full" | "skip";
 
-async function resetToday(parentId: string) {
+export async function resetToday(parentId: string) {
   const day = istDayKey();
   const { start, end } = istDayBounds(day);
   await query(
