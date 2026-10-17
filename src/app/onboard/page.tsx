@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DEMO_HOUSEHOLD } from "@/lib/demo-household";
 import { useHousehold, writeHousehold } from "@/lib/store";
-import { useClientReady } from "@/lib/use-client-ready";
 import type { Household, Language, Relation } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +33,6 @@ const empty: Household = {
 
 export default function OnboardPage() {
   const router = useRouter();
-  const ready = useClientReady();
   const saved = useHousehold();
   const [draft, setDraft] = useState<Household | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,14 +69,6 @@ export default function OnboardPage() {
     setSaving(true);
     writeHousehold(form);
     router.push("/family");
-  }
-
-  if (!ready) {
-    return (
-      <main className="mx-auto max-w-2xl px-4 py-16 text-sm text-muted-foreground">
-        Loading the form…
-      </main>
-    );
   }
 
   return (

@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { makeCallRecord } from "@/lib/call-record";
 import { DEMO_HOUSEHOLD } from "@/lib/demo-household";
@@ -11,34 +11,15 @@ import { OUTCOME_LABEL, outcomeClass } from "@/lib/outcomes";
 import { buildBeats, closingLine, outcomeFrom } from "@/lib/script";
 import { speakHindi, stopSpeaking } from "@/lib/speak";
 import { ensureDemoHousehold, useHousehold, writeCall } from "@/lib/store";
-import { useClientReady } from "@/lib/use-client-ready";
 import type { CallFlag, CallRecord, Household, TranscriptLine } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Phase = "idle" | "ringing" | "retry" | "talk" | "done";
 
 export default function CallPage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="mx-auto max-w-md px-4 py-16 text-sm text-muted-foreground">
-          Connecting…
-        </main>
-      }
-    >
-      <CallInner />
-    </Suspense>
-  );
-}
-
-function CallInner() {
   const router = useRouter();
-  const params = useSearchParams();
-  const ready = useClientReady();
   const stored = useHousehold();
-  const demo = params.get("demo") === "1";
-  const household = stored ?? (demo ? DEMO_HOUSEHOLD : null);
-
+  const household = stored ?? DEMO_HOUSEHOLD;
   const [phase, setPhase] = useState<Phase>("idle");
   const [beatIndex, setBeatIndex] = useState(0);
   const [flags, setFlags] = useState<CallFlag[]>([]);
@@ -46,39 +27,10 @@ function CallInner() {
   const [record, setRecord] = useState<CallRecord | null>(null);
   const clock = useRef({ startedAt: 0 });
 
-  const beats = useMemo(() => (household ? buildBeats(household) : []), [household]);
+  const beats = useMemo(() => buildBeats(household), [household]);
   const beat = beats[beatIndex];
 
-  if (!ready) {
-    return (
-      <main className="mx-auto max-w-md px-4 py-16 text-sm text-muted-foreground">
-        Connecting…
-      </main>
-    );
-  }
-
-  if (!household) {
-    return (
-      <main className="mx-auto max-w-lg px-4 py-16">
-        <h1 className="font-heading text-3xl tracking-tight">No number to ring</h1>
-        <p className="mt-3 text-muted-foreground">
-          Set up a household, or load the fictional Coimbatore demo.
-        </p>
-        <div className="mt-6 flex gap-3">
-          <Link href="/onboard" className={cn(buttonVariants(), "h-10 px-4")}>
-            Set up
-          </Link>
-          <Link href="/call?demo=1" className={cn(buttonVariants({ variant: "outline" }), "h-10 px-4")}>
-            Use demo
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
-  const house = household;
-
-  if (house.paused) {
+  if (household.paused) {
     return (
       <main className="mx-auto max-w-lg px-4 py-16">
         <h1 className="font-heading text-3xl tracking-tight">Calling is paused</h1>
@@ -93,10 +45,10 @@ function CallInner() {
     );
   }
 
-  const parent = firstName(house.parentName);
+  const parent = firstName(household.parentName);
 
   function startRing() {
-    if (demo && !stored) ensureDemoHousehold();
+    if (!stored) ensureDemoHousehold();
     clock.current.startedAt = 1;
     setFlags([]);
     setTranscript([]);
@@ -118,7 +70,7 @@ function CallInner() {
   function missFirst() {
     setPhase("retry");
     window.setTimeout(() => {
-      persist(house, {
+      persist(household, {
         outcome: "missed",
         nextFlags: [],
         lines: [
@@ -141,8 +93,8 @@ function CallInner() {
     ];
     const shouldClose = choice.flags.includes("fall") || beatIndex >= beats.length - 1;
     if (shouldClose) {
-      const close = closingLine(house, nextFlags);
-      persist(house, {
+      const close = closingLine(household, nextFlags);
+      persist(household, {
         outcome: outcomeFrom(nextFlags),
         nextFlags,
         lines: [...afterParent, { speaker: "agent", hi: close.hi, en: close.en }],

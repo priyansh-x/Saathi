@@ -6,23 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { firstName } from "@/lib/names";
 import { OUTCOME_LABEL, outcomeClass } from "@/lib/outcomes";
 import { useCallLog, useHousehold, useLastCall, writeCall, writeHousehold } from "@/lib/store";
-import { useClientReady } from "@/lib/use-client-ready";
 import type { CallOutcome, CallRecord } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function FamilyPage() {
-  const ready = useClientReady();
   const household = useHousehold();
   const last = useLastCall();
   const log = useCallLog();
-
-  if (!ready) {
-    return (
-      <main className="mx-auto max-w-3xl px-4 py-16 text-sm text-muted-foreground">
-        Opening the desk…
-      </main>
-    );
-  }
 
   if (!household) {
     return (

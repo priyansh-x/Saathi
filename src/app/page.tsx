@@ -20,7 +20,7 @@ export default function Home() {
             Set up a household
           </Link>
           <Link
-            href="/call?demo=1"
+            href="/call"
             className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 px-5")}
           >
             Hear a demo call
