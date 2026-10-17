@@ -185,7 +185,7 @@ export function Finale() {
             </div>
           ) : (
             <form onSubmit={onSubmit} className="grid gap-3" aria-label={t.cta}>
-              <div className="grid gap-3 md:grid-cols-[1fr_190px_auto]">
+              <div className="grid gap-3 md:grid-cols-[1fr_170px_auto]">
                 <label htmlFor={ids.contact} className="sr-only">
                   {t.contact}
                 </label>

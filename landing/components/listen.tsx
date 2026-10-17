@@ -53,8 +53,8 @@ export function Listen() {
           className="relative mt-12 overflow-hidden rounded-[32px] border border-border bg-bg-sunk px-4 pb-10 pt-8 md:mt-16 md:px-10 md:pb-14 md:pt-10"
           data-reveal
         >
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="seg" role="group" aria-label="Call language">
+          <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+            <div className="seg max-w-full overflow-x-auto" role="group" aria-label="Call language">
               {t.languages.map((l) => {
                 const id = l.live ? (l.id as LangId) : null;
                 return (

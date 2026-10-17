@@ -316,7 +316,7 @@ export const content = {
     h2a: "Give Maa a morning call",
     h2b: "she looks forward to.",
     sub: "We're starting with a small group of families. Leave a way to reach you and we'll write when a spot opens.",
-    contact: "Your email or WhatsApp number",
+    contact: "Email or WhatsApp number",
     lang: "Maa's language",
     consent: "Contact me only about Saathi.",
     cta: "Join the pilot",
