@@ -66,6 +66,10 @@ Settings → **Missed-call ladder** walks T / +10 / +25 / +30 soft notice / +45 
 
 `SAATHI_KILL_SWITCH=1` stops cron, dials, and sends. Real calls need consent (child written + Maa's haan). **Delete all of Maa's data** wipes the household.
 
+## UX round 1 (PR B)
+
+Alerts list open first. Each row has a worded pill: Open / someone is going / Maa is OK / False alarm. Detail has a 3-step tracker, “I'm on it”, “Maa is OK”, and False alarm. Ack uses the real child name and time.
+
 ## UX round 1 (PR A)
 
 Today is one hero card: scheduled / trying / good / look / act / paused / skipped. A morning with no call yet stays grey "Later today", never amber. Medicines are one card. Settings → Missed shows a trying step list (no "ladder" / "T" / "+25").
