@@ -2,10 +2,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { injectConsentLines, loadConsentSpokenLines } from "../../src/lib/voice/consent-line";
 
+loadConsentSpokenLines();
 const agent = JSON.parse(
   readFileSync(path.join(process.cwd(), "scripts/bolna/agent.json"), "utf8"),
 ) as Record<string, unknown>;
-agent.prompt = injectConsentLines(String(agent.prompt), loadConsentSpokenLines());
+agent.prompt = injectConsentLines(String(agent.prompt));
 
 const key = process.env.BOLNA_API_KEY;
 const base = process.env.BOLNA_BASE_URL || "https://api.bolna.ai";
