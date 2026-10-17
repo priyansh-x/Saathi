@@ -8,7 +8,7 @@
     "start": "next start --port 43147",
     "lint": "eslint",
     "seed": "npx --yes tsx src/lib/db/seed-cli.ts",
-    "test": "npx --yes tsx --test --test-concurrency=1 src/lib/today.test.ts src/lib/bolna/phase2.test.ts src/lib/outbound.test.ts src/lib/whatsapp/phase3.test.ts src/lib/ladder.test.ts",
+    "test": "npx --yes tsx --test --test-concurrency=1 src/lib/today.test.ts src/lib/alerts.test.ts src/lib/bolna/phase2.test.ts src/lib/outbound.test.ts src/lib/whatsapp/phase3.test.ts src/lib/ladder.test.ts",
     "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts"
   },
   "dependencies": {

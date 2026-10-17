@@ -72,6 +72,7 @@ export type AlertRow = {
   resolved_at: string | null;
   late: boolean;
   source: string;
+  is_false?: boolean;
 };
 
 export type AttemptRow = {

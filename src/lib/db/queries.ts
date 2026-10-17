@@ -10,7 +10,7 @@ import type {
   Medicine,
   Parent,
 } from "@/lib/db/types";
-import { istDayKey, istStamp } from "@/lib/time";
+import { nowIstStamp } from "@/lib/time";
 
 export async function parentByToken(token: string) {
   await ensureSeed();
@@ -80,7 +80,12 @@ export async function openActAlerts(parentId: string) {
 
 export async function alertsFor(parentId: string) {
   return query<AlertRow>(
-    `select * from alerts where parent_id = $1 order by created_at desc`,
+    `select a.*, exists(
+        select 1 from alert_events e where e.alert_id = a.id and e.kind = 'false_alarm'
+      ) as is_false
+     from alerts a
+     where a.parent_id = $1
+     order by a.resolved_at is null desc, a.created_at desc`,
     [parentId],
   );
 }
@@ -116,18 +121,22 @@ export async function historyDays(parentId: string, days: number) {
 
 export { todayStatus } from "@/lib/today";
 
-export async function resolveAlert(id: string) {
+export async function resolveAlert(
+  id: string,
+  actor = "family",
+  kind: "resolved" | "false_alarm" = "resolved",
+) {
   const existing = await alertById(id);
   if (!existing || existing.resolved_at) return;
-  const at = istStamp(istDayKey(), 12, 0);
+  const at = nowIstStamp();
   await query(`update alerts set resolved_at = $2 where id = $1 and resolved_at is null`, [id, at]);
   await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
-    `ae_res_${id}_${at}`,
+    `ae_res_${id}_${at}_${kind}`,
     id,
     at,
-    "resolved",
-    "Rohit",
-    "Resolved from web view",
+    kind,
+    actor,
+    kind === "false_alarm" ? "False alarm" : "Maa is OK",
     true,
   ]);
 }
