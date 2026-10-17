@@ -47,6 +47,10 @@ export function toolToken() {
   return process.env.SAATHI_TOOL_TOKEN || (isMockBolna() ? "dev-tool-token" : "");
 }
 
+export function bolnaWebhookSecret() {
+  return process.env.BOLNA_WEBHOOK_SECRET || (isMockBolna() ? toolToken() : "");
+}
+
 export function cronSecret() {
   return process.env.CRON_SECRET || (isMockBolna() ? "dev-cron" : "");
 }
@@ -54,7 +58,9 @@ export function cronSecret() {
 /** Refuse live mode without real secrets. No `dev-*` fallbacks when MOCK_*=0. */
 export function assertLiveSecrets() {
   if (!isMockBolna()) {
-    const missing = ["BOLNA_API_KEY", "SAATHI_TOOL_TOKEN", "CRON_SECRET"].filter((key) => !process.env[key]);
+    const missing = ["BOLNA_API_KEY", "SAATHI_TOOL_TOKEN", "CRON_SECRET", "BOLNA_WEBHOOK_SECRET"].filter(
+      (key) => !process.env[key],
+    );
     if (missing.length) {
       throw new Error(`MOCK_BOLNA=0 requires ${missing.join(", ")}. No dev-* fallbacks.`);
     }

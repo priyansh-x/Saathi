@@ -32,6 +32,18 @@ export function fixtureButtonMessage(args: { from: string; title: string; payloa
   };
 }
 
+export function parseWhatsappWebhookJson(raw: string): { ok: true; messages: WaMessage[] } | { ok: false } {
+  try {
+    const body = JSON.parse(raw || "{}") as {
+      entry?: { changes?: { value?: { messages?: WaMessage[] } }[] }[];
+    };
+    const messages = body.entry?.flatMap((e) => e.changes?.flatMap((c) => c.value?.messages ?? []) ?? []) ?? [];
+    return { ok: true, messages };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export async function processInboundMessages(messages: WaMessage[]) {
   const results = [];
   for (const msg of messages) {
