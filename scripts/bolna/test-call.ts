@@ -4,7 +4,7 @@
  * Usage: npx tsx scripts/bolna/test-call.ts +91XXXXXXXXXX --yes
  * Default (no --yes, or MOCK_BOLNA still on): print the intended payload and exit without fetch.
  */
-import { canPlaceLiveCall, parseTestCallArgs, plannedTestCall } from "../../src/lib/bolna/test-call-cli.ts";
+import { canPlaceLiveCall, parseTestCallArgs, plannedTestCall } from "../../src/lib/bolna/test-call-cli";
 
 async function main() {
   const { yes, phone } = parseTestCallArgs(process.argv.slice(2));
@@ -31,10 +31,10 @@ async function main() {
     return;
   }
 
-  const { query } = await import("../../src/lib/db/client.ts");
-  const { closeDb } = await import("../../src/lib/db/client.ts");
-  const { ensureSeed } = await import("../../src/lib/db/seed.ts");
-  const { placeMorningCall } = await import("../../src/lib/bolna/place.ts");
+  const { query } = await import("../../src/lib/db/client");
+  const { closeDb } = await import("../../src/lib/db/client");
+  const { ensureSeed } = await import("../../src/lib/db/seed");
+  const { placeMorningCall } = await import("../../src/lib/bolna/place");
   await ensureSeed();
   const parents = await query<{ id: string }>(`select id from parents where regexp_replace(phone, '[^0-9+]', '', 'g') = $1`, [
     live.to,
