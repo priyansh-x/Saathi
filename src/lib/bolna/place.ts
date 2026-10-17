@@ -12,8 +12,8 @@ export function bolnaAgentLanguage(languages: string | null | undefined) {
   return first || "hi";
 }
 
-export async function minutesUsedToday() {
-  const { start, end } = istDayBounds(istDayKey());
+export async function minutesUsedToday(clock: Date = new Date()) {
+  const { start, end } = istDayBounds(istDayKey(clock));
   const rows = await query<{ secs: number }>(
     `select coalesce(sum(duration_sec),0)::int as secs from calls where started_at >= $1 and started_at < $2`,
     [start, end],
@@ -21,7 +21,7 @@ export async function minutesUsedToday() {
   return Math.ceil((rows[0]?.secs ?? 0) / 60);
 }
 
-export async function placeMorningCall(parentId: string) {
+export async function placeMorningCall(parentId: string, clock: Date = new Date()) {
   if (killSwitchOn()) return { ok: false as const, reason: "kill_switch" };
   const parents = await query<{
     phone: string;
@@ -41,7 +41,7 @@ export async function placeMorningCall(parentId: string) {
   if (!isMockBolna() && !(await hasPilotConsent(parentId))) {
     return { ok: false as const, reason: "consent" };
   }
-  const used = await minutesUsedToday();
+  const used = await minutesUsedToday(clock);
   if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
   const gate = gateOutbound("call", parent.phone);
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
@@ -60,12 +60,12 @@ export async function placeMorningCall(parentId: string) {
   }
 
   if (isMockBolna()) {
-    const executionId = `mock_${parentId}_${istDayKey()}_${Date.now()}`;
+    const executionId = `mock_${parentId}_${istDayKey(clock)}_${Date.now()}`;
     const callMin = parseHhMm(parent.call_time || "08:30");
     await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
       executionId,
       parentId,
-      istStamp(istDayKey(), Math.floor(callMin / 60), callMin % 60),
+      istStamp(istDayKey(clock), Math.floor(callMin / 60), callMin % 60),
       null,
       null,
       "in_progress",
