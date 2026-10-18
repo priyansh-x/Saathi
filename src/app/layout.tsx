@@ -3,14 +3,14 @@ import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
+import { AppStyles } from "@/components/app-styles";
 import { PwaBoot } from "@/components/pwa/boot";
-import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 const instrument = Instrument_Serif({
@@ -50,6 +50,7 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
       className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full ${hi ? "font-devanagari" : ""}`}
     >
       <body className="flex min-h-full flex-col">
+        <AppStyles />
         <PwaBoot />
         {children}
       </body>

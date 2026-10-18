@@ -30,7 +30,7 @@ cd landing && npm install && npm run dev   # landing, port 43211
 
 Local data is PGlite at `.data/saathi` when `DATABASE_URL` is unset. Set `DATABASE_URL` to a Postgres URL (Supabase) and run `npm run db:migrate`. Tests always use PGlite.
 
-Images go through `next/image` with `sizes`. Fonts are subset (latin Inter/serif, Devanagari Noto; only Inter is preloaded). Today, Alerts, and History stay server-rendered — no React client bundle.
+Images go through `next/image` with `sizes`. Fonts are subset (latin Inter/serif, Devanagari Noto) and not preloaded, so CSS is not queued behind the typefaces. Compiled CSS is inlined (`npm run prebuild`). Today, Alerts, and History stay server-rendered — no React client bundle.
 
 ## Mocks and allowlist
 

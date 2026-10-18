@@ -1,6 +1,5 @@
-import { Suspense } from "react";
 import Link from "next/link";
-import { EmptyState, ExpiredLink, FamilyFrame, LoadingState, PageTitle } from "@/components/family/chrome";
+import { EmptyState, ExpiredLink, FamilyFrame, PageTitle } from "@/components/family/chrome";
 import { historyDays, medicinesFor } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import {
@@ -27,11 +26,7 @@ export default async function HistoryPage({
   const { token } = await params;
   const sp = await searchParams;
   const lang = readLang(sp.lang);
-  return (
-    <Suspense fallback={<LoadingState lang={lang} />}>
-      <HistoryBody token={token} lang={lang} days={sp.days === "7" ? 7 : 30} />
-    </Suspense>
-  );
+  return <HistoryBody token={token} lang={lang} days={sp.days === "7" ? 7 : 30} />;
 }
 
 function dayTitle(day: string, lang: ReturnType<typeof readLang>) {
