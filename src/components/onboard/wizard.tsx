@@ -401,6 +401,11 @@ export function OnboardWizard() {
             />
             <span>{CHILD_WRITTEN_TEXT}</span>
           </label>
+          <p className="mt-4 text-sm">
+            <Link href="/privacy" className="text-primary underline-offset-2 hover:underline">
+              Privacy (draft)
+            </Link>
+          </p>
         </>
       );
     }

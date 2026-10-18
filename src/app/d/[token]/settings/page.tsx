@@ -178,6 +178,16 @@ export default async function SettingsPage({
             .replace("{transcript}", String(retentionTranscriptDays()))
             .replace("{summary}", String(retentionSummaryDays()))}
         </p>
+        <p className="text-sm">
+          <Link href={`/privacy?lang=${lang}`} className="text-primary underline-offset-2 hover:underline">
+            {t.privacyPage}
+          </Link>
+        </p>
+        {ownerDelete ? (
+          <a href={`/api/d/${token}/consent`} className="btn-secondary">
+            {t.consentDownload}
+          </a>
+        ) : null}
         {ownerDelete ? (
           <Link
             href={`/d/${token}/settings?lang=${lang}&confirm=delete`}

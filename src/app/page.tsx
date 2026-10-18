@@ -74,6 +74,12 @@ export default function Home() {
             </Link>
           </div>
           <AddToHome lang="en" />
+          <p className="pt-4 text-center text-[13px] text-ink-3">
+            <Link href="/privacy" className="underline-offset-2 hover:underline">
+              Privacy (draft)
+            </Link>
+            <span> · Not an emergency service · 112</span>
+          </p>
         </div>
       </div>
     </main>
