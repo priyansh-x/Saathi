@@ -12,7 +12,9 @@ export type TemplateName =
   | "consent_declined_en"
   | "consent_declined_hi"
   | "consent_later_en"
-  | "consent_later_hi";
+  | "consent_later_hi"
+  | "responder_optin_en"
+  | "responder_optin_hi";
 
 export function renderTemplate(name: TemplateName, vars: string[]) {
   const v = (i: number) => vars[i] ?? "—";
@@ -43,5 +45,9 @@ export function renderTemplate(name: TemplateName, vars: string[]) {
       return `${v(0)} has not said yes or no to the daily Saathi call after two mornings. Saathi will not call again until you decide. In an emergency call 112.`;
     case "consent_later_hi":
       return `${v(0)} ने दो सुबह हाँ या नहीं नहीं कहा। आप तय करें तब तक साथी फ़ोन नहीं करेगा। आपात में 112 मिलाएँ।`;
+    case "responder_optin_en":
+      return `Will you help if ${v(0)} doesn't answer?\nReply Yes or No. Saathi will only message you if we cannot reach her.`;
+    case "responder_optin_hi":
+      return `${v(0)} फ़ोन न उठाएँ तो क्या आप देखेंगे?\nहाँ या नहीं लिखें। साथी तभी लिखेगा जब उनसे संपर्क न हो।`;
   }
 }

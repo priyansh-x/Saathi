@@ -1,5 +1,6 @@
 import { contactsFor, dosesOnDay, openActAlerts } from "@/lib/db/queries";
 import { childrenFor } from "@/lib/members";
+import { neighbourOptedIn } from "@/lib/neighbour";
 import { query } from "@/lib/db/client";
 import type { AlertRow, CallRow, Contact, Parent } from "@/lib/db/types";
 import { EXAMPLE_TOKEN, publicBaseUrl } from "@/lib/config";
@@ -118,7 +119,7 @@ export async function notifyAlert(parentId: string, alert: Pick<AlertRow, "id" |
       }),
     );
   }
-  if (neighbour) {
+  if (neighbour && (await neighbourOptedIn(parentId))) {
     results.push(
       await sendFamilyMessage({
         parentId,
@@ -136,7 +137,8 @@ export async function notifyAlert(parentId: string, alert: Pick<AlertRow, "id" |
 export async function broadcastAck(parentId: string, alertId: string, actor: string) {
   const { neighbour } = await household(parentId);
   const when = formatIstTime(nowIstStamp().slice(11, 16));
-  const targets = [...(await childrenFor(parentId)), neighbour].filter(Boolean) as Contact[];
+  const opted = neighbour && (await neighbourOptedIn(parentId)) ? neighbour : null;
+  const targets = [...(await childrenFor(parentId)), opted].filter(Boolean) as Contact[];
   const results = [];
   for (const person of targets) {
     results.push(

@@ -5,6 +5,7 @@ import { query } from "@/lib/db/client";
 import { setPaused } from "@/lib/db/queries";
 import { languageCodes } from "@/lib/onboard-form";
 import { firstName } from "@/lib/names";
+import { requestNeighbourOptIn } from "@/lib/neighbour";
 import { toE164 } from "@/lib/phone";
 
 const timeSchema = z.string().regex(/^\d{2}:\d{2}$/, "Pick a morning call time.");
@@ -98,6 +99,7 @@ export async function updateNeighbour(
     );
   }
   await writeAudit(parentId, who, { action: "neighbour", before, after }, parent.is_example);
+  if (after) await requestNeighbourOptIn(parentId);
   return { ok: true as const };
 }
 
