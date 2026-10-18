@@ -107,7 +107,7 @@ describe("WhatsApp delivery statuses", () => {
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
       ) values ('out_desk_line','parent_kamla','whatsapp','daily_briefing_good','+910000000001','EXAMPLE',
-        '2026-10-18T08:42:00+05:30','sent',true,'wamid.EXAMPLE.desk','delivered','2026-10-18T08:42:00+05:30')`,
+        '2099-10-18T08:42:00+05:30','sent',true,'wamid.EXAMPLE.desk','delivered','2099-10-18T08:42:00+05:30')`,
     );
     assert.equal(await latestDeliveryLine("parent_kamla"), "Delivered to Rohit 8:42");
   });
@@ -192,7 +192,15 @@ describe("WhatsApp delivery statuses", () => {
       [id, at, `wamid.EXAMPLE.${id}`],
     );
     await escalateUndeliveredAlerts(new Date());
+    await query(
+      `update outbound_messages set at = $2 where id like $1`,
+      [`%esc_${id}%`, nowIstStamp(new Date(Date.now() - 6 * 60 * 1000))],
+    );
     await escalateUndeliveredAlerts(new Date());
+    await query(
+      `update outbound_messages set at = $2 where id like $1`,
+      [`%esc_${id}%`, nowIstStamp(new Date(Date.now() - 6 * 60 * 1000))],
+    );
     await escalateUndeliveredAlerts(new Date());
     const hops = await query<{ to_phone: string }>(
       `select to_phone from outbound_messages where id like $1 order by at, id`,
@@ -310,6 +318,93 @@ describe("WhatsApp delivery statuses", () => {
     await escalateUndeliveredAlerts(new Date());
     const after = await query<{ n: number }>(`select count(*)::int as n from outbound_messages`);
     assert.equal(after[0]?.n, before[0]?.n);
+  });
+
+  it("stops escalating once any hop in the chain is delivered or read", async () => {
+    await query(`delete from contacts where id = 'contact_priya'`);
+    await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+      "contact_priya",
+      "parent_kamla",
+      "child",
+      "Priya Sharma",
+      "Priya",
+      "+910000000003",
+      "en",
+      true,
+      "priya@example.invalid",
+    ]);
+    const id = `out_safety_alert_emergency_chain_${Date.now()}`;
+    const at = nowIstStamp(new Date(Date.now() - 12 * 60 * 1000));
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE chain',$2,'sent',true,
+        $3,'failed',$2)`,
+      [id, at, `wamid.EXAMPLE.${id}`],
+    );
+    await escalateUndeliveredAlerts(new Date());
+    const hop = await query<{ id: string }>(`select id from outbound_messages where id like $1`, [`%esc_${id}%`]);
+    assert.equal(hop.length, 1);
+    await query(`update outbound_messages set delivery_status = 'read' where id = $1`, [hop[0]!.id]);
+    const before = await query<{ n: number }>(`select count(*)::int as n from outbound_messages where id like $1`, [
+      `%esc_${id}%`,
+    ]);
+    await escalateUndeliveredAlerts(new Date(Date.now() + 10 * 60 * 1000));
+    const after = await query<{ n: number }>(`select count(*)::int as n from outbound_messages where id like $1`, [
+      `%esc_${id}%`,
+    ]);
+    assert.equal(after[0]?.n, before[0]?.n);
+    await query(`delete from contacts where id = 'contact_priya'`);
+  });
+
+  it("spaces hops 5 minutes after the previous hop, not the original", async () => {
+    await query(`delete from contacts where id = 'contact_priya'`);
+    await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+      "contact_priya",
+      "parent_kamla",
+      "child",
+      "Priya Sharma",
+      "Priya",
+      "+910000000003",
+      "en",
+      true,
+      "priya@example.invalid",
+    ]);
+    const id = `out_safety_alert_emergency_space_${Date.now()}`;
+    const originalAt = nowIstStamp(new Date(Date.now() - 20 * 60 * 1000));
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE space',$2,'sent',true,
+        $3,'sent',$2)`,
+      [id, originalAt, `wamid.EXAMPLE.${id}`],
+    );
+    await escalateUndeliveredAlerts(new Date());
+    const first = await query<{ n: number }>(`select count(*)::int as n from outbound_messages where id like $1`, [
+      `%esc_${id}%`,
+    ]);
+    assert.equal(first[0]?.n, 1);
+    await query(
+      `update outbound_messages set at = $2, delivery_status = 'sent' where id like $1`,
+      [`%esc_${id}%`, nowIstStamp(new Date(Date.now() - 2 * 60 * 1000))],
+    );
+    await escalateUndeliveredAlerts(new Date());
+    const tooSoon = await query<{ n: number }>(`select count(*)::int as n from outbound_messages where id like $1`, [
+      `%esc_${id}%`,
+    ]);
+    assert.equal(tooSoon[0]?.n, 1);
+    await query(
+      `update outbound_messages set at = $2 where id like $1`,
+      [`%esc_${id}%`, nowIstStamp(new Date(Date.now() - 6 * 60 * 1000))],
+    );
+    await escalateUndeliveredAlerts(new Date());
+    const later = await query<{ n: number }>(`select count(*)::int as n from outbound_messages where id like $1`, [
+      `%esc_${id}%`,
+    ]);
+    assert.equal(later[0]?.n, 2);
+    await query(`delete from contacts where id = 'contact_priya'`);
   });
 
   it("shows delivery on /ops without raw phones", async () => {
