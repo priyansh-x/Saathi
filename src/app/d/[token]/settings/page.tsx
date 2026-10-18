@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { SettingsForm } from "@/components/family/settings-form";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { isMockBolna, isMockWhatsapp } from "@/lib/config";
 import { consentsFor } from "@/lib/consent";
 import { deleteFamily } from "@/lib/delete-family";
-import { setPaused } from "@/lib/db/queries";
+import { medicinesWithTimes } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { localeWord, messages } from "@/lib/i18n/messages";
+import { actorName, updatePaused } from "@/lib/settings";
 import { formatFriendlyTime, formatIstTime } from "@/lib/time";
 
 function optLabel(granted: boolean | undefined, lang: "en" | "hi") {
@@ -40,10 +42,11 @@ export default async function SettingsPage({
     .map((code) => localeWord(code.trim(), lang))
     .join(", ");
   const mockOn = isMockBolna() || isMockWhatsapp();
+  const timedMeds = await medicinesWithTimes(parentId);
 
   async function togglePause() {
     "use server";
-    await setPaused(parentId, nextPaused);
+    await updatePaused(parentId, nextPaused, await actorName(parentId));
     redirect(`/d/${token}/settings?lang=${lang}`);
   }
 
@@ -83,22 +86,25 @@ export default async function SettingsPage({
         <p>
           {t.saathiCallsHer} {data.parent.first_name}
         </p>
-        <p className="text-sm">
-          <a className="underline-offset-2 hover:underline" href="https://wa.me/">
-            {t.changeWhatsapp}
-          </a>
-        </p>
+        <p className="text-sm text-muted-foreground">{t.settingsHint}</p>
+      </section>
+
+      <section className="mt-8">
+        <SettingsForm
+          token={token}
+          lang={lang}
+          callTime={data.parent.call_time}
+          languages={data.parent.languages}
+          neighbourName={data.neighbour?.full_name || ""}
+          neighbourPhone={data.neighbour?.phone || ""}
+          medicines={timedMeds}
+          saveLabel={t.saveChanges}
+          nextCallHint={t.settingsHint}
+        />
       </section>
 
       <section className="mt-8 space-y-2">
         <h2 className="text-lg font-semibold">{t.medicinesSection}</h2>
-        <ul className="space-y-1">
-          {data.medicines.map((m) => (
-            <li key={m.id}>
-              {m.name} · {m.dose} · {m.meal}
-            </li>
-          ))}
-        </ul>
         <p className="text-sm text-muted-foreground">{t.medsDisclaimer}</p>
       </section>
 
@@ -109,11 +115,6 @@ export default async function SettingsPage({
         </p>
         <p>
           {data.neighbour?.full_name} ji · {optLabel(neighbourYes?.granted ?? (data.parent.is_example ? true : undefined), lang)}
-        </p>
-        <p className="text-sm">
-          <a className="underline-offset-2 hover:underline" href="https://wa.me/">
-            {t.changeWhatsapp}
-          </a>
         </p>
       </section>
 

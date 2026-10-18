@@ -35,6 +35,17 @@ export async function medicinesFor(parentId: string) {
   return query<Medicine>(`select * from medicines where parent_id = $1`, [parentId]);
 }
 
+export async function medicinesWithTimes(parentId: string) {
+  return query<Medicine & { time_local: string | null }>(
+    `select m.*, s.time_local
+     from medicines m
+     left join schedules s on s.medicine_id = m.id
+     where m.parent_id = $1
+     order by m.id`,
+    [parentId],
+  );
+}
+
 export async function callOnDay(parentId: string, day: string) {
   const { start, end } = istDayBounds(day);
   const rows = await query<CallRow>(
