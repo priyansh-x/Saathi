@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function InviteForm({ token }: { token: string }) {
+export function InviteForm({ token, label, hint }: { token: string; label: string; hint: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,12 +20,12 @@ export function InviteForm({ token }: { token: string }) {
 
   return (
     <div className="mt-3 space-y-2">
-      <Button type="button" className="h-12 w-full" onClick={create}>
-        Invite a family member
+      <Button type="button" variant="outline" className="h-12 w-full rounded-xl" onClick={create}>
+        {label}
       </Button>
       {url ? <p className="break-all text-sm">{url}</p> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <p className="text-sm text-muted-foreground">Up to three people. They get the briefing and can open this desk.</p>
+      <p className="text-sm text-muted-foreground">{hint}</p>
     </div>
   );
 }

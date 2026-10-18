@@ -1,4 +1,3 @@
-import { Check } from "lucide-react";
 import { BackLink, ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
@@ -76,28 +75,8 @@ export default async function AlertDetailPage({
         {from === "today" ? t.backToday : t.backAlertsShort}
       </BackLink>
 
-      <ol className="mt-4 grid grid-cols-3 gap-2 text-xs">
-        {[
-          { key: "raised", label: t.stepRaised, on: true },
-          { key: "going", label: t.stepGoing, on: life === "going" || life === "ok" || life === "false" },
-          { key: "ok", label: t.stepOk, on: life === "ok" || life === "false" },
-        ].map((step) => (
-          <li
-            key={step.key}
-            className={`rounded-2xl px-2 py-3 text-center ${
-              step.on ? (life === "ok" ? "bg-good-soft text-good" : "bg-amber-soft text-amber-ink") : "bg-secondary text-muted-foreground"
-            }`}
-          >
-            {step.on ? <Check className="mx-auto mb-1 size-3" aria-hidden /> : null}
-            {step.label}
-          </li>
-        ))}
-      </ol>
-
-      <p className={`mt-5 inline-flex rounded-full px-3 py-1 text-sm ${life === "ok" ? "bg-good-soft text-good" : life === "going" ? "bg-amber-soft text-amber-ink" : life === "false" ? "bg-secondary text-muted-foreground" : "border border-alert text-alert"}`}>
-        {pill.label}
-      </p>
-      <h1 className="mt-3 text-2xl font-semibold capitalize">{alertTitle(alert, lang)}</h1>
+      <p className="mt-4 text-sm text-muted-foreground">{pill.label}</p>
+      <h1 className="mt-1 text-2xl font-semibold">{alertTitle(alert, lang)}</h1>
       {quote ? <p className="font-devanagari mt-2 text-lg leading-[1.6]">“{quote}”</p> : null}
       <p className="mt-1 text-sm text-muted-foreground">{formatFriendlyTime(alert.created_at, lang)}</p>
 

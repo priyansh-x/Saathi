@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AlertTriangle, Check, Minus } from "lucide-react";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { alertQuoteLine, alertTitle, severityChip, sortAlerts, statusPill } from "@/lib/alerts";
 import { loadFamily, readLang } from "@/lib/family-load";
@@ -29,6 +28,7 @@ export default async function AlertsPage({
       active="alerts"
       updatedAt={data.actAlerts[0]?.created_at}
     >
+      <h1 className="mb-4 text-xl font-semibold">{t.alerts}</h1>
       {list.length === 0 ? (
         <p className="text-muted-foreground">{t.emptyAlerts}</p>
       ) : (
@@ -43,35 +43,12 @@ export default async function AlertsPage({
                   href={`/d/${token}/alerts/${alert.id}?lang=${lang}&from=alerts`}
                   className="block rounded-2xl border border-border bg-card px-4 py-3"
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    {sev ? (
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs ${
-                          sev.tone === "act" ? "bg-alert-soft text-alert" : "bg-amber-soft text-amber-ink"
-                        }`}
-                      >
-                        <AlertTriangle className="size-3" aria-hidden />
-                        {sev.label}
-                      </span>
-                    ) : null}
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${
-                        pill.tone === "open"
-                          ? "border border-alert text-alert"
-                          : pill.tone === "look"
-                            ? "bg-amber-soft text-amber-ink"
-                            : pill.tone === "good"
-                              ? "bg-good-soft text-good"
-                              : "bg-secondary text-muted-foreground"
-                      }`}
-                    >
-                      {pill.tone === "good" ? <Check className="size-3" aria-hidden /> : null}
-                      {pill.tone === "neutral" ? <Minus className="size-3" aria-hidden /> : null}
-                      {pill.label}
-                    </span>
-                  </div>
-                  <p className="mt-2 font-medium capitalize">{alertTitle(alert, lang)}</p>
-                  {quote ? <p className="font-devanagari mt-1 text-sm">“{quote}”</p> : null}
+                  <p className="font-medium">{alertTitle(alert, lang)}</p>
+                  <p className={`mt-1 text-sm ${sev?.tone === "act" || pill.tone === "open" ? "text-alert" : "text-muted-foreground"}`}>
+                    {pill.label}
+                    {sev ? ` · ${sev.label}` : ""}
+                  </p>
+                  {quote ? <p className="font-devanagari mt-2 text-sm leading-relaxed">“{quote}”</p> : null}
                   <p className="mt-1 text-sm text-muted-foreground">{formatFriendlyTime(alert.created_at, lang)}</p>
                 </Link>
               </li>
