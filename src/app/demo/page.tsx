@@ -1,34 +1,36 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { MorningLines } from "@/components/demo/morning-lines";
+import { PhonePreview } from "@/components/demo/phone-preview";
+import { RecordPlayer } from "@/components/demo/record-player";
 import { ExamplePill } from "@/components/family/chrome";
 import { runMockScenario } from "@/lib/bolna/mock-run";
 import { EXAMPLE_TOKEN, isMockBolna } from "@/lib/config";
 import { resolveAlert } from "@/lib/db/queries";
 import { demoModeAllowed, playDemoGoodMorning, resetDemoHousehold } from "@/lib/demo-mode";
+import { buildRecordScenes } from "@/lib/demo-record";
 import { WALK_COPY, exampleWhatsappPreviews } from "@/lib/demo-walk";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { advanceLadder } from "@/lib/ladder";
 import { ackAlert } from "@/lib/whatsapp/ack";
 
-function PhonePreview({ title, body }: { title: string; body: string }) {
-  return (
-    <article className="overflow-hidden rounded-[28px] border border-border bg-[#111] p-1.5">
-      <div className="overflow-hidden rounded-[22px] bg-[#efe7dc]">
-        <p className="bg-[#075e54] px-3 py-2 text-[12px] font-medium text-white">{title} · EXAMPLE</p>
-        <div className="p-3">
-          <p className="rounded-[14px] rounded-tl-[4px] bg-white px-3 py-2 text-sm whitespace-pre-wrap">{body}</p>
-        </div>
-      </div>
-    </article>
-  );
-}
+export const metadata: Metadata = {
+  title: "Demo · EXAMPLE · Saathi",
+};
 
-export default async function DemoPage({ searchParams }: { searchParams: Promise<{ lang?: string; step?: string }> }) {
+export default async function DemoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string; step?: string; record?: string }>;
+}) {
   if (!demoModeAllowed() || !isMockBolna()) notFound();
   const q = await searchParams;
   const lang = readLang(q.lang);
   const step = q.step || "start";
+  if (q.record === "1") {
+    return <RecordPlayer lang={lang} scenes={buildRecordScenes(lang)} />;
+  }
   const t = WALK_COPY[lang];
   const data = await loadFamily(EXAMPLE_TOKEN);
   const parentId = data?.parent.id ?? "parent_kamla";
