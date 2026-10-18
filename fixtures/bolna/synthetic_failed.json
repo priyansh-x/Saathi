@@ -1,0 +1,17 @@
+{
+  "saathi_fixture": "synthetic",
+  "id": "synthetic-failed-0001",
+  "status": "failed",
+  "conversation_duration": 0,
+  "telephony_data": {
+    "hangup_reason": "failed",
+    "to_number": "+910000000000",
+    "from_number": "+910000000000",
+    "call_type": "outbound"
+  },
+  "context_details": {
+    "recipient_data": {
+      "parent_id": "parent_kamla"
+    }
+  }
+}
