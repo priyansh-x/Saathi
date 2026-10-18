@@ -1,6 +1,7 @@
 import { callProviderName, isMockBolna, isMockWhatsapp, killSwitchOn } from "@/lib/config";
 import { recentErrors } from "@/lib/log-error";
 import { query } from "@/lib/db/client";
+import { loadBolnaReadiness } from "@/lib/ops/bolna-readiness";
 import { maskPhone } from "@/lib/ops/mask";
 import { istDayBounds, istDayKey } from "@/lib/time";
 
@@ -67,5 +68,6 @@ export async function loadOpsSnapshot(now = new Date()) {
     },
     audits,
     errors: await recentErrors(20),
+    bolna: await loadBolnaReadiness(),
   };
 }

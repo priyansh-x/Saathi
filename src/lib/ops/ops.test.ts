@@ -68,6 +68,10 @@ describe("ops snapshot", () => {
     assert.equal(snap.flags.callProvider, "simulated");
     assert.equal(snap.flags.mockBolna, true);
     assert.equal(snap.flags.mockWhatsapp, true);
+    assert.ok(snap.bolna.checks.some((c) => c.id === "call_provider" && c.detail === "simulated"));
+    for (const check of snap.bolna.checks) {
+      assert.doesNotMatch(check.detail, /Bearer /);
+    }
   });
 
   it("kill switch toggle writes an audit row and blocks outbound", async () => {
