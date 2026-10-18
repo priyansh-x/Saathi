@@ -1,4 +1,6 @@
 import { query } from "@/lib/db/client";
+import { childrenFor } from "@/lib/members";
+import { neighbourOptedIn } from "@/lib/neighbour";
 import { nowIstStamp } from "@/lib/time";
 import { outboundMessageId, sendFamilyMessage } from "@/lib/whatsapp/send";
 import type { TemplateName } from "@/lib/whatsapp/templates";
@@ -35,6 +37,32 @@ export function normalizeDeliveryStatus(status?: string) {
   return "";
 }
 
+const DELIVERY_RANK: Record<string, number> = {
+  failed: 0,
+  sent: 1,
+  delivered: 2,
+  read: 3,
+  mock: 3,
+};
+
+/** Success never moves backwards. A late sent must not overwrite delivered or read. */
+export function deliveryMayAdvance(prev: string | null | undefined, next: string) {
+  const to = DELIVERY_RANK[next];
+  if (to === undefined) return false;
+  const from = DELIVERY_RANK[prev || ""];
+  if (from === undefined) return true;
+  if (next === "failed") return from < DELIVERY_RANK.delivered;
+  return to >= from;
+}
+
+function phoneKey(phone: string) {
+  return phone.replace(/\D/g, "").slice(-10);
+}
+
+function isEscalationId(id: string) {
+  return id.includes("_esc_") || id.includes("esc_out_");
+}
+
 function statusAt(row: WaStatus, fallback: string) {
   if (!row.timestamp) return fallback;
   const sec = Number(row.timestamp);
@@ -61,6 +89,11 @@ export async function applyWhatsappStatuses(statuses: WaStatus[], at = nowIstSta
     const status = normalizeDeliveryStatus(row.status);
     const wamid = row.id;
     if (!status || !wamid) continue;
+    const current = await query<{ id: string; delivery_status: string | null }>(
+      `select id, delivery_status from outbound_messages where provider_message_id = $1`,
+      [wamid],
+    );
+    if (!current[0] || !deliveryMayAdvance(current[0].delivery_status, status)) continue;
     const updated = await query<{ id: string }>(
       `update outbound_messages
        set delivery_status = $2, delivery_at = $3
@@ -140,6 +173,62 @@ export async function latestUndeliveredEmail(parentId: string) {
   return { name, line: `Couldn't reach ${name}` };
 }
 
+async function ladderPeople(parentId: string) {
+  const kids = await childrenFor(parentId);
+  const neighbour = await query<{ phone: string; locale: string; first_name: string; role: string }>(
+    `select phone, locale, first_name, role from contacts where parent_id = $1 and role = 'neighbour' limit 1`,
+    [parentId],
+  );
+  const people = kids.map((c) => ({
+    phone: c.phone,
+    locale: c.locale,
+    first_name: c.first_name,
+    role: c.role,
+  }));
+  if (neighbour[0] && (await neighbourOptedIn(parentId))) people.push(neighbour[0]);
+  return people;
+}
+
+async function relatedAlert(parentId: string, outboundId: string) {
+  const alerts = await query<{
+    id: string;
+    quote: string;
+    created_at: string;
+    acked_at: string | null;
+    resolved_at: string | null;
+  }>(
+    `select id, quote, created_at, acked_at, resolved_at from alerts where parent_id = $1 order by created_at desc`,
+    [parentId],
+  );
+  return alerts.find((alert) => outboundId.includes(alert.id)) ?? null;
+}
+
+async function alertVars(args: {
+  parentId: string;
+  template: string;
+  at: string;
+  quote?: string | null;
+}) {
+  const parent = await query<{ first_name: string; address_term: string | null; phone: string }>(
+    `select first_name, address_term, phone from parents where id = $1`,
+    [args.parentId],
+  );
+  const neighbour = await query<{ first_name: string }>(
+    `select first_name from contacts where parent_id = $1 and role = 'neighbour' limit 1`,
+    [args.parentId],
+  );
+  const who = parent[0]?.address_term?.trim() || parent[0]?.first_name || "family";
+  const stamp = args.at.includes("T") ? args.at : "";
+  const time = stamp.slice(11, 16) || "08:33";
+  const quote = args.quote?.trim() || "—";
+  const neighbourName = neighbour[0]?.first_name || "neighbour";
+  const phone = parent[0]?.phone || "";
+  if (args.template === "safety_alert_unreachable") return [who, "4", time, neighbourName, phone];
+  if (args.template === "safety_alert_emergency") return [who, time, quote, neighbourName, phone];
+  if (args.template === "safety_alert_urgent") return [who, time, quote, "uneasy"];
+  return [who];
+}
+
 export async function escalateUndeliveredAlerts(now = new Date()) {
   const cutoff = nowIstStamp(new Date(now.getTime() - 5 * 60 * 1000));
   const pending = await query<{
@@ -159,27 +248,37 @@ export async function escalateUndeliveredAlerts(now = new Date()) {
   );
   const results = [];
   for (const row of pending) {
-    const contacts = await query<{ phone: string; locale: string; role: string; is_owner: boolean }>(
-      `select phone, locale, role, coalesce(is_owner, false) as is_owner from contacts
+    if (isEscalationId(row.id)) continue;
+    const alert = await relatedAlert(row.parent_id, row.id);
+    if (alert?.acked_at || alert?.resolved_at) continue;
+    const people = await ladderPeople(row.parent_id);
+    const chain = await query<{ to_phone: string; id: string }>(
+      `select to_phone, id from outbound_messages
        where parent_id = $1
-       order by case when role = 'child' then 0 else 1 end, is_owner desc`,
-      [row.parent_id],
+         and (id = $2 or id like $3)`,
+      [row.parent_id, row.id, `%esc_${row.id}%`],
     );
-    const used = row.to_phone.replace(/\D/g, "").slice(-10);
-    const next = contacts.find((c) => c.phone.replace(/\D/g, "").slice(-10) !== used);
+    const used = new Set(chain.map((item) => phoneKey(item.to_phone)).filter(Boolean));
+    used.add(phoneKey(row.to_phone));
+    const next = people.find((person) => !used.has(phoneKey(person.phone)));
     if (!next) continue;
-    const locale = next.locale === "hi" ? "hi" : "en";
+    const hop = used.size;
     const intended = row.template.replace(/_en$|_hi$/, "") as Exclude<TemplateName, "hello_world">;
-    const idempotencyKey = `esc_${row.id}`;
+    const idempotencyKey = hop <= 1 ? `esc_${row.id}` : `esc_${row.id}${hop}`;
     const id = outboundMessageId(intended, idempotencyKey);
     const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);
     if (existing[0]) continue;
     const sent = await sendFamilyMessage({
       parentId: row.parent_id,
       toPhone: next.phone,
-      locale,
+      locale: next.locale === "hi" ? "hi" : "en",
       intended,
-      vars: ["Maa"],
+      vars: await alertVars({
+        parentId: row.parent_id,
+        template: intended,
+        at: alert?.created_at || row.at,
+        quote: alert?.quote,
+      }),
       idempotencyKey,
     });
     results.push(sent);
