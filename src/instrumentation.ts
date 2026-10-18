@@ -1,4 +1,5 @@
 export async function register() {
-  const { assertLiveSecrets } = await import("@/lib/config");
+  const { assertLiveSecrets, assertProductionSecrets } = await import("@/lib/config");
+  assertProductionSecrets();
   assertLiveSecrets();
 }

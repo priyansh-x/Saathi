@@ -30,13 +30,16 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | `OPS_EMAILS` | empty | Who can open `/ops` after sign-in. Empty = 404 for everyone. |
 | `VOICE_ALERT_CHILD` | `0` | No child voice alert. |
 | `PUBLIC_BASE_URL` | `https://<family-vercel-host>` | Magic links and tool URLs. |
+| `SESSION_SECRET` | `openssl rand -hex 32` | Required on a public host. Vercel sets `NODE_ENV=production` even with mocks on. Do not leave empty — there is no `dev-magic` fallback. |
+| `SAATHI_TOOL_TOKEN` | `openssl rand -hex 32` | Required on a public host. Must differ from `BOLNA_WEBHOOK_SECRET`. No `dev-tool-token` fallback. |
+| `BOLNA_WEBHOOK_SECRET` | `openssl rand -hex 32` | Required on a public host. Must differ from the tool token. Never reuse the tool token. |
 | `PRODUCT_NAME` | `Saathi` | Keep unless renaming. |
 | `BRIEFING_CHANNEL` | `whatsapp` | |
 | `LANGUAGES` | `hi,en` | |
 | `CALL_BUDGET_MINUTES_DAILY` | `15` | |
 | `MAX_CALL_SECONDS` | `180` | |
 
-Leave Bolna, WhatsApp, and live email secrets **empty** on staging. `MAGIC_LINK_SECRET` can stay empty while `MOCK_WHATSAPP=1` (the app uses a local fallback). Set a real secret before any live sign-in.
+Leave live Bolna API keys, WhatsApp Graph tokens, and live email secrets **empty** on staging. Still set `SESSION_SECRET`, `SAATHI_TOOL_TOKEN`, and `BOLNA_WEBHOOK_SECRET` with three different `openssl rand -hex 32` values — public hosts have no `dev-*` fallbacks. `MAGIC_LINK_SECRET` is a deprecated alias for `SESSION_SECRET`.
 
 Landing project: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` only if the waitlist table is ready; otherwise the waitlist route no-ops outside production.
 

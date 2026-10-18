@@ -81,20 +81,66 @@ export function defaultLadder() {
   };
 }
 
+const MIN_PROD_SECRET = 32;
+
+function prodSecret(name: string, value: string) {
+  const trimmed = value.trim();
+  if (process.env.NODE_ENV !== "production") return trimmed;
+  if (trimmed.length < MIN_PROD_SECRET) {
+    throw new Error(
+      `${name} is required in production and must be at least ${MIN_PROD_SECRET} characters. Generate one with: openssl rand -hex 32`,
+    );
+  }
+  return trimmed;
+}
+
+/** Desk session HMAC. Production: SESSION_SECRET (or MAGIC_LINK_SECRET) ≥ 32 chars. */
+export function sessionSecret() {
+  const fromEnv = process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET || "";
+  if (process.env.NODE_ENV === "production") return prodSecret("SESSION_SECRET", fromEnv);
+  return fromEnv.trim() || "dev-magic";
+}
+
 export function toolToken() {
-  return process.env.SAATHI_TOOL_TOKEN || (isMockBolna() ? "dev-tool-token" : "");
+  const fromEnv = process.env.SAATHI_TOOL_TOKEN || process.env.BOLNA_TOOL_TOKEN || "";
+  if (process.env.NODE_ENV === "production") return prodSecret("SAATHI_TOOL_TOKEN", fromEnv);
+  return fromEnv.trim() || (isMockBolna() ? "dev-tool-token" : "");
 }
 
 export function bolnaWebhookSecret() {
-  return process.env.BOLNA_WEBHOOK_SECRET || (isMockBolna() ? toolToken() : "");
+  const fromEnv = (process.env.BOLNA_WEBHOOK_SECRET || "").trim();
+  if (process.env.NODE_ENV === "production") {
+    const secret = prodSecret("BOLNA_WEBHOOK_SECRET", fromEnv);
+    const token = (process.env.SAATHI_TOOL_TOKEN || process.env.BOLNA_TOOL_TOKEN || "").trim();
+    if (token && secret === token) {
+      throw new Error("BOLNA_WEBHOOK_SECRET must differ from the tool token.");
+    }
+    return secret;
+  }
+  return fromEnv;
 }
 
 export function cronSecret() {
   return process.env.CRON_SECRET || (isMockBolna() ? "dev-cron" : "");
 }
 
+/** Public hosts run NODE_ENV=production even with mocks on. No `dev-*` fallbacks. */
+export function assertProductionSecrets() {
+  if (process.env.NODE_ENV !== "production") return;
+  const session = sessionSecret();
+  const token = toolToken();
+  const hook = bolnaWebhookSecret();
+  if (token === hook) {
+    throw new Error("BOLNA_WEBHOOK_SECRET must differ from the tool token.");
+  }
+  if (session.length < MIN_PROD_SECRET) {
+    throw new Error("SESSION_SECRET is required in production and must be at least 32 characters.");
+  }
+}
+
 /** Refuse live mode without real secrets. No `dev-*` fallbacks when MOCK_*=0. */
 export function assertLiveSecrets() {
+  assertProductionSecrets();
   if (!isMockBolna()) {
     const missing = ["BOLNA_API_KEY", "SAATHI_TOOL_TOKEN", "CRON_SECRET", "BOLNA_WEBHOOK_SECRET"].filter(
       (key) => !process.env[key],
