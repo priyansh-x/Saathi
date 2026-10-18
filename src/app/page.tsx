@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AddToHome } from "@/components/pwa/register";
 import { productName } from "@/lib/time";
 
 export default function Home() {
@@ -30,6 +31,7 @@ export default function Home() {
       <Link href="/demo/controls" className="mt-2 inline-flex h-12 w-full items-center justify-center text-sm text-muted-foreground">
         Run the two-minute EXAMPLE walks
       </Link>
+      <AddToHome lang="en" />
     </main>
   );
 }

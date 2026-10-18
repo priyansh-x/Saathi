@@ -166,6 +166,8 @@ export const messages = {
     killSwitchOn: "Kill switch is on. No dialling or sending.",
     audioConsentOn: "Recording consent is on; no file attached in this example.",
     audioConsentOff: "No audio. She did not consent to recording.",
+    addToHome: "Add to Home Screen",
+    addToHomeHint: "On your phone: browser menu → Add to Home Screen. Designed for a 360×740 screen.",
   },
   hi: {
     example: "उदाहरण",
@@ -331,6 +333,8 @@ export const messages = {
     killSwitchOn: "ग्लोबल स्विच चालू है। कोई कॉल या संदेश नहीं जाएगा।",
     audioConsentOn: "ऑडियो सहमति है, फ़ाइल नहीं जुड़ी।",
     audioConsentOff: "ऑडियो नहीं — सहमति नहीं है।",
+    addToHome: "होम स्क्रीन पर जोड़ें",
+    addToHomeHint: "फ़ोन पर: ब्राउज़र मेनू → होम स्क्रीन पर जोड़ें। 360×740 स्क्रीन के लिए।",
   },
 } as const;
 

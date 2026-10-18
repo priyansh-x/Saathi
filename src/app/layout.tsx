@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Inter, Noto_Sans_Devanagari } from "next/font/google";
+import { PwaRegister } from "@/components/pwa/register";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,6 +21,13 @@ export const metadata: Metadata = {
   title: "Saathi",
   description: "A morning phone call for Indian parents. Companionship and reminders — never diagnosis.",
   robots: { index: false, follow: false },
+  appleWebApp: { capable: true, title: "Saathi", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#fbf7f2",
 };
 
 function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean }) {
@@ -28,7 +36,10 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
       lang={hi ? "hi" : "en"}
       className={`${inter.variable} ${devanagari.variable} h-full ${hi ? "font-devanagari" : ""}`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }
