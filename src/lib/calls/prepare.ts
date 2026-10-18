@@ -42,6 +42,20 @@ export async function minutesUsedToday(clock: Date = new Date()) {
   return Math.ceil((rows[0]?.secs ?? 0) / 60);
 }
 
+/** Any call row today counts as a dial, including failed and zero-duration. */
+export async function dialsToday(parentId: string, clock: Date = new Date()) {
+  const { start, end } = istDayBounds(istDayKey(clock));
+  const rows = await query<{ n: number }>(
+    `select count(*)::int as n from calls where parent_id = $1 and started_at >= $2 and started_at < $3`,
+    [parentId, start, end],
+  );
+  return rows[0]?.n ?? 0;
+}
+
+export function dailyDialCap() {
+  return Math.max(1, Number(process.env.CALL_BUDGET_DIALS_DAILY || 1));
+}
+
 export async function prepareMorningCall(parentId: string, clock: Date = new Date()): Promise<PlaceCallResult | PreparedCall> {
   if (killSwitchOn()) return { ok: false as const, reason: "kill_switch" };
   const parents = await query<{
@@ -65,14 +79,17 @@ export async function prepareMorningCall(parentId: string, clock: Date = new Dat
   if (!isMockBolna() && !(await hasPilotConsent(parentId))) {
     return { ok: false as const, reason: "consent" };
   }
-  const used = await minutesUsedToday(clock);
-  if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
   const onAllowlist = allowedPhones().map(normalizePhone).includes(normalizePhone(parent.phone));
   if (!parent.is_example && !onAllowlist) {
     return { ok: false as const, reason: "not_allowlisted" };
   }
   const gate = gateOutbound("call", parent.phone);
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
+  const used = await minutesUsedToday(clock);
+  if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
+  if ((await dialsToday(parentId, clock)) >= dailyDialCap()) {
+    return { ok: false as const, reason: "already_called" };
+  }
 
   const userData = await buildCallContext(parentId);
   const payload = {
@@ -92,35 +109,58 @@ export function isPreparedCall(value: PlaceCallResult | PreparedCall): value is 
   return "payload" in value && "parentId" in value;
 }
 
-export async function insertSimulatedCall(prepared: PreparedCall): Promise<PlaceCallOk> {
-  const executionId = `mock_${prepared.parentId}_${istDayKey(prepared.clock)}_${Date.now()}`;
-  const parents = await query<{ call_time: string }>(`select call_time from parents where id = $1`, [
-    prepared.parentId,
-  ]);
+export async function recordCallPlacement(args: {
+  parentId: string;
+  clock: Date;
+  executionId: string;
+  status: "in_progress" | "failed";
+}) {
+  const dup = await query<{ id: string }>(
+    `select id from calls where id = $1 or bolna_execution_id = $1`,
+    [args.executionId],
+  );
+  if (dup[0]) return dup[0].id;
+  const parents = await query<{ call_time: string }>(`select call_time from parents where id = $1`, [args.parentId]);
   const callMin = parseHhMm(parents[0]?.call_time || "08:30");
   await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
-    executionId,
-    prepared.parentId,
-    istStamp(istDayKey(prepared.clock), Math.floor(callMin / 60), callMin % 60),
+    args.executionId,
+    args.parentId,
+    istStamp(istDayKey(args.clock), Math.floor(callMin / 60), callMin % 60),
     null,
-    null,
-    "in_progress",
-    null,
-    null,
-    null,
+    args.status === "failed" ? 0 : null,
+    args.status,
     null,
     null,
     null,
-    executionId,
+    null,
+    null,
+    null,
+    args.executionId,
     true,
   ]);
+  return args.executionId;
+}
+
+export async function insertSimulatedCall(prepared: PreparedCall): Promise<PlaceCallOk> {
+  const executionId = `mock_${prepared.parentId}_${istDayKey(prepared.clock)}_${Date.now()}`;
+  await recordCallPlacement({
+    parentId: prepared.parentId,
+    clock: prepared.clock,
+    executionId,
+    status: "in_progress",
+  });
   return { ok: true as const, execution_id: executionId, mock: true, user_data: prepared.payload.user_data };
 }
 
-export async function postBolnaCall(prepared: PreparedCall): Promise<PlaceCallResult> {
+export type PlaceFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+export async function postBolnaCall(
+  prepared: PreparedCall,
+  fetchImpl: PlaceFetch = fetch,
+): Promise<PlaceCallResult> {
   const key = process.env.BOLNA_API_KEY;
   if (!key) return { ok: false as const, reason: "missing_bolna_key" };
-  const res = await fetch(`${process.env.BOLNA_BASE_URL || "https://api.bolna.ai"}/call`, {
+  const res = await fetchImpl(`${process.env.BOLNA_BASE_URL || "https://api.bolna.ai"}/call`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
@@ -129,10 +169,25 @@ export async function postBolnaCall(prepared: PreparedCall): Promise<PlaceCallRe
     body: JSON.stringify(prepared.payload),
   });
   const body = (await res.json().catch(() => ({}))) as { execution_id?: string; id?: string };
-  if (!res.ok) return { ok: false as const, reason: "bolna_error", status: res.status };
+  const executionId = body.execution_id || body.id || `fail_${prepared.parentId}_${istDayKey(prepared.clock)}_${Date.now()}`;
+  if (!res.ok) {
+    await recordCallPlacement({
+      parentId: prepared.parentId,
+      clock: prepared.clock,
+      executionId,
+      status: "failed",
+    });
+    return { ok: false as const, reason: "bolna_error", status: res.status };
+  }
+  await recordCallPlacement({
+    parentId: prepared.parentId,
+    clock: prepared.clock,
+    executionId,
+    status: "in_progress",
+  });
   return {
     ok: true as const,
-    execution_id: body.execution_id || body.id,
+    execution_id: executionId,
     mock: false,
     user_data: prepared.payload.user_data,
   };

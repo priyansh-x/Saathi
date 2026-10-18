@@ -94,7 +94,7 @@ export function cellAria(
 
 export function callGlyph(call: CallRow | null) {
   if (!call) return "–";
-  if (call.status === "missed") return "✕";
+  if (call.status === "missed" || call.status === "failed") return "✕";
   if (call.status === "completed") return "✓";
   return "–";
 }
@@ -102,7 +102,7 @@ export function callGlyph(call: CallRow | null) {
 export function dayCallLabel(call: CallRow | null, lang: Lang) {
   const t = messages[lang];
   if (!call) return t.notYet;
-  if (call.status === "missed" || call.status === "in_progress") return t.missed;
+  if (call.status === "missed" || call.status === "in_progress" || call.status === "failed") return t.missed;
   if (call.status === "completed") return t.answered;
   return t.headlineSkipped;
 }
