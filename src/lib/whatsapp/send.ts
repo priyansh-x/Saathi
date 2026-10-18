@@ -1,4 +1,4 @@
-import { isMockWhatsapp, killSwitchOn, templatesApproved } from "@/lib/config";
+import { isMockWhatsapp, isWhatsappTemplateApproved, killSwitchOn } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { gateOutbound } from "@/lib/outbound";
 import { nowIst } from "@/lib/bolna/tools";
@@ -77,26 +77,92 @@ async function sendEmailFallback(args: {
   return { ok: status !== "blocked", id, channel: "email", template: args.template, status, reason: args.reason };
 }
 
-async function postMeta(to: string, template: TemplateName, vars: string[]) {
+const WINDOW_MS = 24 * 60 * 60 * 1000;
+
+export function sessionWindowOpen(lastInboundAt: string | null | undefined, now = new Date()) {
+  if (!lastInboundAt) return false;
+  const then = new Date(lastInboundAt).getTime();
+  if (Number.isNaN(then)) return false;
+  return now.getTime() - then < WINDOW_MS;
+}
+
+export function metaTemplateName(intended: string) {
+  return intended.replace(/_en$|_hi$/, "");
+}
+
+export function metaTemplateLanguage(intended: string, locale: "en" | "hi") {
+  if (intended.endsWith("_hi")) return "hi";
+  if (intended.endsWith("_en")) return "en";
+  return locale;
+}
+
+export type WhatsappGraphPayload = {
+  messaging_product: "whatsapp";
+  to: string;
+  type: "text" | "template";
+  text?: { body: string };
+  template?: {
+    name: string;
+    language: { code: "en" | "hi" };
+    components: unknown[];
+  };
+};
+
+export function buildWhatsappPayload(args: {
+  to: string;
+  template: string;
+  language: "en" | "hi";
+  vars: string[];
+  freeText?: string;
+  windowOpen?: boolean;
+}): WhatsappGraphPayload {
+  if (args.freeText && args.windowOpen) {
+    return {
+      messaging_product: "whatsapp",
+      to: args.to,
+      type: "text",
+      text: { body: args.freeText },
+    };
+  }
+  const name = metaTemplateName(args.template);
+  const components =
+    name === "hello_world" ? [] : [{ type: "body", parameters: args.vars.map((text) => ({ type: "text", text })) }];
+  return {
+    messaging_product: "whatsapp",
+    to: args.to,
+    type: "template",
+    template: {
+      name,
+      language: { code: args.language },
+      components,
+    },
+  };
+}
+
+async function lastInboundForPhone(phone: string) {
+  const digits = phone.replace(/\D/g, "").slice(-10);
+  if (!digits) return null;
+  const rows = await query<{ last_inbound_at: string | null }>(
+    `select last_inbound_at from contacts
+     where regexp_replace(phone, '[^0-9]', '', 'g') like $1
+     order by last_inbound_at desc nulls last
+     limit 1`,
+    [`%${digits}`],
+  );
+  return rows[0]?.last_inbound_at ?? null;
+}
+
+async function postMeta(payload: ReturnType<typeof buildWhatsappPayload>) {
   if (process.env.WHATSAPP_FORCE_FAIL === "1") {
     return { ok: false as const, error: "forced_fail" };
   }
   const token = process.env.WHATSAPP_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   if (!token || !phoneId) return { ok: false as const, error: "missing_meta_creds" };
-  const components =
-    template === "hello_world"
-      ? []
-      : [{ type: "body", parameters: vars.map((text) => ({ type: "text", text })) }];
   const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to,
-      type: "template",
-      template: { name: template, language: { code: template.endsWith("_hi") ? "hi" : "en" }, components },
-    }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) return { ok: false as const, error: `meta_${res.status}` };
   return { ok: true as const };
@@ -109,12 +175,17 @@ export async function sendFamilyMessage(args: {
   intended: Exclude<TemplateName, "hello_world">;
   vars: string[];
   idempotencyKey: string;
+  freeText?: string;
 }): Promise<SendResult> {
   if (killSwitchOn()) {
     return { ok: false, id: "", channel: "whatsapp", template: args.intended, status: "kill_switch" };
   }
-  const template: TemplateName = templatesApproved() ? args.intended : "hello_world";
-  const body = renderTemplate(template, args.vars);
+  const language = metaTemplateLanguage(args.intended, args.locale);
+  const windowOpen = sessionWindowOpen(await lastInboundForPhone(args.toPhone));
+  const useFreeText = Boolean(args.freeText && windowOpen);
+  const approved = isWhatsappTemplateApproved(args.intended) || useFreeText;
+  const template: TemplateName = args.intended;
+  const body = useFreeText ? args.freeText! : renderTemplate(template, args.vars);
   const id = messageId(template, args.idempotencyKey);
   const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);
   if (existing[0]) {
@@ -142,6 +213,18 @@ export async function sendFamilyMessage(args: {
     });
   }
 
+  if (!isMockWhatsapp() && !approved) {
+    console.info("whatsapp_unapproved_template", { template: metaTemplateName(args.intended), language });
+    return sendEmailFallback({
+      parentId: args.parentId,
+      toHint: gate.to,
+      template: args.intended,
+      body,
+      idempotencyKey: args.idempotencyKey,
+      reason: "unapproved_template",
+    });
+  }
+
   if (isMockWhatsapp()) {
     await logOutbound({
       id,
@@ -150,12 +233,20 @@ export async function sendFamilyMessage(args: {
       template,
       to: gate.to,
       body,
-      status: "mock",
+      status: useFreeText ? "mock_session" : "mock",
     });
-    return { ok: true, id, channel: "whatsapp", template, status: "mock" };
+    return { ok: true, id, channel: "whatsapp", template, status: useFreeText ? "mock_session" : "mock" };
   }
 
-  const posted = await postMeta(gate.to, template, args.vars);
+  const payload = buildWhatsappPayload({
+    to: gate.to,
+    template,
+    language,
+    vars: args.vars,
+    freeText: args.freeText,
+    windowOpen,
+  });
+  const posted = await postMeta(payload);
   if (!posted.ok) {
     await logOutbound({
       id,
