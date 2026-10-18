@@ -115,10 +115,9 @@ export function TabBar({
                 href={`${item.href}${qs({ lang })}`}
                 aria-current={on ? "page" : undefined}
                 className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[13px] ${
-                  on ? "font-bold text-foreground" : "text-muted-foreground"
+                  on ? "font-medium text-primary" : "text-muted-foreground"
                 }`}
               >
-                {on ? <span aria-hidden className="absolute inset-x-6 top-0 h-0.5 bg-primary" /> : null}
                 <span className="relative">
                   <Icon className="size-5" aria-hidden />
                   {item.key === "alerts" && openAlerts > 0 ? (

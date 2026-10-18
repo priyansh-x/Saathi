@@ -182,6 +182,15 @@ export async function sendSundayWeeklyNotes(now = new Date()) {
   return { ok: true as const, results };
 }
 
+export function weeklyDeskCopy(note: WeeklyNote, lang: "en" | "hi") {
+  if (lang === "hi") {
+    const words = note.quote ? ` उन्होंने कहा: “${note.quote}”` : "";
+    return `7 में से ${note.answered} कॉल उठीं। ${note.dosesExpected} में से ${note.dosesTaken} दवा लीं। मन: ${note.moodHi}.${words}`;
+  }
+  const words = note.quote ? ` She said: “${note.quote}”` : "";
+  return `Answered ${note.answered} of 7 calls. Took ${note.dosesTaken} of ${note.dosesExpected} doses. ${note.moodEn}.${words}`;
+}
+
 export async function latestWeeklyNote(parentId: string, now = new Date()) {
   const rows = await query<{ body: string; template: string; at: string; status: string }>(
     `select body, template, at, status from outbound_messages

@@ -88,21 +88,13 @@ export default async function SettingsPage({
 
   return (
     <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="settings">
-      <section className="space-y-3">
-        <h1 className="text-lg font-semibold">{t.callSection}</h1>
-        <p className="tabular">
-          {formatIstTime(data.parent.call_time)}
-          {process.env.VIEWER_TZ ? ` · ${t.yourTime}` : null}
-        </p>
-        <p>{t.callDays}</p>
-        <p>{langs || t.languageWords}</p>
-        <p>
-          {t.saathiCallsHer} {data.parent.first_name}
-        </p>
-        <p className="text-sm text-muted-foreground">{t.settingsHint}</p>
-      </section>
+      <h1 className="text-xl font-semibold">{t.settings}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {t.saathiCallsHer} {data.parent.address_term || data.parent.first_name} · {langs || t.languageWords}
+        {process.env.VIEWER_TZ ? ` · ${formatIstTime(data.parent.call_time)} ${t.yourTime}` : ` · ${formatIstTime(data.parent.call_time)}`}
+      </p>
 
-      <section className="mt-8">
+      <div className="mt-5">
         <SettingsForm
           token={token}
           lang={lang}
@@ -111,45 +103,42 @@ export default async function SettingsPage({
           neighbourName={data.neighbour?.full_name || ""}
           neighbourPhone={data.neighbour?.phone || ""}
           medicines={timedMeds}
-          saveLabel={t.saveChanges}
-          nextCallHint={t.settingsHint}
         />
-      </section>
+      </div>
 
-      <section className="mt-8 space-y-2">
-        <h2 className="text-lg font-semibold">{t.medicinesSection}</h2>
-        <p className="text-sm text-muted-foreground">{t.medsDisclaimer}</p>
-      </section>
-
-      <section className="mt-8 space-y-2">
-        <h2 className="text-lg font-semibold">{t.familySection}</h2>
-        <ul className="space-y-1">
+      <section className="mt-6 space-y-3 rounded-2xl border border-border bg-card px-4 py-4">
+        <h2 className="font-semibold">{t.familySection}</h2>
+        <ul className="space-y-2">
           {members.map((member) => (
-            <li key={member.id}>
-              {member.full_name}
-              {member.is_owner ? " · first child" : ""}
-              {member.id === data.child?.id ? ` · ${optLabel(childYes?.granted, lang)}` : ""}
+            <li key={member.id} className="text-sm">
+              <span className="font-medium">{member.full_name}</span>
+              <span className="text-muted-foreground">
+                {member.is_owner ? ` · ${t.setsUpFamily}` : ""}
+                {member.id === data.child?.id ? ` · ${optLabel(childYes?.granted, lang)}` : ""}
+              </span>
             </li>
           ))}
         </ul>
-        <p>
-          {data.neighbour?.full_name} ji · {optLabel(neighbourYes?.granted ?? (data.parent.is_example ? true : undefined), lang)}
-        </p>
-        {ownerDelete ? <InviteForm token={token} /> : null}
+        {data.neighbour ? (
+          <p className="text-sm text-muted-foreground">
+            {data.neighbour.full_name} · {optLabel(neighbourYes?.granted ?? (data.parent.is_example ? true : undefined), lang)}
+          </p>
+        ) : null}
+        {ownerDelete ? <InviteForm token={token} label={t.inviteMember} hint={t.inviteHint} /> : null}
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold">{t.pauseLabel}</h2>
-        <p className="mt-1">{data.parent.paused ? t.paused : t.callingOn}</p>
+      <section className="mt-6 rounded-2xl border border-border bg-card px-4 py-4">
+        <h2 className="font-semibold">{t.pauseLabel}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{data.parent.paused ? t.paused : t.callingOn}</p>
         <form action={togglePause} className="mt-3">
-          <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-white">
+          <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-border bg-background">
             {data.parent.paused ? t.pauseOff : t.pauseOn}
           </button>
         </form>
       </section>
 
-      <section className="mt-8 space-y-2">
-        <h2 className="text-lg font-semibold">{t.privacySection}</h2>
+      <section className="mt-6 space-y-3 rounded-2xl border border-border bg-card px-4 py-4">
+        <h2 className="font-semibold">{t.privacySection}</h2>
         <p>
           {data.parent.consent_status === "given"
             ? `${t.firstCallGiven}${data.parent.consent_at ? ` · ${formatFriendlyTime(data.parent.consent_at, lang)}` : ""}`
@@ -174,12 +163,12 @@ export default async function SettingsPage({
             {t.deleteData}
           </Link>
         ) : (
-          <p className="text-sm text-muted-foreground">Only the first child can delete this family.</p>
+          <p className="text-sm text-muted-foreground">{t.onlyOwnerDelete}</p>
         )}
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold">{t.aboutSection}</h2>
+      <section className="mt-6 rounded-2xl border border-border bg-card px-4 py-4">
+        <h2 className="font-semibold">{t.aboutSection}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{t.aboutBody}</p>
         <AddToHome lang={lang} />
       </section>

@@ -99,6 +99,29 @@ export function callGlyph(call: CallRow | null) {
   return "–";
 }
 
+export function dayCallLabel(call: CallRow | null, lang: Lang) {
+  const t = messages[lang];
+  if (!call) return t.notYet;
+  if (call.status === "missed" || call.status === "in_progress") return t.missed;
+  if (call.status === "completed") return t.answered;
+  return t.headlineSkipped;
+}
+
+export function dayMedsLabel(meds: { taken: number; total: number }, lang: Lang) {
+  const t = messages[lang];
+  if (meds.total <= 0) return t.noMedicinesListed;
+  if (meds.taken >= meds.total) return t.allMedicinesTaken;
+  return `${meds.taken} ${t.ofWord} ${meds.total} ${t.medicinesWord}`;
+}
+
+export function moodLabel(mood: Mood, lang: Lang) {
+  const t = messages[lang];
+  if (mood === "cheerful") return t.moodCheerful;
+  if (mood === "okay") return t.moodOkay;
+  if (mood === "low") return t.moodLow;
+  return t.moodUnclear;
+}
+
 export function callBullets(summary: string | null | undefined) {
   if (!summary) return [];
   return summary

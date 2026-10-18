@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Check, Clock, Minus, Pause } from "lucide-react";
+import { AlertTriangle, Check, Clock, Pause } from "lucide-react";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { setPaused } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
@@ -15,6 +15,7 @@ import {
   type DayState,
 } from "@/lib/today";
 import { weekdayShort } from "@/lib/time";
+import { weeklyDeskCopy } from "@/lib/weekly";
 import { neighbourOptedIn } from "@/lib/neighbour";
 import { statusClasses } from "@/lib/status";
 
@@ -211,9 +212,7 @@ export default async function TodayPage({
         {data.weekly.built ? (
           <li className="rounded-2xl border border-border bg-card px-4 py-3">
             <p className="text-sm text-muted-foreground">{t.weeklyNote}</p>
-            <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">
-              {lang === "hi" ? data.weekly.built.bodyHi : data.weekly.built.bodyEn}
-            </p>
+            <p className="mt-1 text-sm leading-relaxed">{weeklyDeskCopy(data.weekly.built, lang)}</p>
             <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="mt-2 inline-block text-sm underline-offset-2 hover:underline">
               {t.weeklySeeHistory}
             </Link>
@@ -222,7 +221,7 @@ export default async function TodayPage({
 
         <li className="rounded-2xl border border-border bg-card px-4 py-3">
           <p className="text-sm text-muted-foreground">{t.thisWeek}</p>
-          <ol className="mt-2 grid grid-cols-7 gap-1">
+          <ol className="mt-3 grid grid-cols-7 gap-1 text-center">
             {Array.from({ length: 7 }, (_, i) => {
               const offset = i - 6;
               const dayKey = data.day;
@@ -230,17 +229,12 @@ export default async function TodayPage({
               const dt = new Date(y, m - 1, d + offset);
               const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
               const call = weekDays.find((c) => c.started_at.startsWith(key));
-              const href = call ? `/d/${token}/history?lang=${lang}&days=7` : `/d/${token}/history?lang=${lang}&days=7`;
+              const word = call?.status === "completed" ? t.legendAnswered : call?.status === "missed" ? t.legendMissed : "–";
               return (
                 <li key={key}>
-                  <Link
-                    href={href}
-                    className="flex min-h-11 flex-col items-center justify-center rounded-lg text-xs"
-                  >
+                  <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="flex min-h-14 flex-col items-center justify-center rounded-lg text-xs">
                     <span className="text-muted-foreground">{weekdayShort(key, lang)}</span>
-                    <span aria-hidden className="text-base">
-                      {call?.status === "completed" ? "✓" : call?.status === "missed" ? "✕" : <Minus className="size-3" />}
-                    </span>
+                    <span className="mt-1 font-medium">{word}</span>
                   </Link>
                 </li>
               );
