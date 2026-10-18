@@ -24,7 +24,7 @@ export default async function AlertDetailPage({
   const alert = await alertById(id);
   if (!alert) {
     return (
-      <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="alerts">
+      <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="alerts" addressTerm={data.parent.address_term}>
         <p>{messages[lang].loadError}</p>
       </FamilyFrame>
     );
@@ -64,6 +64,7 @@ export default async function AlertDetailPage({
       active="alerts"
       updatedAt={alert.created_at}
       extraQuery={{ from }}
+      addressTerm={data.parent.address_term}
     >
       <BackLink
         href={

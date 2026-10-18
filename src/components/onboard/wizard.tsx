@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import setupImg from "../../../public/images/setup-child-phone.jpg";
+import neighbourImg from "../../../public/images/neighbour-knock.jpg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -164,7 +167,10 @@ export function OnboardWizard() {
     if (step === "sign") {
       return (
         <>
-          <p className="text-sm text-muted-foreground">Sign in</p>
+          <div className="grain relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-[28px]">
+            <Image src={setupImg} alt="Setting up a morning call on a phone at home" fill priority className="object-cover" sizes="480px" />
+          </div>
+          <p className="eyebrow">Sign in</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">A link to your email. No SMS.</h1>
           <p className="mt-3 text-muted-foreground">
             When mocks are on, this stays on this phone. In production Saathi emails a one-time link through
@@ -350,7 +356,10 @@ export function OnboardWizard() {
     if (step === "neighbour") {
       return (
         <>
-          <p className="text-sm text-muted-foreground">Optional</p>
+          <div className="grain relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-[28px]">
+            <Image src={neighbourImg} alt="A neighbour at the door, the person who can knock if a call is missed" fill className="object-cover" sizes="480px" />
+          </div>
+          <p className="eyebrow">Optional</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Someone who can knock.</h1>
           <p className="mt-3 text-muted-foreground">
             We will not message them until they reply yes. Skip if you do not have someone nearby yet.

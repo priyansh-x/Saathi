@@ -1,5 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import { AlertTriangle, Check, Clock, Pause } from "lucide-react";
+import hero from "../../../../public/images/hero-maa-balcony.jpg";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { setPaused } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
@@ -79,8 +81,21 @@ export default async function TodayPage({
       alerts={data.actAlerts}
       active="today"
       updatedAt={updatedAt}
+      addressTerm={data.parent.address_term}
     >
-      <section className={`rounded-2xl px-4 py-4 ${statusClasses(state)}`}>
+      {data.parent.is_example ? (
+        <div className="grain relative mb-4 aspect-[16/9] overflow-hidden rounded-[22px]">
+          <Image
+            src={hero}
+            alt="Kamla on her balcony — the EXAMPLE family"
+            fill
+            priority
+            sizes="480px"
+            className="object-cover object-[70%_center]"
+          />
+        </div>
+      ) : null}
+      <section className={`card px-4 py-4 ${statusClasses(state)}`}>
         <p className="flex items-center gap-2 text-sm font-medium">
           <Icon className="size-4" aria-hidden />
           <span>{copy.chip}</span>
@@ -121,20 +136,20 @@ export default async function TodayPage({
           {state === "act" ? (
             <Link
               href={`/d/${token}/alerts/${alert?.id}?lang=${lang}&from=today`}
-              className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-base text-white"
+              className="btn-primary"
             >
               {t.openAlert}
             </Link>
           ) : state === "paused" ? (
             <form action={resume}>
-              <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-base text-white">
+              <button type="submit" className="btn-primary">
                 {t.resumeCalls}
               </button>
             </form>
           ) : state === "scheduled" ? null : (
             <a
               href={`tel:${tel}`}
-              className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-base text-white"
+              className="btn-primary"
             >
               {t.callMaa}
             </a>
@@ -183,7 +198,7 @@ export default async function TodayPage({
 
       <ul className="mt-5 space-y-3">
         {data.doses.length > 0 ? (
-          <li className="rounded-2xl border border-border bg-card px-4 py-3">
+          <li className="card px-4 py-3">
             <p className="text-sm text-muted-foreground">{t.medicinesToday}</p>
             <ul className="mt-2 space-y-2">
               {data.doses.map((dose) => (
@@ -200,7 +215,7 @@ export default async function TodayPage({
         ) : null}
 
         {showQuote ? (
-          <li className="rounded-2xl border border-border bg-card px-4 py-3">
+          <li className="card px-4 py-3">
             <p className="text-sm text-muted-foreground">{t.inHerWords}</p>
             <p className="font-devanagari mt-1 text-lg leading-[1.6]">“{quote}”</p>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -210,7 +225,7 @@ export default async function TodayPage({
         ) : null}
 
         {data.weekly.built ? (
-          <li className="rounded-2xl border border-border bg-card px-4 py-3">
+          <li className="card px-4 py-3">
             <p className="text-sm text-muted-foreground">{t.weeklyNote}</p>
             <p className="mt-1 text-sm leading-relaxed">{weeklyDeskCopy(data.weekly.built, lang)}</p>
             <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="mt-2 inline-block text-sm underline-offset-2 hover:underline">
@@ -219,7 +234,7 @@ export default async function TodayPage({
           </li>
         ) : null}
 
-        <li className="rounded-2xl border border-border bg-card px-4 py-3">
+        <li className="card px-4 py-3">
           <p className="text-sm text-muted-foreground">{t.thisWeek}</p>
           <ol className="mt-3 grid grid-cols-7 gap-1 text-center">
             {Array.from({ length: 7 }, (_, i) => {

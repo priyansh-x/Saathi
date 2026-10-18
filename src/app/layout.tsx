@@ -2,13 +2,20 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Inter, Noto_Sans_Devanagari } from "next/font/google";
+import { Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
 import { PwaRegister } from "@/components/pwa/register";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+const instrument = Instrument_Serif({
+  variable: "--font-instrument",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
 });
 
 const devanagari = Noto_Sans_Devanagari({
@@ -34,7 +41,7 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
   return (
     <html
       lang={hi ? "hi" : "en"}
-      className={`${inter.variable} ${devanagari.variable} h-full ${hi ? "font-devanagari" : ""}`}
+      className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full ${hi ? "font-devanagari" : ""}`}
     >
       <body className="flex min-h-full flex-col">
         <PwaRegister />

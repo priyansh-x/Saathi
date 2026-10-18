@@ -56,21 +56,16 @@ async function HistoryBody({ token, lang, days }: { token: string; lang: ReturnT
       alerts={data.actAlerts}
       active="history"
       extraQuery={{ days: String(days) }}
+      addressTerm={data.parent.address_term}
     >
       <h1 className="text-xl font-semibold">{t.history}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{historySummary(keys, hist.calls, hist.doses, medicineIds, lang)}</p>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-secondary p-1">
-        <Link
-          href={qs({ lang, days: "7" })}
-          className={`inline-flex h-11 items-center justify-center rounded-xl text-sm ${days === 7 ? "bg-card font-medium shadow-sm" : "text-muted-foreground"}`}
-        >
+      <div className="seg mt-4 grid w-full grid-cols-2">
+        <Link href={qs({ lang, days: "7" })} aria-current={days === 7 ? "page" : undefined} className="w-full">
           {t.days7}
         </Link>
-        <Link
-          href={qs({ lang, days: "30" })}
-          className={`inline-flex h-11 items-center justify-center rounded-xl text-sm ${days === 30 ? "bg-card font-medium shadow-sm" : "text-muted-foreground"}`}
-        >
+        <Link href={qs({ lang, days: "30" })} aria-current={days === 30 ? "page" : undefined} className="w-full">
           {t.days30}
         </Link>
       </div>
@@ -78,7 +73,7 @@ async function HistoryBody({ token, lang, days }: { token: string; lang: ReturnT
       {hist.calls.length === 0 ? (
         <p className="mt-8 text-muted-foreground">{t.emptyHistory}</p>
       ) : (
-        <ol className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+        <ol className="card mt-4 divide-y divide-border overflow-hidden">
           {keys.map((day) => {
             const call = callOnDayKey(hist.calls, day);
             const meds = medsOnDay(hist.doses, day, medicineIds);

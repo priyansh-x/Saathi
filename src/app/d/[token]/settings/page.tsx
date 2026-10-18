@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -71,7 +72,7 @@ export default async function SettingsPage({
 
   if (sp.confirm === "delete") {
     return (
-      <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="settings">
+      <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="settings" addressTerm={data.parent.address_term}>
         <h1 className="text-2xl font-semibold">{t.deleteConfirmTitle}</h1>
         <p className="mt-3 text-muted-foreground">{t.deleteConfirmBody}</p>
         <form action={wipe} className="mt-6">
@@ -87,7 +88,7 @@ export default async function SettingsPage({
   }
 
   return (
-    <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="settings">
+    <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="settings" addressTerm={data.parent.address_term}>
       <h1 className="text-xl font-semibold">{t.settings}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         {t.saathiCallsHer} {data.parent.address_term || data.parent.first_name} · {langs || t.languageWords}
@@ -106,7 +107,7 @@ export default async function SettingsPage({
         />
       </div>
 
-      <section className="mt-6 space-y-3 rounded-2xl border border-border bg-card px-4 py-4">
+      <section className="card mt-6 space-y-3 px-4 py-4">
         <h2 className="font-semibold">{t.familySection}</h2>
         <ul className="space-y-2">
           {members.map((member) => (
@@ -120,14 +121,25 @@ export default async function SettingsPage({
           ))}
         </ul>
         {data.neighbour ? (
-          <p className="text-sm text-muted-foreground">
-            {data.neighbour.full_name} · {optLabel(neighbourYes?.granted ?? (data.parent.is_example ? true : undefined), lang)}
-          </p>
+          <div className="flex items-center gap-3">
+            {data.parent.is_example ? (
+              <Image
+                src="/images/neighbour-knock.jpg"
+                alt=""
+                width={72}
+                height={72}
+                className="size-[72px] rounded-2xl object-cover"
+              />
+            ) : null}
+            <p className="text-sm text-muted-foreground">
+              {data.neighbour.full_name} · {optLabel(neighbourYes?.granted ?? (data.parent.is_example ? true : undefined), lang)}
+            </p>
+          </div>
         ) : null}
         {ownerDelete ? <InviteForm token={token} label={t.inviteMember} hint={t.inviteHint} /> : null}
       </section>
 
-      <section className="mt-6 rounded-2xl border border-border bg-card px-4 py-4">
+      <section className="card mt-6 px-4 py-4">
         <h2 className="font-semibold">{t.pauseLabel}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{data.parent.paused ? t.paused : t.callingOn}</p>
         <form action={togglePause} className="mt-3">
@@ -137,7 +149,7 @@ export default async function SettingsPage({
         </form>
       </section>
 
-      <section className="mt-6 space-y-3 rounded-2xl border border-border bg-card px-4 py-4">
+      <section className="card mt-6 space-y-3 px-4 py-4">
         <h2 className="font-semibold">{t.privacySection}</h2>
         <p>
           {data.parent.consent_status === "given"
@@ -167,7 +179,7 @@ export default async function SettingsPage({
         )}
       </section>
 
-      <section className="mt-6 rounded-2xl border border-border bg-card px-4 py-4">
+      <section className="card mt-6 px-4 py-4">
         <h2 className="font-semibold">{t.aboutSection}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{t.aboutBody}</p>
         <AddToHome lang={lang} />
