@@ -208,6 +208,18 @@ export default async function TodayPage({
           </li>
         ) : null}
 
+        {data.weekly.built ? (
+          <li className="rounded-2xl border border-border bg-card px-4 py-3">
+            <p className="text-sm text-muted-foreground">{t.weeklyNote}</p>
+            <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">
+              {lang === "hi" ? data.weekly.built.bodyHi : data.weekly.built.bodyEn}
+            </p>
+            <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="mt-2 inline-block text-sm underline-offset-2 hover:underline">
+              {t.weeklySeeHistory}
+            </Link>
+          </li>
+        ) : null}
+
         <li className="rounded-2xl border border-border bg-card px-4 py-3">
           <p className="text-sm text-muted-foreground">{t.thisWeek}</p>
           <ol className="mt-2 grid grid-cols-7 gap-1">

@@ -1,6 +1,7 @@
 import { EXAMPLE_TOKEN } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { istDayOffset, istStamp, istStampFromOffset } from "@/lib/time";
+import { buildWeeklyNote } from "@/lib/weekly";
 
 export { EXAMPLE_TOKEN };
 
@@ -54,10 +55,11 @@ export async function seed() {
     false,
     true,
   ]);
-  await query(`update parents set consent_status = $2, consent_at = $3 where id = $1`, [
+  await query(`update parents set consent_status = $2, consent_at = $3, address_term = $4 where id = $1`, [
     "parent_kamla",
     "given",
     "2026-10-10T08:12:00+05:30",
+    "Maa",
   ]);
   await query(`insert into family_config values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
     "parent_kamla",
@@ -166,6 +168,21 @@ export async function seed() {
       openAlert: isToday,
       variant: isToday ? "chest" : variant,
     });
+  }
+
+  const weekly = await buildWeeklyNote("parent_kamla");
+  if (weekly) {
+    await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+      `out_week_${weekly.monday}`,
+      "parent_kamla",
+      "whatsapp",
+      "weekly_summary_en",
+      "98765 44110",
+      weekly.bodyEn,
+      `${weekly.sunday}T18:05:00+05:30`,
+      "example",
+      true,
+    ]);
   }
 }
 

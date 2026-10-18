@@ -149,6 +149,35 @@ export function weekdayShort(day: string, lang: "en" | "hi") {
   return lang === "hi" ? WEEKDAY_HI[weekday] : WEEKDAY_EN[weekday];
 }
 
+/** Monday (inclusive) of the IST week containing `date`. Weeks are Mon–Sun. */
+export function istWeekMonday(date = new Date()) {
+  const ist = istNow(date);
+  const back = ist.getDay() === 0 ? 6 : ist.getDay() - 1;
+  ist.setDate(ist.getDate() - back);
+  return formatDay(ist);
+}
+
+export function istWeekSunday(date = new Date()) {
+  return istDayOffset(6, new Date(`${istWeekMonday(date)}T12:00:00+05:30`));
+}
+
+export function istWeekDays(date = new Date()) {
+  const monday = istWeekMonday(date);
+  return Array.from({ length: 7 }, (_, i) => istDayOffset(i, new Date(`${monday}T12:00:00+05:30`)));
+}
+
+export function formatWeekRange(monday: string, sunday: string) {
+  const a = parseIstParts(`${monday}T12:00:00+05:30`);
+  const b = parseIstParts(`${sunday}T12:00:00+05:30`);
+  if (a.mo === b.mo) return `${a.d}–${b.d} ${MONTH_EN[a.mo - 1]}`;
+  return `${a.d} ${MONTH_EN[a.mo - 1]}–${b.d} ${MONTH_EN[b.mo - 1]}`;
+}
+
+/** Sunday from 18:00 IST until midnight. */
+export function inSundayEveningWindow(date = new Date()) {
+  return istNow(date).getDay() === 0 && minutesNowIst(date) >= 18 * 60;
+}
+
 export function formatCallHeader(
   iso: string,
   durationSec: number | null | undefined,

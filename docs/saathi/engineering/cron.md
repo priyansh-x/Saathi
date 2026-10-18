@@ -8,6 +8,7 @@ Every five minutes the tick:
 2. Skips paused or `consent_status=declined` households.
 3. If that IST day already has a call, it only walks the missed ladder from the same tick.
 4. Otherwise, if IST now is in `[call_time, 11:00)`, it places one morning call.
+5. On Sunday from 18:00 IST, it also sends one weekly WhatsApp note per family (answered calls, doses taken, alerts, one line in her words if consent is given). Mocked while `MOCK_WHATSAPP=1`. Idempotent for the Mon–Sun week.
 
 ## Local pinger
 
