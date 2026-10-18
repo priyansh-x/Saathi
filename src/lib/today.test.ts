@@ -53,6 +53,21 @@ describe("todayStatus", () => {
     );
   });
 
+  it("stays scheduled for a new family that has never been called", () => {
+    assert.equal(
+      todayStatus({
+        paused: false,
+        call: null,
+        doses: [],
+        actAlerts: [],
+        nowMin: 12 * 60,
+        callTimeMin: 8 * 60 + 30,
+        neverCalled: true,
+      }),
+      "scheduled",
+    );
+  });
+
   it("is trying after the window with no call", () => {
     assert.equal(
       todayStatus({

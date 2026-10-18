@@ -9,7 +9,7 @@ Two apps live in this repo:
 | Family desk | repo root | `npm run dev` → http://127.0.0.1:43147 |
 | Marketing landing | `landing/` | `cd landing && npm run dev` → http://127.0.0.1:43211 |
 
-EXAMPLE household: open `/d/example-kamla`. Fictional only, labelled EXAMPLE. Specs in [`docs/saathi/`](./docs/saathi/).
+Child setup: `/onboard` (email sign-in, then the family form). EXAMPLE household: `/d/example-kamla` (fictional, labelled EXAMPLE). Specs in [`docs/saathi/`](./docs/saathi/).
 
 ## Run locally
 
@@ -50,7 +50,7 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 | `PUBLIC_BASE_URL` | `http://127.0.0.1:43147` | Magic links and tool URLs. |
 | `PRODUCT_NAME` | `Saathi` | Rename without a rewrite. |
 | `MAGIC_LINK_SECRET` | empty | Desk tokens. |
-| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | empty | Optional later driver. |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | empty | Auth magic link in production; optional later DB driver. |
 
 Full list: [`.env.example`](./.env.example). Never commit values.
 

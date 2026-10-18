@@ -29,6 +29,8 @@ async function open() {
   await db.exec(readFileSync(deletedEvents, "utf8"));
   const consentLater = path.join(process.cwd(), "src/lib/db/migrations/008_consent_later.sql");
   await db.exec(readFileSync(consentLater, "utf8"));
+  const signup = path.join(process.cwd(), "src/lib/db/migrations/009_signup.sql");
+  await db.exec(readFileSync(signup, "utf8"));
   return db;
 }
 
