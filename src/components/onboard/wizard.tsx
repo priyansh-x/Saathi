@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import setupImg from "../../../public/images/setup-child-phone.jpg";
 import neighbourImg from "../../../public/images/neighbour-knock.jpg";
-import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/brand";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CHILD_WRITTEN_TEXT } from "@/lib/consent-copy";
@@ -19,7 +19,6 @@ import {
 } from "@/lib/onboard-form";
 import { writeHousehold } from "@/lib/store";
 import type { Household, Language, Relation } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 const DRAFT_KEY = "saathi_onboard_draft_v2";
 type Step = "sign" | "you" | "parent" | "morning" | "medicines" | "neighbour" | "consent" | "done";
@@ -171,7 +170,7 @@ export function OnboardWizard() {
             <Image src={setupImg} alt="Setting up a morning call on a phone at home" fill priority className="object-cover" sizes="480px" />
           </div>
           <p className="eyebrow">Sign in</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">A link to your email. No SMS.</h1>
+          <h1 className="app-title mt-2">A link to your email. No SMS.</h1>
           <p className="mt-3 text-muted-foreground">
             When mocks are on, this stays on this phone. In production Saathi emails a one-time link through
             Supabase Auth.
@@ -195,7 +194,7 @@ export function OnboardWizard() {
       return (
         <>
           <p className="text-sm text-muted-foreground">You{signedEmail ? ` · ${signedEmail}` : ""}</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Who gets the morning note?</h1>
+          <h1 className="app-title mt-2">Who gets the morning note?</h1>
           <div className="mt-6 space-y-4">
             <Field label="Your name" htmlFor="childName">
               <Input
@@ -221,7 +220,7 @@ export function OnboardWizard() {
       return (
         <>
           <p className="text-sm text-muted-foreground">Your parent</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Who should we call?</h1>
+          <h1 className="app-title mt-2">Who should we call?</h1>
           <div className="mt-6 space-y-4">
             <Field label="Full name" htmlFor="parentName">
               <Input
@@ -282,7 +281,7 @@ export function OnboardWizard() {
       return (
         <>
           <p className="text-sm text-muted-foreground">The morning</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">When should Saathi ring {who}?</h1>
+          <h1 className="app-title mt-2">When should Saathi ring {who}?</h1>
           <div className="mt-6 flex flex-wrap gap-2">
             {CALL_TIMES.map((time) => (
               <Chip key={time} on={form.callTime === time} onClick={() => patch("callTime", time)}>
@@ -297,7 +296,7 @@ export function OnboardWizard() {
       return (
         <>
           <p className="text-sm text-muted-foreground">Optional</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Morning tablets, if any.</h1>
+          <h1 className="app-title mt-2">Morning tablets, if any.</h1>
           <p className="mt-3 text-muted-foreground">Skip if they do not take a daily tablet. You can edit this later.</p>
           <ul className="mt-6 space-y-4">
             {form.medicines.map((med, index) => (
@@ -360,7 +359,7 @@ export function OnboardWizard() {
             <Image src={neighbourImg} alt="A neighbour at the door, the person who can knock if a call is missed" fill className="object-cover" sizes="480px" />
           </div>
           <p className="eyebrow">Optional</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Someone who can knock.</h1>
+          <h1 className="app-title mt-2">Someone who can knock.</h1>
           <p className="mt-3 text-muted-foreground">
             We will not message them until they reply yes. Skip if you do not have someone nearby yet.
           </p>
@@ -389,7 +388,7 @@ export function OnboardWizard() {
       return (
         <>
           <p className="text-sm text-muted-foreground">Written consent</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Tell {who} before the first ring.</h1>
+          <h1 className="app-title mt-2">Tell {who} before the first ring.</h1>
           <p className="mt-3 text-muted-foreground">
             You cannot say yes for them. The intro call still asks {who} for a spoken haan.
           </p>
@@ -408,7 +407,7 @@ export function OnboardWizard() {
     return (
       <>
         <p className="text-sm text-muted-foreground">You&apos;re set</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+        <h1 className="app-title mt-2">
           Saathi will call {who} tomorrow at {clockLabel(form.callTime)}.
         </h1>
         <p className="mt-3 text-muted-foreground">
@@ -442,14 +441,14 @@ export function OnboardWizard() {
     <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-4 py-8">
       <div className="flex items-center gap-3">
         {step !== "done" && step !== "sign" ? (
-          <button type="button" onClick={back} className="inline-flex h-11 min-w-11 items-center text-sm font-medium">
+          <button type="button" onClick={back} className="btn-quiet -ml-3 text-primary">
             Back
           </button>
         ) : (
-          <span className="h-11" />
+          <BrandMark />
         )}
         <span className="flex-1" />
-        <Link href="/d/example-kamla" className="text-sm text-muted-foreground">
+        <Link href="/d/example-kamla" className="btn-quiet text-ink-3">
           Example
         </Link>
       </div>
@@ -459,9 +458,9 @@ export function OnboardWizard() {
           {error}
         </p>
       ) : null}
-      <Button type="button" disabled={primary.disabled} className="h-12 w-full" onClick={primary.action}>
+      <button type="button" disabled={primary.disabled} className="btn-primary" onClick={primary.action}>
         {primary.label}
-      </Button>
+      </button>
     </div>
   );
 }
@@ -523,10 +522,7 @@ function Chip({
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className={cn(
-        "inline-flex min-h-11 items-center rounded-2xl border px-3 text-sm",
-        on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card",
-      )}
+      className="choice"
     >
       {children}
     </button>

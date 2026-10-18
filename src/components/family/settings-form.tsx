@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { messages, type Lang } from "@/lib/i18n/messages";
@@ -10,7 +9,7 @@ import { CALL_TIMES, LANGUAGE_OPTIONS } from "@/lib/onboard-form";
 
 type Med = { id: string; name: string; meal: string; time_local: string | null };
 
-const fieldClass = "h-12 w-full rounded-xl border border-input bg-card px-3 text-base";
+const fieldClass = "field";
 
 export function SettingsForm({
   token,
@@ -88,9 +87,9 @@ export function SettingsForm({
               <option value={callTime}>{callTime} IST</option>
             )}
           </select>
-          <Button type="submit" variant="outline" disabled={busy} className="h-12 w-full rounded-xl">
+          <button type="submit" disabled={busy} className="btn-secondary">
             {t.saveTime}
-          </Button>
+          </button>
         </form>
         <form
           className="space-y-3 border-t border-border pt-4"
@@ -109,9 +108,9 @@ export function SettingsForm({
               </label>
             ))}
           </div>
-          <Button type="submit" variant="outline" disabled={busy} className="h-12 w-full rounded-xl">
+          <button type="submit" disabled={busy} className="btn-secondary">
             {t.saveLanguages}
-          </Button>
+          </button>
         </form>
         <p className="text-sm text-muted-foreground">{t.settingsHint}</p>
       </section>
@@ -155,9 +154,9 @@ export function SettingsForm({
                   >
                     {t.remove}
                   </button>
-                  <Button type="submit" variant="outline" disabled={busy} className="h-11 rounded-xl px-4">
+                  <button type="submit" disabled={busy} className="btn-secondary w-auto min-w-28 px-4">
                     {t.saveChanges}
-                  </Button>
+                  </button>
                 </div>
               </form>
             </li>
@@ -184,9 +183,9 @@ export function SettingsForm({
             <option value="with food">With food</option>
             <option value="without food">Without food</option>
           </select>
-          <Button type="submit" variant="outline" disabled={busy} className="h-12 w-full rounded-xl">
+          <button type="submit" disabled={busy} className="btn-secondary">
             {t.addTablet}
-          </Button>
+          </button>
         </form>
       </section>
 
@@ -202,9 +201,9 @@ export function SettingsForm({
         >
           <Input name="name" defaultValue={neighbourName} placeholder="Sunita" aria-label={t.neighbour} />
           <Input name="phone" defaultValue={neighbourPhone} placeholder="98111 77821" aria-label={t.neighbour} />
-          <Button type="submit" variant="outline" disabled={busy} className="h-12 w-full rounded-xl">
+          <button type="submit" disabled={busy} className="btn-secondary">
             {t.saveChanges}
-          </Button>
+          </button>
         </form>
       </section>
     </div>

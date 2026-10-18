@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ExpiredLink, FamilyFrame, LoadingState } from "@/components/family/chrome";
+import { EmptyState, ExpiredLink, FamilyFrame, LoadingState, PageTitle } from "@/components/family/chrome";
 import { historyDays, medicinesFor } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import {
@@ -58,8 +58,7 @@ async function HistoryBody({ token, lang, days }: { token: string; lang: ReturnT
       extraQuery={{ days: String(days) }}
       addressTerm={data.parent.address_term}
     >
-      <h1 className="text-xl font-semibold">{t.history}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{historySummary(keys, hist.calls, hist.doses, medicineIds, lang)}</p>
+      <PageTitle sub={historySummary(keys, hist.calls, hist.doses, medicineIds, lang)}>{t.history}</PageTitle>
 
       <div className="seg mt-4 grid w-full grid-cols-2">
         <Link href={qs({ lang, days: "7" })} aria-current={days === 7 ? "page" : undefined} className="w-full">
@@ -71,9 +70,9 @@ async function HistoryBody({ token, lang, days }: { token: string; lang: ReturnT
       </div>
 
       {hist.calls.length === 0 ? (
-        <p className="mt-8 text-muted-foreground">{t.emptyHistory}</p>
+        <EmptyState title={t.emptyHistory} />
       ) : (
-        <ol className="card mt-4 divide-y divide-border overflow-hidden">
+        <ol className="list-group mt-2">
           {keys.map((day) => {
             const call = callOnDayKey(hist.calls, day);
             const meds = medsOnDay(hist.doses, day, medicineIds);

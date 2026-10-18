@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 
 export function InviteForm({ token, label, hint }: { token: string; label: string; hint: string }) {
   const [url, setUrl] = useState<string | null>(null);
@@ -20,9 +19,9 @@ export function InviteForm({ token, label, hint }: { token: string; label: strin
 
   return (
     <div className="mt-3 space-y-2">
-      <Button type="button" variant="outline" className="h-12 w-full rounded-xl" onClick={create}>
+      <button type="button" className="btn-secondary" onClick={create}>
         {label}
-      </Button>
+      </button>
       {url ? <p className="break-all text-sm">{url}</p> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <p className="text-sm text-muted-foreground">{hint}</p>

@@ -39,23 +39,23 @@ export function AddToHome({ lang }: { lang: Lang }) {
   if (hidden) return null;
   if (!promptEvent) {
     return (
-      <p className="mt-4 text-sm text-muted-foreground">
+      <p className="mt-4 text-[14px] leading-6 text-muted-foreground">
         {t.addToHomeHint}
       </p>
     );
   }
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+    <div className="mt-4 space-y-2">
       <button
         type="button"
-        className="underline-offset-2 hover:underline"
+        className="btn-secondary"
         onClick={() => {
           void promptEvent.prompt();
         }}
       >
         {t.addToHome}
       </button>
-      <button type="button" className="text-muted-foreground underline-offset-2 hover:underline" onClick={() => setHidden(true)}>
+      <button type="button" className="btn-quiet w-full text-muted-foreground" onClick={() => setHidden(true)}>
         {t.cancel}
       </button>
     </div>

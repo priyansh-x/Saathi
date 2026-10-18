@@ -81,7 +81,7 @@ export default async function AlertDetailPage({
       {quote ? <p className="font-devanagari mt-2 text-lg leading-[1.6]">“{quote}”</p> : null}
       <p className="mt-1 text-sm text-muted-foreground">{formatFriendlyTime(alert.created_at, lang)}</p>
 
-      <section className="mt-5 rounded-2xl border border-border bg-card px-4 py-3">
+      <section className="card mt-5 px-4 py-3">
         <p className="text-sm text-muted-foreground">{t.whoWeTold}</p>
         <p className="mt-1">
           {told || "—"} · {t.channelWhatsapp}
@@ -98,7 +98,7 @@ export default async function AlertDetailPage({
 
       {life === "open" ? (
         <form action={markGoing} className="mt-6">
-          <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-white">
+          <button type="submit" className="btn-primary">
             {t.imOnIt}
           </button>
         </form>
@@ -107,7 +107,7 @@ export default async function AlertDetailPage({
       {life === "open" || life === "going" ? (
         <div className="mt-3 space-y-2">
           <form action={markOk}>
-            <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border">
+            <button type="submit" className="btn-secondary">
               {t.shesOk}
             </button>
           </form>

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { InviteForm } from "@/components/family/invite-form";
 import { SettingsForm } from "@/components/family/settings-form";
-import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { ExpiredLink, FamilyFrame, PageTitle } from "@/components/family/chrome";
 import { AddToHome } from "@/components/pwa/register";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { isMockBolna, isMockWhatsapp } from "@/lib/config";
@@ -73,14 +73,14 @@ export default async function SettingsPage({
   if (sp.confirm === "delete") {
     return (
       <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="settings" addressTerm={data.parent.address_term}>
-        <h1 className="text-2xl font-semibold">{t.deleteConfirmTitle}</h1>
-        <p className="mt-3 text-muted-foreground">{t.deleteConfirmBody}</p>
+        <PageTitle>{t.deleteConfirmTitle}</PageTitle>
+        <p className="text-muted-foreground">{t.deleteConfirmBody}</p>
         <form action={wipe} className="mt-6">
-          <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-alert text-white">
+          <button type="submit" className="btn-primary bg-alert">
             {t.deleteConfirmYes}
           </button>
         </form>
-        <Link href={`/d/${token}/settings?lang=${lang}`} className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-2xl border border-border">
+        <Link href={`/d/${token}/settings?lang=${lang}`} className="btn-secondary mt-3">
           {t.cancel}
         </Link>
       </FamilyFrame>
@@ -89,13 +89,13 @@ export default async function SettingsPage({
 
   return (
     <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="settings" addressTerm={data.parent.address_term}>
-      <h1 className="text-xl font-semibold">{t.settings}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {t.saathiCallsHer} {data.parent.address_term || data.parent.first_name} · {langs || t.languageWords}
-        {process.env.VIEWER_TZ ? ` · ${formatIstTime(data.parent.call_time)} ${t.yourTime}` : ` · ${formatIstTime(data.parent.call_time)}`}
-      </p>
+      <PageTitle
+        sub={`${t.saathiCallsHer} ${data.parent.address_term || data.parent.first_name} · ${langs || t.languageWords}${process.env.VIEWER_TZ ? ` · ${formatIstTime(data.parent.call_time)} ${t.yourTime}` : ` · ${formatIstTime(data.parent.call_time)}`}`}
+      >
+        {t.settings}
+      </PageTitle>
 
-      <div className="mt-5">
+      <div className="mt-1">
         <SettingsForm
           token={token}
           lang={lang}
@@ -109,13 +109,18 @@ export default async function SettingsPage({
 
       <section className="card mt-6 space-y-3 px-4 py-4">
         <h2 className="font-semibold">{t.familySection}</h2>
-        <ul className="space-y-2">
+        <ul className="list-group">
           {members.map((member) => (
-            <li key={member.id} className="text-sm">
-              <span className="font-medium">{member.full_name}</span>
-              <span className="text-muted-foreground">
-                {member.is_owner ? ` · ${t.setsUpFamily}` : ""}
-                {member.id === data.child?.id ? ` · ${optLabel(childYes?.granted, lang)}` : ""}
+            <li key={member.id} className="list-row">
+              <span className="grid size-10 place-items-center rounded-full bg-brand-soft font-serif text-brand-deep">
+                {(member.full_name.trim()[0] || "स").toUpperCase()}
+              </span>
+              <span className="min-w-0 flex-1 text-sm">
+                <span className="block font-medium">{member.full_name}</span>
+                <span className="text-muted-foreground">
+                  {member.is_owner ? t.setsUpFamily : ""}
+                  {member.id === data.child?.id ? ` · ${optLabel(childYes?.granted, lang)}` : ""}
+                </span>
               </span>
             </li>
           ))}
@@ -143,7 +148,7 @@ export default async function SettingsPage({
         <h2 className="font-semibold">{t.pauseLabel}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{data.parent.paused ? t.paused : t.callingOn}</p>
         <form action={togglePause} className="mt-3">
-          <button type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-border bg-background">
+          <button type="submit" className="btn-secondary">
             {data.parent.paused ? t.pauseOff : t.pauseOn}
           </button>
         </form>
@@ -170,7 +175,7 @@ export default async function SettingsPage({
         {ownerDelete ? (
           <Link
             href={`/d/${token}/settings?lang=${lang}&confirm=delete`}
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-alert text-alert"
+            className="btn-secondary border-alert text-alert"
           >
             {t.deleteData}
           </Link>

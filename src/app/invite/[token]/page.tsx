@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/brand";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -46,31 +46,32 @@ export default function InvitePage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[480px] px-4 py-10">
-      <h1 className="text-3xl font-semibold tracking-tight">Join this family desk</h1>
-      <p className="mt-3 text-muted-foreground">You will get the morning WhatsApp note and alerts. You cannot delete the family.</p>
-      <div className="mt-6 space-y-4">
+    <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-10">
+      <BrandMark />
+      <h1 className="app-title mt-8">Join this family desk</h1>
+      <p className="mt-3 text-[16px] text-muted-foreground">You will get the morning WhatsApp note and alerts. You cannot delete the family.</p>
+      <div className="mt-8 space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+          <Input id="email" className="field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
         </div>
         {!signed ? (
-          <Button className="h-12 w-full" type="button" onClick={signIn}>
+          <button className="btn-primary" type="button" onClick={signIn}>
             Continue
-          </Button>
+          </button>
         ) : (
           <>
             <div className="space-y-1.5">
               <Label htmlFor="name">Your name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Priya" />
+              <Input id="name" className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Priya" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="wa">WhatsApp</Label>
-              <Input id="wa" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="98765 44111" />
+              <Input id="wa" className="field" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="98765 44111" />
             </div>
-            <Button className="h-12 w-full" type="button" onClick={join}>
+            <button className="btn-primary" type="button" onClick={join}>
               Join the desk
-            </Button>
+            </button>
           </>
         )}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
