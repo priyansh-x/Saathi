@@ -36,6 +36,7 @@ export async function seed() {
   await query("delete from webhook_events");
   await query("delete from magic_links");
   await query("delete from family_config");
+  await query("delete from family_invites");
   await query("delete from audit_events");
   await query("delete from contacts");
   await query("delete from parents");
@@ -79,6 +80,7 @@ export async function seed() {
     true,
     "rohit@example.invalid",
   ]);
+  await query(`update contacts set is_owner = true where id = 'contact_rohit'`);
   await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
     "contact_sunita",
     "parent_kamla",

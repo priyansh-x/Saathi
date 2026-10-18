@@ -1,4 +1,5 @@
 import { contactsFor, dosesOnDay, openActAlerts } from "@/lib/db/queries";
+import { childrenFor } from "@/lib/members";
 import { query } from "@/lib/db/client";
 import type { AlertRow, CallRow, Contact, Parent } from "@/lib/db/types";
 import { EXAMPLE_TOKEN, publicBaseUrl } from "@/lib/config";
@@ -20,6 +21,7 @@ async function household(parentId: string) {
   const contacts = await contactsFor(parentId);
   return {
     parent: parents[0],
+    children: contacts.filter((c) => c.role === "child"),
     child: contacts.find((c) => c.role === "child") ?? null,
     neighbour: contacts.find((c) => c.role === "neighbour") ?? null,
   };
@@ -41,8 +43,8 @@ function medLine(doses: { name?: string; status: string }[]) {
 }
 
 export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "id" | "mood_quote" | "status">) {
-  const { parent, child } = await household(parentId);
-  if (!parent || !child) return { ok: false as const, reason: "missing_child" };
+  const { parent, children } = await household(parentId);
+  if (!parent || children.length === 0) return { ok: false as const, reason: "missing_child" };
   const day = istDayKey();
   const callMin = parseHhMm(parent.call_time || "08:30");
   const doses = await dosesOnDay(parentId, day);
@@ -67,30 +69,37 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
   });
   const label = status === "act" ? "Act now" : status === "look" || status === "trying" ? "Needs a look" : "Good";
   const url = await magicUrl(parentId);
-  return sendFamilyMessage({
-    parentId,
-    toPhone: child.phone,
-    locale: localeOf(child),
-    intended: localeOf(child) === "hi" ? "daily_briefing_hi" : "daily_briefing_en",
-    vars: [
-      parent.first_name,
-      parent.call_time,
-      label,
-      medLine(doses),
-      call.mood_quote || "—",
-      url,
-    ],
-    idempotencyKey: `brief_${call.id}_${child.phone.replace(/\s/g, "")}`,
-  });
+  const results = [];
+  for (const child of children) {
+    results.push(
+      await sendFamilyMessage({
+        parentId,
+        toPhone: child.phone,
+        locale: localeOf(child),
+        intended: localeOf(child) === "hi" ? "daily_briefing_hi" : "daily_briefing_en",
+        vars: [
+          parent.first_name,
+          parent.call_time,
+          label,
+          medLine(doses),
+          call.mood_quote || "—",
+          url,
+        ],
+        idempotencyKey: `brief_${call.id}_${child.phone.replace(/\s/g, "")}`,
+      }),
+    );
+  }
+  return { ok: true as const, results };
 }
 
 export async function notifyAlert(parentId: string, alert: Pick<AlertRow, "id" | "quote" | "created_at">) {
-  const { parent, child, neighbour } = await household(parentId);
+  const { parent, neighbour } = await household(parentId);
   if (!parent) return { ok: false as const };
   const url = `${await magicUrl(parentId)}/alerts/${alert.id}`;
   const time = alert.created_at.includes("T") ? alert.created_at.slice(11, 16) : "08:33";
   const results = [];
-  if (child) {
+  const kids = await childrenFor(parentId);
+  for (const child of kids) {
     results.push(
       await sendFamilyMessage({
         parentId,
@@ -125,9 +134,9 @@ export async function notifyAlert(parentId: string, alert: Pick<AlertRow, "id" |
 }
 
 export async function broadcastAck(parentId: string, alertId: string, actor: string) {
-  const { child, neighbour } = await household(parentId);
+  const { neighbour } = await household(parentId);
   const when = formatIstTime(nowIstStamp().slice(11, 16));
-  const targets = [child, neighbour].filter(Boolean) as Contact[];
+  const targets = [...(await childrenFor(parentId)), neighbour].filter(Boolean) as Contact[];
   const results = [];
   for (const person of targets) {
     results.push(

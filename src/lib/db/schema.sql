@@ -32,7 +32,8 @@ create table if not exists contacts (
   phone text not null,
   locale text not null default 'en',
   is_example boolean not null default false,
-  email text
+  email text,
+  is_owner boolean not null default false
 );
 
 create table if not exists medicines (
@@ -178,6 +179,15 @@ create table if not exists deleted_events (
   id text primary key,
   at text not null,
   kind text not null
+);
+
+create table if not exists family_invites (
+  token text primary key,
+  parent_id text not null references parents(id),
+  created_by text not null,
+  expires_at text not null,
+  consumed_at text,
+  is_example boolean not null default false
 );
 
 create table if not exists audit_events (
