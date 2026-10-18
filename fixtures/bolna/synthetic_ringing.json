@@ -1,0 +1,13 @@
+{
+  "saathi_fixture": "synthetic",
+  "id": "synthetic-ringing-0001",
+  "status": "ringing",
+  "conversation_duration": 12,
+  "user_number": "+910000000000",
+  "transcript": "user: hello",
+  "context_details": {
+    "recipient_data": {
+      "parent_id": "parent_kamla"
+    }
+  }
+}

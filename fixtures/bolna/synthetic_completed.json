@@ -1,0 +1,20 @@
+{
+  "saathi_fixture": "synthetic",
+  "id": "synthetic-completed-0001",
+  "status": "completed",
+  "conversation_duration": 55,
+  "user_number": "+910000000000",
+  "agent_number": "+910000000000",
+  "transcript": "assistant: Namaste Mummy\nuser: hello\nassistant: मैं साथी बोल रही हूँ। अभी दो मिनट बात कर सकते हैं?\nuser: हां जी करिए",
+  "extracted_data": {
+    "summary_en": "EXAMPLE synthetic morning check-in.",
+    "summary_hi": "उदाहरण सुबह की बात।",
+    "mood_quote": "हां जी करिए"
+  },
+  "tool_call_logs": [],
+  "context_details": {
+    "recipient_data": {
+      "parent_id": "parent_kamla"
+    }
+  }
+}

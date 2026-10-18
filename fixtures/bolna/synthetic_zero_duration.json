@@ -1,0 +1,13 @@
+{
+  "saathi_fixture": "synthetic",
+  "id": "synthetic-zero-0001",
+  "status": "completed",
+  "conversation_duration": 0,
+  "user_number": "+910000000000",
+  "transcript": "assistant: Namaste",
+  "context_details": {
+    "recipient_data": {
+      "parent_id": "parent_kamla"
+    }
+  }
+}
