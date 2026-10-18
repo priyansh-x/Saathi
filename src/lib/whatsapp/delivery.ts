@@ -270,12 +270,17 @@ export async function escalateUndeliveredAlerts(now = new Date()) {
     const alert = await relatedAlert(row.parent_id, row.id);
     if (alert?.acked_at || alert?.resolved_at) continue;
     const people = await ladderPeople(row.parent_id);
-    const chain = await query<{ to_phone: string; id: string }>(
-      `select to_phone, id from outbound_messages
+    const chain = await query<{ to_phone: string; id: string; delivery_status: string | null; at: string }>(
+      `select to_phone, id, delivery_status, at from outbound_messages
        where parent_id = $1
          and (id = $2 or id like $3)`,
       [row.parent_id, row.id, `%esc_${row.id}%`],
     );
+    if (chain.some((item) => item.delivery_status === "delivered" || item.delivery_status === "read")) {
+      continue;
+    }
+    const lastAt = chain.reduce((latest, item) => (item.at > latest ? item.at : latest), row.at);
+    if (lastAt >= cutoff) continue;
     const used = new Set(chain.map((item) => phoneKey(item.to_phone)).filter(Boolean));
     used.add(phoneKey(row.to_phone));
     const next = people.find((person) => !used.has(phoneKey(person.phone)));
