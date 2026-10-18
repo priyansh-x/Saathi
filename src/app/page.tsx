@@ -66,8 +66,8 @@ export default function Home() {
             See an example family
           </Link>
           <div className="flex justify-center gap-1 pt-1">
-            <Link href="/demo/call" className="btn-quiet text-[14px] text-muted-foreground">
-              Hear a practice call
+            <Link href="/demo" className="btn-quiet text-[14px] text-muted-foreground">
+              Walk one EXAMPLE morning
             </Link>
             <Link href="/demo/controls" className="btn-quiet text-[14px] text-ink-3">
               Demo walks
