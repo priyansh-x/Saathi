@@ -7,6 +7,11 @@ export const CONSENT_EN_TOKEN = "{{consent_line_en}}";
 
 export type ConsentSpokenLines = { hi: string; en: string };
 
+export type ConsentSpokenVersions = {
+  withNeighbour: ConsentSpokenLines;
+  withoutNeighbour: ConsentSpokenLines;
+};
+
 export type ConsentNameVars = {
   parent_name: string;
   child_name: string;
@@ -41,9 +46,33 @@ export function parseConsentLineMarkdown(md: string): ConsentSpokenLines {
   return { hi, en };
 }
 
-export function loadConsentSpokenLines(root = process.cwd()): ConsentSpokenLines {
+export function parseConsentLineVersions(md: string): ConsentSpokenVersions {
+  const withNeighbour = {
+    hi: spokenAfter(md, "**Hindi (spoken, with neighbour):**"),
+    en: spokenAfter(md, "**English (spoken, with neighbour):**"),
+  };
+  const withoutNeighbour = {
+    hi: spokenAfter(md, "**Hindi (spoken, without neighbour):**"),
+    en: spokenAfter(md, "**English (spoken, without neighbour):**"),
+  };
+  if (!withNeighbour.hi || !withNeighbour.en || !withoutNeighbour.hi || !withoutNeighbour.en) {
+    throw new Error("consent_line.md is missing with/without neighbour spoken lines");
+  }
+  return { withNeighbour, withoutNeighbour };
+}
+
+export function loadConsentSpokenVersions(root = process.cwd()): ConsentSpokenVersions {
   const md = readFileSync(path.join(root, CONSENT_LINE_PATH), "utf8");
-  return parseConsentLineMarkdown(md);
+  return parseConsentLineVersions(md);
+}
+
+export function loadConsentSpokenLines(root = process.cwd()): ConsentSpokenLines {
+  return loadConsentSpokenVersions(root).withNeighbour;
+}
+
+/** Prefer an opted-in neighbour's with-neighbour pair. Fallback stripping is not used here. */
+export function pickConsentSpokenLines(versions: ConsentSpokenVersions, hasOptedInNeighbour: boolean) {
+  return hasOptedInNeighbour ? versions.withNeighbour : versions.withoutNeighbour;
 }
 
 const NEIGHBOUR_TOKEN = /\{\{neighbour_name\}\}|\{neighbour_name\}/;
@@ -57,7 +86,7 @@ function tidySpoken(text: string) {
     .trim();
 }
 
-/** Drop any sentence that names the neighbour so an empty name never stays in the line. */
+/** Drop any sentence that names the neighbour so an empty name never stays in the line. Fallback only. */
 export function dropNeighbourClauses(text: string) {
   const sentences = text.split(/(?<=[।.!?])\s+/);
   return tidySpoken(sentences.filter((sentence) => !NEIGHBOUR_TOKEN.test(sentence)).join(" "));

@@ -5,10 +5,10 @@ import path from "node:path";
 import { promptVariables } from "../bolna/summary";
 import { closeDb, query } from "../db/client";
 import { seed } from "../db/seed";
+import { recordNeighbourReply } from "../neighbour";
 import {
   fillConsentSpokenLine,
   injectConsentLines,
-  loadConsentSpokenLines,
   parseConsentLineMarkdown,
 } from "./consent-line";
 
@@ -25,6 +25,13 @@ const fixtureHi =
   "{{parent_name}}, मैं साथी हूँ। {{child_name}} ने रखा है। पड़ोसन {{neighbour_name}} पास में हैं। हाँ बोलिए।";
 const fixtureEn =
   "{parent_name}, this is Saathi. {child_name} asked me to call. Neighbour {neighbour_name} is nearby. Please say yes or no.";
+
+function assertFilled(text: string) {
+  assert.equal(/\{[a-z_]+\}/.test(text), false, text);
+  assert.match(text, /112/);
+  assert.match(text, /Rohit/);
+  assert.match(text, /short update|छोटा सा हाल/);
+}
 
 before(async () => {
   await seed();
@@ -82,7 +89,6 @@ describe("first-call consent line source", () => {
   });
 
   it("fills the Product file from the parent record", async () => {
-    loadConsentSpokenLines();
     const agent = JSON.parse(readFileSync(path.join(process.cwd(), "scripts/bolna/agent.json"), "utf8")) as {
       prompt: string;
     };
@@ -91,14 +97,24 @@ describe("first-call consent line source", () => {
     assert.match(assembled, /record_consent/);
 
     const vars = await promptVariables("parent_kamla");
-    assert.match(vars.consent_line_en, /Rohit/);
-    assert.match(vars.consent_line_hi, /Rohit/);
+    assertFilled(vars.consent_line_en);
+    assertFilled(vars.consent_line_hi);
     assert.equal(vars.neighbour_name, "Sunita");
-    assert.equal(vars.consent_line_en.includes("{"), false);
+    assert.match(vars.consent_line_en, /Sunita/);
+
+    await recordNeighbourReply("parent_kamla", false);
+    const declined = await promptVariables("parent_kamla");
+    assert.equal(declined.neighbour_name, "");
+    assertFilled(declined.consent_line_en);
+    assertFilled(declined.consent_line_hi);
+    assert.doesNotMatch(declined.consent_line_en, /Sunita/);
+    assert.doesNotMatch(declined.consent_line_hi, /Sunita/);
 
     await query(`delete from contacts where id = 'contact_sunita'`);
     const without = await promptVariables("parent_kamla");
     assert.equal(without.neighbour_name, "");
+    assertFilled(without.consent_line_en);
+    assertFilled(without.consent_line_hi);
     assert.doesNotMatch(without.consent_line_en, /Sunita/);
     assert.doesNotMatch(without.consent_line_hi, /Sunita/);
   });
