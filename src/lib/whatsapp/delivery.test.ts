@@ -78,7 +78,24 @@ describe("WhatsApp delivery statuses", () => {
       `select delivery_status from outbound_messages where provider_message_id = $1`,
       [wamid],
     );
-    assert.equal(failed[0]?.delivery_status, "failed");
+    assert.equal(failed[0]?.delivery_status, "read");
+  });
+
+  it("does not let a late sent overwrite delivered or read", async () => {
+    const wamid = `wamid.EXAMPLE.order_${Date.now()}`;
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,$2,'whatsapp','daily_briefing_good','98765 44110','EXAMPLE body',$3,'sent',true,$4,'delivered',$3)`,
+      [`out_order_${Date.now()}`, "parent_kamla", "2026-10-18T08:40:00+05:30", wamid],
+    );
+    await applyWhatsappStatuses([{ id: wamid, status: "sent", timestamp: "1760782000" }]);
+    const row = await query<{ delivery_status: string }>(
+      `select delivery_status from outbound_messages where provider_message_id = $1`,
+      [wamid],
+    );
+    assert.equal(row[0]?.delivery_status, "delivered");
   });
 
   it("formats the desk line as Delivered to Rohit 8:42", async () => {
@@ -149,6 +166,150 @@ describe("WhatsApp delivery statuses", () => {
       [`%esc_${lateId}%`],
     );
     assert.equal(copies[0]?.n, 1);
+  });
+
+  it("walks child, other family, then opted-in neighbour without repeating", async () => {
+    await query(`delete from contacts where id = 'contact_priya'`);
+    await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+      "contact_priya",
+      "parent_kamla",
+      "child",
+      "Priya Sharma",
+      "Priya",
+      "98765 44111",
+      "en",
+      true,
+      "priya@example.invalid",
+    ]);
+    const id = `out_safety_alert_emergency_ladder_${Date.now()}`;
+    const at = nowIstStamp(new Date(Date.now() - 6 * 60 * 1000));
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE ladder',$2,'sent',true,
+        $3,'sent',$2)`,
+      [id, at, `wamid.EXAMPLE.${id}`],
+    );
+    await escalateUndeliveredAlerts(new Date());
+    await escalateUndeliveredAlerts(new Date());
+    await escalateUndeliveredAlerts(new Date());
+    const hops = await query<{ to_phone: string }>(
+      `select to_phone from outbound_messages where id like $1 order by at, id`,
+      [`%esc_${id}%`],
+    );
+    assert.equal(hops.length, 2);
+    assert.match(hops[0]!.to_phone.replace(/\D/g, ""), /9876544111/);
+    assert.match(hops[1]!.to_phone.replace(/\D/g, ""), /9811177821/);
+    await query(`delete from contacts where id = 'contact_priya'`);
+  });
+
+  it("skips a neighbour who has not opted in", async () => {
+    await query(`update consents set granted = false where id = 'con_neighbour'`);
+    await query(`delete from contacts where id = 'contact_priya'`);
+    await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+      "contact_priya",
+      "parent_kamla",
+      "child",
+      "Priya Sharma",
+      "Priya",
+      "98765 44111",
+      "en",
+      true,
+      "priya@example.invalid",
+    ]);
+    const id = `out_safety_alert_emergency_optin_${Date.now()}`;
+    const at = nowIstStamp(new Date(Date.now() - 6 * 60 * 1000));
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE optin',$2,'sent',true,
+        $3,'sent',$2)`,
+      [id, at, `wamid.EXAMPLE.${id}`],
+    );
+    await escalateUndeliveredAlerts(new Date());
+    await escalateUndeliveredAlerts(new Date());
+    const hops = await query<{ to_phone: string }>(
+      `select to_phone from outbound_messages where id like $1 order by at, id`,
+      [`%esc_${id}%`],
+    );
+    assert.equal(hops.length, 1);
+    assert.match(hops[0]!.to_phone.replace(/\D/g, ""), /9876544111/);
+    assert.doesNotMatch(hops[0]!.to_phone.replace(/\D/g, ""), /9811177821/);
+    await query(`update consents set granted = true where id = 'con_neighbour'`);
+    await query(`delete from contacts where id = 'contact_priya'`);
+  });
+
+  it("stops the ladder once the alert is acknowledged", async () => {
+    const alertId = `alert_ack_stop_${Date.now()}`;
+    await query(`insert into alerts values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, [
+      alertId,
+      "parent_kamla",
+      null,
+      "EMERGENCY",
+      "act",
+      "Bathroom mein gir gayi, uth nahi pa rahi.",
+      nowIstStamp(),
+      nowIstStamp(),
+      "Rohit",
+      null,
+      false,
+      "test",
+      true,
+    ]);
+    const id = `out_safety_alert_emergency_${alertId}`;
+    const at = nowIstStamp(new Date(Date.now() - 6 * 60 * 1000));
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE acked',$2,'sent',true,
+        $3,'sent',$2)`,
+      [id, at, `wamid.EXAMPLE.${id}`],
+    );
+    await escalateUndeliveredAlerts(new Date());
+    const hops = await query<{ n: number }>(
+      `select count(*)::int as n from outbound_messages where id like $1`,
+      [`%esc_${id}%`],
+    );
+    assert.equal(hops[0]?.n, 0);
+  });
+
+  it("fills alert variables from the parent record, not a hard-coded Maa", async () => {
+    await query(`update parents set address_term = 'Amma' where id = 'parent_kamla'`);
+    const id = `out_safety_alert_emergency_vars_${Date.now()}`;
+    const at = nowIstStamp(new Date(Date.now() - 6 * 60 * 1000));
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE vars',$2,'sent',true,
+        $3,'sent',$2)`,
+      [id, at, `wamid.EXAMPLE.${id}`],
+    );
+    await escalateUndeliveredAlerts(new Date());
+    const hop = await query<{ body: string }>(`select body from outbound_messages where id like $1`, [`%esc_${id}%`]);
+    assert.match(hop[0]?.body ?? "", /Amma/);
+    assert.doesNotMatch(hop[0]?.body ?? "", /hard-coded/);
+    await query(`update parents set address_term = 'Maa' where id = 'parent_kamla'`);
+  });
+
+  it("does not escalate an escalation row", async () => {
+    const id = `out_safety_alert_emergency_esc_already_${Date.now()}`;
+    const at = nowIstStamp(new Date(Date.now() - 6 * 60 * 1000));
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98111 77821','EXAMPLE esc',$2,'sent',true,
+        $3,'failed',$2)`,
+      [id, at, `wamid.EXAMPLE.${id}`],
+    );
+    const before = await query<{ n: number }>(`select count(*)::int as n from outbound_messages`);
+    await escalateUndeliveredAlerts(new Date());
+    const after = await query<{ n: number }>(`select count(*)::int as n from outbound_messages`);
+    assert.equal(after[0]?.n, before[0]?.n);
   });
 
   it("shows delivery on /ops without raw phones", async () => {
