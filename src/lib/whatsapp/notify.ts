@@ -8,6 +8,8 @@ import { todayStatus } from "@/lib/db/queries";
 import { formatIstTime, istDayKey, istStamp, nowIstStamp, parseHhMm } from "@/lib/time";
 import { sendPushToFamily } from "@/lib/push";
 import { sendFamilyMessage } from "@/lib/whatsapp/send";
+import { ladderConfig, nextRetryLabel } from "@/lib/ladder";
+import { packTemplate } from "@/lib/whatsapp/templates";
 
 async function magicUrl(parentId: string) {
   const rows = await query<{ token: string }>(
@@ -79,14 +81,22 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
         ? "daily_briefing_missed_med"
         : "daily_briefing_good";
   const who = parent.address_term?.trim() || parent.first_name;
+  const tries = await query<{ n: number }>(`select count(*)::int as n from call_attempts where call_id = $1`, [call.id]);
+  const cfg = await ladderConfig(parentId);
   const results = [];
   for (const child of children) {
     const locale = localeOf(child);
     const vars =
       intended === "missed_call_soft"
-        ? [who, "1", parent.call_time, parent.call_time, parent.phone]
+        ? [
+            who,
+            String(tries[0]?.n || 1),
+            parent.call_time,
+            nextRetryLabel(parent.call_time, 0, cfg),
+            parent.phone,
+          ]
         : intended === "daily_briefing_missed_med"
-          ? [who, missed?.name ?? "tablet", call.mood_quote || "not taken"]
+          ? [who, missed?.name ?? "tablet", missed?.meal || parent.call_time]
           : [who, parent.call_time, medLine(doses), call.mood_quote || "—"];
     results.push(
       await sendFamilyMessage({
@@ -111,7 +121,6 @@ export async function notifyAlert(
   if (!parent) return { ok: false as const };
   const time = alert.created_at.includes("T") ? alert.created_at.slice(11, 16) : "08:33";
   const who = parent.address_term?.trim() || parent.first_name;
-  const neighbourName = neighbour?.first_name ?? "neighbour";
   const childTemplate =
     alert.category === "MISSED" || alert.level === "look"
       ? "safety_alert_unreachable"
@@ -122,12 +131,39 @@ export async function notifyAlert(
     childTemplate === "safety_alert_unreachable" ? "responder_alert_unreachable" : "responder_alert_emergency";
   const results = [];
   const kids = await childrenFor(parentId);
+  const tries = await query<{ n: number }>(
+    `select count(*)::int as n from call_attempts where call_id in (select call_id from alerts where id = $1)`,
+    [alert.id],
+  );
+  const tryCount = String(Math.max(1, tries[0]?.n || 1));
+  let neighbourMessaged = false;
+  if (neighbour && (await neighbourOptedIn(parentId))) {
+    const childName = kids[0]?.first_name ?? "family";
+    const nvars =
+      neighbourTemplate === "responder_alert_unreachable"
+        ? [neighbour.first_name, who, parent.city, childName]
+        : [neighbour.first_name, who, parent.city, alert.quote, childName];
+    const sent = await sendFamilyMessage({
+      parentId,
+      toPhone: neighbour.phone,
+      locale: localeOf(neighbour),
+      intended: neighbourTemplate,
+      vars: nvars,
+      idempotencyKey: `resp_${alert.id}_${neighbour.phone.replace(/\s/g, "")}`,
+    });
+    neighbourMessaged = sent.ok && !String(sent.status).startsWith("blocked") && !String(sent.status).startsWith("failed");
+    results.push(sent);
+  }
   for (const child of kids) {
+    const locale = localeOf(child);
+    const neighbourVar = neighbourMessaged
+      ? neighbour?.first_name ?? ""
+      : packTemplate(childTemplate, locale)?.examples[3] ?? "";
     const vars =
       childTemplate === "safety_alert_unreachable"
-        ? [who, "4", time, neighbourName, parent.phone]
+        ? [who, tryCount, time, neighbourVar, parent.phone]
         : childTemplate === "safety_alert_emergency"
-          ? [who, time, alert.quote, neighbourName, parent.phone]
+          ? [who, time, alert.quote, neighbourVar, parent.phone]
           : [who, time, alert.quote, "uneasy"];
     results.push(
       await sendFamilyMessage({
@@ -141,23 +177,6 @@ export async function notifyAlert(
     );
   }
   await sendPushToFamily(parentId, "Act now", alert.quote, `alert_${alert.id}`);
-  if (neighbour && (await neighbourOptedIn(parentId))) {
-    const childName = kids[0]?.first_name ?? "family";
-    const nvars =
-      neighbourTemplate === "responder_alert_unreachable"
-        ? [neighbour.first_name, who, parent.city, childName]
-        : [neighbour.first_name, who, parent.city, alert.quote, childName];
-    results.push(
-      await sendFamilyMessage({
-        parentId,
-        toPhone: neighbour.phone,
-        locale: localeOf(neighbour),
-        intended: neighbourTemplate,
-        vars: nvars,
-        idempotencyKey: `resp_${alert.id}_${neighbour.phone.replace(/\s/g, "")}`,
-      }),
-    );
-  }
   return { ok: true as const, results };
 }
 

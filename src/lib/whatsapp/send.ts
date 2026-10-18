@@ -14,6 +14,15 @@ export type SendResult = {
   reason?: string;
 };
 
+export type MockLoggedWhatsapp = {
+  name: string;
+  language: "en" | "hi";
+  vars: string[];
+  buttons: number;
+};
+
+export const mockLoggedWhatsapp: MockLoggedWhatsapp[] = [];
+
 export function outboundMessageId(template: string, idempotencyKey: string) {
   return `out_${template}_${idempotencyKey}`.slice(0, 80);
 }
@@ -322,6 +331,22 @@ export async function sendFamilyMessage(args: {
   }
 
   if (isMockWhatsapp()) {
+    const graph = buildWhatsappPayload({
+      to: gate.to,
+      template,
+      language,
+      vars: args.vars,
+      freeText: args.freeText,
+      windowOpen,
+      buttonUrlVar: args.buttonUrlVar,
+    });
+    const components = (graph.template?.components as { type: string }[] | undefined) ?? [];
+    mockLoggedWhatsapp.push({
+      name: graph.template?.name ?? template,
+      language,
+      vars: args.vars,
+      buttons: components.filter((c) => c.type === "button").length,
+    });
     await logOutbound({
       id,
       parentId: args.parentId,

@@ -3,7 +3,7 @@ import { placeCall } from "@/lib/calls/provider";
 import { defaultLadder } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { raiseAlert } from "@/lib/bolna/tools";
-import { istStampFromOffset, istDayKey } from "@/lib/time";
+import { formatIstClock, istStampFromOffset, istDayKey, parseHhMm } from "@/lib/time";
 import { sendFamilyMessage } from "@/lib/whatsapp/send";
 import { contactsFor } from "@/lib/db/queries";
 
@@ -63,6 +63,14 @@ async function recordAttempt(callId: string, offset: number, result: string) {
 
 function reachable(results: string[]) {
   return results.some((r) => r === "busy" || r === "declined" || r === "answered");
+}
+
+export function nextRetryLabel(callTime: string, elapsedMin: number, cfg: LadderConfig) {
+  const next = [cfg.retry_10, cfg.retry_25, cfg.last_45].find((offset) => offset > elapsedMin) ?? cfg.escalate_60;
+  const total = parseHhMm(callTime || "08:30") + next;
+  const hh = String(Math.floor(total / 60) % 24).padStart(2, "0");
+  const mm = String(total % 60).padStart(2, "0");
+  return formatIstClock(`${hh}:${mm}`);
 }
 
 type PlaceFn = (parentId: string, clock?: Date) => Promise<{ ok: boolean; reason?: string }>;
@@ -153,7 +161,7 @@ export async function advanceLadder(
               who,
               String(tries[0]?.n || 1),
               parent[0]?.call_time || "08:30",
-              parent[0]?.call_time || "08:30",
+              nextRetryLabel(parent[0]?.call_time || "08:30", args.elapsedMin, cfg),
               parent[0]?.phone || "",
             ],
             idempotencyKey: `soft_${args.callId}_${child.phone.replace(/\s/g, "")}`,
