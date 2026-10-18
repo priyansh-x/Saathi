@@ -20,7 +20,7 @@ function messageId(template: string, idempotencyKey: string) {
 export async function logOutbound(row: {
   id: string;
   parentId: string;
-  channel: "whatsapp" | "email";
+  channel: "whatsapp" | "email" | "push";
   template: string;
   to: string;
   body: string;

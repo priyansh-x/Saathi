@@ -11,6 +11,7 @@ import {
   istWeekMonday,
   parseIstParts,
 } from "@/lib/time";
+import { sendPushToFamily } from "@/lib/push";
 import { sendFamilyMessage } from "@/lib/whatsapp/send";
 import { renderTemplate } from "@/lib/whatsapp/templates";
 
@@ -167,6 +168,7 @@ export async function sendWeeklyNote(parentId: string, now = new Date()) {
       }),
     );
   }
+  await sendPushToFamily(parentId, "This week's note", note.bodyEn, `week_${monday}`);
   return { ok: true as const, note, results };
 }
 
