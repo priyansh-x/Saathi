@@ -189,6 +189,7 @@ export const messages = {
     audioConsentOff: "No audio. She did not consent to recording.",
     addToHome: "Add to Home Screen",
     addToHomeHint: "On your phone: browser menu → Add to Home Screen. Designed for a 360×740 screen.",
+    signOut: "Sign out",
   },
   hi: {
     example: "उदाहरण",
@@ -377,6 +378,7 @@ export const messages = {
     audioConsentOff: "ऑडियो नहीं — सहमति नहीं है।",
     addToHome: "होम स्क्रीन पर जोड़ें",
     addToHomeHint: "फ़ोन पर: ब्राउज़र मेनू → होम स्क्रीन पर जोड़ें। 360×740 स्क्रीन के लिए।",
+    signOut: "साइन आउट",
   },
 } as const;
 

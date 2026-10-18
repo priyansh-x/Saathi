@@ -11,7 +11,7 @@ Two apps live in this repo:
 
 Child setup: `/onboard` (email sign-in, then the family form). EXAMPLE household: `/d/example-kamla` (fictional, labelled EXAMPLE). Specs in [`docs/saathi/`](./docs/saathi/).
 
-The family desk is a PWA (`/manifest.webmanifest`, `/sw.js`): Add to Home Screen from the home page or Settings. Layout target is a 360×740 phone. The service worker does not cache `/api`. Web Push goes through `gateOutbound` (`push`) and is mocked while `MOCK_WHATSAPP=1`.
+The family desk is a PWA (`/manifest.webmanifest`, `/sw.js`): Add to Home Screen from the home page or Settings. Layout target is a 360×740 phone. The service worker caches the app shell (desk HTML, JS, CSS, fonts, icons) on successful GETs and never `/api`. Desk pages expire after 24 hours; a cached page shows “Last updated at …”. Sign-out and Delete everything clear the cache. Web Push goes through `gateOutbound` (`push`) and is mocked while `MOCK_WHATSAPP=1`.
 
 ## Run locally
 
