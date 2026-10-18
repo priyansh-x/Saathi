@@ -42,7 +42,8 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 
 | Name | Default | Used for |
 | --- | --- | --- |
-| `MOCK_BOLNA` | `1` | Mock dials. Never set to `0` unless Priyansh says go. |
+| `CALL_PROVIDER` | `simulated` | `simulated` or `bolna`. Default simulated. Never set to `bolna` unless Priyansh says go. |
+| `MOCK_BOLNA` | `1` | Mock dials. `0` is an alias for `CALL_PROVIDER=bolna`. Never set to `0` unless Priyansh says go. |
 | `MOCK_WHATSAPP` | `1` | Mock WhatsApp. Same rule. |
 | `SAATHI_KILL_SWITCH` | `0` | Stops cron, dials, and sends. |
 | `ALLOWED_PHONE_NUMBERS` | empty | Live allowlist. |
@@ -67,14 +68,19 @@ Full list: [`.env.example`](./.env.example). Never commit values.
 
 Checklist: [`docs/saathi/engineering/deploy.md`](./docs/saathi/engineering/deploy.md). Vercel (family root + `landing/`) and optional Supabase. Keep `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, empty allowlists, cron off.
 
-## First real call (runbook)
+## First live call (runbook)
 
-Nothing reaches a real person without Priyansh's explicit go-ahead.
+Nothing reaches a real person without Priyansh's explicit go-ahead. Defaults stay `CALL_PROVIDER=simulated`, `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`. Agents never set those live flags and never pass `--yes`.
 
-1. Keep `MOCK_BOLNA=1` and `MOCK_WHATSAPP=1`. Walk `/demo/controls` and `/d/example-kamla`.
-2. Put **only** Priyansh's numbers on `ALLOWED_PHONE_NUMBERS` (and emails on `ALLOWED_EMAILS`).
-3. Dry run, no `--yes`: `npx tsx scripts/bolna/test-call.ts +91XXXXXXXXXX`
-4. Stop. Do not pass `--yes`. Do not set `MOCK_*=0`. Do not enable cron.
-5. A live `--yes` call happens only when Priyansh is on the line and says go.
+1. **Env.** Set `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `SAATHI_TOOL_TOKEN`, `BOLNA_WEBHOOK_SECRET`, `CRON_SECRET`, and `PUBLIC_BASE_URL` (HTTPS). Keep `MOCK_WHATSAPP=1`. Leave `SAATHI_KILL_SWITCH=0` until you need to freeze.
+2. **Sync dry, then apply.** `npm run bolna:sync` prints the agent JSON and diffs `scripts/bolna/agent.json` (no network). Only Priyansh runs `npm run bolna:sync -- --apply`, which PUTs the existing agent. It never creates a new one.
+3. **Readiness all green.** Sign in with an `OPS_EMAILS` address. `/ops` Bolna card: CALL_PROVIDER, agent id / API key / tool token / webhook secret set, `PUBLIC_BASE_URL` HTTPS, allowlist exactly one number (last four only). Secrets are never shown.
+4. **Simulate webhook.** On `/ops`, **Simulate a Bolna webhook**. Last webhook time + status should go green. EXAMPLE synthetic payload only.
+5. **Allowlist own number.** `ALLOWED_PHONE_NUMBERS` is exactly Priyansh's E.164 number. `ALLOWED_EMAILS` is his inbox.
+6. **Provider.** Priyansh sets `CALL_PROVIDER=bolna` (do not leave this on).
+7. **Test-call dry, then `--yes`.** `npm run bolna:test-call -- +91XXXXXXXXXX` prints the payload and does not fetch. Live dial only with `--yes`, `CALL_PROVIDER=bolna`, and the allowlisted number, with Priyansh on the line.
+8. **Desk.** Confirm Today, the call row, and the briefing path on the family desk (EXAMPLE data stays labelled EXAMPLE).
+9. **Switch back.** Set `CALL_PROVIDER=simulated` and `MOCK_BOLNA=1`. Empty or restore the allowlist. Do not leave Bolna live.
+10. **Kill switch.** `SAATHI_KILL_SWITCH=1` (or `/ops` Turn on) stops cron, dials, and sends. Env `1` still wins over the desk latch.
 
-If you are not Priyansh, you are done at step 3.
+If you are not Priyansh, stop after the dry-run sync and the dry-run test-call. Do not `--apply`. Do not `--yes`. Do not set `CALL_PROVIDER=bolna`.
