@@ -1,13 +1,13 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { ExpiredLink } from "@/components/family/chrome";
+import { titled } from "@/lib/page-title";
 
-export default function NotFound() {
-  return (
-    <main className="mx-auto max-w-[480px] px-4 py-16">
-      <h1 className="text-2xl font-semibold">Link expired or unknown</h1>
-      <p className="mt-3 text-muted-foreground">Ask Rohit for a new WhatsApp link, or open the example desk.</p>
-      <Link href="/d/example-kamla" className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-white">
-        Open example desk
-      </Link>
-    </main>
-  );
+export async function generateMetadata(): Promise<Metadata> {
+  return titled("Not found · Saathi", "नहीं मिला · साथी", (await cookies()).get("saathi_lang")?.value);
+}
+
+export default async function NotFound() {
+  const lang = (await cookies()).get("saathi_lang")?.value === "hi" ? "hi" : "en";
+  return <ExpiredLink lang={lang} />;
 }

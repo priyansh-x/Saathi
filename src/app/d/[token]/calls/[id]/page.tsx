@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
+import { titled } from "@/lib/page-title";
 import { BackLink, ExpiredLink, FamilyFrame, LoadingState } from "@/components/family/chrome";
 import { callById, dosesOnDay } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
@@ -6,6 +8,14 @@ import { callBullets, callLanguageLabel, qs } from "@/lib/history";
 import { messages } from "@/lib/i18n/messages";
 import { formatCallHeader } from "@/lib/time";
 import { doseMark, slotLabel } from "@/lib/today";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("Call · Saathi", "कॉल · साथी", (await searchParams).lang);
+}
 
 export default async function CallDetailPage({
   params,

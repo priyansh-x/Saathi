@@ -1,9 +1,19 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { titled } from "@/lib/page-title";
 import { EmptyState, ExpiredLink, FamilyFrame, PageTitle } from "@/components/family/chrome";
 import { alertQuoteLine, alertTitle, severityChip, sortAlerts, statusPill } from "@/lib/alerts";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
 import { formatFriendlyTime } from "@/lib/time";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("Alerts · Saathi", "अलर्ट · साथी", (await searchParams).lang);
+}
 
 export default async function AlertsPage({
   params,

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DemoAudio } from "@/components/demo/demo-audio";
-import { ExamplePill } from "@/components/family/chrome";
 import { PhonePreview } from "@/components/demo/phone-preview";
 import type { Lang } from "@/lib/i18n/messages";
 import {
@@ -96,7 +95,9 @@ export function RecordPlayer({
   return (
     <div className="record-stage">
       <header className="record-bar">
-        <ExamplePill lang={lang} />
+        <span className="rounded-full bg-amber-soft px-2 py-0.5 text-[11px] font-semibold tracking-wide text-amber-ink">
+          EXAMPLE
+        </span>
         <h1 className="record-title">{scene.title}</h1>
         <span className="record-progress" aria-hidden>
           {index + 1}/{scenes.length}
@@ -147,7 +148,11 @@ export function RecordPlayer({
         {scene.footer ? <p className="record-footer">{scene.footer}</p> : null}
       </section>
 
-      {hint ? <p className="record-hint">Space pauses · arrows step · EXAMPLE</p> : null}
+      {hint ? (
+        <p className="record-hint">
+          {lang === "hi" ? "स्पेस रोकता है · तीर कदम · EXAMPLE" : "Space pauses · arrows step · EXAMPLE"}
+        </p>
+      ) : null}
       <DemoAudio
         url={audioUrl}
         playing={Boolean(audioUrl) && scene.kind === "call" && !paused}

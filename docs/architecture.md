@@ -24,7 +24,10 @@ The parent never opens this website.
 | `/d/[token]/alerts/[id]` | Alert detail |
 | `/d/[token]/calls/[id]` | Call detail |
 | `/d/[token]/settings` | Read-only settings |
+| `/demo` | EXAMPLE morning walk (missed + red-flag ladder) |
+| `/demo?record=1` | Film mode — autoplay, 1080×1920 / 1920×1080 |
 | `/demo/call` | Offline scripted simulator (judge fallback) |
+| `/demo/controls` | Redirects to `/demo` |
 | `/family`, `/call` | Redirect into `/d/example-kamla` or `/demo/call` |
 
 ## Data
