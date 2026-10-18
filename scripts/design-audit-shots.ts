@@ -70,12 +70,12 @@ async function main() {
   await page.getByLabel("Your name").waitFor();
   await shot(page, "setup-you-en");
   await page.getByLabel("Your name").fill("Ananya");
-  await page.getByLabel("Your WhatsApp").fill("9876544110");
+  await page.getByLabel("Your WhatsApp").fill("+910000000001");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Full name").waitFor();
   await shot(page, "setup-parent-en");
   await page.getByLabel("Full name").fill("Kamla Test");
-  await page.getByLabel("Their phone").fill("9711122334");
+  await page.getByLabel("Their phone").fill("+910000000005");
   await page.getByLabel("City").fill("Delhi");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByText("When should Saathi ring").waitFor();

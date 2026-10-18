@@ -29,7 +29,7 @@ function restoreEmailEnv(prev: Record<string, string | undefined>) {
 async function fallbackToEmail(key: string) {
   return sendFamilyMessage({
     parentId: "parent_kamla",
-    toPhone: "98765 44110",
+    toPhone: "+910000000001",
     locale: "en",
     intended: "daily_briefing_good",
     vars: ["Maa", "8:04", "Good", "—", "—", "http://local"],
@@ -61,7 +61,7 @@ describe("email fallback transport", () => {
     process.env.MOCK_EMAIL = "0";
     process.env.WHATSAPP_TEMPLATES_APPROVED = "0";
     process.env.WHATSAPP_APPROVED_TEMPLATES = "";
-    process.env.ALLOWED_PHONE_NUMBERS = "98765 44110";
+    process.env.ALLOWED_PHONE_NUMBERS = "+910000000001";
     process.env.ALLOWED_EMAILS = "rohit@example.invalid";
     delete process.env.EMAIL_FROM;
     delete process.env.EMAIL_API_KEY;
@@ -110,7 +110,7 @@ describe("email fallback transport", () => {
     process.env.MOCK_WHATSAPP = "0";
     process.env.MOCK_EMAIL = "1";
     process.env.WHATSAPP_TEMPLATES_APPROVED = "0";
-    process.env.ALLOWED_PHONE_NUMBERS = "98765 44110";
+    process.env.ALLOWED_PHONE_NUMBERS = "+910000000001";
     process.env.ALLOWED_EMAILS = "rohit@example.invalid";
     delete process.env.EMAIL_FROM;
     delete process.env.EMAIL_API_KEY;
@@ -153,7 +153,7 @@ describe("email fallback transport", () => {
     process.env.MOCK_WHATSAPP = "0";
     process.env.MOCK_EMAIL = "0";
     process.env.WHATSAPP_TEMPLATES_APPROVED = "0";
-    process.env.ALLOWED_PHONE_NUMBERS = "98765 44110";
+    process.env.ALLOWED_PHONE_NUMBERS = "+910000000001";
     process.env.ALLOWED_EMAILS = "rohit@example.invalid";
     process.env.EMAIL_FROM = "Saathi <noreply@example.invalid>";
     process.env.RESEND_API_KEY = "example-resend-key";

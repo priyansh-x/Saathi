@@ -69,7 +69,7 @@ describe("allowlist", () => {
     const prev = process.env.MOCK_WHATSAPP;
     process.env.MOCK_WHATSAPP = "0";
     process.env.ALLOWED_PHONE_NUMBERS = "9999999999";
-    const decision = gateOutbound("whatsapp", "98765 44110");
+    const decision = gateOutbound("whatsapp", "+910000000001");
     assert.equal(decision.ok, false);
     process.env.MOCK_WHATSAPP = prev;
   });

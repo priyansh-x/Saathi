@@ -91,7 +91,7 @@ describe("missed ladder", () => {
       assert.match(rows[0]?.body ?? "", /Amma/);
       assert.doesNotMatch(rows[0]?.body ?? "", /Kamla/);
     } finally {
-      await query(`update parents set address_term = 'Maa', first_name = 'Kamla', call_time = '08:30', phone = '98100 22118' where id = 'parent_kamla'`);
+      await query(`update parents set address_term = 'Maa', first_name = 'Kamla', call_time = '08:30', phone = '+910000000000' where id = 'parent_kamla'`);
     }
   });
 

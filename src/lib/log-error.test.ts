@@ -17,13 +17,13 @@ after(async () => {
 
 describe("logError", () => {
   it("scrubs phone numbers and names from the message and drops them from context", async () => {
-    const raw = "Failed for Kamla Sharma at +919876543210 कमला";
+    const raw = "Failed for Kamla Sharma at +910000000008 कमला";
     assert.doesNotMatch(scrubPii(raw), /Kamla/);
     assert.doesNotMatch(scrubPii(raw), /98765/);
     assert.doesNotMatch(scrubPii(raw), /कमला/);
     const ctx = scrubContext({
       parent_id: "parent_abc",
-      phone: "+919876543210",
+      phone: "+910000000008",
       name: "Kamla Sharma",
       transcript: "secret",
     });
@@ -34,7 +34,7 @@ describe("logError", () => {
 
     await logError("tools.raise_alert", new Error(raw), {
       parent_id: "parent_abc",
-      phone: "+919876543210",
+      phone: "+910000000008",
       name: "Rohit Sharma",
     });
     const rows = await recentErrors(1);

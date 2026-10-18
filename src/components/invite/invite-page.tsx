@@ -75,7 +75,7 @@ export function InviteJoin({ lang }: { lang: Lang }) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="wa">{t.setupYourWhatsapp}</Label>
-              <Input id="wa" className="field" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="98765 44111" />
+              <Input id="wa" className="field" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+910000000003" />
             </div>
             <button className="btn-primary" type="button" onClick={join}>
               {t.inviteJoin}

@@ -200,7 +200,7 @@ export function SettingsForm({
           }}
         >
           <Input name="name" defaultValue={neighbourName} placeholder="Sunita" aria-label={t.neighbour} />
-          <Input name="phone" defaultValue={neighbourPhone} placeholder="98111 77821" aria-label={t.neighbour} />
+          <Input name="phone" defaultValue={neighbourPhone} placeholder="+910000000002" aria-label={t.neighbour} />
           <button type="submit" disabled={busy} className="btn-secondary">
             {t.saveChanges}
           </button>

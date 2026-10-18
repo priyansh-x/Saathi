@@ -3,16 +3,16 @@ import type { Household } from "@/lib/types";
 /** Fictional only. Safe to show judges. Do not replace with a real parent. */
 export const DEMO_HOUSEHOLD: Household = {
   childName: "Rohit",
-  childWhatsapp: "98765 44110",
+  childWhatsapp: "+910000000001",
   parentName: "Kamla Sharma",
   relation: "Amma",
-  parentPhone: "98100 22118",
+  parentPhone: "+910000000000",
   city: "Delhi",
   language: "Hindi",
   callTime: "08:30",
   medicines: "Amlodipine 5mg after breakfast, Metformin 500mg after lunch",
   neighborName: "Sunita",
-  neighborPhone: "98111 77821",
+  neighborPhone: "+910000000002",
   parentConsented: true,
   paused: false,
 };

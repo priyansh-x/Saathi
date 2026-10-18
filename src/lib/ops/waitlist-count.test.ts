@@ -37,6 +37,8 @@ describe("landing waitlist gates", () => {
         return new Response(null, { status: 200, headers: { "content-range": "0-0/4" } });
       });
       assert.equal(n, 4);
+      const missing = await waitlistSignupCount(async () => new Response(null, { status: 500 }));
+      assert.equal(missing, null);
     } finally {
       if (prev.url) process.env.SUPABASE_URL = prev.url;
       else delete process.env.SUPABASE_URL;
