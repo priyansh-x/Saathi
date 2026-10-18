@@ -28,6 +28,10 @@ export default defineConfig({
       CALL_PROVIDER: "simulated",
       SAATHI_KILL_SWITCH: "0",
       PGLITE_PATH: ".data/saathi-e2e",
+      // next start is NODE_ENV=production; public hosts have no dev-* fallbacks.
+      SESSION_SECRET: "e2e-session-secret-32chars-minimum",
+      BOLNA_TOOL_TOKEN: "e2e-bolna-tool-token-32chars-min",
+      BOLNA_WEBHOOK_SECRET: "e2e-webhook-secret-32chars-minxx",
     },
   },
 });
