@@ -17,7 +17,9 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { titled } from "@/lib/page-title";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { resolveAlert, setPaused } from "@/lib/db/queries";
 import type { DoseLog } from "@/lib/db/types";
@@ -64,6 +66,14 @@ function DosePill({ status, lang }: { status: DoseLog["status"]; lang: Lang }) {
     return <span className="pill bg-sunk text-muted-foreground">{t.notSure}</span>;
   }
   return <span className="pill bg-sunk text-ink-3">{t.notAsked}</span>;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("Today · Saathi", "आज · साथी", (await searchParams).lang);
 }
 
 export default async function TodayPage({

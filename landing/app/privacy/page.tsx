@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { content } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Privacy · Saathi",
+  description: content.legal.privacyBody,
+};
 
 export default function Privacy() {
   return (

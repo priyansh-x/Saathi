@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { BackLink, ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { titled } from "@/lib/page-title";
 import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
 import { alertById, alertEvents, resolveAlert } from "@/lib/db/queries";
@@ -7,6 +9,14 @@ import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
 import { formatFriendlyTime } from "@/lib/time";
 import { redirect } from "next/navigation";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("Alert · Saathi", "अलर्ट · साथी", (await searchParams).lang);
+}
 
 export default async function AlertDetailPage({
   params,

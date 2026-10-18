@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { titled } from "@/lib/page-title";
 import { EmptyState, ExpiredLink, FamilyFrame, PageTitle } from "@/components/family/chrome";
 import { historyDays, medicinesFor } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
@@ -15,6 +17,14 @@ import {
 } from "@/lib/history";
 import { messages } from "@/lib/i18n/messages";
 import { MONTH_EN, istDayOffset, parseIstParts, weekdayShort } from "@/lib/time";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("History · Saathi", "इतिहास · साथी", (await searchParams).lang);
+}
 
 export default async function HistoryPage({
   params,

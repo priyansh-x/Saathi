@@ -1,6 +1,16 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { BrandMark } from "@/components/brand";
+import { titled } from "@/lib/page-title";
 import { privacyCopy } from "@/lib/privacy-copy";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("Privacy · Saathi", "गोपनीयता · साथी", (await searchParams).lang);
+}
 
 export default async function PrivacyPage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
   const lang = (await searchParams).lang === "hi" ? "hi" : "en";

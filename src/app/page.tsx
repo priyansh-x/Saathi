@@ -1,14 +1,29 @@
 import type { CSSProperties } from "react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { titled } from "@/lib/page-title";
 import { ArrowRight, Check, PhoneCall } from "lucide-react";
 import { BrandMark } from "@/components/brand";
 import { AddToHome } from "@/components/pwa/register";
 import hero from "../../public/images/hero-maa-balcony.jpg";
 
-const promises = ["No app for her", "Any phone works", "Two lines for you"];
+const PROMISE = {
+  en: ["No app for her", "Any phone works", "Two lines for you"],
+  hi: ["उनके लिए ऐप नहीं", "कोई भी फ़ोन चलता है", "आपके लिए दो पंक्तियाँ"],
+};
 
-export default function Home() {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("Saathi", "साथी", (await searchParams).lang);
+}
+
+export default async function Home({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
+  const lang = (await searchParams).lang === "hi" ? "hi" : "en";
+  const hi = lang === "hi";
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col">
       <div className="relative">
@@ -29,6 +44,9 @@ export default function Home() {
           style={{ paddingTop: "max(16px, env(safe-area-inset-top))" }}
         >
           <BrandMark tone="light" />
+          <Link href={hi ? "/" : "/?lang=hi"} className="text-sm font-medium text-white">
+            {hi ? "EN" : "हिं"}
+          </Link>
         </div>
         <div className="absolute right-4 bottom-4 left-4 flex items-center gap-3 rounded-[22px] border border-white/50 bg-card/95 p-3.5 shadow-[var(--shadow-float)] backdrop-blur">
           <span className="ring-pulse grid size-10 shrink-0 place-items-center rounded-full bg-good text-white">
@@ -43,13 +61,23 @@ export default function Home() {
 
       <div className="flex flex-1 flex-col px-6 pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <h1 className="app-title rise text-[2rem]">
-          A morning call for Maa, <span className="serif-line">on the phone she has.</span>
+          {hi ? (
+            <>
+              माँ के लिए सुबह की कॉल, <span className="serif-line">उसी फ़ोन पर जो उनके पास है।</span>
+            </>
+          ) : (
+            <>
+              A morning call for Maa, <span className="serif-line">on the phone she has.</span>
+            </>
+          )}
         </h1>
         <p className="rise mt-3 text-[16px] leading-6 text-muted-foreground" style={{ "--d": "80ms" } as CSSProperties}>
-          She picks up and talks. You get two calm lines on WhatsApp. If something is wrong, you hear first.
+          {hi
+            ? "वे फ़ोन उठाती हैं और बात करती हैं। आपको व्हाट्सऐप पर दो शांत पंक्तियाँ मिलती हैं। कुछ गड़बड़ हो तो पहले आपको पता चलता है।"
+            : "She picks up and talks. You get two calm lines on WhatsApp. If something is wrong, you hear first."}
         </p>
         <ul className="rise mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[14px] text-muted-foreground" style={{ "--d": "140ms" } as CSSProperties}>
-          {promises.map((item) => (
+          {PROMISE[lang].map((item) => (
             <li key={item} className="flex items-center gap-1.5">
               <Check className="size-4 text-good" strokeWidth={2.5} aria-hidden />
               {item}
@@ -58,27 +86,24 @@ export default function Home() {
         </ul>
 
         <div className="mt-auto space-y-3 pt-10">
-          <Link href="/onboard" className="btn-primary">
-            Set up a call for Maa
+          <Link href={`/onboard?lang=${lang}`} className="btn-primary">
+            {hi ? "माँ के लिए कॉल सेट करें" : "Set up a call for Maa"}
             <ArrowRight className="size-[18px]" aria-hidden />
           </Link>
-          <Link href="/d/example-kamla" className="btn-secondary">
-            See an example family
+          <Link href={`/d/example-kamla?lang=${lang}`} className="btn-secondary">
+            {hi ? "उदाहरण परिवार देखें" : "See an example family"}
           </Link>
           <div className="flex justify-center gap-1 pt-1">
-            <Link href="/demo" className="btn-quiet text-[14px] text-muted-foreground">
-              Walk one EXAMPLE morning
-            </Link>
-            <Link href="/demo/controls" className="btn-quiet text-[14px] text-ink-3">
-              Demo walks
+            <Link href={`/demo?lang=${lang}`} className="btn-quiet text-[14px] text-muted-foreground">
+              {hi ? "एक EXAMPLE सुबह चलें" : "Walk one EXAMPLE morning"}
             </Link>
           </div>
-          <AddToHome lang="en" />
+          <AddToHome lang={lang} />
           <p className="pt-4 text-center text-[13px] text-ink-3">
-            <Link href="/privacy" className="underline-offset-2 hover:underline">
-              Privacy (draft)
+            <Link href={`/privacy?lang=${lang}`} className="underline-offset-2 hover:underline">
+              {hi ? "गोपनीयता (मसौदा)" : "Privacy (draft)"}
             </Link>
-            <span> · Not an emergency service · 112</span>
+            <span>{hi ? " · आपात सेवा नहीं · 112" : " · Not an emergency service · 112"}</span>
           </p>
         </div>
       </div>

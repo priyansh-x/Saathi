@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -16,8 +17,17 @@ import { medicinesWithTimes } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { localeWord, messages } from "@/lib/i18n/messages";
 import { canDeleteFamily, childrenFor } from "@/lib/members";
+import { titled } from "@/lib/page-title";
 import { actorName, updatePaused } from "@/lib/settings";
 import { formatFriendlyTime, formatIstTime } from "@/lib/time";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("Settings · Saathi", "सेटिंग · साथी", (await searchParams).lang);
+}
 
 function optLabel(granted: boolean | undefined, lang: "en" | "hi") {
   const t = messages[lang];
@@ -211,7 +221,7 @@ export default async function SettingsPage({
 
       {mockOn ? (
         <p className="mt-8 text-sm">
-          <Link href={`/demo/controls?lang=${lang}`} className="underline-offset-2 hover:underline">
+          <Link href={`/demo?lang=${lang}`} className="underline-offset-2 hover:underline">
             {t.demoControls}
           </Link>
         </p>

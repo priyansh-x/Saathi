@@ -123,8 +123,10 @@ async function main() {
   await goto(page, `${BASE}/demo?lang=hi&step=call`);
   await shot(page, "demo-call-hi");
 
-  await goto(page, `${BASE}/demo/controls`);
-  await shot(page, "demo-controls-en");
+  await goto(page, `${BASE}/demo?step=red`);
+  await shot(page, "demo-red-en");
+  await goto(page, `${BASE}/demo?record=1`);
+  await shot(page, "demo-record-en");
 
   await goto(page, `${BASE}/`);
   await shot(page, "home-en");

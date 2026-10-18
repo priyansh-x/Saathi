@@ -13,11 +13,16 @@ import { buildRecordScenes } from "@/lib/demo-record";
 import { WALK_COPY, exampleWhatsappPreviews } from "@/lib/demo-walk";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { advanceLadder } from "@/lib/ladder";
+import { titled } from "@/lib/page-title";
 import { ackAlert } from "@/lib/whatsapp/ack";
 
-export const metadata: Metadata = {
-  title: "Demo · EXAMPLE · Saathi",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  return titled("Demo · EXAMPLE · Saathi", "डेमो · EXAMPLE · साथी", (await searchParams).lang);
+}
 
 export default async function DemoPage({
   searchParams,
@@ -40,6 +45,7 @@ export default async function DemoPage({
   const openAlertId = data?.actAlerts[0]?.id ?? "";
   const callId = data?.call?.id ?? "";
   const previews = exampleWhatsappPreviews();
+  const other = lang === "hi" ? "en" : "hi";
 
   async function reset() {
     "use server";
@@ -69,6 +75,12 @@ export default async function DemoPage({
     redirect(`/demo?lang=${lang}&step=missed`);
   }
 
+  async function nextRed() {
+    "use server";
+    await runMockScenario("chest", parentId);
+    redirect(`/demo?lang=${lang}&step=red`);
+  }
+
   async function nextLadder() {
     "use server";
     if (callId) await advanceLadder({ parentId, callId, elapsedMin: 60 });
@@ -91,10 +103,16 @@ export default async function DemoPage({
     <main className="mx-auto max-w-[480px] px-4 py-8 pb-16">
       <p className="flex items-center gap-2 text-sm font-medium">
         <ExamplePill lang={lang} />
-        One EXAMPLE morning
+        {t.oneMorning}
+        <Link href={`/demo?lang=${other}&step=${step}`} className="ml-auto text-primary">
+          {lang === "en" ? "हिं" : "EN"}
+        </Link>
       </p>
-      <p className="mt-2 text-sm text-muted-foreground">
-        About 90 seconds. Next walks a simulated call — Hindi with English below. Nothing dials.
+      <p className="mt-2 text-sm text-muted-foreground">{t.paceHint}</p>
+      <p className="mt-2 text-sm">
+        <Link href={`/demo?lang=${lang}&record=1`} className="underline-offset-2 hover:underline">
+          {t.film}
+        </Link>
       </p>
       <form action={reset} className="mt-4">
         <button type="submit" className="btn-secondary">
@@ -105,18 +123,18 @@ export default async function DemoPage({
       {step === "start" ? (
         <form action={nextCall} className="mt-8">
           <button type="submit" className="btn-primary">
-            Next · the call
+            {t.nextCall}
           </button>
         </form>
       ) : null}
 
       {step === "call" ? (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">The call (EXAMPLE)</h2>
+          <h2 className="text-lg font-semibold">{t.callTitle}</h2>
           <MorningLines audioUrl={audioUrl} />
           <form action={nextMeds} className="mt-6">
             <button type="submit" className="btn-primary">
-              Next · medicines
+              {t.nextMeds}
             </button>
           </form>
         </section>
@@ -124,11 +142,11 @@ export default async function DemoPage({
 
       {step === "meds" ? (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">Medicines (EXAMPLE)</h2>
-          <p className="mt-2">Amlodipine — taken. Metformin — afternoon, not asked yet.</p>
+          <h2 className="text-lg font-semibold">{t.medsTitle}</h2>
+          <p className="mt-2">{t.medsBody}</p>
           <form action={nextBrief} className="mt-6">
             <button type="submit" className="btn-primary">
-              Next · briefing
+              {t.nextBrief}
             </button>
           </form>
         </section>
@@ -136,17 +154,39 @@ export default async function DemoPage({
 
       {step === "brief" ? (
         <section className="mt-8 space-y-3">
-          <h2 className="text-lg font-semibold">Summary and WhatsApp (EXAMPLE)</h2>
+          <h2 className="text-lg font-semibold">{t.briefTitle}</h2>
           <p className="text-sm text-muted-foreground">{data?.call?.summary_en || "Kamla slept well and took Amlodipine."}</p>
-          <PhonePreview title={`${t.child} · EN`} body={previews.missed_soft_en.replace("Needs a look", "Good morning").replace("No answer yet.", "Neend theek thi.")} />
+          <PhonePreview
+            title={`${t.child} · EN`}
+            body={previews.missed_soft_en.replace("Needs a look", "Good morning").replace("No answer yet.", "Neend theek thi.")}
+          />
           <form action={nextMissed} className="mt-6">
             <button type="submit" className="btn-secondary">
-              Optional · missed call
+              {t.optionalMissed}
+            </button>
+          </form>
+          <form action={nextRed} className="mt-3">
+            <button type="submit" className="btn-secondary">
+              {t.optionalRed}
             </button>
           </form>
           <Link href={`/d/${EXAMPLE_TOKEN}?lang=${lang}`} className="btn-primary mt-3">
             {t.openToday}
           </Link>
+        </section>
+      ) : null}
+
+      {step === "red" ? (
+        <section className="mt-8 space-y-3">
+          <h2 className="text-lg font-semibold">{t.redTitle}</h2>
+          <p className="text-sm text-muted-foreground">{t.redHint}</p>
+          <PhonePreview title={`${t.child} · EN`} body={previews.safety_en} />
+          <PhonePreview title={`${t.neighbour} · हिं`} body={previews.responder_hi} />
+          <form action={nextGoing} className="mt-6">
+            <button type="submit" className="btn-primary">
+              {t.redNeighbour}
+            </button>
+          </form>
         </section>
       ) : null}
 
@@ -156,7 +196,7 @@ export default async function DemoPage({
           <p className="mt-2 text-sm text-muted-foreground">{t.missedHint}</p>
           <form action={nextLadder} className="mt-6">
             <button type="submit" className="btn-primary">
-              Next · the ladder
+              {t.nextLadder}
             </button>
           </form>
         </section>
@@ -192,12 +232,6 @@ export default async function DemoPage({
           </Link>
         </section>
       ) : null}
-
-      <p className="mt-10 text-sm">
-        <Link href={`/demo/controls?lang=${lang}`} className="text-primary underline-offset-2 hover:underline">
-          {t.title}
-        </Link>
-      </p>
     </main>
   );
 }

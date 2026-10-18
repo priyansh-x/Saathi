@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { content } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Terms · Saathi",
+  description: content.legal.termsBody,
+};
 
 export default function Terms() {
   return (
