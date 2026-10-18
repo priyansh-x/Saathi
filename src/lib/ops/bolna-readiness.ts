@@ -138,7 +138,8 @@ export function loadSyntheticCompletedFixture(root = process.cwd()): BolnaWebhoo
 
 /** POST the synthetic fixture to our own webhook using the configured secret. Never returns the secret. */
 export async function postSimulateBolnaWebhook(fetchImpl: SyncFetch = fetch) {
-  const secret = bolnaWebhookSecret() || toolToken();
+  const secret =
+    bolnaWebhookSecret() || (process.env.NODE_ENV !== "production" ? toolToken() : "");
   if (!secret) return { ok: false as const, reason: "missing_webhook_secret" };
   const body = loadSyntheticCompletedFixture();
   const executionId = `sim_${Date.now()}`;
