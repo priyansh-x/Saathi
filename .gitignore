@@ -54,3 +54,6 @@ next-env.d.ts
 
 # compiled, inlined CSS (npm run prebuild)
 /src/generated
+
+# hyperframes render cache
+/archives/brag/composition/.hyperframes
