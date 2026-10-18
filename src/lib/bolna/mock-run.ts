@@ -172,6 +172,7 @@ export async function runMockScenario(scenario: MockScenario, parentId = "parent
       parentId,
       callId: executionId,
       elapsedMin: scenario === "missed_full" ? 60 : 20,
+      redial: false,
     });
   }
 

@@ -23,6 +23,6 @@ export async function POST(req: Request) {
   );
   if (!open[0]) return Response.json({ ok: false, error: "no_call" }, { status: 404 });
   return Response.json(
-    await advanceLadder({ parentId, callId: open[0].id, elapsedMin: body?.elapsed_min ?? 60 }),
+    await advanceLadder({ parentId, callId: open[0].id, elapsedMin: body?.elapsed_min ?? 60, redial: false }),
   );
 }
