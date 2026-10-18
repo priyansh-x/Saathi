@@ -1,30 +1,15 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { injectConsentLines, loadConsentSpokenLines } from "../../src/lib/voice/consent-line";
-
-loadConsentSpokenLines();
-const agent = JSON.parse(
-  readFileSync(path.join(process.cwd(), "scripts/bolna/agent.json"), "utf8"),
-) as Record<string, unknown>;
-agent.prompt = injectConsentLines(String(agent.prompt));
-
-const key = process.env.BOLNA_API_KEY;
-const base = process.env.BOLNA_BASE_URL || "https://api.bolna.ai";
+/**
+ * Build the Bolna agent JSON from the repo and optionally PUT the existing agent.
+ *
+ * Default (no --apply): print the JSON and a diff against scripts/bolna/agent.json. Never fetches.
+ * Apply: npm run bolna:sync -- --apply
+ *   Requires BOLNA_API_KEY and BOLNA_AGENT_ID. PUT /v2/agent/{id} only — never creates an agent.
+ */
+import { runBolnaSync } from "../../src/lib/bolna/agent-config";
 
 async function main() {
-  if (!key) {
-    console.log("Dry run. Set BOLNA_API_KEY to POST /v2/agent.");
-    console.log(JSON.stringify({ expect: 201, agent_name: agent.agent_name, language: agent.language }, null, 2));
-    return;
-  }
-  const res = await fetch(`${base}/v2/agent`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify(agent),
-  });
-  const body = await res.text();
-  console.log(res.status, body);
-  if (res.status !== 201) process.exit(1);
+  const result = await runBolnaSync(process.argv.slice(2));
+  if ("reason" in result && result.reason) process.exit(1);
 }
 
 main().catch((err) => {
