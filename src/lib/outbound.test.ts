@@ -11,6 +11,13 @@ describe("allowlist", () => {
     assert.equal(decision.ok, true);
   });
 
+  it("mocks web push when WhatsApp mocks are on", () => {
+    process.env.SAATHI_KILL_SWITCH = "0";
+    process.env.MOCK_WHATSAPP = "1";
+    const decision = gateOutbound("push", "98765 44110");
+    assert.equal(decision.ok, true);
+  });
+
   it("stops on the kill switch", () => {
     process.env.SAATHI_KILL_SWITCH = "1";
     const decision = gateOutbound("call", "9810022118");

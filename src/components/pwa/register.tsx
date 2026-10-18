@@ -6,8 +6,17 @@ import { messages } from "@/lib/i18n/messages";
 
 export function PwaRegister() {
   useEffect(() => {
-    if (!("serviceWorker" in navigator)) return;
-    void navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    }
+    const match = window.location.pathname.match(/^\/d\/([^/]+)/);
+    if (match) {
+      void fetch(`/api/d/${match[1]}/push`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint: `mock://${window.location.host}/${match[1]}` }),
+      });
+    }
   }, []);
   return null;
 }

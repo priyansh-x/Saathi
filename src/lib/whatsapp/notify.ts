@@ -6,6 +6,7 @@ import type { AlertRow, CallRow, Contact, Parent } from "@/lib/db/types";
 import { EXAMPLE_TOKEN, publicBaseUrl } from "@/lib/config";
 import { todayStatus } from "@/lib/db/queries";
 import { formatIstTime, istDayKey, istStamp, nowIstStamp, parseHhMm } from "@/lib/time";
+import { sendPushToFamily } from "@/lib/push";
 import { sendFamilyMessage } from "@/lib/whatsapp/send";
 
 async function magicUrl(parentId: string) {
@@ -119,6 +120,7 @@ export async function notifyAlert(parentId: string, alert: Pick<AlertRow, "id" |
       }),
     );
   }
+  await sendPushToFamily(parentId, "Act now", alert.quote, `alert_${alert.id}`);
   if (neighbour && (await neighbourOptedIn(parentId))) {
     results.push(
       await sendFamilyMessage({

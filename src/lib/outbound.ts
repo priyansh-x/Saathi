@@ -1,6 +1,6 @@
 import { allowedEmails, allowedPhones, isMockBolna, isMockWhatsapp, killSwitchOn } from "@/lib/config";
 
-export type OutboundKind = "call" | "whatsapp" | "email";
+export type OutboundKind = "call" | "whatsapp" | "email" | "push";
 
 export type OutboundDecision =
   | { ok: true; to: string }
@@ -24,6 +24,6 @@ export function gateOutbound(kind: OutboundKind, target: string): OutboundDecisi
   const allowed = allowedPhones().map(normalizePhone);
   if (allowed.includes(phone)) return { ok: true, to: phone };
   if (isMockBolna() && kind === "call") return { ok: true, to: phone };
-  if (isMockWhatsapp() && kind === "whatsapp") return { ok: true, to: phone };
+  if (isMockWhatsapp() && (kind === "whatsapp" || kind === "push")) return { ok: true, to: phone };
   return { ok: false, reason: "not_allowlisted" };
 }

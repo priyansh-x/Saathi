@@ -34,6 +34,7 @@ export async function seed() {
   await query("delete from consents");
   await query("delete from memory_notes");
   await query("delete from outbound_messages");
+  await query("delete from push_subscriptions");
   await query("delete from webhook_events");
   await query("delete from magic_links");
   await query("delete from family_config");
