@@ -1,5 +1,5 @@
 import { allowedPhones, dailyBudgetMinutes, isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
-import { promptVariables } from "@/lib/bolna/summary";
+import { buildCallContext } from "@/lib/bolna/call-context";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
 import { gateOutbound, normalizePhone } from "@/lib/outbound";
@@ -9,7 +9,7 @@ export type PlaceCallOk = {
   ok: true;
   execution_id?: string;
   mock?: boolean;
-  user_data?: Awaited<ReturnType<typeof promptVariables>>;
+  user_data?: Awaited<ReturnType<typeof buildCallContext>>;
 };
 export type PlaceCallErr = { ok: false; reason: string; status?: number };
 export type PlaceCallResult = PlaceCallOk | PlaceCallErr;
@@ -20,7 +20,7 @@ export type PreparedCall = {
   payload: {
     agent_id: string | undefined;
     recipient_phone_number: string;
-    user_data: Awaited<ReturnType<typeof promptVariables>>;
+    user_data: Awaited<ReturnType<typeof buildCallContext>>;
     agent_data: { language: string };
     max_duration: number;
   };
@@ -74,7 +74,7 @@ export async function prepareMorningCall(parentId: string, clock: Date = new Dat
   const gate = gateOutbound("call", parent.phone);
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
 
-  const userData = await promptVariables(parentId);
+  const userData = await buildCallContext(parentId);
   const payload = {
     agent_id: process.env.BOLNA_AGENT_ID,
     recipient_phone_number: gate.to,
