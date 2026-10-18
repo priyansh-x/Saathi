@@ -1,5 +1,6 @@
-import { isMockWhatsapp, isWhatsappTemplateApproved, killSwitchOn } from "@/lib/config";
+import { isMockWhatsapp, isWhatsappTemplateApproved, killSwitchOn, PRODUCT_NAME } from "@/lib/config";
 import { query } from "@/lib/db/client";
+import { deliverEmail, isMockEmail, selectEmailTransport } from "@/lib/email/transport";
 import { gateOutbound } from "@/lib/outbound";
 import { nowIst } from "@/lib/bolna/tools";
 import { packTemplate, renderTemplate, type TemplateName } from "@/lib/whatsapp/templates";
@@ -76,17 +77,71 @@ async function sendEmailFallback(args: {
   if (existing[0]) {
     return { ok: true, id, channel: "email", template: args.template, status: "duplicate" };
   }
-  const status = gate.ok || isMockWhatsapp() ? (isMockWhatsapp() ? "mock_email" : "sent") : "blocked";
+  const to = gate.ok ? gate.to : email;
+  const body = `${args.body}\n\n[fallback: ${args.reason}]`;
+  if (!email || !gate.ok) {
+    const status = !email ? "undelivered" : "blocked";
+    await logOutbound({
+      id,
+      parentId: args.parentId,
+      channel: "email",
+      template: args.template,
+      to: to || args.toHint,
+      body,
+      status,
+      deliveryStatus: status === "undelivered" ? "undelivered" : null,
+    });
+    return { ok: false, id, channel: "email", template: args.template, status, reason: args.reason };
+  }
+
+  if (isMockEmail()) {
+    await logOutbound({
+      id,
+      parentId: args.parentId,
+      channel: "email",
+      template: args.template,
+      to,
+      body,
+      status: "mock_email",
+      deliveryStatus: "mock",
+      deliveryAt: nowIst(),
+    });
+    return { ok: true, id, channel: "email", template: args.template, status: "mock_email", reason: args.reason };
+  }
+
+  if (selectEmailTransport() === "none") {
+    await logOutbound({
+      id,
+      parentId: args.parentId,
+      channel: "email",
+      template: args.template,
+      to,
+      body,
+      status: "undelivered",
+      deliveryStatus: "undelivered",
+    });
+    return { ok: false, id, channel: "email", template: args.template, status: "undelivered", reason: "no_transport" };
+  }
+
+  const posted = await deliverEmail({
+    to,
+    subject: `${PRODUCT_NAME}: ${args.template.replace(/_/g, " ")}`,
+    text: body,
+  });
+  const status = posted.ok ? "sent" : "undelivered";
   await logOutbound({
     id,
     parentId: args.parentId,
     channel: "email",
     template: args.template,
-    to: gate.ok ? gate.to : email,
-    body: `${args.body}\n\n[fallback: ${args.reason}]`,
+    to,
+    body,
     status,
+    providerMessageId: posted.ok ? posted.providerId ?? null : null,
+    deliveryStatus: status,
+    deliveryAt: posted.ok ? nowIst() : null,
   });
-  return { ok: status !== "blocked", id, channel: "email", template: args.template, status, reason: args.reason };
+  return { ok: posted.ok, id, channel: "email", template: args.template, status, reason: posted.ok ? args.reason : posted.error };
 }
 
 const WINDOW_MS = 24 * 60 * 60 * 1000;

@@ -22,6 +22,10 @@ export function isMockWhatsapp() {
   return (process.env.MOCK_WHATSAPP ?? "1") !== "0";
 }
 
+export function isMockEmail() {
+  return (process.env.MOCK_EMAIL ?? "1") !== "0";
+}
+
 export function templatesApproved() {
   return process.env.WHATSAPP_TEMPLATES_APPROVED === "1";
 }

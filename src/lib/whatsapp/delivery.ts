@@ -116,6 +116,30 @@ export async function latestDeliveryLine(parentId: string) {
   return row?.line ?? null;
 }
 
+/** Desk copy: "Couldn't reach Rohit" when email fallback never left. */
+export async function latestUndeliveredEmail(parentId: string) {
+  const rows = await query<{
+    to_phone: string;
+    first_name: string | null;
+  }>(
+    `select o.to_phone, c.first_name
+     from outbound_messages o
+     left join contacts c
+       on c.parent_id = o.parent_id
+      and lower(coalesce(c.email, '')) = lower(o.to_phone)
+     where o.parent_id = $1
+       and o.channel = 'email'
+       and (o.status = 'undelivered' or o.delivery_status = 'undelivered')
+     order by o.at desc, o.id desc
+     limit 1`,
+    [parentId],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  const name = row.first_name || "family";
+  return { name, line: `Couldn't reach ${name}` };
+}
+
 export async function escalateUndeliveredAlerts(now = new Date()) {
   const cutoff = nowIstStamp(new Date(now.getTime() - 5 * 60 * 1000));
   const pending = await query<{

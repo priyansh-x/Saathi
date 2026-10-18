@@ -74,7 +74,7 @@ Images go through `next/image` with `sizes`. Fonts are subset (latin Inter/serif
 
 ## Mocks and allowlist
 
-`MOCK_BOLNA=1` and `MOCK_WHATSAPP=1` by default. Morning calls go through `CALL_PROVIDER` (`simulated` by default; `MOCK_BOLNA=0` is an alias for `bolna`). Nothing dials or sends on install, deploy, or `npm run dev`. Cron is authenticated and **not** enabled on deploy. Sunday evening IST, the same tick logs a mocked weekly WhatsApp note for each family.
+`MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, and `MOCK_EMAIL=1` by default. Morning calls go through `CALL_PROVIDER` (`simulated` by default; `MOCK_BOLNA=0` is an alias for `bolna`). Nothing dials or sends on install, deploy, or `npm run dev`. Cron is authenticated and **not** enabled on deploy. Sunday evening IST, the same tick logs a mocked weekly WhatsApp note for each family.
 
 Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`. Kill switch: `SAATHI_KILL_SWITCH=1`.
 
@@ -85,6 +85,10 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 | `CALL_PROVIDER` | `simulated` | `simulated` or `bolna`. Default simulated. Never set to `bolna` unless Priyansh says go. |
 | `MOCK_BOLNA` | `1` | Mock dials. `0` is an alias for `CALL_PROVIDER=bolna`. Never set to `0` unless Priyansh says go. |
 | `MOCK_WHATSAPP` | `1` | Mock WhatsApp. Same rule. |
+| `MOCK_EMAIL` | `1` | Mock email fallback. Same rule. Unset Resend/SMTP marks the row `undelivered`, never `sent`. |
+| `EMAIL_FROM` | empty | From address for Resend or SMTP. Required for a live send. |
+| `RESEND_API_KEY` / `EMAIL_API_KEY` | empty | Resend. `EMAIL_API_KEY` is an alias. |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | empty | SMTP fallback when Resend is unset. |
 | `SAATHI_KILL_SWITCH` | `0` | Stops cron, dials, and sends. |
 | `ALLOWED_PHONE_NUMBERS` | empty | Live allowlist. |
 | `ALLOWED_EMAILS` | empty | Live email fallback allowlist. |
