@@ -34,7 +34,7 @@ async function main() {
   const { query } = await import("../../src/lib/db/client");
   const { closeDb } = await import("../../src/lib/db/client");
   const { ensureSeed } = await import("../../src/lib/db/seed");
-  const { placeMorningCall } = await import("../../src/lib/bolna/place");
+  const { placeCall } = await import("../../src/lib/calls/provider");
   await ensureSeed();
   const parents = await query<{ id: string }>(`select id from parents where regexp_replace(phone, '[^0-9+]', '', 'g') = $1`, [
     live.to,
@@ -45,7 +45,7 @@ async function main() {
     await closeDb();
     process.exit(1);
   }
-  const result = await placeMorningCall(parentId);
+  const result = await placeCall(parentId);
   console.log(JSON.stringify(result, null, 2));
   await closeDb();
   if (!result.ok) process.exit(1);

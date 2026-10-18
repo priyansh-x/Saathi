@@ -1,4 +1,4 @@
-import { placeMorningCall } from "@/lib/bolna/place";
+import { placeCall } from "@/lib/calls/provider";
 import { isMockBolna, killSwitchOn } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { ensureSeed } from "@/lib/db/seed";
@@ -82,7 +82,7 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
       results.push({ parent_id: parent.id, skipped: "outside_window" });
       continue;
     }
-    results.push({ parent_id: parent.id, ...(await placeMorningCall(parent.id, now)) });
+    results.push({ parent_id: parent.id, ...(await placeCall(parent.id, now)) });
   }
   const weekly = await sendSundayWeeklyNotes(now);
   return { ok: true as const, day, results, weekly };
