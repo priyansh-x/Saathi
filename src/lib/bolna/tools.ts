@@ -167,13 +167,20 @@ export async function relayMessage(input: { call_sid: string; parent_id: string;
       [input.parent_id],
     );
     if (contacts[0]) {
+      const parent = await query<{ first_name: string; address_term: string | null; call_time: string }>(
+        `select first_name, address_term, call_time from parents where id = $1`,
+        [input.parent_id],
+      );
+      const who = parent[0]?.address_term?.trim() || parent[0]?.first_name || "family";
+      const when = parent[0]?.call_time || "";
       for (const child of contacts) {
         await sendFamilyMessage({
           parentId: input.parent_id,
           toPhone: child.phone,
           locale: child.locale === "hi" ? "hi" : "en",
-          intended: "daily_briefing_good",
-          vars: ["Kamla", "08:30", "a message for you", input.message],
+          intended: "parent_relay",
+          vars: [who, input.message, when],
+          freeText: input.message,
           idempotencyKey: `${id}_${child.phone.replace(/\s/g, "")}`,
         });
       }

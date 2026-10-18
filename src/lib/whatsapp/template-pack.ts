@@ -297,6 +297,25 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
       },
     ),
     ...pair(
+      "parent_relay",
+      {
+        body: '💬 {{1}} asked me to tell you: "{{2}}". (From today\'s {{3}} call.)',
+        buttons: [
+          { type: "QUICK_REPLY", text: "Calling her" },
+          { type: "QUICK_REPLY", text: "Reply via Saathi" },
+        ],
+        examples: ["Maa", "Please buy sugar tablets.", "8:30 AM"],
+      },
+      {
+        body: '💬 {{1}} ने कहा आपको बताऊँ: "{{2}}". (आज की {{3}} कॉल से।)',
+        buttons: [
+          { type: "QUICK_REPLY", text: "मैं कॉल करूँ" },
+          { type: "QUICK_REPLY", text: "साथी से जवाब" },
+        ],
+        examples: ["माँ", "शुगर की गोली ले आइए।", "8:30"],
+      },
+    ),
+    ...pair(
       "onboarding_reminder",
       {
         body: "👋 Your Saathi setup for {{1}} is almost done. It takes about 2 minutes to finish.",

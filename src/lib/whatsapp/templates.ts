@@ -17,7 +17,8 @@ export type TemplateName =
   | "weekly_summary"
   | "onboarding_reminder"
   | "consent_declined"
-  | "consent_later";
+  | "consent_later"
+  | "parent_relay";
 
 export function packTemplate(name: string, language: "en" | "hi"): WhatsappTemplate | undefined {
   return whatsappTemplatePack().find((tpl) => tpl.name === name && tpl.language === language);
