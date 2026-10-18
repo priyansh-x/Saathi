@@ -3,6 +3,7 @@ import { recentErrors } from "@/lib/log-error";
 import { query } from "@/lib/db/client";
 import { loadBolnaReadiness } from "@/lib/ops/bolna-readiness";
 import { loadWhatsappReadiness } from "@/lib/ops/whatsapp-readiness";
+import { waitlistSignupCount } from "@/lib/ops/waitlist-count";
 import { maskPhone } from "@/lib/ops/mask";
 import { istDayBounds, istDayKey } from "@/lib/time";
 
@@ -78,5 +79,6 @@ export async function loadOpsSnapshot(now = new Date()) {
     errors: await recentErrors(20),
     bolna: await loadBolnaReadiness(),
     whatsapp: await loadWhatsappReadiness(),
+    waitlistCount: await waitlistSignupCount(),
   };
 }

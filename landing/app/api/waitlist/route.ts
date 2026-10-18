@@ -1,6 +1,12 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import {
+  allowWaitlistAttempt,
+  clientIp,
+  isHoneypot,
+  waitlistUnavailable,
+} from "@/lib/waitlist-core";
 
 const schema = z.object({
   name: z.string().trim().max(200).optional().default(""),
@@ -14,6 +20,11 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  const ip = clientIp(req);
+  if (!allowWaitlistAttempt(ip)) {
+    return Response.json({ ok: false, error: "rate_limited" }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -22,7 +33,7 @@ export async function POST(req: Request) {
   }
   const parsed = schema.safeParse(body);
   if (!parsed.success) return Response.json({ ok: false }, { status: 400 });
-  if (parsed.data.company) return Response.json({ ok: true });
+  if (isHoneypot(parsed.data.company)) return Response.json({ ok: true });
   if (!parsed.data.consent) return Response.json({ ok: false }, { status: 400 });
 
   const row = {
@@ -37,7 +48,7 @@ export async function POST(req: Request) {
 
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url && process.env.NODE_ENV === "production") {
+  if (waitlistUnavailable(process.env)) {
     return Response.json({ ok: false, error: "waitlist_unavailable" }, { status: 503 });
   }
   if (url && key) {

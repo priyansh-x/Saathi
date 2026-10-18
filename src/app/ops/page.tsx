@@ -113,6 +113,12 @@ export default async function OpsPage() {
       </section>
 
       <section className="card mt-4 p-4">
+        <h2 className="text-sm font-medium text-ink-3">Waitlist sign-ups</h2>
+        <p className="mt-1 text-2xl font-medium">{snap.waitlistCount}</p>
+        <p className="mt-1 text-sm text-muted-foreground">Count only. No emails or names.</p>
+      </section>
+
+      <section className="card mt-4 p-4">
         <h2 className="text-sm font-medium text-ink-3">Families</h2>
         <p className="mt-1 text-2xl font-medium">{snap.familyCount}</p>
         <ul className="mt-2 space-y-1 text-sm">
