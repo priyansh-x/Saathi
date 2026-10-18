@@ -1,4 +1,5 @@
-import { defaultLadder } from "@/lib/config";
+import { placeCall } from "@/lib/calls/provider";
+import { defaultLadder, isMockBolna } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { raiseAlert } from "@/lib/bolna/tools";
 import { istStampFromOffset, istDayKey } from "@/lib/time";
@@ -63,12 +64,18 @@ function reachable(results: string[]) {
   return results.some((r) => r === "busy" || r === "declined" || r === "answered");
 }
 
-export async function advanceLadder(args: {
-  parentId: string;
-  callId: string;
-  elapsedMin: number;
-  attemptResult?: string;
-}) {
+type PlaceFn = (parentId: string, clock?: Date) => Promise<{ ok: boolean; reason?: string }>;
+
+export async function advanceLadder(
+  args: {
+    parentId: string;
+    callId: string;
+    elapsedMin: number;
+    attemptResult?: string;
+    redial?: boolean;
+  },
+  deps?: { place?: PlaceFn },
+) {
   await ensureFamilyConfig(args.parentId);
   const cfg = await ladderConfig(args.parentId);
   const result = args.attemptResult ?? "no_answer";
@@ -80,28 +87,56 @@ export async function advanceLadder(args: {
     { offset: cfg.last_45, kind: "ring" },
     { offset: cfg.escalate_60, kind: "escalate" },
   ];
+  const parent = await query<{ first_name: string; address_term: string | null; call_time: string; phone: string }>(
+    `select first_name, address_term, call_time, phone from parents where id = $1`,
+    [args.parentId],
+  );
+  const who = parent[0]?.address_term?.trim() || parent[0]?.first_name || "family";
+  const redial = args.redial ?? !isMockBolna();
+  const place = deps?.place ?? placeCall;
+  let placedRetry = false;
 
   const actions: string[] = [];
   for (const step of steps) {
     if (args.elapsedMin < step.offset) continue;
     if (step.kind === "ring") {
+      const existing = await query<{ id: string }>(
+        `select id from call_attempts where call_id = $1 and offset_min = $2`,
+        [args.callId, step.offset],
+      );
+      if (!existing[0] && step.offset > 0 && redial) {
+        if (placedRetry) continue;
+        const placed = await place(args.parentId);
+        placedRetry = true;
+        actions.push(placed.ok ? `redial_${step.offset}` : `redial_${step.offset}_${placed.reason || "failed"}`);
+      }
       await recordAttempt(args.callId, step.offset, result);
       actions.push(`ring_${step.offset}`);
     }
     if (step.kind === "soft") {
       const already = await query<{ n: number }>(
-        `select count(*)::int as n from outbound_messages where id = $1`,
-        [`out_soft_${args.callId}`],
+        `select count(*)::int as n from outbound_messages where template = 'missed_call_soft' and id like $1`,
+        [`%soft_${args.callId}%`],
       );
       if ((already[0]?.n ?? 0) === 0) {
         const kids = (await contactsFor(args.parentId)).filter((c) => c.role === "child");
+        const tries = await query<{ n: number }>(
+          `select count(*)::int as n from call_attempts where call_id = $1`,
+          [args.callId],
+        );
         for (const child of kids) {
           await sendFamilyMessage({
             parentId: args.parentId,
             toPhone: child.phone,
             locale: child.locale === "hi" ? "hi" : "en",
             intended: "missed_call_soft",
-            vars: ["Kamla", "1", "08:30", "09:00", "+910000000000"],
+            vars: [
+              who,
+              String(tries[0]?.n || 1),
+              parent[0]?.call_time || "08:30",
+              parent[0]?.call_time || "08:30",
+              parent[0]?.phone || "",
+            ],
             idempotencyKey: `soft_${args.callId}_${child.phone.replace(/\s/g, "")}`,
           });
         }
@@ -129,7 +164,7 @@ export async function advanceLadder(args: {
         call_sid: args.callId,
         parent_id: args.parentId,
         category: "MISSED",
-        quote: "Couldn't reach Maa after the morning calls.",
+        quote: `Couldn't reach ${who} after the morning calls.`,
         source: "ladder",
       });
       await recordAttempt(args.callId, step.offset, "escalated");

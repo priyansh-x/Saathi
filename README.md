@@ -25,7 +25,7 @@ flowchart TD
   WA --> Desk
 ```
 
-The parent never opens a website. If nobody answers, the ladder retries, then asks the child and — if they opted in — a neighbour. First ack wins.
+The parent never opens a website. If nobody answers, the ladder retries in simulation, then asks the child and — if they opted in — a neighbour. First ack wins. Live redials go through the provider and `gateOutbound` with spacing; they are not claimed as tested on a real line.
 
 ## Safety design
 
