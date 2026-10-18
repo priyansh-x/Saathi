@@ -54,6 +54,10 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 
 Full list: [`.env.example`](./.env.example). Never commit values.
 
+## Staging (Priyansh deploys)
+
+Checklist: [`docs/saathi/engineering/deploy.md`](./docs/saathi/engineering/deploy.md). Vercel (family root + `landing/`) and optional Supabase. Keep `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, empty allowlists, cron off.
+
 ## First real call (runbook)
 
 Nothing reaches a real person without Priyansh's explicit go-ahead.
