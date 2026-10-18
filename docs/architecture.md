@@ -50,7 +50,7 @@ One gateway (`src/lib/outbound.ts`). Never dial/send outside `ALLOWED_PHONE_NUMB
 | `POST /api/cron/tick` | Place today's calls (own scheduler) |
 | `POST /api/demo/bolna` | Mock scenarios when `MOCK_BOLNA=1` |
 
-Agent config: `scripts/bolna/agent.json`. Sync: `npm run bolna:sync` (dry-run without a key).
+Agent config: built from `docs/saathi/voice/system_prompt_bolna.md` + `tools_schema.md` into `scripts/bolna/agent.json`. Sync: `npm run bolna:sync` prints JSON and a snapshot diff (never fetches). `--apply` PUTs `/v2/agent/$BOLNA_AGENT_ID` only — it never creates an agent.
 
 Trial verification still pending — write results into `docs/saathi/engineering/bolna_api_notes.md`. Do not invent them.
 
