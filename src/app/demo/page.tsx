@@ -6,7 +6,7 @@ import { PhonePreview } from "@/components/demo/phone-preview";
 import { RecordPlayer } from "@/components/demo/record-player";
 import { ExamplePill } from "@/components/family/chrome";
 import { runMockScenario } from "@/lib/bolna/mock-run";
-import { EXAMPLE_TOKEN, isMockBolna } from "@/lib/config";
+import { EXAMPLE_TOKEN, demoAudioUrl, isMockBolna } from "@/lib/config";
 import { resolveAlert } from "@/lib/db/queries";
 import { demoModeAllowed, playDemoGoodMorning, resetDemoHousehold } from "@/lib/demo-mode";
 import { buildRecordScenes } from "@/lib/demo-record";
@@ -28,8 +28,9 @@ export default async function DemoPage({
   const q = await searchParams;
   const lang = readLang(q.lang);
   const step = q.step || "start";
+  const audioUrl = demoAudioUrl();
   if (q.record === "1") {
-    return <RecordPlayer lang={lang} scenes={buildRecordScenes(lang)} />;
+    return <RecordPlayer lang={lang} scenes={buildRecordScenes(lang)} audioUrl={audioUrl} />;
   }
   const t = WALK_COPY[lang];
   const data = await loadFamily(EXAMPLE_TOKEN);
@@ -112,7 +113,7 @@ export default async function DemoPage({
       {step === "call" ? (
         <section className="mt-8">
           <h2 className="text-lg font-semibold">The call (EXAMPLE)</h2>
-          <MorningLines />
+          <MorningLines audioUrl={audioUrl} />
           <form action={nextMeds} className="mt-6">
             <button type="submit" className="btn-primary">
               Next · medicines
