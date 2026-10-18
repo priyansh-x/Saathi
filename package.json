@@ -8,6 +8,7 @@
     "start": "next start --port 43147",
     "lint": "eslint",
     "seed": "npx --yes tsx src/lib/db/seed-cli.ts",
+    "db:migrate": "npx --yes tsx src/lib/db/migrate-cli.ts",
     "test": "npx --yes tsx --test --test-concurrency=1 \"src/**/*.test.ts\"",
     "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts",
     "bolna:test-call": "npx --yes tsx scripts/bolna/test-call.ts"
@@ -18,6 +19,7 @@
     "class-variance-authority": "^0.7.1",
     "lucide-react": "^1.58.0",
     "next": "16.4.2",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "shadcn": "^4.22.0",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

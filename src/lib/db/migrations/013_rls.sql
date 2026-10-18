@@ -1,0 +1,22 @@
+-- Service role (our server) bypasses RLS. anon/public get no policies, so no rows.
+alter table if exists parents enable row level security;
+alter table if exists auth_tokens enable row level security;
+alter table if exists contacts enable row level security;
+alter table if exists medicines enable row level security;
+alter table if exists schedules enable row level security;
+alter table if exists calls enable row level security;
+alter table if exists call_attempts enable row level security;
+alter table if exists dose_logs enable row level security;
+alter table if exists alerts enable row level security;
+alter table if exists alert_events enable row level security;
+alter table if exists memory_notes enable row level security;
+alter table if exists consents enable row level security;
+alter table if exists outbound_messages enable row level security;
+alter table if exists webhook_events enable row level security;
+alter table if exists family_config enable row level security;
+alter table if exists magic_links enable row level security;
+alter table if exists deleted_events enable row level security;
+alter table if exists family_invites enable row level security;
+alter table if exists audit_events enable row level security;
+alter table if exists push_subscriptions enable row level security;
+alter table if exists schema_migrations enable row level security;

@@ -36,7 +36,7 @@ Tables: parents, contacts, medicines, schedules, calls, call_attempts, dose_logs
 
 `is_example=true` on seed rows. UI shows **EXAMPLE DATA**.
 
-When `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set, swap the driver (Phase 1 still runs on PGlite if they are empty). Staging steps: `docs/saathi/engineering/deploy.md`. The family desk still uses PGlite until that swap lands.
+When `DATABASE_URL` is set, `src/lib/db/client.ts` uses `pg` (service role). Empty `DATABASE_URL` keeps PGlite. `npm run db:migrate` applies numbered SQL in order. Staging steps: `docs/saathi/engineering/deploy.md`.
 
 ## Outbound (Phase 2)
 
