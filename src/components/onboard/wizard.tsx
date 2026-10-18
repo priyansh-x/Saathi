@@ -17,6 +17,7 @@ import {
   type OnboardInput,
   type ParsedMedicine,
 } from "@/lib/onboard-form";
+import { messages, localeWord, type Lang } from "@/lib/i18n/messages";
 import { writeHousehold } from "@/lib/store";
 import type { Household, Language, Relation } from "@/lib/types";
 
@@ -58,8 +59,14 @@ function clockLabel(hhmm: string) {
   return `${h12}:${String(m || 0).padStart(2, "0")} ${suffix}`;
 }
 
-export function OnboardWizard() {
+function fill(template: string, vars: Record<string, string>) {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => vars[key] ?? "");
+}
+
+export function OnboardWizard({ lang }: { lang: Lang }) {
   const router = useRouter();
+  const t = messages[lang];
+  const other = lang === "hi" ? "en" : "hi";
   const [step, setStep] = useState<Step>("sign");
   const [form, setForm] = useState<OnboardInput>(loadDraft);
   const [email, setEmail] = useState("");
@@ -102,7 +109,7 @@ export function OnboardWizard() {
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; mode?: string };
       if (!res.ok) {
-        setError(data.error || "Could not sign in.");
+        setError(data.error || t.setupSignFail);
         return;
       }
       if (data.mode === "email") {
@@ -112,7 +119,7 @@ export function OnboardWizard() {
       setSignedEmail(email.trim().toLowerCase());
       setStep("you");
     } catch {
-      setError("Could not sign in. Check your connection.");
+      setError(t.setupSignFail);
     } finally {
       setSaving(false);
     }
@@ -132,7 +139,7 @@ export function OnboardWizard() {
 
   async function submit() {
     if (!form.toldParent) {
-      setError("The first call must not be a surprise. Tell them first, then tick the box.");
+      setError(t.setupTellFirst);
       return;
     }
     setSaving(true);
@@ -145,7 +152,7 @@ export function OnboardWizard() {
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; token?: string };
       if (!res.ok || !data.token) {
-        setError(data.error || "Could not save. Try again.");
+        setError(data.error || t.setupSaveFail);
         return;
       }
       writeHousehold(toHousehold(form));
@@ -153,7 +160,7 @@ export function OnboardWizard() {
       setToken(data.token);
       setStep("done");
     } catch {
-      setError("Could not save. Check your connection and try again.");
+      setError(t.setupSaveFail);
     } finally {
       setSaving(false);
     }
@@ -169,13 +176,10 @@ export function OnboardWizard() {
           <div className="grain relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-[28px]">
             <Image src={setupImg} alt="Setting up a morning call on a phone at home" fill priority className="object-cover" sizes="(max-width: 480px) 100vw, 480px" />
           </div>
-          <p className="eyebrow">Sign in</p>
-          <h1 className="app-title mt-2">A link to your email. No SMS.</h1>
-          <p className="mt-3 text-muted-foreground">
-            When mocks are on, this stays on this phone. In production Saathi emails a one-time link through
-            Supabase Auth.
-          </p>
-          <Field label="Email" htmlFor="email">
+          <p className="eyebrow">{t.setupSignKicker}</p>
+          <h1 className="app-title mt-2">{t.setupSignTitle}</h1>
+          <p className="mt-3 text-muted-foreground">{t.setupSignBody}</p>
+          <Field label={t.setupEmail} htmlFor="email">
             <Input
               id="email"
               type="email"
@@ -185,7 +189,7 @@ export function OnboardWizard() {
             />
           </Field>
           {sent ? (
-            <p className="mt-4 text-sm">Check that inbox for a sign-in link. It expires in 30 minutes.</p>
+            <p className="mt-4 text-sm">{t.setupCheckInbox}</p>
           ) : null}
         </>
       );
@@ -193,10 +197,13 @@ export function OnboardWizard() {
     if (step === "you") {
       return (
         <>
-          <p className="text-sm text-muted-foreground">You{signedEmail ? ` · ${signedEmail}` : ""}</p>
-          <h1 className="app-title mt-2">Who gets the morning note?</h1>
+          <p className="text-sm text-muted-foreground">
+            {t.setupYouKicker}
+            {signedEmail ? ` · ${signedEmail}` : ""}
+          </p>
+          <h1 className="app-title mt-2">{t.setupYouTitle}</h1>
           <div className="mt-6 space-y-4">
-            <Field label="Your name" htmlFor="childName">
+            <Field label={t.setupYourName} htmlFor="childName">
               <Input
                 id="childName"
                 value={form.childName}
@@ -204,7 +211,7 @@ export function OnboardWizard() {
                 placeholder="Ananya"
               />
             </Field>
-            <Field label="Your WhatsApp" htmlFor="childWhatsapp">
+            <Field label={t.setupYourWhatsapp} htmlFor="childWhatsapp">
               <Input
                 id="childWhatsapp"
                 value={form.childWhatsapp}
@@ -219,10 +226,10 @@ export function OnboardWizard() {
     if (step === "parent") {
       return (
         <>
-          <p className="text-sm text-muted-foreground">Your parent</p>
-          <h1 className="app-title mt-2">Who should we call?</h1>
+          <p className="text-sm text-muted-foreground">{t.setupParentKicker}</p>
+          <h1 className="app-title mt-2">{t.setupParentTitle}</h1>
           <div className="mt-6 space-y-4">
-            <Field label="Full name" htmlFor="parentName">
+            <Field label={t.setupFullName} htmlFor="parentName">
               <Input
                 id="parentName"
                 value={form.parentName}
@@ -230,7 +237,7 @@ export function OnboardWizard() {
                 placeholder="Kamla Sharma"
               />
             </Field>
-            <Field label="What you call them" htmlFor="addressTerm">
+            <Field label={t.setupWhatYouCall} htmlFor="addressTerm">
               <div className="flex flex-wrap gap-2">
                 {ADDRESS_TERMS.map((term) => (
                   <Chip
@@ -243,7 +250,7 @@ export function OnboardWizard() {
                 ))}
               </div>
             </Field>
-            <Field label="Their phone" htmlFor="parentPhone">
+            <Field label={t.setupTheirPhone} htmlFor="parentPhone">
               <Input
                 id="parentPhone"
                 value={form.parentPhone}
@@ -251,11 +258,11 @@ export function OnboardWizard() {
                 placeholder="98100 22118"
               />
             </Field>
-            <Field label="City" htmlFor="city">
+            <Field label={t.setupCity} htmlFor="city">
               <Input id="city" value={form.city} onChange={(e) => patch("city", e.target.value)} placeholder="Delhi" />
             </Field>
             <fieldset>
-              <legend className="mb-2 text-sm font-medium">Languages of the call</legend>
+              <legend className="mb-2 text-sm font-medium">{t.setupCallLanguages}</legend>
               <div className="flex flex-wrap gap-2">
                 {LANGUAGE_OPTIONS.map((opt) => (
                   <Chip
@@ -268,7 +275,7 @@ export function OnboardWizard() {
                       patch("languages", next.length ? next : [opt.code]);
                     }}
                   >
-                    {opt.label}
+                    {localeWord(opt.code, lang) === opt.code ? opt.label : localeWord(opt.code, lang)}
                   </Chip>
                 ))}
               </div>
@@ -280,8 +287,8 @@ export function OnboardWizard() {
     if (step === "morning") {
       return (
         <>
-          <p className="text-sm text-muted-foreground">The morning</p>
-          <h1 className="app-title mt-2">When should Saathi ring {who}?</h1>
+          <p className="text-sm text-muted-foreground">{t.setupMorningKicker}</p>
+          <h1 className="app-title mt-2">{fill(t.setupMorningTitle, { who })}</h1>
           <div className="mt-6 flex flex-wrap gap-2">
             {CALL_TIMES.map((time) => (
               <Chip key={time} on={form.callTime === time} onClick={() => patch("callTime", time)}>
@@ -295,20 +302,20 @@ export function OnboardWizard() {
     if (step === "medicines") {
       return (
         <>
-          <p className="text-sm text-muted-foreground">Optional</p>
-          <h1 className="app-title mt-2">Morning tablets, if any.</h1>
-          <p className="mt-3 text-muted-foreground">Skip if they do not take a daily tablet. You can edit this later.</p>
+          <p className="text-sm text-muted-foreground">{t.setupMedsKicker}</p>
+          <h1 className="app-title mt-2">{t.setupMedsTitle}</h1>
+          <p className="mt-3 text-muted-foreground">{t.setupMedsBody}</p>
           <ul className="mt-6 space-y-4">
             {form.medicines.map((med, index) => (
               <li key={index} className="space-y-2 rounded-2xl border border-border p-3">
-                <Field label="Name" htmlFor={`med-name-${index}`}>
+                <Field label={t.setupMedName} htmlFor={`med-name-${index}`}>
                   <Input
                     id={`med-name-${index}`}
                     value={med.name}
                     onChange={(e) => patch("medicines", replaceMed(form.medicines, index, { ...med, name: e.target.value }))}
                   />
                 </Field>
-                <Field label="Time" htmlFor={`med-time-${index}`}>
+                <Field label={t.setupMedTime} htmlFor={`med-time-${index}`}>
                   <Input
                     id={`med-time-${index}`}
                     type="time"
@@ -321,13 +328,13 @@ export function OnboardWizard() {
                     on={med.withFood}
                     onClick={() => patch("medicines", replaceMed(form.medicines, index, { ...med, withFood: true }))}
                   >
-                    With food
+                    {t.setupWithFood}
                   </Chip>
                   <Chip
                     on={!med.withFood}
                     onClick={() => patch("medicines", replaceMed(form.medicines, index, { ...med, withFood: false }))}
                   >
-                    Without food
+                    {t.setupWithoutFood}
                   </Chip>
                 </div>
                 <button
@@ -335,7 +342,7 @@ export function OnboardWizard() {
                   className="text-sm text-muted-foreground"
                   onClick={() => patch("medicines", form.medicines.filter((_, i) => i !== index))}
                 >
-                  Remove
+                  {t.setupRemove}
                 </button>
               </li>
             ))}
@@ -347,7 +354,7 @@ export function OnboardWizard() {
               patch("medicines", [...form.medicines, { name: "", time: form.callTime, withFood: true }])
             }
           >
-            Add a tablet
+            {t.setupAddTablet}
           </button>
         </>
       );
@@ -358,13 +365,11 @@ export function OnboardWizard() {
           <div className="grain relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-[28px]">
             <Image src={neighbourImg} alt="A neighbour at the door, the person who can knock if a call is missed" fill className="object-cover" sizes="(max-width: 480px) 100vw, 480px" />
           </div>
-          <p className="eyebrow">Optional</p>
-          <h1 className="app-title mt-2">Someone who can knock.</h1>
-          <p className="mt-3 text-muted-foreground">
-            We will not message them until they reply yes. Skip if you do not have someone nearby yet.
-          </p>
+          <p className="eyebrow">{t.setupMedsKicker}</p>
+          <h1 className="app-title mt-2">{t.setupNeighbourTitle}</h1>
+          <p className="mt-3 text-muted-foreground">{t.setupNeighbourBody}</p>
           <div className="mt-6 space-y-4">
-            <Field label="Neighbour’s name" htmlFor="neighborName">
+            <Field label={t.setupNeighbourName} htmlFor="neighborName">
               <Input
                 id="neighborName"
                 value={form.neighborName}
@@ -372,7 +377,7 @@ export function OnboardWizard() {
                 placeholder="Sunita"
               />
             </Field>
-            <Field label="Neighbour’s phone" htmlFor="neighborPhone">
+            <Field label={t.setupNeighbourPhone} htmlFor="neighborPhone">
               <Input
                 id="neighborPhone"
                 value={form.neighborPhone}
@@ -387,11 +392,9 @@ export function OnboardWizard() {
     if (step === "consent") {
       return (
         <>
-          <p className="text-sm text-muted-foreground">Written consent</p>
-          <h1 className="app-title mt-2">Tell {who} before the first ring.</h1>
-          <p className="mt-3 text-muted-foreground">
-            You cannot say yes for them. The intro call still asks {who} for a spoken haan.
-          </p>
+          <p className="text-sm text-muted-foreground">{t.setupConsentKicker}</p>
+          <h1 className="app-title mt-2">{fill(t.setupConsentTitle, { who })}</h1>
+          <p className="mt-3 text-muted-foreground">{fill(t.setupConsentBody, { who })}</p>
           <label className="mt-6 flex items-start gap-3 text-sm leading-6">
             <input
               type="checkbox"
@@ -402,8 +405,8 @@ export function OnboardWizard() {
             <span>{CHILD_WRITTEN_TEXT}</span>
           </label>
           <p className="mt-4 text-sm">
-            <Link href="/privacy" className="text-primary underline-offset-2 hover:underline">
-              Privacy (draft)
+            <Link href={`/privacy?lang=${lang}`} className="text-primary underline-offset-2 hover:underline">
+              {t.setupPrivacyLink}
             </Link>
           </p>
         </>
@@ -411,50 +414,50 @@ export function OnboardWizard() {
     }
     return (
       <>
-        <p className="text-sm text-muted-foreground">You&apos;re set</p>
+        <p className="text-sm text-muted-foreground">{t.setupDoneKicker}</p>
         <h1 className="app-title mt-2">
-          Saathi will call {who} tomorrow at {clockLabel(form.callTime)}.
+          {fill(t.setupDoneTitle, { who, time: clockLabel(form.callTime) })}
         </h1>
-        <p className="mt-3 text-muted-foreground">
-          Today starts empty on purpose. Nothing rings a real phone until outbound is switched on and this number is
-          on the allowlist.
-        </p>
+        <p className="mt-3 text-muted-foreground">{t.setupDoneBody}</p>
       </>
     );
-  }, [step, form, email, signedEmail, langs, sent, who]);
+  }, [step, form, email, signedEmail, langs, sent, who, t, lang]);
 
   const primary = (() => {
-    if (step === "sign") return { label: sent ? "Waiting for the email" : saving ? "…" : "Continue", action: signIn, disabled: sent || saving };
+    if (step === "sign") return { label: sent ? t.setupWaitingEmail : saving ? "…" : t.setupContinue, action: signIn, disabled: sent || saving };
     if (step === "medicines") {
-      return { label: form.medicines.length ? "Continue" : "She doesn't take a daily tablet", action: next, disabled: saving };
+      return { label: form.medicines.length ? t.setupContinue : t.setupNoTablet, action: next, disabled: saving };
     }
     if (step === "neighbour") {
-      return { label: form.neighborName.trim() ? "Continue" : "Skip for now", action: next, disabled: saving };
+      return { label: form.neighborName.trim() ? t.setupContinue : t.setupSkip, action: next, disabled: saving };
     }
-    if (step === "consent") return { label: saving ? "Saving…" : "Looks right", action: submit, disabled: saving };
+    if (step === "consent") return { label: saving ? "…" : t.setupLooksRight, action: submit, disabled: saving };
     if (step === "done") {
       return {
-        label: "Open the family desk",
-        action: () => token && router.push(`/d/${token}`),
+        label: t.setupOpenDesk,
+        action: () => token && router.push(`/d/${token}?lang=${lang}`),
         disabled: !token,
       };
     }
-    return { label: "Continue", action: next, disabled: saving };
+    return { label: t.setupContinue, action: next, disabled: saving };
   })();
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-4 py-8">
+    <div className={`mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-4 py-8 ${lang === "hi" ? "font-devanagari" : ""}`}>
       <div className="flex items-center gap-3">
         {step !== "done" && step !== "sign" ? (
           <button type="button" onClick={back} className="btn-quiet -ml-3 text-primary">
-            Back
+            {t.setupBack}
           </button>
         ) : (
           <BrandMark />
         )}
         <span className="flex-1" />
-        <Link href="/d/example-kamla" className="btn-quiet text-ink-3">
-          Example
+        <Link href={`/onboard?lang=${other}`} className="btn-quiet text-primary">
+          {lang === "en" ? "हिं" : "EN"}
+        </Link>
+        <Link href={`/d/example-kamla?lang=${lang}`} className="btn-quiet text-ink-3">
+          {t.setupExample}
         </Link>
       </div>
       <div className="flex-1 pt-4 pb-8">{body}</div>

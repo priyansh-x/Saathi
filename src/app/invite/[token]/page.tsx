@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { BrandMark } from "@/components/brand";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { messages } from "@/lib/i18n/messages";
 
 export default function InvitePage() {
   const params = useParams<{ token: string }>();
+  const search = useSearchParams();
+  const lang = search.get("lang") === "hi" ? "hi" : "en";
+  const t = messages[lang];
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -24,7 +28,7 @@ export default function InvitePage() {
     });
     const data = (await res.json()) as { ok?: boolean; error?: string };
     if (!res.ok) {
-      setError(data.error || "Could not sign in.");
+      setError(data.error || t.setupSignFail);
       return;
     }
     setSigned(true);
@@ -39,38 +43,43 @@ export default function InvitePage() {
     });
     const data = (await res.json()) as { ok?: boolean; error?: string; deskToken?: string };
     if (!res.ok) {
-      setError(data.error || "Could not join.");
+      setError(data.error || t.inviteFail);
       return;
     }
-    if (data.deskToken) router.push(`/d/${data.deskToken}`);
+    if (data.deskToken) router.push(`/d/${data.deskToken}?lang=${lang}`);
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-10">
-      <BrandMark />
-      <h1 className="app-title mt-8">Join this family desk</h1>
-      <p className="mt-3 text-[16px] text-muted-foreground">You will get the morning WhatsApp note and alerts. You cannot delete the family.</p>
+    <main className={`mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-10 ${lang === "hi" ? "font-devanagari" : ""}`}>
+      <div className="flex items-center justify-between">
+        <BrandMark />
+        <a href={`?lang=${lang === "hi" ? "en" : "hi"}`} className="text-sm font-medium text-primary">
+          {lang === "en" ? "हिं" : "EN"}
+        </a>
+      </div>
+      <h1 className="app-title mt-8">{t.inviteTitle}</h1>
+      <p className="mt-3 text-[16px] text-muted-foreground">{t.inviteBody}</p>
       <div className="mt-8 space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t.setupEmail}</Label>
           <Input id="email" className="field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
         </div>
         {!signed ? (
           <button className="btn-primary" type="button" onClick={signIn}>
-            Continue
+            {t.setupContinue}
           </button>
         ) : (
           <>
             <div className="space-y-1.5">
-              <Label htmlFor="name">Your name</Label>
+              <Label htmlFor="name">{t.setupYourName}</Label>
               <Input id="name" className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Priya" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="wa">WhatsApp</Label>
+              <Label htmlFor="wa">{t.setupYourWhatsapp}</Label>
               <Input id="wa" className="field" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="98765 44111" />
             </div>
             <button className="btn-primary" type="button" onClick={join}>
-              Join the desk
+              {t.inviteJoin}
             </button>
           </>
         )}
