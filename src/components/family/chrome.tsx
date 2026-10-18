@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AlertTriangle, Bell, CalendarDays, ChevronLeft, ChevronRight, CloudOff, House, Languages, Link2Off, Settings } from "lucide-react";
+import kamlaAvatar from "../../../public/images/avatar-kamla.jpg";
 import type { AlertRow } from "@/lib/db/types";
 import { qs } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
@@ -19,19 +20,23 @@ export function Avatar({
   name,
   example,
   size = 44,
+  priority = false,
 }: {
   name: string;
   example?: boolean;
   size?: number;
+  priority?: boolean;
 }) {
   const initial = (name.trim()[0] || "स").toUpperCase();
   if (example) {
     return (
       <Image
-        src="/images/avatar-kamla.jpg"
+        src={kamlaAvatar}
         alt=""
         width={size}
         height={size}
+        sizes={`${size}px`}
+        priority={priority}
         className="shrink-0 rounded-full object-cover ring-2 ring-card"
         style={{ width: size, height: size }}
       />
@@ -105,7 +110,7 @@ export function TopBar({
       className="glass sticky top-0 z-20 flex items-center gap-3 px-4 pb-3"
       style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}
     >
-      <Avatar name={name} example={example} />
+      <Avatar name={name} example={example} priority />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2">
           <span className="truncate text-[17px] font-semibold tracking-tight">{name}</span>

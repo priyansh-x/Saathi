@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
+import neighbourImg from "../../../../../public/images/neighbour-knock.jpg";
 import { redirect } from "next/navigation";
 import { InviteForm } from "@/components/family/invite-form";
 import { SettingsForm } from "@/components/family/settings-form";
@@ -130,10 +131,11 @@ export default async function SettingsPage({
           <div className="flex items-center gap-3">
             {data.parent.is_example ? (
               <Image
-                src="/images/neighbour-knock.jpg"
+                src={neighbourImg}
                 alt=""
                 width={72}
                 height={72}
+                sizes="72px"
                 className="size-[72px] rounded-2xl object-cover"
               />
             ) : null}

@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   serverExternalPackages: ["@electric-sql/pglite"],
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
+  images: {
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [360, 480, 640, 750, 828],
+    imageSizes: [44, 72, 96, 128, 256],
+  },
   turbopack: {
     rules: {
       "*.css": {

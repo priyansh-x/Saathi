@@ -3,34 +3,6 @@
 import { useEffect, useState } from "react";
 import type { Lang } from "@/lib/i18n/messages";
 import { messages } from "@/lib/i18n/messages";
-import { CLEAR_CACHE_MESSAGE } from "@/lib/offline";
-
-export async function clearSaathiCache() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.controller?.postMessage({ type: CLEAR_CACHE_MESSAGE });
-  }
-  if ("caches" in window) {
-    const keys = await caches.keys();
-    await Promise.all(keys.map((key) => caches.delete(key)));
-  }
-}
-
-export function PwaRegister() {
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker.register("/sw.js", { scope: "/" });
-    }
-    const match = window.location.pathname.match(/^\/d\/([^/]+)/);
-    if (match) {
-      void fetch(`/api/d/${match[1]}/push`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: `mock://${window.location.host}/${match[1]}` }),
-      });
-    }
-  }, []);
-  return null;
-}
 
 export function AddToHome({ lang }: { lang: Lang }) {
   const t = messages[lang];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { clearSaathiCache } from "@/components/pwa/register";
+import { clearSaathiCache } from "@/components/pwa/cache";
 
 export function CachedAction({
   action,
