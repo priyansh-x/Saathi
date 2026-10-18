@@ -163,6 +163,9 @@ export function assertProductionSecrets() {
   if (token === hook) {
     throw new Error("BOLNA_WEBHOOK_SECRET must differ from the tool token.");
   }
+  if (session === token || session === hook) {
+    throw new Error("SESSION_SECRET must differ from the tool token and webhook secret.");
+  }
   if (cron === session || cron === token || cron === hook) {
     throw new Error("CRON_SECRET must differ from SESSION_SECRET, BOLNA_TOOL_TOKEN, and BOLNA_WEBHOOK_SECRET.");
   }
