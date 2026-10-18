@@ -159,6 +159,8 @@ export const messages = {
     firstCallLaterRetry: "First-call consent: she asked to decide later. Saathi will try once more tomorrow morning.",
     firstCallLaterStopped:
       "First-call consent: still waiting. She did not say yes or no on two mornings, so Saathi has stopped calling.",
+    retentionPolicy:
+      "Call transcripts are deleted after {transcript} days. Summaries and quotes after {summary} days. Alerts stay, without her words. Saathi is not an emergency service — in an emergency call 112.",
     deleteData: "Delete all of Maa's data",
     deleteConfirmTitle: "Delete everything?",
     deleteConfirmBody: "This removes Maa's calls, medicines, alerts and the family desk. It cannot be undone.",
@@ -349,6 +351,8 @@ export const messages = {
     firstCallLaterRetry: "पहली कॉल की सहमति: बाद में तय करेंगी। साथी कल सुबह एक बार और कोशिश करेगा।",
     firstCallLaterStopped:
       "पहली कॉल की सहमति: अभी इंतज़ार। दो सुबह हाँ या नहीं नहीं मिला, इसलिए साथी ने कॉल रोक दी हैं।",
+    retentionPolicy:
+      "कॉल की पूरी बात {transcript} दिन बाद मिट जाती है। सार और उनके शब्द {summary} दिन बाद। अलर्ट रहेंगे, बिना उनके शब्दों के। साथी आपात सेवा नहीं है — आपात में 112 मिलाएँ।",
     deleteData: "माँ का सारा डेटा मिटाएँ",
     deleteConfirmTitle: "सब मिटा दें?",
     deleteConfirmBody: "कॉल, दवा, अलर्ट और डेस्क हट जाएँगे। वापस नहीं आएगा।",

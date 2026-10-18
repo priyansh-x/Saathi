@@ -8,7 +8,7 @@ import { ExpiredLink, FamilyFrame, PageTitle } from "@/components/family/chrome"
 import { AddToHome } from "@/components/pwa/register";
 import { CachedAction, SignOutButton } from "@/components/pwa/clear-cache";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
-import { isMockBolna, isMockWhatsapp } from "@/lib/config";
+import { isMockBolna, isMockWhatsapp, retentionSummaryDays, retentionTranscriptDays } from "@/lib/config";
 import { consentsFor } from "@/lib/consent";
 import { deleteFamily } from "@/lib/delete-family";
 import { medicinesWithTimes } from "@/lib/db/queries";
@@ -172,6 +172,11 @@ export default async function SettingsPage({
           {voice?.granted
             ? `${t.recordingYes} ${formatFriendlyTime(voice.at, lang).replace(/, .+$/, "").replace(/^Today |^आज /, "· ")}`
             : t.recordingNo}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {t.retentionPolicy
+            .replace("{transcript}", String(retentionTranscriptDays()))
+            .replace("{summary}", String(retentionSummaryDays()))}
         </p>
         {ownerDelete ? (
           <Link
