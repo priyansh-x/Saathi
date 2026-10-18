@@ -23,13 +23,14 @@ after(async () => {
 describe("stop on any call", () => {
   it("tells the agent to record_consent no for stop or बंद करो on any call", () => {
     const agent = JSON.parse(readFileSync(path.join(process.cwd(), "scripts/bolna/agent.json"), "utf8")) as {
-      prompt: string;
+      agent_prompts: { task_1: { system_prompt: string } };
     };
-    assert.match(agent.prompt, /On any call/);
-    assert.match(agent.prompt, /stop/);
-    assert.match(agent.prompt, /बंद करो/);
-    assert.match(agent.prompt, /record_consent/);
-    assert.match(agent.prompt, /answer=no/);
+    const prompt = agent.agent_prompts.task_1.system_prompt;
+    assert.match(prompt, /On any call/);
+    assert.match(prompt, /stop/);
+    assert.match(prompt, /बंद करो/);
+    assert.match(prompt, /record_consent/);
+    assert.match(prompt, /answer=no/);
   });
 
   it("honours no after she had already said yes", async () => {

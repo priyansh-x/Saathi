@@ -92,7 +92,7 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 | `RETENTION_TRANSCRIPT_DAYS` | `30` | Daily tick deletes call transcripts older than this. |
 | `RETENTION_SUMMARY_DAYS` | `90` | Daily tick clears summaries and quotes; alerts stay without her words. |
 | `BOLNA_API_KEY` / `BOLNA_AGENT_ID` / `BOLNA_BASE_URL` | empty | Live Bolna. |
-| `SAATHI_TOOL_TOKEN` | empty locally; `openssl rand -hex 32` in production | Mid-call tools. Required on a public host. |
+| `BOLNA_TOOL_TOKEN` | empty locally; `openssl rand -hex 32` in production | Mid-call tools. Required on a public host. `SAATHI_TOOL_TOKEN` is a deprecated alias. |
 | `BOLNA_WEBHOOK_SECRET` | empty locally; `openssl rand -hex 32` in production | Bolna webhook. Required on a public host. Must differ from the tool token. |
 | `CRON_SECRET` | empty (dev fallback when mocked) | `POST /api/cron/tick`. |
 | `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_VERIFY_TOKEN` / `WHATSAPP_APP_SECRET` | empty | Live WhatsApp. |
@@ -115,10 +115,10 @@ Checklist: [`docs/saathi/engineering/deploy.md`](./docs/saathi/engineering/deplo
 
 Nothing reaches a real person without Priyansh's explicit go-ahead. Defaults stay `CALL_PROVIDER=simulated`, `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`. Agents never set those live flags and never pass `--yes`.
 
-1. **Env.** Set `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `SAATHI_TOOL_TOKEN`, `BOLNA_WEBHOOK_SECRET`, `CRON_SECRET`, and `PUBLIC_BASE_URL` (HTTPS). Keep `MOCK_WHATSAPP=1`. Leave `SAATHI_KILL_SWITCH=0` until you need to freeze.
-2. **Sync dry, then apply.** `npm run bolna:sync` prints the agent JSON and diffs `scripts/bolna/agent.json` (no network). Only Priyansh runs `npm run bolna:sync -- --apply`, which PUTs the existing agent. It never creates a new one.
-3. **Readiness all green.** Sign in with an `OPS_EMAILS` address. `/ops` Bolna card: CALL_PROVIDER, agent id / API key / tool token / webhook secret set, `PUBLIC_BASE_URL` HTTPS, allowlist exactly one number (last four only). Secrets are never shown.
-4. **Simulate webhook.** On `/ops`, **Simulate a Bolna webhook**. Last webhook time + status should go green. EXAMPLE synthetic payload only.
+1. **Env.** Set `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `BOLNA_TOOL_TOKEN`, `BOLNA_WEBHOOK_SECRET`, `CRON_SECRET`, and `PUBLIC_BASE_URL` (HTTPS). Keep `MOCK_WHATSAPP=1`. Leave `SAATHI_KILL_SWITCH=0` until you need to freeze.
+2. **Sync dry, then apply.** `npm run bolna:sync` prints the v2 agent JSON (placeholders only) and a line-by-line diff against `scripts/bolna/agent.json` (no network). Only Priyansh runs `npm run bolna:sync -- --apply`, which PUTs the existing agent with secrets in memory. It never creates a new one, never writes secrets to disk, and refuses localhost/`http` `PUBLIC_BASE_URL`. After apply, set Bolna Extractions → Add headers to `{"Authorization":"Bearer <BOLNA_WEBHOOK_SECRET>"}` — the agent API has `webhook_url` only.
+3. **Readiness all green.** Sign in with an `OPS_EMAILS` address. `/ops` Bolna card: CALL_PROVIDER, agent id / API key / `BOLNA_TOOL_TOKEN` / webhook secret set, `PUBLIC_BASE_URL` HTTPS, **Reachable** (our `/api/health` over HTTPS), allowlist exactly one number (last four only). Secrets are never shown.
+4. **Simulate webhook.** On `/ops`, **Simulate a Bolna webhook** is a separate control. Last Bolna webhook counts real deliveries only, not this button. EXAMPLE synthetic payload only.
 5. **Allowlist own number.** `ALLOWED_PHONE_NUMBERS` is exactly Priyansh's E.164 number. `ALLOWED_EMAILS` is his inbox.
 6. **Provider.** Priyansh sets `CALL_PROVIDER=bolna` (do not leave this on).
 7. **Test-call dry, then `--yes`.** `npm run bolna:test-call -- +91XXXXXXXXXX` prints the payload and does not fetch. Live dial only with `--yes`, `CALL_PROVIDER=bolna`, and the allowlisted number, with Priyansh on the line.

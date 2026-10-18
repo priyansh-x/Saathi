@@ -101,17 +101,29 @@ export function sessionSecret() {
   return fromEnv.trim() || "dev-magic";
 }
 
+let warnedToolTokenAlias = false;
+
+function toolTokenFromEnv() {
+  const primary = (process.env.BOLNA_TOOL_TOKEN || "").trim();
+  const alias = (process.env.SAATHI_TOOL_TOKEN || "").trim();
+  if (!primary && alias && !warnedToolTokenAlias) {
+    warnedToolTokenAlias = true;
+    console.warn("SAATHI_TOOL_TOKEN is deprecated; set BOLNA_TOOL_TOKEN instead.");
+  }
+  return primary || alias;
+}
+
 export function toolToken() {
-  const fromEnv = process.env.SAATHI_TOOL_TOKEN || process.env.BOLNA_TOOL_TOKEN || "";
-  if (process.env.NODE_ENV === "production") return prodSecret("SAATHI_TOOL_TOKEN", fromEnv);
-  return fromEnv.trim() || (isMockBolna() ? "dev-tool-token" : "");
+  const fromEnv = toolTokenFromEnv();
+  if (process.env.NODE_ENV === "production") return prodSecret("BOLNA_TOOL_TOKEN", fromEnv);
+  return fromEnv || (isMockBolna() ? "dev-tool-token" : "");
 }
 
 export function bolnaWebhookSecret() {
   const fromEnv = (process.env.BOLNA_WEBHOOK_SECRET || "").trim();
   if (process.env.NODE_ENV === "production") {
     const secret = prodSecret("BOLNA_WEBHOOK_SECRET", fromEnv);
-    const token = (process.env.SAATHI_TOOL_TOKEN || process.env.BOLNA_TOOL_TOKEN || "").trim();
+    const token = toolTokenFromEnv();
     if (token && secret === token) {
       throw new Error("BOLNA_WEBHOOK_SECRET must differ from the tool token.");
     }
@@ -142,9 +154,10 @@ export function assertProductionSecrets() {
 export function assertLiveSecrets() {
   assertProductionSecrets();
   if (!isMockBolna()) {
-    const missing = ["BOLNA_API_KEY", "SAATHI_TOOL_TOKEN", "CRON_SECRET", "BOLNA_WEBHOOK_SECRET"].filter(
-      (key) => !process.env[key],
-    );
+    const missing = ["BOLNA_API_KEY", "BOLNA_TOOL_TOKEN", "CRON_SECRET", "BOLNA_WEBHOOK_SECRET"].filter((key) => {
+      if (key === "BOLNA_TOOL_TOKEN") return !toolTokenFromEnv();
+      return !process.env[key];
+    });
     if (missing.length) {
       throw new Error(`MOCK_BOLNA=0 requires ${missing.join(", ")}. No dev-* fallbacks.`);
     }

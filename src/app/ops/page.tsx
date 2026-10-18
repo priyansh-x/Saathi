@@ -69,7 +69,10 @@ export default async function OpsPage() {
 
       <section className="card mt-4 p-4">
         <h2 className="text-sm font-medium text-ink-3">Bolna readiness</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Green or red only. Secrets and full numbers are never shown.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Green or red only. Secrets and full numbers are never shown. Reachable means our own /api/health answered over HTTPS.
+          Last Bolna webhook counts real deliveries only.
+        </p>
         <ul className="mt-3 space-y-2 text-sm">
           {snap.bolna.checks.map((row) => (
             <li key={row.id} className="flex flex-wrap justify-between gap-2">
@@ -86,6 +89,7 @@ export default async function OpsPage() {
             Simulate a Bolna webhook
           </button>
         </form>
+        <p className="mt-2 text-xs text-ink-3">Simulate is separate. It does not count as the last Bolna webhook.</p>
       </section>
 
       <section className="card mt-4 p-4">

@@ -59,6 +59,7 @@ describe("call provider seam", () => {
       provider: process.env.CALL_PROVIDER,
       key: process.env.BOLNA_API_KEY,
       tool: process.env.SAATHI_TOOL_TOKEN,
+      bolnaTool: process.env.BOLNA_TOOL_TOKEN,
       cron: process.env.CRON_SECRET,
       hook: process.env.BOLNA_WEBHOOK_SECRET,
       phones: process.env.ALLOWED_PHONE_NUMBERS,
@@ -67,6 +68,7 @@ describe("call provider seam", () => {
     process.env.MOCK_BOLNA = "0";
     delete process.env.BOLNA_API_KEY;
     delete process.env.SAATHI_TOOL_TOKEN;
+    delete process.env.BOLNA_TOOL_TOKEN;
     delete process.env.CRON_SECRET;
     delete process.env.BOLNA_WEBHOOK_SECRET;
     process.env.ALLOWED_PHONE_NUMBERS = "";
@@ -92,6 +94,8 @@ describe("call provider seam", () => {
       else delete process.env.BOLNA_API_KEY;
       if (prev.tool) process.env.SAATHI_TOOL_TOKEN = prev.tool;
       else delete process.env.SAATHI_TOOL_TOKEN;
+      if (prev.bolnaTool) process.env.BOLNA_TOOL_TOKEN = prev.bolnaTool;
+      else delete process.env.BOLNA_TOOL_TOKEN;
       if (prev.cron) process.env.CRON_SECRET = prev.cron;
       else delete process.env.CRON_SECRET;
       if (prev.hook) process.env.BOLNA_WEBHOOK_SECRET = prev.hook;

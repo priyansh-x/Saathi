@@ -43,9 +43,9 @@ export function bolnaEnvChecks(): ReadinessCheck[] {
     },
     {
       id: "tool_token",
-      label: "Tool token set",
-      ok: set(process.env.SAATHI_TOOL_TOKEN) || set(process.env.BOLNA_TOOL_TOKEN),
-      detail: set(process.env.SAATHI_TOOL_TOKEN) || set(process.env.BOLNA_TOOL_TOKEN) ? "set" : "missing",
+      label: "BOLNA_TOOL_TOKEN",
+      ok: set(process.env.BOLNA_TOOL_TOKEN),
+      detail: set(process.env.BOLNA_TOOL_TOKEN) ? "set" : "missing",
     },
     {
       id: "webhook_secret",
@@ -70,7 +70,11 @@ export function bolnaEnvChecks(): ReadinessCheck[] {
 
 export async function lastBolnaWebhook(): Promise<{ at: string; status: string } | null> {
   const rows = await query<{ at: string; payload: string }>(
-    `select at, payload from webhook_events where source = 'bolna' order by at desc, id desc limit 1`,
+    `select at, payload from webhook_events
+     where source = 'bolna'
+       and payload not like '%"saathi_fixture"%'
+     order by at desc, id desc
+     limit 1`,
   );
   const row = rows[0];
   if (!row) return null;
@@ -84,12 +88,37 @@ export async function lastBolnaWebhook(): Promise<{ at: string; status: string }
   return { at: row.at, status };
 }
 
-export async function loadBolnaReadiness(): Promise<BolnaReadiness> {
+export type SyncFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+export async function probeOwnHealth(fetchImpl: SyncFetch = fetch) {
+  const base = publicBaseUrl();
+  if (!base.startsWith("https://")) {
+    return { ok: false, detail: "not https" };
+  }
+  try {
+    const res = await fetchImpl(`${base}/api/health`, {
+      method: "GET",
+      signal: AbortSignal.timeout(4000),
+    });
+    return { ok: res.ok, detail: res.ok ? "https /api/health ok" : `health ${res.status}` };
+  } catch {
+    return { ok: false, detail: "https /api/health unreachable" };
+  }
+}
+
+export async function loadBolnaReadiness(opts: { fetchImpl?: SyncFetch } = {}): Promise<BolnaReadiness> {
   const checks = bolnaEnvChecks();
+  const health = await probeOwnHealth(opts.fetchImpl ?? fetch);
+  checks.push({
+    id: "reachable",
+    label: "Reachable",
+    ok: health.ok,
+    detail: health.detail,
+  });
   const lastWebhook = await lastBolnaWebhook();
   checks.push({
     id: "last_webhook",
-    label: "Last webhook",
+    label: "Last Bolna webhook",
     ok: Boolean(lastWebhook),
     detail: lastWebhook ? `${lastWebhook.status} · ${lastWebhook.at}` : "none yet",
   });
@@ -106,8 +135,6 @@ export function loadSyntheticCompletedFixture(root = process.cwd()): BolnaWebhoo
   const file = path.join(root, "fixtures/bolna/synthetic_completed.json");
   return JSON.parse(readFileSync(file, "utf8")) as BolnaWebhook;
 }
-
-export type SyncFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 /** POST the synthetic fixture to our own webhook using the configured secret. Never returns the secret. */
 export async function postSimulateBolnaWebhook(fetchImpl: SyncFetch = fetch) {

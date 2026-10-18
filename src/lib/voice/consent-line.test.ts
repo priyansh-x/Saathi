@@ -90,9 +90,9 @@ describe("first-call consent line source", () => {
 
   it("fills the Product file from the parent record", async () => {
     const agent = JSON.parse(readFileSync(path.join(process.cwd(), "scripts/bolna/agent.json"), "utf8")) as {
-      prompt: string;
+      agent_prompts: { task_1: { system_prompt: string } };
     };
-    const assembled = injectConsentLines(agent.prompt);
+    const assembled = injectConsentLines(agent.agent_prompts.task_1.system_prompt);
     assert.match(assembled, /\{\{consent_line_hi\}\}/);
     assert.match(assembled, /record_consent/);
 

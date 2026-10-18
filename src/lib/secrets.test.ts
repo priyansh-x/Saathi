@@ -93,14 +93,15 @@ describe("production secrets", () => {
         BOLNA_WEBHOOK_SECRET: LONG_B,
       },
       () => {
-        assert.throws(() => toolToken(), /SAATHI_TOOL_TOKEN|BOLNA_TOOL_TOKEN|32/);
+        assert.throws(() => toolToken(), /BOLNA_TOOL_TOKEN|32/);
       },
     );
     withEnv(
       {
         NODE_ENV: "production",
         SESSION_SECRET: LONG_A,
-        SAATHI_TOOL_TOKEN: LONG_A,
+        BOLNA_TOOL_TOKEN: LONG_A,
+        SAATHI_TOOL_TOKEN: undefined,
         BOLNA_WEBHOOK_SECRET: LONG_A,
       },
       () => {
@@ -111,7 +112,8 @@ describe("production secrets", () => {
       {
         NODE_ENV: "production",
         SESSION_SECRET: LONG_A,
-        SAATHI_TOOL_TOKEN: LONG_A,
+        BOLNA_TOOL_TOKEN: LONG_A,
+        SAATHI_TOOL_TOKEN: undefined,
         BOLNA_WEBHOOK_SECRET: LONG_B,
       },
       () => {

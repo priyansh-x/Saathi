@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { publicBaseUrl } from "@/lib/config";
+import { maxCallSeconds, publicBaseUrl } from "@/lib/config";
 import { injectConsentLines } from "@/lib/voice/consent-line";
 
 export const AGENT_SNAPSHOT_PATH = "scripts/bolna/agent.json";
@@ -8,7 +8,6 @@ export const SYSTEM_PROMPT_PATH = "docs/saathi/voice/system_prompt_bolna.md";
 export const TOOLS_SCHEMA_PATH = "docs/saathi/voice/tools_schema.md";
 
 export const TOOL_TOKEN_PLACEHOLDER = "Bearer ${BOLNA_TOOL_TOKEN}";
-export const WEBHOOK_SECRET_PLACEHOLDER = "Bearer ${BOLNA_WEBHOOK_SECRET}";
 
 const TOOL_PATHS: Record<string, string> = {
   log_medicine: "/api/tools/log_medicine",
@@ -45,33 +44,65 @@ export type CustomTaskTool = {
   };
 };
 
-export type BolnaAgentJson = {
-  agent_name: string;
-  agent_welcome_message: string;
-  webhook_url: string;
-  webhook_headers: { Authorization: string };
-  call_summary_enabled: true;
-  language: "hi";
-  calling_guardrails: {
-    timezone: "Asia/Kolkata";
-    call_start_hour: number;
-    call_end_hour: number;
+export type BolnaApiToolDef = {
+  name: string;
+  description: string;
+  pre_call_message: string;
+  parameters: CustomTaskTool["parameters"];
+};
+
+export type BolnaApiToolParams = {
+  method: string;
+  url: string;
+  api_token: string;
+  headers?: Record<string, string>;
+  param: Record<string, string>;
+};
+
+export type BolnaAgentV2 = {
+  agent_config: {
+    agent_name: string;
+    agent_welcome_message: string;
+    webhook_url: string;
+    call_summary_enabled: true;
+    calling_guardrails: {
+      call_start_hour: number;
+      call_end_hour: number;
+    };
+    tasks: [
+      {
+        task_type: "conversation";
+        toolchain: { execution: "sequential"; pipelines: string[][] };
+        tools_config: {
+          llm_agent: {
+            agent_type: "simple_llm_agent";
+            agent_flow_type: "streaming";
+            llm_config: { provider: string; model: string };
+          };
+          synthesizer: {
+            provider: "sarvam";
+            model: string;
+            provider_config: { language: "hi" };
+            stream: true;
+          };
+          transcriber: {
+            provider: "sarvam";
+            model: string;
+            language: "hi";
+            stream: true;
+          };
+          input: { provider: "plivo"; format: "wav" };
+          output: { provider: "plivo"; format: "wav" };
+          api_tools: {
+            tools: BolnaApiToolDef[];
+            tools_params: Record<string, BolnaApiToolParams>;
+          };
+        };
+        task_config: { call_terminate: number };
+      },
+    ];
   };
-  pipelines: Array<Array<string>>;
-  transcriber: { provider: "sarvam"; model: string; language: "hi" };
-  llm: {
-    provider: string;
-    model: string;
-    agent_type: "simple_llm_agent";
-    agent_flow_type: "streaming";
-  };
-  synthesizer: {
-    provider: "sarvam";
-    model: string;
-    provider_config: { language: "hi" };
-  };
-  tools: CustomTaskTool[];
-  prompt: string;
+  agent_prompts: { task_1: { system_prompt: string } };
 };
 
 export function extractSystemPrompt(md: string) {
@@ -81,6 +112,13 @@ export function extractSystemPrompt(md: string) {
     throw new Error("system_prompt_bolna.md is missing BEGIN/END PROMPT markers");
   }
   return md.slice(begin + "## BEGIN PROMPT".length, end).trim();
+}
+
+export function agentSystemPrompt(agent: BolnaAgentV2 | { prompt?: string }) {
+  if ("agent_prompts" in agent && agent.agent_prompts?.task_1?.system_prompt) {
+    return agent.agent_prompts.task_1.system_prompt;
+  }
+  return "prompt" in agent ? agent.prompt || "" : "";
 }
 
 function extractJsonBlocks(md: string): unknown[] {
@@ -181,53 +219,125 @@ export function toolsFromSchema(md: string, base: string): CustomTaskTool[] {
   return fromDocs;
 }
 
-export function prettyAgent(agent: BolnaAgentJson) {
+function toApiTools(tools: CustomTaskTool[]) {
+  const defs: BolnaApiToolDef[] = [];
+  const params: Record<string, BolnaApiToolParams> = {};
+  for (const tool of tools) {
+    defs.push({
+      name: tool.name,
+      description: tool.description,
+      pre_call_message: tool.pre_call_message ?? "",
+      parameters: tool.parameters,
+    });
+    params[tool.name] = {
+      method: tool.value.method,
+      url: tool.value.url,
+      api_token: tool.value.api_token,
+      headers: tool.value.headers,
+      param: tool.value.param,
+    };
+  }
+  return { tools: defs, tools_params: params };
+}
+
+export function prettyAgent(agent: BolnaAgentV2) {
   return `${JSON.stringify(agent, null, 2)}\n`;
 }
 
-export function buildBolnaAgent(root = process.cwd(), base = publicBaseUrl()): BolnaAgentJson {
+export function lineByLineDiff(built: string, snapshot: string) {
+  const a = built.replace(/\n$/, "").split("\n");
+  const b = snapshot.replace(/\n$/, "").split("\n");
+  const max = Math.max(a.length, b.length);
+  const out: string[] = [];
+  for (let i = 0; i < max; i++) {
+    if (a[i] === b[i]) continue;
+    if (b[i] !== undefined) out.push(`- ${b[i]}`);
+    if (a[i] !== undefined) out.push(`+ ${a[i]}`);
+  }
+  return out;
+}
+
+export function buildBolnaAgent(root = process.cwd(), base = publicBaseUrl()): BolnaAgentV2 {
   const promptMd = readFileSync(path.join(root, SYSTEM_PROMPT_PATH), "utf8");
   const toolsMd = readFileSync(path.join(root, TOOLS_SCHEMA_PATH), "utf8");
   const prompt = injectConsentLines(extractSystemPrompt(promptMd));
   const tools = toolsFromSchema(toolsMd, base);
   return {
-    agent_name: "Saathi",
-    agent_welcome_message: "Namaste {{address_term}}.",
-    webhook_url: `${base}/api/webhooks/bolna`,
-    webhook_headers: { Authorization: WEBHOOK_SECRET_PLACEHOLDER },
-    call_summary_enabled: true,
-    language: "hi",
-    calling_guardrails: {
-      timezone: "Asia/Kolkata",
-      call_start_hour: 7,
-      call_end_hour: 11,
+    agent_config: {
+      agent_name: "Saathi",
+      agent_welcome_message: "Namaste {{address_term}}.",
+      webhook_url: `${base}/api/webhooks/bolna`,
+      call_summary_enabled: true,
+      calling_guardrails: {
+        call_start_hour: 7,
+        call_end_hour: 11,
+      },
+      tasks: [
+        {
+          task_type: "conversation",
+          toolchain: {
+            execution: "sequential",
+            pipelines: [["transcriber", "llm", "synthesizer"]],
+          },
+          tools_config: {
+            llm_agent: {
+              agent_type: "simple_llm_agent",
+              agent_flow_type: "streaming",
+              llm_config: {
+                provider: "openai",
+                model: "gpt-4.1-mini",
+              },
+            },
+            synthesizer: {
+              provider: "sarvam",
+              model: "bulbul:v4-flash",
+              provider_config: { language: "hi" },
+              stream: true,
+            },
+            transcriber: {
+              provider: "sarvam",
+              model: "saaras:v4",
+              language: "hi",
+              stream: true,
+            },
+            input: { provider: "plivo", format: "wav" },
+            output: { provider: "plivo", format: "wav" },
+            api_tools: toApiTools(tools),
+          },
+          task_config: { call_terminate: maxCallSeconds() },
+        },
+      ],
     },
-    pipelines: [["transcriber", "llm", "synthesizer"]],
-    transcriber: { provider: "sarvam", model: "saaras:v4", language: "hi" },
-    llm: {
-      provider: "openai",
-      model: "gpt-4.1-mini",
-      agent_type: "simple_llm_agent",
-      agent_flow_type: "streaming",
+    agent_prompts: {
+      task_1: { system_prompt: prompt },
     },
-    synthesizer: {
-      provider: "sarvam",
-      model: "bulbul:v4-flash",
-      provider_config: { language: "hi" },
-    },
-    tools,
-    prompt,
   };
 }
 
-export function loadAgentSnapshot(root = process.cwd()): BolnaAgentJson | null {
+export function loadAgentSnapshot(root = process.cwd()): BolnaAgentV2 | null {
   const file = path.join(root, AGENT_SNAPSHOT_PATH);
   if (!existsSync(file)) return null;
-  return JSON.parse(readFileSync(file, "utf8")) as BolnaAgentJson;
+  return JSON.parse(readFileSync(file, "utf8")) as BolnaAgentV2;
 }
 
 export function parseSyncArgs(argv: string[]) {
   return { apply: argv.includes("--apply") };
+}
+
+export function publicBaseUrlAllowsApply(raw: string | undefined) {
+  const value = (raw || "").trim();
+  if (!value) return { ok: false as const, reason: "missing_public_base_url" };
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:") return { ok: false as const, reason: "public_base_url_not_https" };
+    const host = url.hostname.toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost")) {
+      return { ok: false as const, reason: "public_base_url_localhost" };
+    }
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, reason: "public_base_url_invalid" };
+  }
 }
 
 export function canApplySync(env: Record<string, string | undefined> = process.env) {
@@ -236,7 +346,30 @@ export function canApplySync(env: Record<string, string | undefined> = process.e
   if (!key || !id) {
     return { ok: false as const, reason: "missing_bolna_key_or_agent_id" };
   }
+  const base = publicBaseUrlAllowsApply(env.PUBLIC_BASE_URL);
+  if (!base.ok) return base;
+  const token = (env.BOLNA_TOOL_TOKEN || env.SAATHI_TOOL_TOKEN || "").trim();
+  if (!token) return { ok: false as const, reason: "missing_bolna_tool_token" };
   return { ok: true as const, agentId: id, apiKey: key };
+}
+
+export function materializeAgentSecrets(
+  agent: BolnaAgentV2,
+  env: Record<string, string | undefined> = process.env,
+): BolnaAgentV2 {
+  const token = (env.BOLNA_TOOL_TOKEN || env.SAATHI_TOOL_TOKEN || "").trim();
+  if (!token) throw new Error("BOLNA_TOOL_TOKEN is required to apply");
+  const next = JSON.stringify(agent).split(TOOL_TOKEN_PLACEHOLDER).join(`Bearer ${token}`);
+  if (next.includes("${")) throw new Error("unresolved placeholders in Bolna agent payload");
+  return JSON.parse(next) as BolnaAgentV2;
+}
+
+function scrubSecrets(text: string, secrets: string[]) {
+  let out = text;
+  for (const secret of secrets) {
+    if (secret && secret.length > 3) out = out.split(secret).join("[redacted]");
+  }
+  return out;
 }
 
 export type SyncFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -253,7 +386,8 @@ export async function runBolnaSync(
   const log = opts.log ?? console.log;
   const env = opts.env ?? process.env;
   const { apply } = parseSyncArgs(argv);
-  const agent = buildBolnaAgent(opts.root);
+  const base = (env.PUBLIC_BASE_URL || publicBaseUrl()).replace(/\/$/, "");
+  const agent = buildBolnaAgent(opts.root, base);
   const built = prettyAgent(agent);
   const snapshot = loadAgentSnapshot(opts.root);
   const snapText = snapshot ? prettyAgent(snapshot) : "";
@@ -264,22 +398,30 @@ export async function runBolnaSync(
   } else if (built === snapText) {
     log("Matches scripts/bolna/agent.json.");
   } else {
-    log("Diff vs scripts/bolna/agent.json: built agent JSON differs from the committed snapshot.");
+    log("Diff vs scripts/bolna/agent.json:");
+    for (const line of lineByLineDiff(built, snapText)) log(line);
   }
 
   if (!apply) {
-    log("Dry run. Pass --apply with BOLNA_API_KEY and BOLNA_AGENT_ID to PUT the existing agent. Never creates a new agent.");
+    log("Dry run. Pass --apply with BOLNA_API_KEY, BOLNA_AGENT_ID, BOLNA_TOOL_TOKEN, and a public https PUBLIC_BASE_URL to PUT the existing agent. Never creates a new agent.");
     return { dryRun: true as const, applied: false as const, fetchCalls: [] as string[] };
   }
 
   const allowed = canApplySync(env);
   if (!allowed.ok) {
-    log("Refusing --apply: need BOLNA_API_KEY and BOLNA_AGENT_ID. Will not POST /v2/agent.");
+    log(`Refusing --apply: ${allowed.reason}. Need BOLNA_API_KEY, BOLNA_AGENT_ID, BOLNA_TOOL_TOKEN, and PUBLIC_BASE_URL as public https (not localhost). Will not POST /v2/agent.`);
     return { dryRun: false as const, applied: false as const, fetchCalls: [] as string[], reason: allowed.reason };
   }
 
-  const base = (env.BOLNA_BASE_URL || "https://api.bolna.ai").replace(/\/$/, "");
-  const url = `${base}/v2/agent/${allowed.agentId}`;
+  const live = materializeAgentSecrets(agent, env);
+  const secrets = [
+    allowed.apiKey,
+    (env.BOLNA_TOOL_TOKEN || "").trim(),
+    (env.SAATHI_TOOL_TOKEN || "").trim(),
+    (env.BOLNA_WEBHOOK_SECRET || "").trim(),
+  ];
+  const bolnaBase = (env.BOLNA_BASE_URL || "https://api.bolna.ai").replace(/\/$/, "");
+  const url = `${bolnaBase}/v2/agent/${allowed.agentId}`;
   const fetchImpl = opts.fetchImpl ?? fetch;
   const res = await fetchImpl(url, {
     method: "PUT",
@@ -287,11 +429,11 @@ export async function runBolnaSync(
       Authorization: `Bearer ${allowed.apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(agent),
+    body: JSON.stringify(live),
   });
   const body = await res.text();
-  log(`${res.status} PUT ${url}`);
-  log(body);
+  log(scrubSecrets(`${res.status} PUT ${url}`, secrets));
+  log(scrubSecrets(body, secrets));
   if (!res.ok) {
     throw new Error(`Bolna PUT failed: ${res.status}`);
   }
