@@ -1,16 +1,16 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { isMockWhatsapp } from "@/lib/config";
+import { sessionSecret } from "@/lib/config";
 
 export const SESSION_COOKIE = "saathi_child";
 const MAX_AGE_SEC = 60 * 60 * 24 * 7;
 
 function secret() {
-  return process.env.MAGIC_LINK_SECRET || (isMockWhatsapp() ? "dev-magic" : "");
+  return sessionSecret();
 }
 
 function sign(payload: string) {
   const key = secret();
-  if (!key) throw new Error("MAGIC_LINK_SECRET is required when mocks are off.");
+  if (!key) throw new Error("SESSION_SECRET is required when mocks are off.");
   return createHmac("sha256", key).update(payload).digest("base64url");
 }
 

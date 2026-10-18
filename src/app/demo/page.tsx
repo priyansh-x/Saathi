@@ -6,7 +6,7 @@ import { PhonePreview } from "@/components/demo/phone-preview";
 import { RecordPlayer } from "@/components/demo/record-player";
 import { ExamplePill } from "@/components/family/chrome";
 import { runMockScenario } from "@/lib/bolna/mock-run";
-import { EXAMPLE_TOKEN, demoAudioUrl, isMockBolna } from "@/lib/config";
+import { EXAMPLE_TOKEN, demoAudioUrl } from "@/lib/config";
 import { resolveAlert } from "@/lib/db/queries";
 import { demoModeAllowed, playDemoGoodMorning, resetDemoHousehold } from "@/lib/demo-mode";
 import { buildRecordScenes } from "@/lib/demo-record";
@@ -29,7 +29,7 @@ export default async function DemoPage({
 }: {
   searchParams: Promise<{ lang?: string; step?: string; record?: string }>;
 }) {
-  if (!demoModeAllowed() || !isMockBolna()) notFound();
+  if (!demoModeAllowed()) notFound();
   const q = await searchParams;
   const lang = readLang(q.lang);
   const step = q.step || "start";
@@ -49,52 +49,61 @@ export default async function DemoPage({
 
   async function reset() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     await resetDemoHousehold();
     redirect(`/demo?lang=${lang}&step=start`);
   }
 
   async function nextCall() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     await playDemoGoodMorning();
     redirect(`/demo?lang=${lang}&step=call`);
   }
 
   async function nextMeds() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     redirect(`/demo?lang=${lang}&step=meds`);
   }
 
   async function nextBrief() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     redirect(`/demo?lang=${lang}&step=brief`);
   }
 
   async function nextMissed() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     await runMockScenario("missed", parentId);
     redirect(`/demo?lang=${lang}&step=missed`);
   }
 
   async function nextRed() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     await runMockScenario("chest", parentId);
     redirect(`/demo?lang=${lang}&step=red`);
   }
 
   async function nextLadder() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     if (callId) await advanceLadder({ parentId, callId, elapsedMin: 60 });
     redirect(`/demo?lang=${lang}&step=ladder`);
   }
 
   async function nextGoing() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     if (openAlertId) await ackAlert(openAlertId, neighbour);
     redirect(`/demo?lang=${lang}&step=going`);
   }
 
   async function nextOk() {
     "use server";
+    if (!demoModeAllowed()) notFound();
     if (openAlertId) await resolveAlert(openAlertId, child, "resolved");
     redirect(`/demo?lang=${lang}&step=ok`);
   }

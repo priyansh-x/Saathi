@@ -92,8 +92,8 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 | `RETENTION_TRANSCRIPT_DAYS` | `30` | Daily tick deletes call transcripts older than this. |
 | `RETENTION_SUMMARY_DAYS` | `90` | Daily tick clears summaries and quotes; alerts stay without her words. |
 | `BOLNA_API_KEY` / `BOLNA_AGENT_ID` / `BOLNA_BASE_URL` | empty | Live Bolna. |
-| `SAATHI_TOOL_TOKEN` | empty (dev fallback when mocked) | Mid-call tools. |
-| `BOLNA_WEBHOOK_SECRET` | empty | Live Bolna webhook. |
+| `SAATHI_TOOL_TOKEN` | empty locally; `openssl rand -hex 32` in production | Mid-call tools. Required on a public host. |
+| `BOLNA_WEBHOOK_SECRET` | empty locally; `openssl rand -hex 32` in production | Bolna webhook. Required on a public host. Must differ from the tool token. |
 | `CRON_SECRET` | empty (dev fallback when mocked) | `POST /api/cron/tick`. |
 | `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_VERIFY_TOKEN` / `WHATSAPP_APP_SECRET` | empty | Live WhatsApp. |
 | `WHATSAPP_TEMPLATES_APPROVED` | `0` | `1` treats every template as approved. |
@@ -101,7 +101,8 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 | `DEMO_AUDIO_URL` | empty | Optional http(s) recording for `/demo`. Do not add an audio file to the repo. |
 | `PUBLIC_BASE_URL` | `http://127.0.0.1:43147` | Magic links and tool URLs. |
 | `PRODUCT_NAME` | `Saathi` | Rename without a rewrite. |
-| `MAGIC_LINK_SECRET` | empty | Desk tokens. |
+| `SESSION_SECRET` | empty locally; `openssl rand -hex 32` in production | Desk session HMAC. Required on a public host (no `dev-magic` fallback). |
+| `MAGIC_LINK_SECRET` | empty | Deprecated alias for `SESSION_SECRET`. |
 | `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | empty | Auth magic link in production; optional later DB driver. Landing waitlist uses URL + service key. |
 
 Full list: [`.env.example`](./.env.example). Never commit values.

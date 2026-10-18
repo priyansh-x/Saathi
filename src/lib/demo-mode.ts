@@ -1,11 +1,12 @@
 import { runMockScenario } from "@/lib/bolna/mock-run";
-import { EXAMPLE_TOKEN, callProviderName } from "@/lib/config";
+import { EXAMPLE_TOKEN, isMockBolna, isMockWhatsapp } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { insertExampleHousehold } from "@/lib/db/seed";
 import { deleteFamily } from "@/lib/delete-family";
 
+/** /demo is EXAMPLE only. Both mock call and mock WhatsApp must be on. */
 export function demoModeAllowed() {
-  return callProviderName() === "simulated";
+  return isMockBolna() && isMockWhatsapp();
 }
 
 /** Wipe EXAMPLE rows only, then put Kamla back. Other families stay. */

@@ -18,7 +18,7 @@ after(async () => {
 });
 
 describe("demo mode", () => {
-  it("is on when CALL_PROVIDER=simulated and the transcript is bilingual EXAMPLE copy", () => {
+  it("is on when both mocks are on and the transcript is bilingual EXAMPLE copy", () => {
     assert.equal(demoModeAllowed(), true);
     const lines = demoMorningLines();
     assert.ok(lines.length >= 4);
