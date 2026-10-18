@@ -44,7 +44,7 @@ Landing project: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` only if the waitli
 Create one project (ap-south-1 if offered). Staging uses it for:
 
 1. **Landing waitlist** (`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on the landing project).
-2. **Family email magic links** later, when mocks are off (`SUPABASE_ANON_KEY` or service role on the family project). While `MOCK_WHATSAPP=1`, `/onboard` does not call Auth.
+2. **Family email magic links** later, when mocks are off (`SUPABASE_ANON_KEY` or service role on the family project). While `MOCK_WHATSAPP=1`, `/onboard` issues a local session and does not call Auth. When mocks are off, the address must be on `ALLOWED_EMAILS` or the form shows "Pilot is invite-only for now" and no email is sent. Desk `/d/[token]` links stay independent of the email cookie.
 
 The family desk boots **PGlite** (`.data/saathi`) when `DATABASE_URL` is unset, including on Vercel. That store is ephemeral on serverless — cold starts re-seed the EXAMPLE household. That is enough for a mocked staging walk.
 

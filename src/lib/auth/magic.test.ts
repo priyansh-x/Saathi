@@ -21,6 +21,51 @@ describe("email sign-in", () => {
     assert.equal(session?.email, "ananya@example.com");
   });
 
+  it("in mock mode still issues a session for an address off ALLOWED_EMAILS", async () => {
+    const prev = process.env.ALLOWED_EMAILS;
+    process.env.MOCK_WHATSAPP = "1";
+    process.env.ALLOWED_EMAILS = "pilot@example.com";
+    try {
+      const result = await startEmailSignIn("visitor@example.com");
+      assert.equal(result.ok, true);
+      if (result.ok) assert.equal(result.mode, "mock");
+    } finally {
+      process.env.ALLOWED_EMAILS = prev;
+    }
+  });
+
+  it("when mocks are off, refuses addresses that are not on ALLOWED_EMAILS", async () => {
+    const prev = {
+      mock: process.env.MOCK_WHATSAPP,
+      emails: process.env.ALLOWED_EMAILS,
+      url: process.env.SUPABASE_URL,
+    };
+    process.env.MOCK_WHATSAPP = "0";
+    process.env.ALLOWED_EMAILS = "pilot@example.com";
+    delete process.env.SUPABASE_URL;
+    const urls: string[] = [];
+    const original = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      urls.push(String(input));
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+    try {
+      const blocked = await startEmailSignIn("visitor@example.com");
+      assert.equal(blocked.ok, false);
+      if (!blocked.ok) assert.match(blocked.error, /Pilot is invite-only for now/);
+      assert.equal(urls.length, 0);
+      const allowed = await startEmailSignIn("pilot@example.com");
+      assert.equal(allowed.ok, false);
+      if (!allowed.ok) assert.match(allowed.error, /not configured/);
+      assert.equal(urls.length, 0);
+    } finally {
+      globalThis.fetch = original;
+      process.env.MOCK_WHATSAPP = prev.mock;
+      process.env.ALLOWED_EMAILS = prev.emails;
+      if (prev.url) process.env.SUPABASE_URL = prev.url;
+    }
+  });
+
   it("round-trips a signed session", () => {
     const token = encodeSession("rohit@example.com", 1_700_000_000_000);
     const session = decodeSession(token, 1_700_000_000_000);
