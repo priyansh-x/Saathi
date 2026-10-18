@@ -29,6 +29,7 @@ export type Contact = {
   phone: string;
   locale: string;
   email: string | null;
+  is_owner: boolean;
 };
 
 export type Medicine = {

@@ -1,13 +1,17 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { InviteForm } from "@/components/family/invite-form";
 import { SettingsForm } from "@/components/family/settings-form";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { isMockBolna, isMockWhatsapp } from "@/lib/config";
 import { consentsFor } from "@/lib/consent";
 import { deleteFamily } from "@/lib/delete-family";
 import { medicinesWithTimes } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { localeWord, messages } from "@/lib/i18n/messages";
+import { canDeleteFamily, childrenFor } from "@/lib/members";
 import { actorName, updatePaused } from "@/lib/settings";
 import { formatFriendlyTime, formatIstTime } from "@/lib/time";
 
@@ -43,6 +47,9 @@ export default async function SettingsPage({
     .join(", ");
   const mockOn = isMockBolna() || isMockWhatsapp();
   const timedMeds = await medicinesWithTimes(parentId);
+  const members = await childrenFor(parentId);
+  const sessionEmail = decodeSession((await cookies()).get(SESSION_COOKIE)?.value)?.email ?? null;
+  const ownerDelete = await canDeleteFamily(parentId, sessionEmail);
 
   async function togglePause() {
     "use server";
@@ -52,6 +59,11 @@ export default async function SettingsPage({
 
   async function wipe() {
     "use server";
+    const email = decodeSession((await cookies()).get(SESSION_COOKIE)?.value)?.email ?? null;
+    if (!(await canDeleteFamily(parentId, email))) {
+      redirect(`/d/${token}/settings?lang=${lang}`);
+      return;
+    }
     await deleteFamily(parentId);
     redirect("/");
   }
@@ -110,12 +122,19 @@ export default async function SettingsPage({
 
       <section className="mt-8 space-y-2">
         <h2 className="text-lg font-semibold">{t.familySection}</h2>
-        <p>
-          {data.child?.full_name} · {optLabel(childYes?.granted, lang)}
-        </p>
+        <ul className="space-y-1">
+          {members.map((member) => (
+            <li key={member.id}>
+              {member.full_name}
+              {member.is_owner ? " · first child" : ""}
+              {member.id === data.child?.id ? ` · ${optLabel(childYes?.granted, lang)}` : ""}
+            </li>
+          ))}
+        </ul>
         <p>
           {data.neighbour?.full_name} ji · {optLabel(neighbourYes?.granted ?? (data.parent.is_example ? true : undefined), lang)}
         </p>
+        {ownerDelete ? <InviteForm token={token} /> : null}
       </section>
 
       <section className="mt-8">
@@ -146,12 +165,16 @@ export default async function SettingsPage({
             ? `${t.recordingYes} ${formatFriendlyTime(voice.at, lang).replace(/, .+$/, "").replace(/^Today |^आज /, "· ")}`
             : t.recordingNo}
         </p>
-        <Link
-          href={`/d/${token}/settings?lang=${lang}&confirm=delete`}
-          className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-alert text-alert"
-        >
-          {t.deleteData}
-        </Link>
+        {ownerDelete ? (
+          <Link
+            href={`/d/${token}/settings?lang=${lang}&confirm=delete`}
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-alert text-alert"
+          >
+            {t.deleteData}
+          </Link>
+        ) : (
+          <p className="text-sm text-muted-foreground">Only the first child can delete this family.</p>
+        )}
       </section>
 
       <section className="mt-8">

@@ -94,15 +94,15 @@ export async function advanceLadder(args: {
         [`out_soft_${args.callId}`],
       );
       if ((already[0]?.n ?? 0) === 0) {
-        const child = (await contactsFor(args.parentId)).find((c) => c.role === "child");
-        if (child) {
+        const kids = (await contactsFor(args.parentId)).filter((c) => c.role === "child");
+        for (const child of kids) {
           await sendFamilyMessage({
             parentId: args.parentId,
             toPhone: child.phone,
             locale: child.locale === "hi" ? "hi" : "en",
             intended: "daily_briefing_en",
             vars: ["Kamla", "08:30", "Needs a look", "—", "No answer yet.", ""],
-            idempotencyKey: `soft_${args.callId}`,
+            idempotencyKey: `soft_${args.callId}_${child.phone.replace(/\s/g, "")}`,
           });
         }
       }

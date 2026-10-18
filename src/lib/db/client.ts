@@ -33,6 +33,8 @@ async function open() {
   await db.exec(readFileSync(signup, "utf8"));
   const audit = path.join(process.cwd(), "src/lib/db/migrations/010_audit.sql");
   await db.exec(readFileSync(audit, "utf8"));
+  const members = path.join(process.cwd(), "src/lib/db/migrations/011_members.sql");
+  await db.exec(readFileSync(members, "utf8"));
   return db;
 }
 

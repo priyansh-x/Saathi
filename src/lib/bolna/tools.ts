@@ -160,16 +160,17 @@ export async function relayMessage(input: { call_sid: string; parent_id: string;
       `select phone, locale from contacts where parent_id = $1 and role = 'child'`,
       [input.parent_id],
     );
-    const child = contacts[0];
-    if (child) {
-      await sendFamilyMessage({
-        parentId: input.parent_id,
-        toPhone: child.phone,
-        locale: child.locale === "hi" ? "hi" : "en",
-        intended: "daily_briefing_en",
-        vars: ["Kamla", "08:30", "Needs a look", "—", input.message, ""],
-        idempotencyKey: id,
-      });
+    if (contacts[0]) {
+      for (const child of contacts) {
+        await sendFamilyMessage({
+          parentId: input.parent_id,
+          toPhone: child.phone,
+          locale: child.locale === "hi" ? "hi" : "en",
+          intended: "daily_briefing_en",
+          vars: ["Kamla", "08:30", "Needs a look", "—", input.message, ""],
+          idempotencyKey: `${id}_${child.phone.replace(/\s/g, "")}`,
+        });
+      }
     } else {
       await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
         id,

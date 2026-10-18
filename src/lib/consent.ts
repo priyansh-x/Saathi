@@ -110,27 +110,29 @@ async function notifyConsentLater(parentId: string) {
 }
 
 async function notifyChild(parentId: string, kind: "consent_declined" | "consent_later") {
-  const child = await query<{ phone: string; locale: string; first_name: string }>(
-    `select phone, locale, first_name from contacts where parent_id = $1 and role = 'child' limit 1`,
+  const children = await query<{ phone: string; locale: string; first_name: string }>(
+    `select phone, locale, first_name from contacts where parent_id = $1 and role = 'child'`,
     [parentId],
   );
   const parent = await query<{ first_name: string }>(`select first_name from parents where id = $1`, [parentId]);
-  if (!child[0] || !parent[0]) return;
-  const locale = child[0].locale === "hi" ? "hi" : "en";
-  const intended =
-    kind === "consent_later"
-      ? locale === "hi"
-        ? "consent_later_hi"
-        : "consent_later_en"
-      : locale === "hi"
-        ? "consent_declined_hi"
-        : "consent_declined_en";
-  await sendFamilyMessage({
-    parentId,
-    toPhone: child[0].phone,
-    locale,
-    intended,
-    vars: [parent[0].first_name],
-    idempotencyKey: `${kind}_${parentId}`,
-  });
+  if (!children[0] || !parent[0]) return;
+  for (const child of children) {
+    const locale = child.locale === "hi" ? "hi" : "en";
+    const intended =
+      kind === "consent_later"
+        ? locale === "hi"
+          ? "consent_later_hi"
+          : "consent_later_en"
+        : locale === "hi"
+          ? "consent_declined_hi"
+          : "consent_declined_en";
+    await sendFamilyMessage({
+      parentId,
+      toPhone: child.phone,
+      locale,
+      intended,
+      vars: [parent[0].first_name],
+      idempotencyKey: `${kind}_${parentId}_${child.phone.replace(/\s/g, "")}`,
+    });
+  }
 }
