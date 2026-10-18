@@ -64,7 +64,9 @@ export function demoAudioUrl(raw = process.env.DEMO_AUDIO_URL) {
 }
 
 export function whatsappVerifyToken() {
-  return process.env.WHATSAPP_VERIFY_TOKEN || (isMockWhatsapp() ? "dev-wa-verify" : "");
+  const fromEnv = (process.env.WHATSAPP_VERIFY_TOKEN || "").trim();
+  if (process.env.NODE_ENV === "production") return fromEnv;
+  return fromEnv || (isMockWhatsapp() ? "dev-wa-verify" : "");
 }
 
 export function killSwitchOn() {
@@ -137,7 +139,18 @@ export function bolnaWebhookSecret() {
 }
 
 export function cronSecret() {
-  return process.env.CRON_SECRET || (isMockBolna() ? "dev-cron" : "");
+  const fromEnv = (process.env.CRON_SECRET || "").trim();
+  if (process.env.NODE_ENV === "production") {
+    const secret = prodSecret("CRON_SECRET", fromEnv);
+    const session = (process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET || "").trim();
+    const token = toolTokenFromEnv();
+    const hook = (process.env.BOLNA_WEBHOOK_SECRET || "").trim();
+    if (secret === session || secret === token || secret === hook) {
+      throw new Error("CRON_SECRET must differ from SESSION_SECRET, BOLNA_TOOL_TOKEN, and BOLNA_WEBHOOK_SECRET.");
+    }
+    return secret;
+  }
+  return fromEnv || (isMockBolna() ? "dev-cron" : "");
 }
 
 /** Public hosts run NODE_ENV=production even with mocks on. No `dev-*` fallbacks. */
@@ -146,8 +159,12 @@ export function assertProductionSecrets() {
   const session = sessionSecret();
   const token = toolToken();
   const hook = bolnaWebhookSecret();
+  const cron = cronSecret();
   if (token === hook) {
     throw new Error("BOLNA_WEBHOOK_SECRET must differ from the tool token.");
+  }
+  if (cron === session || cron === token || cron === hook) {
+    throw new Error("CRON_SECRET must differ from SESSION_SECRET, BOLNA_TOOL_TOKEN, and BOLNA_WEBHOOK_SECRET.");
   }
   if (session.length < MIN_PROD_SECRET) {
     throw new Error("SESSION_SECRET is required in production and must be at least 32 characters.");

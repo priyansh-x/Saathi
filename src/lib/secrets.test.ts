@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { encodeSession } from "@/lib/auth/session";
-import { assertProductionSecrets, bolnaWebhookSecret, toolToken } from "@/lib/config";
+import { cronAuthorized } from "@/lib/bolna/auth";
+import { assertProductionSecrets, bolnaWebhookSecret, cronSecret, toolToken, whatsappVerifyToken } from "@/lib/config";
 import { demoModeAllowed } from "@/lib/demo-mode";
 
 const LONG_A = "a".repeat(32);
 const LONG_B = "b".repeat(32);
+const LONG_C = "c".repeat(32);
+const LONG_D = "d".repeat(32);
 
 function withEnv(vars: Record<string, string | undefined>, fn: () => void) {
   const prev: Record<string, string | undefined> = {};
@@ -91,6 +94,7 @@ describe("production secrets", () => {
         SESSION_SECRET: LONG_A,
         SAATHI_TOOL_TOKEN: undefined,
         BOLNA_WEBHOOK_SECRET: LONG_B,
+        CRON_SECRET: LONG_C,
       },
       () => {
         assert.throws(() => toolToken(), /BOLNA_TOOL_TOKEN|32/);
@@ -103,6 +107,7 @@ describe("production secrets", () => {
         BOLNA_TOOL_TOKEN: LONG_A,
         SAATHI_TOOL_TOKEN: undefined,
         BOLNA_WEBHOOK_SECRET: LONG_A,
+        CRON_SECRET: LONG_C,
       },
       () => {
         assert.throws(() => assertProductionSecrets(), /differ/);
@@ -115,11 +120,67 @@ describe("production secrets", () => {
         BOLNA_TOOL_TOKEN: LONG_A,
         SAATHI_TOOL_TOKEN: undefined,
         BOLNA_WEBHOOK_SECRET: LONG_B,
+        CRON_SECRET: LONG_C,
       },
       () => {
         assert.equal(toolToken(), LONG_A);
         assert.equal(bolnaWebhookSecret(), LONG_B);
         assert.doesNotThrow(() => assertProductionSecrets());
+      },
+    );
+  });
+
+  it("production + MOCK_BOLNA=1 + no CRON_SECRET throws", () => {
+    withEnv(
+      {
+        NODE_ENV: "production",
+        MOCK_BOLNA: "1",
+        SESSION_SECRET: LONG_A,
+        BOLNA_TOOL_TOKEN: LONG_B,
+        SAATHI_TOOL_TOKEN: undefined,
+        BOLNA_WEBHOOK_SECRET: LONG_C,
+        CRON_SECRET: undefined,
+      },
+      () => {
+        assert.throws(() => cronSecret(), /CRON_SECRET/);
+        assert.throws(() => assertProductionSecrets(), /CRON_SECRET/);
+      },
+    );
+  });
+
+  it("Bearer dev-cron is 401 in production", () => {
+    withEnv(
+      {
+        NODE_ENV: "production",
+        MOCK_BOLNA: "1",
+        SESSION_SECRET: LONG_A,
+        BOLNA_TOOL_TOKEN: LONG_B,
+        BOLNA_WEBHOOK_SECRET: LONG_C,
+        CRON_SECRET: LONG_D,
+      },
+      () => {
+        assert.equal(
+          cronAuthorized(new Request("http://local/api/cron/tick", { headers: { authorization: "Bearer dev-cron" } })),
+          false,
+        );
+        assert.equal(
+          cronAuthorized(new Request("http://local/api/cron/tick", { headers: { authorization: `Bearer ${LONG_D}` } })),
+          true,
+        );
+      },
+    );
+  });
+
+  it("does not fall WhatsApp verify back to dev-wa-verify in production", () => {
+    withEnv(
+      {
+        NODE_ENV: "production",
+        MOCK_WHATSAPP: "1",
+        WHATSAPP_VERIFY_TOKEN: undefined,
+      },
+      () => {
+        assert.equal(whatsappVerifyToken(), "");
+        assert.notEqual(whatsappVerifyToken(), "dev-wa-verify");
       },
     );
   });

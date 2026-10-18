@@ -34,13 +34,14 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | `SESSION_SECRET` | `openssl rand -hex 32` | Required on a public host. Vercel sets `NODE_ENV=production` even with mocks on. Do not leave empty — there is no `dev-magic` fallback. |
 | `BOLNA_TOOL_TOKEN` | `openssl rand -hex 32` | Required on a public host. Must differ from `BOLNA_WEBHOOK_SECRET`. No `dev-tool-token` fallback. `SAATHI_TOOL_TOKEN` is a deprecated alias. |
 | `BOLNA_WEBHOOK_SECRET` | `openssl rand -hex 32` | Required on a public host. Must differ from the tool token. Never reuse the tool token. |
+| `CRON_SECRET` | `openssl rand -hex 32` | Required on a public host. Must differ from `SESSION_SECRET`, `BOLNA_TOOL_TOKEN`, and `BOLNA_WEBHOOK_SECRET`. No `dev-cron` fallback. Production ignores `now` / `elapsed_min` on the cron body even with mocks on. |
 | `PRODUCT_NAME` | `Saathi` | Keep unless renaming. |
 | `BRIEFING_CHANNEL` | `whatsapp` | |
 | `LANGUAGES` | `hi,en` | |
 | `CALL_BUDGET_MINUTES_DAILY` | `15` | |
 | `MAX_CALL_SECONDS` | `180` | |
 
-Leave live Bolna API keys, WhatsApp Graph tokens, and live email secrets (`RESEND_API_KEY` / `EMAIL_API_KEY`, `SMTP_*`, `EMAIL_FROM`) **empty** on staging. Still set `SESSION_SECRET`, `BOLNA_TOOL_TOKEN`, and `BOLNA_WEBHOOK_SECRET` with three different `openssl rand -hex 32` values — public hosts have no `dev-*` fallbacks. `MAGIC_LINK_SECRET` is a deprecated alias for `SESSION_SECRET`. `SAATHI_TOOL_TOKEN` is a deprecated alias for `BOLNA_TOOL_TOKEN`.
+Leave live Bolna API keys, WhatsApp Graph tokens, and live email secrets (`RESEND_API_KEY` / `EMAIL_API_KEY`, `SMTP_*`, `EMAIL_FROM`) **empty** on staging. Still set `SESSION_SECRET`, `BOLNA_TOOL_TOKEN`, `BOLNA_WEBHOOK_SECRET`, and `CRON_SECRET` with four different `openssl rand -hex 32` values — public hosts have no `dev-*` fallbacks. `WHATSAPP_VERIFY_TOKEN` has no `dev-wa-verify` fallback in production. `MAGIC_LINK_SECRET` is a deprecated alias for `SESSION_SECRET`. `SAATHI_TOOL_TOKEN` is a deprecated alias for `BOLNA_TOOL_TOKEN`.
 
 Landing project: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` only if the waitlist table is ready; otherwise the waitlist route no-ops outside production.
 
