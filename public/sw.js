@@ -1,5 +1,42 @@
-/* Offline shell only. Never cache /api or family writes. */
-const VERSION = "saathi-pwa-v1";
+/* Offline shell. Cache successful GETs. Never cache /api or family writes. */
+const VERSION = "saathi-pwa-v2";
+const DESK_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const CACHED_AT = "x-saathi-cached-at";
+
+function shouldCache(url, method) {
+  if (method !== "GET") return false;
+  if (url.origin !== self.location.origin) return false;
+  if (url.pathname.startsWith("/api/")) return false;
+  return true;
+}
+
+function isDeskPath(pathname) {
+  return /^\/d\/[^/]+/.test(pathname);
+}
+
+function isFresh(cachedAt, now) {
+  if (!cachedAt) return false;
+  return now - cachedAt <= DESK_MAX_AGE_MS;
+}
+
+async function clearAllCaches() {
+  const keys = await caches.keys();
+  await Promise.all(keys.map((key) => caches.delete(key)));
+}
+
+function banner(html, cachedAt) {
+  const lang = /<html[^>]*lang="hi"/.test(html) ? "hi" : "en";
+  const stamp = new Date(cachedAt).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "numeric",
+    minute: "2-digit",
+    day: "numeric",
+    month: "short",
+  });
+  const label = lang === "hi" ? `आखिरी अपडेट ${stamp} · ऑफ़लाइन` : `Last updated at ${stamp} · offline`;
+  const bar = `<div id="saathi-offline" style="margin:8px 16px;padding:10px 14px;border-radius:999px;background:#fcefd6;color:#7a4f0e;font-size:13px;text-align:center">${label}</div>`;
+  return html.replace(/<body([^>]*)>/i, `<body$1>${bar}`);
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
@@ -7,22 +44,46 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim()),
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "CLEAR_CACHE") {
+    event.waitUntil(clearAllCaches());
+  }
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== "GET") return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/api/")) return;
+  if (!shouldCache(url, req.method)) return;
   event.respondWith(
     fetch(req)
-      .then((res) => {
-        if (res.ok && req.destination === "document") return res;
+      .then(async (res) => {
+        if (res.ok) {
+          const headers = new Headers(res.headers);
+          headers.set(CACHED_AT, String(Date.now()));
+          const copy = new Response(await res.clone().blob(), { status: res.status, statusText: res.statusText, headers });
+          const cache = await caches.open(VERSION);
+          await cache.put(req, copy);
+        }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || Response.error())),
+      .catch(async () => {
+        const hit = await caches.match(req);
+        if (!hit) return Response.error();
+        const cachedAt = Number(hit.headers.get(CACHED_AT) || 0);
+        if (isDeskPath(url.pathname) && !isFresh(cachedAt, Date.now())) return Response.error();
+        const type = hit.headers.get("content-type") || "";
+        if (type.includes("text/html") && cachedAt) {
+          const html = await hit.text();
+          return new Response(banner(html, cachedAt), { status: hit.status, headers: hit.headers });
+        }
+        return hit;
+      }),
   );
 });

@@ -6,6 +6,7 @@ import { InviteForm } from "@/components/family/invite-form";
 import { SettingsForm } from "@/components/family/settings-form";
 import { ExpiredLink, FamilyFrame, PageTitle } from "@/components/family/chrome";
 import { AddToHome } from "@/components/pwa/register";
+import { CachedAction, SignOutButton } from "@/components/pwa/clear-cache";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { isMockBolna, isMockWhatsapp } from "@/lib/config";
 import { consentsFor } from "@/lib/consent";
@@ -75,11 +76,11 @@ export default async function SettingsPage({
       <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="settings" addressTerm={data.parent.address_term}>
         <PageTitle>{t.deleteConfirmTitle}</PageTitle>
         <p className="text-muted-foreground">{t.deleteConfirmBody}</p>
-        <form action={wipe} className="mt-6">
-          <button type="submit" className="btn-primary bg-alert">
+        <div className="mt-6">
+          <CachedAction action={wipe} className="btn-primary bg-alert">
             {t.deleteConfirmYes}
-          </button>
-        </form>
+          </CachedAction>
+        </div>
         <Link href={`/d/${token}/settings?lang=${lang}`} className="btn-secondary mt-3">
           {t.cancel}
         </Link>
@@ -188,6 +189,7 @@ export default async function SettingsPage({
         <h2 className="font-semibold">{t.aboutSection}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{t.aboutBody}</p>
         <AddToHome lang={lang} />
+        <SignOutButton label={t.signOut} />
       </section>
 
       {mockOn ? (

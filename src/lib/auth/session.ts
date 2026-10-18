@@ -44,6 +44,11 @@ export function sessionCookie(token: string) {
   return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE_SEC}${secure}`;
 }
 
+export function expiredSessionCookie() {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
+}
+
 export function newAuthToken() {
   return `m_${randomBytes(16).toString("hex")}`;
 }
