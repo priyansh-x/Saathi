@@ -56,7 +56,8 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 | `BOLNA_WEBHOOK_SECRET` | empty | Live Bolna webhook. |
 | `CRON_SECRET` | empty (dev fallback when mocked) | `POST /api/cron/tick`. |
 | `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_VERIFY_TOKEN` / `WHATSAPP_APP_SECRET` | empty | Live WhatsApp. |
-| `WHATSAPP_TEMPLATES_APPROVED` | `0` | Real templates vs `hello_world`. |
+| `WHATSAPP_TEMPLATES_APPROVED` | `0` | `1` treats every template as approved. |
+| `WHATSAPP_APPROVED_TEMPLATES` | empty | Comma-separated Meta template names. Unlisted templates fall back to email. |
 | `PUBLIC_BASE_URL` | `http://127.0.0.1:43147` | Magic links and tool URLs. |
 | `PRODUCT_NAME` | `Saathi` | Rename without a rewrite. |
 | `MAGIC_LINK_SECRET` | empty | Desk tokens. |

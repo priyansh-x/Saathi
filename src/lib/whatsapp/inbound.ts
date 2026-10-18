@@ -1,6 +1,7 @@
 import { query } from "@/lib/db/client";
 import { parseNeighbourIntent, recordNeighbourReply } from "@/lib/neighbour";
 import { ackAlert, parseAckIntent, parseAlertId } from "@/lib/whatsapp/ack";
+import { nowIstStamp } from "@/lib/time";
 
 export type WaMessage = {
   from?: string;
@@ -52,6 +53,13 @@ export async function processInboundMessages(messages: WaMessage[]) {
     const payload = msg.button?.payload || msg.interactive?.button_reply?.id || "";
     const from = msg.from ?? "";
     const digits = from.replace(/\D/g, "").slice(-10);
+    if (digits) {
+      await query(
+        `update contacts set last_inbound_at = $2
+         where regexp_replace(phone, '[^0-9]', '', 'g') like $1`,
+        [`%${digits}`, nowIstStamp()],
+      );
+    }
     const neighbourIntent = parseNeighbourIntent(text, payload);
     if (neighbourIntent) {
       const neighbour = await query<{ parent_id: string; phone: string }>(

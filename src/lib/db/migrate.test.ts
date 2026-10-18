@@ -26,6 +26,7 @@ describe("db migrate", () => {
     assert.ok(files.includes("013_rls.sql"));
     assert.ok(files.includes("014_ops.sql"));
     assert.ok(files.includes("015_errors.sql"));
+    assert.ok(files.includes("016_wa_session.sql"));
     const ids = files.map((name) => name.slice(0, 3));
     assert.deepEqual(ids, [...ids].sort());
   });
@@ -37,6 +38,7 @@ describe("db migrate", () => {
     const rows = await query<{ id: string }>(`select id from schema_migrations order by id`);
     assert.ok(rows.some((row) => row.id === "001_init"));
     assert.ok(rows.some((row) => row.id === "013_rls"));
+    assert.ok(rows.some((row) => row.id === "016_wa_session"));
     assert.ok(first.length === 0 || first.includes("013_rls") || rows.length >= 13);
   });
 });

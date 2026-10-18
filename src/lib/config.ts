@@ -26,6 +26,22 @@ export function templatesApproved() {
   return process.env.WHATSAPP_TEMPLATES_APPROVED === "1";
 }
 
+/** Comma-separated Meta template names. `WHATSAPP_TEMPLATES_APPROVED=1` means all. */
+export function approvedWhatsappTemplates() {
+  if (templatesApproved()) return null;
+  return (process.env.WHATSAPP_APPROVED_TEMPLATES || "")
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean);
+}
+
+export function isWhatsappTemplateApproved(name: string) {
+  const list = approvedWhatsappTemplates();
+  if (list === null) return true;
+  const base = name.replace(/_en$|_hi$/, "");
+  return list.includes(name) || list.includes(base);
+}
+
 export function publicBaseUrl() {
   return (process.env.PUBLIC_BASE_URL || "http://127.0.0.1:43147").replace(/\/$/, "");
 }

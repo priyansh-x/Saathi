@@ -33,7 +33,8 @@ create table if not exists contacts (
   locale text not null default 'en',
   is_example boolean not null default false,
   email text,
-  is_owner boolean not null default false
+  is_owner boolean not null default false,
+  last_inbound_at text
 );
 
 create table if not exists medicines (
