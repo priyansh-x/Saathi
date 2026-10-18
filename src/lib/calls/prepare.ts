@@ -3,7 +3,7 @@ import { buildCallContext } from "@/lib/bolna/call-context";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
 import { gateOutbound, normalizePhone } from "@/lib/outbound";
-import { istDayBounds, istDayKey, istStamp, parseHhMm } from "@/lib/time";
+import { istDayBounds, istDayKey, nowIstStamp, parseHhMm } from "@/lib/time";
 
 export type PlaceCallOk = {
   ok: true;
@@ -120,12 +120,10 @@ export async function recordCallPlacement(args: {
     [args.executionId],
   );
   if (dup[0]) return dup[0].id;
-  const parents = await query<{ call_time: string }>(`select call_time from parents where id = $1`, [args.parentId]);
-  const callMin = parseHhMm(parents[0]?.call_time || "08:30");
   await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
     args.executionId,
     args.parentId,
-    istStamp(istDayKey(args.clock), Math.floor(callMin / 60), callMin % 60),
+    nowIstStamp(args.clock),
     null,
     args.status === "failed" ? 0 : null,
     args.status,

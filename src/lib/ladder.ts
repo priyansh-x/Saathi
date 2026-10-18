@@ -172,6 +172,12 @@ export async function advanceLadder(
     }
   }
 
-  await query(`update calls set status = 'missed' where id = $1 and status = 'in_progress'`, [args.callId]);
+  const terminalMissed = ["no_answer", "busy", "failed", "no_conversation"].includes(result);
+  if (terminalMissed && args.attemptResult) {
+    await query(
+      `update calls set status = 'missed' where id = $1 and status = 'in_progress'`,
+      [args.callId],
+    );
+  }
   return { ok: true as const, actions };
 }

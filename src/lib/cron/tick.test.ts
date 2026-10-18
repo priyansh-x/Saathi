@@ -65,7 +65,11 @@ describe("daily tick window", () => {
     assert.equal(second.ok, true);
     if (second.ok) {
       const kamla = second.results.find((r) => r.parent_id === "parent_kamla");
-      assert.ok(kamla && ("ladder" in kamla || ("skipped" in kamla && kamla.skipped === "already_called")));
+      assert.ok(
+        kamla &&
+          ("ladder" in kamla ||
+            ("skipped" in kamla && (kamla.skipped === "already_called" || kamla.skipped === "in_progress"))),
+      );
     }
     const n = await query<{ n: number }>(
       `select count(*)::int as n from calls where parent_id = 'parent_kamla' and started_at like '2026-10-17%'`,

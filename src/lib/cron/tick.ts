@@ -1,5 +1,5 @@
 import { placeCall } from "@/lib/calls/provider";
-import { isMockBolna, killSwitchOn } from "@/lib/config";
+import { isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { ensureSeed } from "@/lib/db/seed";
 import { advanceLadder } from "@/lib/ladder";
@@ -65,6 +65,14 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
       [parent.id, start, end],
     );
     if (today[0]) {
+      if (today[0].status === "in_progress") {
+        const ringMs = (maxCallSeconds() + 5 * 60) * 1000;
+        const startedMs = new Date(today[0].started_at).getTime();
+        if (Number.isNaN(startedMs) || now.getTime() - startedMs < ringMs) {
+          results.push({ parent_id: parent.id, skipped: "in_progress" });
+          continue;
+        }
+      }
       const open = ["missed", "in_progress", "no_conversation", "failed"].includes(today[0].status);
       if (open) {
         const mins =
