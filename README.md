@@ -26,7 +26,7 @@ npm run lint
 cd landing && npm install && npm run dev   # landing, port 43211
 ```
 
-Local data is PGlite at `.data/saathi`.
+Local data is PGlite at `.data/saathi` when `DATABASE_URL` is unset. Set `DATABASE_URL` to a Postgres URL (Supabase) and run `npm run db:migrate`. Tests always use PGlite.
 
 ## Mocks and allowlist
 

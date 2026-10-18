@@ -46,12 +46,22 @@ Create one project (ap-south-1 if offered). Staging uses it for:
 1. **Landing waitlist** (`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on the landing project).
 2. **Family email magic links** later, when mocks are off (`SUPABASE_ANON_KEY` or service role on the family project). While `MOCK_WHATSAPP=1`, `/onboard` does not call Auth.
 
-The family desk still boots **PGlite** (`.data/saathi`) when `SUPABASE_URL` is unset, including on Vercel. That store is ephemeral on serverless — cold starts re-seed the EXAMPLE household. That is enough for a mocked staging walk. A Postgres driver swap in `src/lib/db/client.ts` is a later change; do not wait on it to preview.
+The family desk boots **PGlite** (`.data/saathi`) when `DATABASE_URL` is unset, including on Vercel. That store is ephemeral on serverless — cold starts re-seed the EXAMPLE household. That is enough for a mocked staging walk.
 
-When you are ready to host family data on Supabase, run SQL in the editor **in this order** (idempotent `if not exists` / `add column if not exists`):
+When you are ready to host family data on Supabase Postgres:
 
-1. `src/lib/db/schema.sql` — current folded schema (includes auth tokens, consent, audit, members).
-2. Then the numbered files under `src/lib/db/migrations/` that are not already represented in `schema.sql`, in order: `001_init.sql` … `011_members.sql`. Safe to run them all; they use `if not exists`.
+1. Create a project (ap-south-1 if offered). Copy the **service role** connection string into `DATABASE_URL` on the family Vercel project (server-only; never `NEXT_PUBLIC_`).
+2. From this repo: `npm run db:migrate` with `DATABASE_URL` set. It applies `src/lib/db/migrations/001_*.sql` … in order, records them in `schema_migrations`, and is safe to re-run.
+3. Every table has **RLS on and no public policies**. The Next.js server uses the service role, which bypasses RLS. Do not use the anon key for family queries.
+
+**Manual Supabase check (Priyansh):**
+
+1. `DATABASE_URL` set, `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, allowlists empty.
+2. `npm run db:migrate` prints `{ ok: true, driver: "postgres" }`.
+3. In the SQL editor: `select id from schema_migrations order by id;` includes `013_rls`.
+4. `select relrowsecurity from pg_class where relname = 'parents';` is true.
+5. As anon (not service role), `select count(*) from parents;` returns 0 / permission error — no public policy.
+6. `npm test` still runs on PGlite (unset `DATABASE_URL` in that shell).
 
 Do not seed production with EXAMPLE rows. Staging may show `/d/example-kamla` from the local PGlite seed.
 

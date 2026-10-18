@@ -1,49 +1,87 @@
 import { PGlite } from "@electric-sql/pglite";
-import { readFileSync } from "node:fs";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
+import type { Pool } from "pg";
+import { applyMigrations, type MigrationExec } from "@/lib/db/migrate";
 
-const globalForDb = globalThis as unknown as { saathiDb?: PGlite; saathiReady?: Promise<PGlite> };
+const globalForDb = globalThis as unknown as {
+  saathiDb?: PGlite;
+  saathiReady?: Promise<PGlite>;
+  saathiPool?: Pool;
+  saathiPoolReady?: Promise<Pool>;
+};
 
-function schemaPath() {
-  return path.join(process.cwd(), "src/lib/db/schema.sql");
+export function databaseUrl() {
+  return (process.env.DATABASE_URL || "").trim();
 }
 
-async function open() {
+export function usingPostgres() {
+  return Boolean(databaseUrl());
+}
+
+function pgliteIo(db: PGlite): MigrationExec {
+  return {
+    exec: async (sql) => {
+      await db.exec(sql);
+    },
+    query: async <T>(sql: string, params: unknown[] = []) => {
+      const result = await db.query<T>(sql, params);
+      return result.rows;
+    },
+  };
+}
+
+function postgresIo(pool: Pool): MigrationExec {
+  return {
+    exec: async (sql) => {
+      await pool.query(sql);
+    },
+    query: async <T>(sql: string, params: unknown[] = []) => {
+      const result = await pool.query(sql, params);
+      return result.rows as T[];
+    },
+  };
+}
+
+export function migrationIo(): MigrationExec {
+  return {
+    exec: async (sql) => {
+      if (usingPostgres()) {
+        const pool = await getPool();
+        await pool.query(sql);
+        return;
+      }
+      const db = await getDb();
+      await db.exec(sql);
+    },
+    query: async <T>(sql: string, params: unknown[] = []) => query<T>(sql, params),
+  };
+}
+
+async function openPglite() {
+  const { mkdirSync } = await import("node:fs");
+  const path = await import("node:path");
   mkdirSync(path.join(process.cwd(), ".data"), { recursive: true });
   const db = new PGlite(path.join(process.cwd(), ".data/saathi"));
   await db.waitReady;
-  const sql = readFileSync(schemaPath(), "utf8");
-  await db.exec(sql);
-  const phase2 = path.join(process.cwd(), "src/lib/db/migrations/002_phase2.sql");
-  await db.exec(readFileSync(phase2, "utf8"));
-  const phase4 = path.join(process.cwd(), "src/lib/db/migrations/003_phase4.sql");
-  await db.exec(readFileSync(phase4, "utf8"));
-  const mood = path.join(process.cwd(), "src/lib/db/migrations/004_mood.sql");
-  await db.exec(readFileSync(mood, "utf8"));
-  const contactsEmail = path.join(process.cwd(), "src/lib/db/migrations/005_contacts_email.sql");
-  await db.exec(readFileSync(contactsEmail, "utf8"));
-  const parentConsent = path.join(process.cwd(), "src/lib/db/migrations/006_parent_consent.sql");
-  await db.exec(readFileSync(parentConsent, "utf8"));
-  const deletedEvents = path.join(process.cwd(), "src/lib/db/migrations/007_deleted_events.sql");
-  await db.exec(readFileSync(deletedEvents, "utf8"));
-  const consentLater = path.join(process.cwd(), "src/lib/db/migrations/008_consent_later.sql");
-  await db.exec(readFileSync(consentLater, "utf8"));
-  const signup = path.join(process.cwd(), "src/lib/db/migrations/009_signup.sql");
-  await db.exec(readFileSync(signup, "utf8"));
-  const audit = path.join(process.cwd(), "src/lib/db/migrations/010_audit.sql");
-  await db.exec(readFileSync(audit, "utf8"));
-  const members = path.join(process.cwd(), "src/lib/db/migrations/011_members.sql");
-  await db.exec(readFileSync(members, "utf8"));
-  const push = path.join(process.cwd(), "src/lib/db/migrations/012_push.sql");
-  await db.exec(readFileSync(push, "utf8"));
+  await applyMigrations(pgliteIo(db));
   return db;
 }
 
+async function openPool() {
+  const { Pool } = await import("pg");
+  const url = databaseUrl();
+  const ssl = /sslmode=require|supabase\.co/i.test(url) ? { rejectUnauthorized: false } : undefined;
+  const pool = new Pool({ connectionString: url, ssl });
+  await applyMigrations(postgresIo(pool));
+  return pool;
+}
+
 export async function getDb() {
+  if (usingPostgres()) {
+    throw new Error("getDb() is PGlite-only. Use query() when DATABASE_URL is set.");
+  }
   if (globalForDb.saathiDb) return globalForDb.saathiDb;
   if (!globalForDb.saathiReady) {
-    globalForDb.saathiReady = open().then((db) => {
+    globalForDb.saathiReady = openPglite().then((db) => {
       globalForDb.saathiDb = db;
       return db;
     });
@@ -51,7 +89,26 @@ export async function getDb() {
   return globalForDb.saathiReady;
 }
 
+export async function getPool() {
+  if (!usingPostgres()) {
+    throw new Error("getPool() needs DATABASE_URL.");
+  }
+  if (globalForDb.saathiPool) return globalForDb.saathiPool;
+  if (!globalForDb.saathiPoolReady) {
+    globalForDb.saathiPoolReady = openPool().then((pool) => {
+      globalForDb.saathiPool = pool;
+      return pool;
+    });
+  }
+  return globalForDb.saathiPoolReady;
+}
+
 export async function query<T>(sql: string, params: unknown[] = []) {
+  if (usingPostgres()) {
+    const pool = await getPool();
+    const result = await pool.query(sql, params);
+    return result.rows as T[];
+  }
   const db = await getDb();
   const result = await db.query<T>(sql, params);
   return result.rows;
@@ -62,5 +119,10 @@ export async function closeDb() {
     await globalForDb.saathiDb.close();
     globalForDb.saathiDb = undefined;
     globalForDb.saathiReady = undefined;
+  }
+  if (globalForDb.saathiPool) {
+    await globalForDb.saathiPool.end();
+    globalForDb.saathiPool = undefined;
+    globalForDb.saathiPoolReady = undefined;
   }
 }
