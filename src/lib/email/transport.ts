@@ -77,7 +77,8 @@ function encodeLogin(value: string) {
   return Buffer.from(value, "utf8").toString("base64");
 }
 
-async function sendSmtp(message: EmailMessage): Promise<EmailSendResult> {
+/** Implicit TLS on 465. STARTTLS on other ports. Exported for the local fake-server test. */
+export async function sendSmtp(message: EmailMessage): Promise<EmailSendResult> {
   const host = smtpHost();
   const port = smtpPort();
   const user = (process.env.SMTP_USER || "").trim();
@@ -216,9 +217,17 @@ async function sendSmtp(message: EmailMessage): Promise<EmailSendResult> {
       }
     };
 
-    socket = net.connect({ host, port }, () => {
-      socket?.setEncoding("utf8");
-    });
+    if (port === 465) {
+      socket = tls.connect({
+        host,
+        port,
+        servername: host,
+        rejectUnauthorized: process.env.SMTP_TLS_INSECURE !== "1",
+      });
+    } else {
+      socket = net.connect({ host, port });
+    }
+    socket.setEncoding("utf8");
     socket.on("data", onData);
     socket.on("error", () => {
       clearTimeout(timer);

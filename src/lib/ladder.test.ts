@@ -63,6 +63,46 @@ describe("missed ladder", () => {
     assert.ok(!result.actions.includes("escalated"));
   });
 
+  it("records attempts from the parent call_time, not a hard-coded 08:30", async () => {
+    await query(`update parents set call_time = '09:15' where id = 'parent_kamla'`);
+    try {
+      const callId = `att_time_${Date.now()}`;
+      const day = istDayKey();
+      await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
+        callId,
+        "parent_kamla",
+        istStamp(day, 9, 15),
+        null,
+        0,
+        "missed",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        callId,
+        true,
+      ]);
+      await advanceLadder({
+        parentId: "parent_kamla",
+        callId,
+        elapsedMin: 10,
+        attemptResult: "no_answer",
+        redial: false,
+      });
+      const rows = await query<{ attempted_at: string; offset_min: number }>(
+        `select attempted_at, offset_min from call_attempts where call_id = $1 order by offset_min`,
+        [callId],
+      );
+      const ten = rows.find((row) => row.offset_min === 10);
+      assert.match(ten?.attempted_at ?? "", /T09:25:00\+05:30/);
+      assert.doesNotMatch(ten?.attempted_at ?? "", /T08:40:00/);
+    } finally {
+      await query(`update parents set call_time = '08:30' where id = 'parent_kamla'`);
+    }
+  });
+
   it("fills the soft notice from the parent name and address term", async () => {
     await query(`update parents set address_term = 'Amma', first_name = 'Leela', call_time = '09:15', phone = '+910000000000' where id = 'parent_kamla'`);
     try {

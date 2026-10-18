@@ -72,3 +72,18 @@ export function canSendTestWhatsapp(phone: string, templateArg: string, yes: boo
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
   return { ok: true as const, to: gate.to, template: template as Exclude<TemplateName, "hello_world"> };
 }
+
+/** Allowlist is enough. The number does not have to already be a contact. */
+export async function resolveTestSendParentId(phone: string) {
+  const digits = phone.replace(/\D/g, "").slice(-10);
+  const { query } = await import("@/lib/db/client");
+  const contacts = await query<{ parent_id: string }>(
+    `select parent_id from contacts where regexp_replace(phone, '[^0-9]', '', 'g') like $1 limit 1`,
+    [`%${digits}`],
+  );
+  if (contacts[0]?.parent_id) return contacts[0].parent_id;
+  const example = await query<{ id: string }>(
+    `select id from parents where is_example = true order by id limit 1`,
+  );
+  return example[0]?.id ?? "parent_kamla";
+}

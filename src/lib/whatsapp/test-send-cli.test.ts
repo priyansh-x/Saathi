@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
-import { canSendTestWhatsapp, parseTestSendArgs, plannedTestSend } from "./test-send-cli";
+import { after, before, describe, it } from "node:test";
+import { closeDb } from "../db/client";
+import { seed } from "../db/seed";
+import { canSendTestWhatsapp, parseTestSendArgs, plannedTestSend, resolveTestSendParentId } from "./test-send-cli";
+
+before(async () => {
+  await seed();
+});
+after(async () => {
+  await closeDb();
+});
 
 process.env.MOCK_WHATSAPP = "1";
 process.env.SAATHI_KILL_SWITCH = "0";
@@ -19,7 +28,7 @@ describe("whatsapp:test-send CLI", () => {
     assert.match(JSON.stringify(plan), /Maa|example-kamla/);
   });
 
-  it("only allows a live send with --yes, MOCK_WHATSAPP=0, allowlist, and an approved template", () => {
+  it("only allows a live send with --yes, MOCK_WHATSAPP=0, allowlist, and an approved template", async () => {
     const phone = "+910000000001";
     assert.equal(canSendTestWhatsapp(phone, "briefing", false).reason, "missing_yes");
     const prev = {
@@ -40,6 +49,14 @@ describe("whatsapp:test-send CLI", () => {
       const ok = canSendTestWhatsapp(phone, "briefing", true);
       assert.equal(ok.ok, true);
       if (ok.ok) assert.equal(ok.template, "daily_briefing_good");
+      const stranger = "+919998887776";
+      process.env.ALLOWED_PHONE_NUMBERS = stranger;
+      const plan = plannedTestSend(stranger, "briefing");
+      assert.equal(plan.allowlisted, true);
+      const liveStranger = canSendTestWhatsapp(stranger, "briefing", true);
+      assert.equal(liveStranger.ok, true);
+      const parentId = await resolveTestSendParentId(stranger);
+      assert.equal(parentId, "parent_kamla");
     } finally {
       process.env.MOCK_WHATSAPP = prev.mock;
       process.env.ALLOWED_PHONE_NUMBERS = prev.phones;

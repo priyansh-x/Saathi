@@ -123,9 +123,37 @@ describe("production secrets", () => {
         CRON_SECRET: LONG_C,
       },
       () => {
+        assert.throws(() => assertProductionSecrets(), /SESSION_SECRET must differ/);
+      },
+    );
+    withEnv(
+      {
+        NODE_ENV: "production",
+        SESSION_SECRET: LONG_D,
+        BOLNA_TOOL_TOKEN: LONG_A,
+        SAATHI_TOOL_TOKEN: undefined,
+        BOLNA_WEBHOOK_SECRET: LONG_B,
+        CRON_SECRET: LONG_C,
+      },
+      () => {
         assert.equal(toolToken(), LONG_A);
         assert.equal(bolnaWebhookSecret(), LONG_B);
         assert.doesNotThrow(() => assertProductionSecrets());
+      },
+    );
+  });
+
+  it("SESSION_SECRET must differ from the tool token and webhook secret", () => {
+    withEnv(
+      {
+        NODE_ENV: "production",
+        SESSION_SECRET: LONG_A,
+        BOLNA_TOOL_TOKEN: LONG_A,
+        BOLNA_WEBHOOK_SECRET: LONG_B,
+        CRON_SECRET: LONG_C,
+      },
+      () => {
+        assert.throws(() => assertProductionSecrets(), /SESSION_SECRET must differ/);
       },
     );
   });

@@ -9,6 +9,7 @@ import {
   canSendTestWhatsapp,
   parseTestSendArgs,
   plannedTestSend,
+  resolveTestSendParentId,
 } from "../../src/lib/whatsapp/test-send-cli";
 
 async function main() {
@@ -37,21 +38,11 @@ async function main() {
     return;
   }
 
-  const { closeDb, query } = await import("../../src/lib/db/client");
+  const { closeDb } = await import("../../src/lib/db/client");
   const { ensureSeed } = await import("../../src/lib/db/seed");
   const { sendFamilyMessage } = await import("../../src/lib/whatsapp/send");
   await ensureSeed();
-  const digits = live.to.replace(/\D/g, "").slice(-10);
-  const contacts = await query<{ parent_id: string }>(
-    `select parent_id from contacts where regexp_replace(phone, '[^0-9]', '', 'g') like $1 limit 1`,
-    [`%${digits}`],
-  );
-  const parentId = contacts[0]?.parent_id;
-  if (!parentId) {
-    console.error(JSON.stringify({ ok: false, reason: "no_parent_for_number", example: true }));
-    await closeDb();
-    process.exit(1);
-  }
+  const parentId = await resolveTestSendParentId(live.to);
   const result = await sendFamilyMessage({
     parentId,
     toPhone: live.to,

@@ -49,11 +49,16 @@ async function recordAttempt(callId: string, offset: number, result: string) {
   );
   if (existing[0]) return existing[0].id;
   const id = `att_${callId}_${offset}`;
-  const day = istDayKey();
+  const parent = await query<{ call_time: string; started_at: string }>(
+    `select p.call_time, c.started_at from calls c join parents p on p.id = c.parent_id where c.id = $1`,
+    [callId],
+  );
+  const day = parent[0]?.started_at?.slice(0, 10) || istDayKey();
+  const callMin = parseHhMm(parent[0]?.call_time || "08:30");
   await query(`insert into call_attempts values ($1,$2,$3,$4,$5,$6)`, [
     id,
     callId,
-    istStampFromOffset(day, 8, 30, offset),
+    istStampFromOffset(day, Math.floor(callMin / 60), callMin % 60, offset),
     offset,
     result,
     true,
