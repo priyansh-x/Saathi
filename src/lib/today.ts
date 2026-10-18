@@ -29,6 +29,7 @@ export function todayStatus(args: {
   nowMin: number;
   callTimeMin: number;
   escalated?: boolean;
+  neverCalled?: boolean;
 }): DayState {
   if (args.paused) return "paused";
   const openAct = args.actAlerts.filter((a) => !a.resolved_at && a.level === "act");
@@ -36,6 +37,7 @@ export function todayStatus(args: {
   if (args.call?.status === "no_conversation") return "skipped";
   if (args.call?.status === "missed" || args.call?.status === "in_progress") return "trying";
   if (!args.call) {
+    if (args.neverCalled) return "scheduled";
     return args.nowMin < args.callTimeMin + 10 ? "scheduled" : "trying";
   }
   if (args.call.status === "completed" && args.doses.some((d) => d.status === "not_taken")) return "look";

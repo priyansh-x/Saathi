@@ -65,6 +65,7 @@ export async function loadFamily(token: string) {
       nowMin: minutesNowIst(),
       callTimeMin: parseHhMm(parent.call_time),
       escalated,
+      neverCalled: week.calls.length === 0,
     }),
     child: contacts.find((c) => c.role === "child") ?? null,
     neighbour: contacts.find((c) => c.role === "neighbour") ?? null,

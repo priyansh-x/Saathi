@@ -12,7 +12,15 @@ create table if not exists parents (
   is_example boolean not null default false,
   consent_status text not null default 'pending',
   consent_at text,
-  consent_later_count integer not null default 0
+  consent_later_count integer not null default 0,
+  address_term text
+);
+
+create table if not exists auth_tokens (
+  token text primary key,
+  email text not null,
+  expires_at text not null,
+  consumed_at text
 );
 
 create table if not exists contacts (

@@ -1,8 +1,8 @@
-import { dailyBudgetMinutes, isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
+import { allowedPhones, dailyBudgetMinutes, isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
 import { promptVariables } from "@/lib/bolna/summary";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
-import { gateOutbound } from "@/lib/outbound";
+import { gateOutbound, normalizePhone } from "@/lib/outbound";
 import { istDayBounds, istDayKey, istStamp, parseHhMm } from "@/lib/time";
 
 /** Bolna `agent_data.language` follows the parent's first listed language. */
@@ -31,8 +31,9 @@ export async function placeMorningCall(parentId: string, clock: Date = new Date(
     languages: string;
     consent_status: string;
     consent_later_count: number;
+    is_example: boolean;
   }>(
-    `select phone, paused, first_name, call_time, languages, consent_status, consent_later_count from parents where id = $1`,
+    `select phone, paused, first_name, call_time, languages, consent_status, consent_later_count, is_example from parents where id = $1`,
     [parentId],
   );
   const parent = parents[0];
@@ -45,6 +46,10 @@ export async function placeMorningCall(parentId: string, clock: Date = new Date(
   }
   const used = await minutesUsedToday(clock);
   if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
+  const onAllowlist = allowedPhones().map(normalizePhone).includes(normalizePhone(parent.phone));
+  if (!parent.is_example && !onAllowlist) {
+    return { ok: false as const, reason: "not_allowlisted" };
+  }
   const gate = gateOutbound("call", parent.phone);
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
 
