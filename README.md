@@ -11,6 +11,8 @@ Two apps live in this repo:
 
 Child setup: `/onboard` (email sign-in, then the family form). EXAMPLE household: `/d/example-kamla` (fictional, labelled EXAMPLE). Specs in [`docs/saathi/`](./docs/saathi/).
 
+The family desk is a PWA (`/manifest.webmanifest`, `/sw.js`): Add to Home Screen from the home page or Settings. Layout target is a 360×740 phone. The service worker does not cache `/api`.
+
 ## Run locally
 
 ```bash

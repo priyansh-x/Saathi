@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { InviteForm } from "@/components/family/invite-form";
 import { SettingsForm } from "@/components/family/settings-form";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { AddToHome } from "@/components/pwa/register";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { isMockBolna, isMockWhatsapp } from "@/lib/config";
 import { consentsFor } from "@/lib/consent";
@@ -180,6 +181,7 @@ export default async function SettingsPage({
       <section className="mt-8">
         <h2 className="text-lg font-semibold">{t.aboutSection}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{t.aboutBody}</p>
+        <AddToHome lang={lang} />
       </section>
 
       {mockOn ? (
