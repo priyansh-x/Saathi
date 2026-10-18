@@ -140,14 +140,13 @@ export default async function TodayPage({
       active="today"
       updatedAt={updatedAt}
     >
-      <p className="rise px-1 pt-2 text-[15px] text-muted-foreground">
+      <p className="px-1 pt-2 text-[15px] text-muted-foreground">
         {greeting(lang)}
         {data.child?.first_name ? `, ${data.child.first_name}` : ""}
       </p>
 
       <section
-        className={`rise grain mt-3 overflow-hidden rounded-[28px] border border-black/[0.04] p-5 shadow-[var(--shadow-card)] ${HERO_TONE[tone]}`}
-        style={{ "--d": "60ms" } as CSSProperties}
+        className={`grain mt-3 overflow-hidden rounded-[28px] border border-black/[0.04] p-5 shadow-[var(--shadow-card)] ${HERO_TONE[tone]}`}
       >
         <div className="flex items-center gap-2.5">
           <span className={`grid size-9 place-items-center rounded-full ${HERO_ICON_BG[tone]} ${state === "act" || state === "trying" ? "ring-pulse" : ""}`}>

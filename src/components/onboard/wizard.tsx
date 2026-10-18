@@ -167,7 +167,7 @@ export function OnboardWizard() {
       return (
         <>
           <div className="grain relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-[28px]">
-            <Image src={setupImg} alt="Setting up a morning call on a phone at home" fill priority className="object-cover" sizes="480px" />
+            <Image src={setupImg} alt="Setting up a morning call on a phone at home" fill priority className="object-cover" sizes="(max-width: 480px) 100vw, 480px" />
           </div>
           <p className="eyebrow">Sign in</p>
           <h1 className="app-title mt-2">A link to your email. No SMS.</h1>
@@ -356,7 +356,7 @@ export function OnboardWizard() {
       return (
         <>
           <div className="grain relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-[28px]">
-            <Image src={neighbourImg} alt="A neighbour at the door, the person who can knock if a call is missed" fill className="object-cover" sizes="480px" />
+            <Image src={neighbourImg} alt="A neighbour at the door, the person who can knock if a call is missed" fill className="object-cover" sizes="(max-width: 480px) 100vw, 480px" />
           </div>
           <p className="eyebrow">Optional</p>
           <h1 className="app-title mt-2">Someone who can knock.</h1>

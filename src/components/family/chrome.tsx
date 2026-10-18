@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AlertTriangle, Bell, CalendarDays, ChevronLeft, ChevronRight, CloudOff, House, Languages, Link2Off, Settings } from "lucide-react";
+import kamlaAvatar from "../../../public/images/avatar-kamla.jpg";
 import type { AlertRow } from "@/lib/db/types";
 import { qs } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
@@ -28,10 +29,11 @@ export function Avatar({
   if (example) {
     return (
       <Image
-        src="/images/avatar-kamla.jpg"
+        src={kamlaAvatar}
         alt=""
         width={size}
         height={size}
+        sizes={`${size}px`}
         className="shrink-0 rounded-full object-cover ring-2 ring-card"
         style={{ width: size, height: size }}
       />
@@ -158,6 +160,7 @@ export function TabBar({
             <li key={item.key}>
               <Link
                 href={`${item.href}${qs({ lang })}`}
+                prefetch={false}
                 aria-current={on ? "page" : undefined}
                 className={`flex h-16 flex-col items-center justify-center gap-1 text-[12px] ${
                   on ? "font-semibold text-foreground" : "text-ink-3"

@@ -19,7 +19,7 @@ export default function Home() {
             fill
             priority
             placeholder="blur"
-            sizes="480px"
+            sizes="(max-width: 480px) 100vw, 480px"
             className="object-cover object-[70%_center]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/0 to-black/10" />

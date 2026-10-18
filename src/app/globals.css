@@ -299,6 +299,12 @@
     animation: rise 600ms var(--ease) both;
     animation-delay: var(--d, 0ms);
   }
+  @media (prefers-reduced-motion: reduce) {
+    .rise,
+    .ring-pulse::after {
+      animation: none;
+    }
+  }
   .ring-pulse {
     position: relative;
   }

@@ -30,6 +30,8 @@ cd landing && npm install && npm run dev   # landing, port 43211
 
 Local data is PGlite at `.data/saathi` when `DATABASE_URL` is unset. Set `DATABASE_URL` to a Postgres URL (Supabase) and run `npm run db:migrate`. Tests always use PGlite.
 
+Images go through `next/image` with `sizes`. Fonts are subset (latin Inter/serif, Devanagari Noto) and not preloaded, so CSS is not queued behind the typefaces. Compiled CSS is inlined (`npm run prebuild`). Today, Alerts, and History stay server-rendered — no React client bundle.
+
 ## Mocks and allowlist
 
 `MOCK_BOLNA=1` and `MOCK_WHATSAPP=1` by default. Morning calls go through `CALL_PROVIDER` (`simulated` by default; `MOCK_BOLNA=0` is an alias for `bolna`). Nothing dials or sends on install, deploy, or `npm run dev`. Cron is authenticated and **not** enabled on deploy. Sunday evening IST, the same tick logs a mocked weekly WhatsApp note for each family.

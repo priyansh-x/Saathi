@@ -51,3 +51,6 @@ next-env.d.ts
 
 # local PGlite
 /.data
+
+# compiled, inlined CSS (npm run prebuild)
+/src/generated
