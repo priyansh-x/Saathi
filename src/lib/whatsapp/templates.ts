@@ -14,7 +14,9 @@ export type TemplateName =
   | "consent_later_en"
   | "consent_later_hi"
   | "responder_optin_en"
-  | "responder_optin_hi";
+  | "responder_optin_hi"
+  | "weekly_summary_en"
+  | "weekly_summary_hi";
 
 export function renderTemplate(name: TemplateName, vars: string[]) {
   const v = (i: number) => vars[i] ?? "—";
@@ -49,5 +51,9 @@ export function renderTemplate(name: TemplateName, vars: string[]) {
       return `Will you help if ${v(0)} doesn't answer?\nReply Yes or No. Saathi will only message you if we cannot reach her.`;
     case "responder_optin_hi":
       return `${v(0)} फ़ोन न उठाएँ तो क्या आप देखेंगे?\nहाँ या नहीं लिखें। साथी तभी लिखेगा जब उनसे संपर्क न हो।`;
+    case "weekly_summary_en":
+      return `🗓 ${v(0)}'s week (${v(1)}): answered ${v(2)} of 7 calls, took ${v(3)} of ${v(4)} doses.\nMood: ${v(5)}. Notable: ${v(6)}. Tap below for the full week.`;
+    case "weekly_summary_hi":
+      return `🗓 ${v(0)} का हफ़्ता (${v(1)}): 7 में से ${v(2)} कॉल उठाईं, ${v(4)} में से ${v(3)} दवाइयाँ लीं।\nमन: ${v(5)}। ख़ास बातें: ${v(6)}। पूरा हफ़्ता नीचे देखें।`;
   }
 }

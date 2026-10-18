@@ -4,6 +4,7 @@ import { query } from "@/lib/db/client";
 import { ensureSeed } from "@/lib/db/seed";
 import { advanceLadder } from "@/lib/ladder";
 import { istDayBounds, istDayKey, minutesNowIst, parseHhMm } from "@/lib/time";
+import { sendSundayWeeklyNotes } from "@/lib/weekly";
 
 const WINDOW_END = parseHhMm("11:00");
 
@@ -83,5 +84,6 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
     }
     results.push({ parent_id: parent.id, ...(await placeMorningCall(parent.id, now)) });
   }
-  return { ok: true as const, day, results };
+  const weekly = await sendSundayWeeklyNotes(now);
+  return { ok: true as const, day, results, weekly };
 }
