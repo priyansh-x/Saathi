@@ -41,6 +41,7 @@ export async function seed() {
   await query("delete from family_config");
   await query("delete from family_invites");
   await query("delete from audit_events");
+  await query("delete from error_events");
   await query("delete from ops_audit");
   await query("delete from ops_flags");
   latchOpsKillSwitch(false);

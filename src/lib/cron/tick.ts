@@ -3,6 +3,7 @@ import { isMockBolna, killSwitchOn } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { ensureSeed } from "@/lib/db/seed";
 import { advanceLadder } from "@/lib/ladder";
+import { logError } from "@/lib/log-error";
 import { applyRetention } from "@/lib/retention";
 import { istDayBounds, istDayKey, minutesNowIst, parseHhMm } from "@/lib/time";
 import { sendSundayWeeklyNotes } from "@/lib/weekly";
@@ -84,7 +85,12 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
       results.push({ parent_id: parent.id, skipped: "outside_window" });
       continue;
     }
-    results.push({ parent_id: parent.id, ...(await placeCall(parent.id, now)) });
+    try {
+      results.push({ parent_id: parent.id, ...(await placeCall(parent.id, now)) });
+    } catch (err) {
+      await logError("cron.tick.parent", err, { parent_id: parent.id });
+      results.push({ parent_id: parent.id, skipped: "error" });
+    }
   }
   const weekly = await sendSundayWeeklyNotes(now);
   return { ok: true as const, day, results, weekly, retention };

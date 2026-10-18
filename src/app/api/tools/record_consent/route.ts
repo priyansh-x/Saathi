@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { toolAuthorized } from "@/lib/bolna/auth";
 import { recordSpokenConsent } from "@/lib/consent";
-import { readJson, unauthorized } from "@/lib/http";
+import { jsonOrLog, readJson, unauthorized } from "@/lib/http";
 
 export async function POST(req: Request) {
   await connection();
@@ -10,5 +10,7 @@ export async function POST(req: Request) {
   if (!body?.call_sid || !body.parent_id || (body.answer !== "yes" && body.answer !== "no" && body.answer !== "later")) {
     return Response.json({ ok: false, error: "bad_request" }, { status: 400 });
   }
-  return Response.json(await recordSpokenConsent(body));
+  return jsonOrLog("tools.record_consent", { parent_id: body.parent_id, call_id: body.call_sid }, () =>
+    recordSpokenConsent(body),
+  );
 }

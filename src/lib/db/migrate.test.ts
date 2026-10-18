@@ -25,6 +25,7 @@ describe("db migrate", () => {
     assert.equal(files[0], "001_init.sql");
     assert.ok(files.includes("013_rls.sql"));
     assert.ok(files.includes("014_ops.sql"));
+    assert.ok(files.includes("015_errors.sql"));
     const ids = files.map((name) => name.slice(0, 3));
     assert.deepEqual(ids, [...ids].sort());
   });

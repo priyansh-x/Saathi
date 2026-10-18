@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { toolAuthorized } from "@/lib/bolna/auth";
 import { saveMemoryNote } from "@/lib/bolna/tools";
-import { readJson, unauthorized } from "@/lib/http";
+import { jsonOrLog, readJson, unauthorized } from "@/lib/http";
 
 export async function POST(req: Request) {
   await connection();
@@ -15,5 +15,7 @@ export async function POST(req: Request) {
   if (!body?.call_sid || !body.parent_id || !body.note || !body.kind) {
     return Response.json({ ok: false, error: "bad_request" }, { status: 400 });
   }
-  return Response.json(await saveMemoryNote(body));
+  return jsonOrLog("tools.save_memory_note", { parent_id: body.parent_id, call_id: body.call_sid }, () =>
+    saveMemoryNote(body),
+  );
 }
