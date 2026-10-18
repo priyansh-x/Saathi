@@ -24,7 +24,7 @@ export async function startEmailSignIn(rawEmail: string) {
   }
 
   const gate = gateOutbound("email", email);
-  if (!gate.ok) return { ok: false as const, error: "That email is not on the allowlist." };
+  if (!gate.ok) return { ok: false as const, error: "Pilot is invite-only for now" };
 
   const token = newAuthToken();
   const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace("Z", "+00:00");
