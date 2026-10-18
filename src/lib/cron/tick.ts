@@ -58,27 +58,24 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
       results.push({ parent_id: parent.id, skipped: "consent_later" });
       continue;
     }
-    const open = await query<{ id: string; started_at: string; status: string }>(
+    const today = await query<{ id: string; started_at: string; status: string }>(
       `select id, started_at, status from calls
-       where parent_id = $1 and started_at >= $2 and started_at < $3 and status in ('missed','in_progress')
+       where parent_id = $1 and started_at >= $2 and started_at < $3
        order by started_at desc limit 1`,
       [parent.id, start, end],
     );
-    if (open[0]) {
-      const mins =
-        args?.elapsedMin ??
-        Math.max(0, Math.floor((now.getTime() - new Date(open[0].started_at).getTime()) / 60000));
-      results.push({
-        parent_id: parent.id,
-        ladder: await advanceLadder({ parentId: parent.id, callId: open[0].id, elapsedMin: mins }),
-      });
-      continue;
-    }
-    const existing = await query<{ n: number }>(
-      `select count(*)::int as n from calls where parent_id = $1 and started_at >= $2 and started_at < $3 and status in ('completed','no_conversation','in_progress','missed')`,
-      [parent.id, start, end],
-    );
-    if ((existing[0]?.n ?? 0) > 0) {
+    if (today[0]) {
+      const open = ["missed", "in_progress", "no_conversation", "failed"].includes(today[0].status);
+      if (open) {
+        const mins =
+          args?.elapsedMin ??
+          Math.max(0, Math.floor((now.getTime() - new Date(today[0].started_at).getTime()) / 60000));
+        results.push({
+          parent_id: parent.id,
+          ladder: await advanceLadder({ parentId: parent.id, callId: today[0].id, elapsedMin: mins }),
+        });
+        continue;
+      }
       results.push({ parent_id: parent.id, skipped: "already_called" });
       continue;
     }

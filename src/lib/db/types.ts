@@ -46,7 +46,7 @@ export type CallRow = {
   started_at: string;
   ended_at: string | null;
   duration_sec: number | null;
-  status: "completed" | "missed" | "no_conversation" | "in_progress";
+  status: "completed" | "missed" | "no_conversation" | "in_progress" | "failed";
   summary_en: string | null;
   summary_hi: string | null;
   mood_quote: string | null;

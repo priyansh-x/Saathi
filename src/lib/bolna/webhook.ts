@@ -34,7 +34,8 @@ export type BolnaWebhook = {
   };
 };
 
-const MISSED_STATUSES = new Set(["no-answer", "busy", "failed"]);
+const FAILED_STATUSES = new Set(["error", "balance-low", "canceled", "stopped", "failed"]);
+const MISSED_STATUSES = new Set(["no-answer", "busy", ...FAILED_STATUSES]);
 
 export function normalizeBolnaStatus(status?: string) {
   const raw = (status || "").trim().toLowerCase().replace(/_/g, "-");
@@ -43,6 +44,10 @@ export function normalizeBolnaStatus(status?: string) {
 
 export function isMissedBolnaStatus(status?: string) {
   return MISSED_STATUSES.has(normalizeBolnaStatus(status));
+}
+
+export function isFailedBolnaStatus(status?: string) {
+  return FAILED_STATUSES.has(normalizeBolnaStatus(status));
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -164,8 +169,9 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
   }
 
   if (noConvo) {
+    const ladder = await advanceLadder({ parentId, callId, elapsedMin: 0, attemptResult: "no_conversation" });
     await query(`update webhook_events set processed = true where id = $1`, [eventId]);
-    return { ok: true as const, call_id: callId, status: "no_conversation" as const };
+    return { ok: true as const, call_id: callId, status: "no_conversation" as const, missed: true as const, ladder };
   }
 
   for (const med of payload.extracted_data?.medicines ?? []) {
@@ -228,7 +234,8 @@ async function startMissedFromWebhook(
   const at = nowIstStamp();
   const callId = existing?.id ?? executionId;
   const status = normalizeBolnaStatus(payload.status);
-  const attemptResult = status === "no-answer" ? "no_answer" : status;
+  const attemptResult = status === "no-answer" ? "no_answer" : isFailedBolnaStatus(status) ? "failed" : status;
+  const callStatus = isFailedBolnaStatus(status) ? "failed" : "in_progress";
   if (!existing) {
     await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
       callId,
@@ -236,7 +243,7 @@ async function startMissedFromWebhook(
       at,
       null,
       0,
-      "in_progress",
+      callStatus,
       null,
       null,
       null,
@@ -246,6 +253,8 @@ async function startMissedFromWebhook(
       executionId,
       true,
     ]);
+  } else if (isFailedBolnaStatus(status) && existing.status === "in_progress") {
+    await query(`update calls set status = 'failed', duration_sec = 0 where id = $1`, [existing.id]);
   }
   const ladder = await advanceLadder({
     parentId,

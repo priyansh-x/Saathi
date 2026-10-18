@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "../db/client";
 import { seed } from "../db/seed";
-import { isMissedBolnaStatus, normalizeBolnaStatus, processBolnaWebhook, type BolnaWebhook } from "./webhook";
+import {
+  isFailedBolnaStatus,
+  isMissedBolnaStatus,
+  normalizeBolnaStatus,
+  processBolnaWebhook,
+  type BolnaWebhook,
+} from "./webhook";
 
 process.env.MOCK_BOLNA = "1";
 process.env.MOCK_WHATSAPP = "1";
@@ -39,6 +45,8 @@ describe("Bolna status mapping", () => {
     assert.equal(normalizeBolnaStatus("call_disconnected"), "call-disconnected");
     assert.equal(isMissedBolnaStatus("busy"), true);
     assert.equal(isMissedBolnaStatus("call-disconnected"), false);
+    assert.equal(isFailedBolnaStatus("balance-low"), true);
+    assert.equal(isFailedBolnaStatus("busy"), false);
   });
 
   it("completed stores telephony_data and nested extracted_data", async () => {
@@ -79,14 +87,46 @@ describe("Bolna status mapping", () => {
       const result = await processBolnaWebhook(examplePayload(status), sid);
       assert.equal("missed" in result && result.missed, true);
       const call = await query<{ status: string }>(`select status from calls where id = $1`, [sid]);
-      assert.equal(call[0]?.status, "missed");
+      assert.equal(call[0]?.status, status === "failed" ? "failed" : "missed");
       const attempts = await query<{ result: string; offset_min: number }>(
         `select result, offset_min from call_attempts where call_id = $1`,
         [sid],
       );
       assert.ok(attempts.some((row) => row.offset_min === 0));
-      const expected = status === "no-answer" ? "no_answer" : status;
+      const expected = status === "no-answer" ? "no_answer" : status === "failed" ? "failed" : status;
       assert.equal(attempts[0]?.result, expected);
     });
   }
+
+  for (const status of ["error", "balance-low", "canceled", "stopped"] as const) {
+    it(`${status} maps to failed and starts the missed-call ladder`, async () => {
+      const sid = `st_${status}_${Date.now()}`;
+      const result = await processBolnaWebhook(examplePayload(status), sid);
+      assert.equal("missed" in result && result.missed, true);
+      const call = await query<{ status: string }>(`select status from calls where id = $1`, [sid]);
+      assert.equal(call[0]?.status, "failed");
+      const attempts = await query<{ result: string }>(`select result from call_attempts where call_id = $1`, [sid]);
+      assert.equal(attempts[0]?.result, "failed");
+    });
+  }
+
+  it("completed with conversation_duration 0 is no_conversation and starts the ladder", async () => {
+    const sid = `st_zero_${Date.now()}`;
+    const result = await processBolnaWebhook(
+      examplePayload("completed", {
+        conversation_duration: 0,
+        transcript: "assistant: Namaste",
+      }),
+      sid,
+    );
+    assert.equal("status" in result && result.status, "no_conversation");
+    assert.equal("missed" in result && result.missed, true);
+    const call = await query<{ status: string }>(`select status from calls where id = $1`, [sid]);
+    assert.equal(call[0]?.status, "no_conversation");
+    const attempts = await query<{ n: number }>(
+      `select count(*)::int as n from call_attempts where call_id = $1`,
+      [sid],
+    );
+    assert.equal((attempts[0]?.n ?? 0) > 0, true);
+  });
 });

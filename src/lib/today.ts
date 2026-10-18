@@ -35,7 +35,9 @@ export function todayStatus(args: {
   const openAct = args.actAlerts.filter((a) => !a.resolved_at && a.level === "act");
   if (openAct.length > 0 || args.escalated) return "act";
   if (args.call?.status === "no_conversation") return "skipped";
-  if (args.call?.status === "missed" || args.call?.status === "in_progress") return "trying";
+  if (args.call?.status === "missed" || args.call?.status === "in_progress" || args.call?.status === "failed") {
+    return "trying";
+  }
   if (!args.call) {
     if (args.neverCalled) return "scheduled";
     return args.nowMin < args.callTimeMin + 10 ? "scheduled" : "trying";

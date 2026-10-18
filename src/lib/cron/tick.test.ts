@@ -70,7 +70,7 @@ describe("daily tick window", () => {
     const n = await query<{ n: number }>(
       `select count(*)::int as n from calls where parent_id = 'parent_kamla' and started_at like '2026-10-17%'`,
     );
-    assert.equal(n[0]?.n, 1);
+    assert.equal(n[0]?.n, 1, "two ticks must mean one dial");
   });
 
   it("skips paused and declined households", async () => {
