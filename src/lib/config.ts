@@ -103,6 +103,14 @@ export function allowedPhones() {
     .filter(Boolean);
 }
 
+export function retentionTranscriptDays() {
+  return Number(process.env.RETENTION_TRANSCRIPT_DAYS || 30);
+}
+
+export function retentionSummaryDays() {
+  return Number(process.env.RETENTION_SUMMARY_DAYS || 90);
+}
+
 export function allowedEmails() {
   return (process.env.ALLOWED_EMAILS || "")
     .split(",")

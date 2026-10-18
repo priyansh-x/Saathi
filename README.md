@@ -44,6 +44,8 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 | `ALLOWED_PHONE_NUMBERS` | empty | Live allowlist. |
 | `ALLOWED_EMAILS` | empty | Live email fallback allowlist. |
 | `OPS_EMAILS` | empty | Signed-in emails that can open `/ops`. Others get 404. |
+| `RETENTION_TRANSCRIPT_DAYS` | `30` | Daily tick deletes call transcripts older than this. |
+| `RETENTION_SUMMARY_DAYS` | `90` | Daily tick clears summaries and quotes; alerts stay without her words. |
 | `BOLNA_API_KEY` / `BOLNA_AGENT_ID` / `BOLNA_BASE_URL` | empty | Live Bolna. |
 | `SAATHI_TOOL_TOKEN` | empty (dev fallback when mocked) | Mid-call tools. |
 | `BOLNA_WEBHOOK_SECRET` | empty | Live Bolna webhook. |

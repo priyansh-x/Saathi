@@ -3,6 +3,7 @@ import { isMockBolna, killSwitchOn } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { ensureSeed } from "@/lib/db/seed";
 import { advanceLadder } from "@/lib/ladder";
+import { applyRetention } from "@/lib/retention";
 import { istDayBounds, istDayKey, minutesNowIst, parseHhMm } from "@/lib/time";
 import { sendSundayWeeklyNotes } from "@/lib/weekly";
 
@@ -27,10 +28,11 @@ export function resolveTickClock(
 
 export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
   const now = args?.now ?? new Date();
-  if (killSwitchOn()) {
-    return { ok: false as const, halted: true as const, reason: "kill_switch" as const };
-  }
   await ensureSeed();
+  const retention = await applyRetention(now);
+  if (killSwitchOn()) {
+    return { ok: false as const, halted: true as const, reason: "kill_switch" as const, retention };
+  }
   const day = istDayKey(now);
   const { start, end } = istDayBounds(day);
   const parents = await query<{
@@ -85,5 +87,5 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
     results.push({ parent_id: parent.id, ...(await placeCall(parent.id, now)) });
   }
   const weekly = await sendSundayWeeklyNotes(now);
-  return { ok: true as const, day, results, weekly };
+  return { ok: true as const, day, results, weekly, retention };
 }
