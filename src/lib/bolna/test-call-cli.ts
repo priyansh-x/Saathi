@@ -1,3 +1,4 @@
+import { callProviderName } from "@/lib/config";
 import { gateOutbound, normalizePhone } from "@/lib/outbound";
 
 export function parseTestCallArgs(argv: string[]) {
@@ -22,7 +23,7 @@ export function plannedTestCall(phone: string) {
 
 export function canPlaceLiveCall(phone: string, yes: boolean) {
   if (!yes) return { ok: false as const, reason: "missing_yes" };
-  if (process.env.MOCK_BOLNA !== "0") return { ok: false as const, reason: "mock_on" };
+  if (callProviderName() !== "bolna") return { ok: false as const, reason: "mock_on" };
   if (!phone) return { ok: false as const, reason: "missing_phone" };
   const gate = gateOutbound("call", phone);
   if (!gate.ok) return { ok: false as const, reason: gate.reason };

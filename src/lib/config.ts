@@ -5,8 +5,15 @@ export const LANGUAGES = (process.env.LANGUAGES || "hi,en").split(",");
 export const EXAMPLE_TOKEN = "example-kamla";
 export const MAGIC_LINK_DAYS = 7;
 
+/** `CALL_PROVIDER=simulated|bolna`. Default simulated. `MOCK_BOLNA=0` is an alias for bolna. */
+export function callProviderName(): "simulated" | "bolna" {
+  const named = (process.env.CALL_PROVIDER || "").trim().toLowerCase();
+  if (named === "bolna" || named === "simulated") return named;
+  return process.env.MOCK_BOLNA === "0" ? "bolna" : "simulated";
+}
+
 export function isMockBolna() {
-  return (process.env.MOCK_BOLNA ?? "1") !== "0";
+  return callProviderName() !== "bolna";
 }
 
 export function isMockWhatsapp() {
