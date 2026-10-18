@@ -1,4 +1,5 @@
 import { query } from "@/lib/db/client";
+import { parseNeighbourIntent, recordNeighbourReply } from "@/lib/neighbour";
 import { ackAlert, parseAckIntent, parseAlertId } from "@/lib/whatsapp/ack";
 
 export type WaMessage = {
@@ -49,17 +50,28 @@ export async function processInboundMessages(messages: WaMessage[]) {
   for (const msg of messages) {
     const text = msg.button?.text || msg.interactive?.button_reply?.title || msg.text?.body || "";
     const payload = msg.button?.payload || msg.interactive?.button_reply?.id || "";
+    const from = msg.from ?? "";
+    const digits = from.replace(/\D/g, "").slice(-10);
+    const neighbourIntent = parseNeighbourIntent(text, payload);
+    if (neighbourIntent) {
+      const neighbour = await query<{ parent_id: string; phone: string }>(
+        `select parent_id, phone from contacts where role = 'neighbour'`,
+      );
+      const match = neighbour.find((c) => c.phone.replace(/\D/g, "").endsWith(digits));
+      if (match) {
+        results.push(await recordNeighbourReply(match.parent_id, neighbourIntent === "yes"));
+        continue;
+      }
+    }
     const intent = parseAckIntent(text) || (payload.toLowerCase().startsWith("ack") ? "ack" : null);
     const alertId =
       parseAlertId(payload) ||
       (await query<{ id: string }>(`select id from alerts where resolved_at is null order by created_at desc limit 1`))[0]
         ?.id;
     if (intent === "ack" && alertId) {
-      const from = msg.from ?? "";
       const contacts = await query<{ full_name: string; first_name: string; phone: string }>(
         `select full_name, first_name, phone from contacts`,
       );
-      const digits = from.replace(/\D/g, "").slice(-10);
       const match = contacts.find((c) => c.phone.replace(/\D/g, "").endsWith(digits));
       const actor = match?.first_name || match?.full_name || "family";
       results.push(await ackAlert(alertId, actor));

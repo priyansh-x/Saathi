@@ -15,6 +15,7 @@ import {
   type DayState,
 } from "@/lib/today";
 import { weekdayShort } from "@/lib/time";
+import { neighbourOptedIn } from "@/lib/neighbour";
 import { statusClasses } from "@/lib/status";
 
 export default async function TodayPage({
@@ -53,6 +54,7 @@ export default async function TodayPage({
   const parentId = data.parent.id;
   const childName = data.child?.first_name || "family";
   const updatedAt = alert?.created_at || data.call?.ended_at || data.call?.started_at;
+  const neighbourReady = data.neighbour ? await neighbourOptedIn(data.parent.id) : true;
 
   async function resume() {
     "use server";
@@ -86,6 +88,9 @@ export default async function TodayPage({
           {copy.headline}
         </h1>
         {copy.sub ? <p className="mt-2 text-sm opacity-90">{copy.sub}</p> : null}
+        {data.neighbour && !neighbourReady ? (
+          <p className="mt-2 text-sm">{t.waitingNeighbour}</p>
+        ) : null}
 
         {state === "trying" ? (
           <ol className="mt-3 space-y-1.5 text-sm">

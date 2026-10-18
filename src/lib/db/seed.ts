@@ -130,6 +130,15 @@ export async function seed() {
     "haan, 2026-10-10 08:12 IST",
     true,
   ]);
+  await query(`insert into consents values ($1,$2,$3,$4,$5,$6,$7)`, [
+    "con_neighbour",
+    "parent_kamla",
+    "neighbour_whatsapp",
+    true,
+    "2026-10-10T08:20:00+05:30",
+    "whatsapp_yes",
+    true,
+  ]);
   await query(`insert into magic_links values ($1,$2,$3,$4)`, [
     EXAMPLE_TOKEN,
     "parent_kamla",

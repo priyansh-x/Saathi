@@ -4,6 +4,7 @@ import { defaultLadder } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { firstName } from "@/lib/names";
 import { toE164 } from "@/lib/phone";
+import { requestNeighbourOptIn } from "@/lib/neighbour";
 import { nowIstStamp } from "@/lib/time";
 
 function id(prefix: string) {
@@ -87,6 +88,7 @@ export async function createHousehold(input: OnboardInput, childEmail: string) {
         null,
       ],
     );
+    await requestNeighbourOptIn(parentId);
   }
 
   for (const med of data.medicines) {
