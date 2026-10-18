@@ -53,14 +53,14 @@ describe("WhatsApp 24h window, unapproved fallback, and gate", () => {
   });
 
   it("records last inbound and mocks a session reply", async () => {
-    await processInboundMessages([{ from: "9876544110", type: "text", text: { body: "haan" } }]);
+    await processInboundMessages([{ from: "+910000000001", type: "text", text: { body: "haan" } }]);
     const rows = await query<{ last_inbound_at: string | null }>(
       `select last_inbound_at from contacts where id = 'contact_rohit'`,
     );
     assert.ok(rows[0]?.last_inbound_at);
     const sent = await sendFamilyMessage({
       parentId: "parent_kamla",
-      toPhone: "98765 44110",
+      toPhone: "+910000000001",
       locale: "en",
       intended: "daily_briefing_good",
       vars: ["Maa"],
@@ -87,14 +87,14 @@ describe("WhatsApp 24h window, unapproved fallback, and gate", () => {
     process.env.MOCK_WHATSAPP = "0";
     process.env.WHATSAPP_TEMPLATES_APPROVED = "0";
     process.env.WHATSAPP_APPROVED_TEMPLATES = "";
-    process.env.ALLOWED_PHONE_NUMBERS = "98765 44110";
+    process.env.ALLOWED_PHONE_NUMBERS = "+910000000001";
     process.env.ALLOWED_EMAILS = "rohit@example.invalid";
     process.env.WHATSAPP_TOKEN = "example-token";
     process.env.WHATSAPP_PHONE_NUMBER_ID = "example-phone";
     try {
       const sent = await sendFamilyMessage({
         parentId: "parent_kamla",
-        toPhone: "98765 44110",
+        toPhone: "+910000000001",
         locale: "en",
         intended: "daily_briefing_good",
         vars: ["Maa", "8:04", "Good", "—", "—", "http://local"],
@@ -124,7 +124,7 @@ describe("WhatsApp 24h window, unapproved fallback, and gate", () => {
     try {
       const sent = await sendFamilyMessage({
         parentId: "parent_kamla",
-        toPhone: "98765 44110",
+        toPhone: "+910000000001",
         locale: "en",
         intended: "daily_briefing_good",
         vars: ["Maa"],

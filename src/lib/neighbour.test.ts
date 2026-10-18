@@ -15,16 +15,16 @@ process.env.WHATSAPP_TEMPLATES_APPROVED = "1";
 
 const family: OnboardInput = {
   childName: "Ananya Joshi",
-  childWhatsapp: "9876500011",
+  childWhatsapp: "+910000000011",
   parentName: "Leela Joshi",
   addressTerm: "Aai",
-  parentPhone: "9810000111",
+  parentPhone: "+910000000012",
   city: "Pune",
   languages: ["mr"],
   callTime: "08:30",
   medicines: [],
   neighborName: "Rekha",
-  neighborPhone: "9822000111",
+  neighborPhone: "+910000000013",
   toldParent: true,
 };
 
@@ -60,7 +60,7 @@ describe("neighbour opt-in", () => {
     assert.equal(respondersBefore[0]?.n, 0);
 
     const yes = parseWhatsappWebhookJson(
-      JSON.stringify(fixtureButtonMessage({ from: "919822000111", title: "Yes", payload: "neighbour_yes" })),
+      JSON.stringify(fixtureButtonMessage({ from: "910000000013", title: "Yes", payload: "neighbour_yes" })),
     );
     assert.equal(yes.ok, true);
     if (yes.ok) await processInboundMessages(yes.messages);
@@ -78,11 +78,11 @@ describe("neighbour opt-in", () => {
     assert.ok((respondersAfter[0]?.n ?? 0) >= 1);
 
     const other = await createHousehold(
-      { ...family, parentPhone: "9810000222", childWhatsapp: "9876500022", neighborPhone: "9822000222" },
+      { ...family, parentPhone: "+910000000014", childWhatsapp: "+910000000015", neighborPhone: "+910000000017" },
       "ananya2@example.com",
     );
     const no = parseWhatsappWebhookJson(
-      JSON.stringify(fixtureButtonMessage({ from: "919822000222", title: "No", payload: "neighbour_no" })),
+      JSON.stringify(fixtureButtonMessage({ from: "910000000017", title: "No", payload: "neighbour_no" })),
     );
     assert.equal(no.ok, true);
     if (no.ok) await processInboundMessages(no.messages);

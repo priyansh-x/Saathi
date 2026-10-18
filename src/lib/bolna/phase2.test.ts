@@ -137,7 +137,7 @@ describe("outbound gate", () => {
     const prev = process.env.MOCK_BOLNA;
     process.env.MOCK_BOLNA = "0";
     process.env.ALLOWED_PHONE_NUMBERS = "9999999999";
-    const decision = gateOutbound("call", "98100 22118");
+    const decision = gateOutbound("call", "+910000000000");
     assert.equal(decision.ok, false);
     process.env.MOCK_BOLNA = prev;
   });

@@ -23,11 +23,11 @@ describe("web push", () => {
   it("uses gateOutbound and mocks when MOCK_WHATSAPP=1", () => {
     process.env.SAATHI_KILL_SWITCH = "0";
     process.env.MOCK_WHATSAPP = "1";
-    const mock = gateOutbound("push", "98765 44110");
+    const mock = gateOutbound("push", "+910000000001");
     assert.equal(mock.ok, true);
     process.env.MOCK_WHATSAPP = "0";
     process.env.ALLOWED_PHONE_NUMBERS = "9999999999";
-    const blocked = gateOutbound("push", "98765 44110");
+    const blocked = gateOutbound("push", "+910000000001");
     assert.equal(blocked.ok, false);
     process.env.MOCK_WHATSAPP = "1";
   });

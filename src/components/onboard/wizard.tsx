@@ -216,7 +216,7 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
                 id="childWhatsapp"
                 value={form.childWhatsapp}
                 onChange={(e) => patch("childWhatsapp", e.target.value)}
-                placeholder="98765 44110"
+                placeholder="+910000000001"
               />
             </Field>
           </div>
@@ -255,7 +255,7 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
                 id="parentPhone"
                 value={form.parentPhone}
                 onChange={(e) => patch("parentPhone", e.target.value)}
-                placeholder="98100 22118"
+                placeholder="+910000000000"
               />
             </Field>
             <Field label={t.setupCity} htmlFor="city">
@@ -382,7 +382,7 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
                 id="neighborPhone"
                 value={form.neighborPhone}
                 onChange={(e) => patch("neighborPhone", e.target.value)}
-                placeholder="98450 77821"
+                placeholder="+910000000009"
               />
             </Field>
           </div>

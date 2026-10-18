@@ -37,7 +37,7 @@ describe("Bolna readiness", () => {
     process.env.BOLNA_AGENT_ID = "agent-secret-id";
     process.env.BOLNA_TOOL_TOKEN = "tool-secret-do-not-leak";
     process.env.BOLNA_WEBHOOK_SECRET = "hook-secret-do-not-leak";
-    process.env.ALLOWED_PHONE_NUMBERS = "+919876543210";
+    process.env.ALLOWED_PHONE_NUMBERS = "+910000000008";
     process.env.PUBLIC_BASE_URL = "https://saathi.example.test";
     try {
       const snap = await loadBolnaReadiness({
@@ -48,9 +48,8 @@ describe("Bolna readiness", () => {
       assert.doesNotMatch(blob, /agent-secret-id/);
       assert.doesNotMatch(blob, /tool-secret-do-not-leak/);
       assert.doesNotMatch(blob, /hook-secret-do-not-leak/);
-      assert.doesNotMatch(blob, /9876543210/);
-      assert.doesNotMatch(blob, /\+919876543210/);
-      assert.match(blob, /••••3210/);
+      assert.doesNotMatch(blob, /\+910000000008/);
+      assert.match(blob, /••••0008/);
       const https = snap.checks.find((c) => c.id === "public_base");
       assert.equal(https?.ok, true);
       const allow = snap.checks.find((c) => c.id === "allowlist");

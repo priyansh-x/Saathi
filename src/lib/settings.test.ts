@@ -40,12 +40,12 @@ describe("family settings", () => {
     const langs = await query<{ languages: string }>(`select languages from parents where id = 'parent_kamla'`);
     assert.equal(langs[0]?.languages, "hi,mr,en");
 
-    await updateNeighbour("parent_kamla", { name: "Kavita", phone: "9811177822" }, "Rohit");
+    await updateNeighbour("parent_kamla", { name: "Kavita", phone: "+910000000007" }, "Rohit");
     const neighbour = await query<{ full_name: string; phone: string }>(
       `select full_name, phone from contacts where parent_id = 'parent_kamla' and role = 'neighbour'`,
     );
     assert.equal(neighbour[0]?.full_name, "Kavita");
-    assert.equal(neighbour[0]?.phone, "+919811177822");
+    assert.equal(neighbour[0]?.phone, "+910000000007");
 
     const added = await addMedicine("parent_kamla", { name: "Calcium", time: "20:30", meal: "with food" }, "Rohit");
     await editMedicine("parent_kamla", added.id, { name: "Calcium", time: "21:00", meal: "without food" }, "Rohit");

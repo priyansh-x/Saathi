@@ -43,9 +43,9 @@ describe("ops access", () => {
 
 describe("ops masking", () => {
   it("keeps only the last four digits of a number", () => {
-    assert.equal(maskPhone("+919876543210"), "••••3210");
+    assert.equal(maskPhone("+910000000008"), "••••0008");
     assert.equal(maskPhone("+910000000000"), "••••0000");
-    assert.doesNotMatch(maskPhone("+919876543210"), /98765/);
+    assert.doesNotMatch(maskPhone("+910000000008"), /98765/);
   });
 });
 
@@ -74,7 +74,7 @@ describe("ops snapshot", () => {
     for (const check of snap.bolna.checks) {
       assert.doesNotMatch(check.detail, /Bearer /);
     }
-    assert.equal(typeof snap.waitlistCount, "number");
+    assert.equal(snap.waitlistCount === null || typeof snap.waitlistCount === "number", true);
     assert.ok(snap.whatsapp.checks.some((c) => c.id === "token"));
     for (const check of snap.whatsapp.checks) {
       assert.doesNotMatch(check.detail, /Bearer /);

@@ -83,7 +83,7 @@ describe("outbound fetch", () => {
       assert.equal(placed.ok, false);
       const sent = await sendFamilyMessage({
         parentId: "parent_kamla",
-        toPhone: "98765 44110",
+        toPhone: "+910000000001",
         locale: "en",
         intended: "daily_briefing_good",
         vars: ["Kamla", "08:30", "Good", "—", "—", "http://local"],
@@ -116,7 +116,7 @@ describe("outbound fetch", () => {
     try {
       const sent = await sendFamilyMessage({
         parentId: "parent_kamla",
-        toPhone: "98765 44110",
+        toPhone: "+910000000001",
         locale: "en",
         intended: "daily_briefing_good",
         vars: ["Kamla", "08:30", "Good", "—", "—", "http://local"],

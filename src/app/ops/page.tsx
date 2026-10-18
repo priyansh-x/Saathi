@@ -124,7 +124,9 @@ export default async function OpsPage() {
 
       <section className="card mt-4 p-4">
         <h2 className="text-sm font-medium text-ink-3">Waitlist sign-ups</h2>
-        <p className="mt-1 text-2xl font-medium">{snap.waitlistCount}</p>
+        <p className="mt-1 text-2xl font-medium">
+          {snap.waitlistCount === null ? "count unavailable" : snap.waitlistCount}
+        </p>
         <p className="mt-1 text-sm text-muted-foreground">Count only. No emails or names.</p>
       </section>
 

@@ -36,7 +36,7 @@ describe("fixture inbound buttons", () => {
     const alertId = "alert_id" in result ? result.alert_id : "";
     assert.ok(alertId);
     const fixture = fixtureButtonMessage({
-      from: "9876544110",
+      from: "+910000000001",
       title: "I'm going",
       payload: `ack:${alertId}`,
     });

@@ -16,16 +16,16 @@ process.env.ALLOWED_PHONE_NUMBERS = "";
 
 const valid: OnboardInput = {
   childName: "Ananya Joshi",
-  childWhatsapp: "9876543210",
+  childWhatsapp: "+910000000008",
   parentName: "Leela Joshi",
   addressTerm: "Aai",
-  parentPhone: "+91 98100 33445",
+  parentPhone: "+910000000006",
   city: "Pune",
   languages: ["mr", "hi"],
   callTime: "08:30",
   medicines: [{ name: "BP wali goli", time: "08:30", withFood: true }],
   neighborName: "Rekha",
-  neighborPhone: "98220 11009",
+  neighborPhone: "+910000000010",
   toldParent: true,
 };
 
@@ -39,14 +39,14 @@ after(async () => {
 
 describe("onboard validation", () => {
   it("writes E.164 and rejects a bad phone", () => {
-    assert.equal(toE164("98100 33445"), "+919810033445");
+    assert.equal(toE164("+910000000006"), "+910000000006");
     assert.equal(toE164("123"), null);
     const bad = parseOnboard({ ...valid, parentPhone: "123" });
     assert.equal(bad.ok, false);
     if (!bad.ok) assert.match(bad.error, /10-digit|\+91/);
     const good = parseOnboard(valid);
     assert.equal(good.ok, true);
-    if (good.ok) assert.equal(good.data.parentPhone, "+919810033445");
+    if (good.ok) assert.equal(good.data.parentPhone, "+910000000006");
   });
 
   it("blocks finishing without the written consent box", () => {
@@ -64,14 +64,14 @@ describe("createHousehold", () => {
     assert.equal(parent?.is_example, false);
     assert.equal(parent?.consent_status, "pending");
     assert.equal(parent?.address_term, "Aai");
-    assert.equal(parent?.phone, "+919810033445");
+    assert.equal(parent?.phone, "+910000000006");
     assert.equal(parent?.call_time, "08:30");
     const child = await query<{ email: string; phone: string }>(
       `select email, phone from contacts where parent_id = $1 and role = 'child'`,
       [created.parentId],
     );
     assert.equal(child[0]?.email, "ananya@example.com");
-    assert.equal(child[0]?.phone, "+919876543210");
+    assert.equal(child[0]?.phone, "+910000000008");
     const consent = await query<{ evidence: string }>(
       `select evidence from consents where parent_id = $1 and kind = 'child_written'`,
       [created.parentId],
@@ -96,6 +96,6 @@ describe("createHousehold", () => {
   });
 
   it("throws when consent is missing", async () => {
-    await assert.rejects(() => createHousehold({ ...valid, toldParent: false, parentPhone: "9810033446" }, "a@b.co"), /surprise/);
+    await assert.rejects(() => createHousehold({ ...valid, toldParent: false, parentPhone: "+910000000016" }, "a@b.co"), /surprise/);
   });
 });

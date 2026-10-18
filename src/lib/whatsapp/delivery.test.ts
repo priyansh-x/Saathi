@@ -33,7 +33,7 @@ function statusPayload(id: string, status: string, timestamp = "1760781720") {
         changes: [
           {
             value: {
-              statuses: [{ id, status, timestamp, recipient_id: "9876544110" }],
+              statuses: [{ id, status, timestamp, recipient_id: "+910000000001" }],
             },
           },
         ],
@@ -56,7 +56,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,$2,'whatsapp','daily_briefing_good','98765 44110','EXAMPLE body',$3,'sent',true,$4,'sent',$3)`,
+      ) values ($1,$2,'whatsapp','daily_briefing_good','+910000000001','EXAMPLE body',$3,'sent',true,$4,'sent',$3)`,
       [`out_del_${Date.now()}`, "parent_kamla", "2026-10-18T08:40:00+05:30", wamid],
     );
     const applied = await applyWhatsappStatuses(parseWhatsappStatuses(statusPayload(wamid, "delivered", "1760782320")));
@@ -87,7 +87,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,$2,'whatsapp','daily_briefing_good','98765 44110','EXAMPLE body',$3,'sent',true,$4,'delivered',$3)`,
+      ) values ($1,$2,'whatsapp','daily_briefing_good','+910000000001','EXAMPLE body',$3,'sent',true,$4,'delivered',$3)`,
       [`out_order_${Date.now()}`, "parent_kamla", "2026-10-18T08:40:00+05:30", wamid],
     );
     await applyWhatsappStatuses([{ id: wamid, status: "sent", timestamp: "1760782000" }]);
@@ -106,7 +106,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ('out_desk_line','parent_kamla','whatsapp','daily_briefing_good','98765 44110','EXAMPLE',
+      ) values ('out_desk_line','parent_kamla','whatsapp','daily_briefing_good','+910000000001','EXAMPLE',
         '2026-10-18T08:42:00+05:30','sent',true,'wamid.EXAMPLE.desk','delivered','2026-10-18T08:42:00+05:30')`,
     );
     assert.equal(await latestDeliveryLine("parent_kamla"), "Delivered to Rohit 8:42");
@@ -119,7 +119,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE alert',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE alert',$2,'sent',true,
         $3,'sent',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );
@@ -130,7 +130,7 @@ describe("WhatsApp delivery statuses", () => {
       [`%esc_${id}%`],
     );
     assert.ok(next[0]);
-    assert.match(next[0]!.to_phone.replace(/\D/g, ""), /9811177821/);
+    assert.match(next[0]!.to_phone.replace(/\D/g, ""), /0000000002$/);
     assert.equal(next[0]!.template, "safety_alert_emergency");
   });
 
@@ -141,7 +141,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE ok',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE ok',$2,'sent',true,
         $3,'delivered',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );
@@ -155,7 +155,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE late',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE late',$2,'sent',true,
         $3,'failed',$2)`,
       [lateId, at, `wamid.EXAMPLE.${lateId}`],
     );
@@ -176,7 +176,7 @@ describe("WhatsApp delivery statuses", () => {
       "child",
       "Priya Sharma",
       "Priya",
-      "98765 44111",
+      "+910000000003",
       "en",
       true,
       "priya@example.invalid",
@@ -187,7 +187,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE ladder',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE ladder',$2,'sent',true,
         $3,'sent',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );
@@ -199,8 +199,8 @@ describe("WhatsApp delivery statuses", () => {
       [`%esc_${id}%`],
     );
     assert.equal(hops.length, 2);
-    assert.match(hops[0]!.to_phone.replace(/\D/g, ""), /9876544111/);
-    assert.match(hops[1]!.to_phone.replace(/\D/g, ""), /9811177821/);
+    assert.match(hops[0]!.to_phone.replace(/\D/g, ""), /0000000003$/);
+    assert.match(hops[1]!.to_phone.replace(/\D/g, ""), /0000000002$/);
     await query(`delete from contacts where id = 'contact_priya'`);
   });
 
@@ -213,7 +213,7 @@ describe("WhatsApp delivery statuses", () => {
       "child",
       "Priya Sharma",
       "Priya",
-      "98765 44111",
+      "+910000000003",
       "en",
       true,
       "priya@example.invalid",
@@ -224,7 +224,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE optin',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE optin',$2,'sent',true,
         $3,'sent',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );
@@ -235,8 +235,8 @@ describe("WhatsApp delivery statuses", () => {
       [`%esc_${id}%`],
     );
     assert.equal(hops.length, 1);
-    assert.match(hops[0]!.to_phone.replace(/\D/g, ""), /9876544111/);
-    assert.doesNotMatch(hops[0]!.to_phone.replace(/\D/g, ""), /9811177821/);
+    assert.match(hops[0]!.to_phone.replace(/\D/g, ""), /0000000003$/);
+    assert.doesNotMatch(hops[0]!.to_phone.replace(/\D/g, ""), /0000000002$/);
     await query(`update consents set granted = true where id = 'con_neighbour'`);
     await query(`delete from contacts where id = 'contact_priya'`);
   });
@@ -264,7 +264,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE acked',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE acked',$2,'sent',true,
         $3,'sent',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );
@@ -284,7 +284,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE vars',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000001','EXAMPLE vars',$2,'sent',true,
         $3,'sent',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );
@@ -302,7 +302,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98111 77821','EXAMPLE esc',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','+910000000002','EXAMPLE esc',$2,'sent',true,
         $3,'failed',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );

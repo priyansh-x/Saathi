@@ -28,7 +28,7 @@ describe("family members", () => {
     const joined = await acceptInvite(invite.token, {
       email: "priya@example.com",
       name: "Priya Sharma",
-      whatsapp: "9876544111",
+      whatsapp: "+910000000003",
     });
     assert.equal(joined.parentId, "parent_kamla");
     const kids = await childrenFor("parent_kamla");
@@ -39,7 +39,7 @@ describe("family members", () => {
     await acceptInvite(second.token, {
       email: "amit@example.com",
       name: "Amit Sharma",
-      whatsapp: "9876544112",
+      whatsapp: "+910000000004",
     });
     assert.equal((await childrenFor("parent_kamla")).length, MAX_FAMILY_MEMBERS);
     await assert.rejects(() => createInvite("parent_kamla", "Rohit Sharma"), /three members/);

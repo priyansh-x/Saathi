@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       ?.id;
   if (!alertId) return Response.json({ ok: false, error: "no_open_alert" }, { status: 404 });
   const fixture = fixtureButtonMessage({
-    from: body?.from || "9876544110",
+    from: body?.from || "+910000000001",
     title: body?.title || "I'm going",
     payload: body?.payload || `ack:${alertId}`,
   });
