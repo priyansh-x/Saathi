@@ -47,7 +47,10 @@ export async function seed() {
   latchOpsKillSwitch(false);
   await query("delete from contacts");
   await query("delete from parents");
+  await insertExampleHousehold();
+}
 
+export async function insertExampleHousehold() {
   await query(`insert into parents values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, [
     "parent_kamla",
     "Kamla Sharma",
