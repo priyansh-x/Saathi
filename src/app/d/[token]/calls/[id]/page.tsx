@@ -92,7 +92,7 @@ async function CallBody({
       </section>
 
       {doses.length > 0 ? (
-        <section className="mt-5 rounded-2xl border border-border bg-card px-4 py-3">
+        <section className="card mt-5 px-4 py-3">
           <p className="text-sm text-muted-foreground">{t.medicinesToday}</p>
           <ul className="mt-2 space-y-2">
             {doses.map((dose) => (
@@ -108,13 +108,13 @@ async function CallBody({
       ) : null}
 
       {call.mood_quote ? (
-        <section className="mt-5 rounded-2xl border border-border bg-card px-4 py-3">
+        <section className="card mt-5 px-4 py-3">
           <p className="text-sm text-muted-foreground">{t.inHerWords}</p>
           <p className="font-devanagari mt-1 text-lg leading-[1.6]">“{call.mood_quote}”</p>
         </section>
       ) : null}
 
-      <details className="mt-5 rounded-2xl border border-border bg-card px-4 py-3">
+      <details className="card mt-5 px-4 py-3">
         <summary className="cursor-pointer min-h-11">{t.showConversation}</summary>
         {lines.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">{t.emptyCall}</p>

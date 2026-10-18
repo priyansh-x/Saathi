@@ -50,6 +50,14 @@ export const messages = {
     headlineSkipped: "No call was placed today",
     seeYesterday: "See yesterday",
     seeYesterdayHint: "Yesterday's note is below.",
+    firstMorningHint: "You'll get a WhatsApp right after. No call has happened yet.",
+    neighbourWord: "Neighbour",
+    setupChecklist: "Before the first call",
+    setupTell: "Tell them so the number is not a surprise",
+    setupSaveNumber: "Save Saathi in their phone under your name",
+    setupNeighbourWait: "Neighbour hasn't replied YES yet",
+    setupNoNeighbour: "No neighbour yet — missed calls come only to you",
+    setupConsentPending: "They say yes or no on the intro call. You cannot decide for them.",
     seeTodaysCall: "See today's call",
     shesOk: "She's OK",
     askNeighbourNow: "Ask Sunita ji now",
@@ -231,6 +239,14 @@ export const messages = {
     headlineSkipped: "आज कॉल नहीं लगी",
     seeYesterday: "कल देखें",
     seeYesterdayHint: "कल की बात नीचे है।",
+    firstMorningHint: "कॉल के बाद व्हाट्सऐप आएगा। अभी कोई कॉल नहीं हुई।",
+    neighbourWord: "पड़ोसी",
+    setupChecklist: "पहली कॉल से पहले",
+    setupTell: "नंबर अचानक न लगे, पहले बता दें",
+    setupSaveNumber: "फ़ोन में साथी को अपने नाम से सेव करें",
+    setupNeighbourWait: "पड़ोसी ने अभी हाँ नहीं कहा",
+    setupNoNeighbour: "पड़ोसी नहीं जोड़ा — छूटी कॉल सिर्फ़ आपको जाएगी",
+    setupConsentPending: "हाँ या नहीं वो पहली कॉल पर बोलेंगे। आप उनके बदले नहीं तय कर सकते।",
     seeTodaysCall: "आज की कॉल देखें",
     shesOk: "माँ ठीक हैं",
     askNeighbourNow: "सुनीता जी से अभी कहें",
@@ -374,4 +390,19 @@ export function localeWord(code: string, lang: Lang) {
   if (code === "hi") return lang === "hi" ? "हिंदी" : "Hindi";
   if (code === "en") return lang === "hi" ? "अंग्रेज़ी" : "English";
   return code;
+}
+
+export function greeting(lang: Lang, date = new Date()) {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Asia/Kolkata" }).format(date),
+  );
+  if (lang === "hi") return hour < 12 ? "सुप्रभात" : hour < 17 ? "नमस्ते" : "शुभ संध्या";
+  return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+}
+
+/** Swap the default address term for the one this family chose. */
+export function personal(text: string, term: string, lang: Lang) {
+  if (!term || term === "Maa") return text;
+  if (lang === "hi") return text.replace(/माँ/g, term);
+  return text.replace(/\bMaa\b/g, term);
 }

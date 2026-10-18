@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { EmptyState, ExpiredLink, FamilyFrame, PageTitle } from "@/components/family/chrome";
 import { alertQuoteLine, alertTitle, severityChip, sortAlerts, statusPill } from "@/lib/alerts";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
@@ -29,9 +29,9 @@ export default async function AlertsPage({
       updatedAt={data.actAlerts[0]?.created_at}
       addressTerm={data.parent.address_term}
     >
-      <h1 className="mb-4 text-xl font-semibold">{t.alerts}</h1>
+      <PageTitle>{t.alerts}</PageTitle>
       {list.length === 0 ? (
-        <p className="text-muted-foreground">{t.emptyAlerts}</p>
+        <EmptyState title={t.emptyAlerts} />
       ) : (
         <ul className="space-y-3">
           {list.map((alert) => {

@@ -183,6 +183,30 @@ export function TabBar({
   );
 }
 
+export function PageTitle({ children, sub }: { children: React.ReactNode; sub?: React.ReactNode }) {
+  return (
+    <div className="mb-4 px-1">
+      <h1 className="text-[26px] leading-tight font-semibold tracking-tight">{children}</h1>
+      {sub ? <p className="mt-1 text-[15px] text-muted-foreground">{sub}</p> : null}
+    </div>
+  );
+}
+
+export function EmptyState({
+  title,
+  body,
+}: {
+  title: string;
+  body?: string;
+}) {
+  return (
+    <div className="card grain flex flex-col items-center px-6 py-10 text-center">
+      <p className="text-[17px] font-semibold">{title}</p>
+      {body ? <p className="mt-1.5 max-w-[30ch] text-[15px] text-muted-foreground">{body}</p> : null}
+    </div>
+  );
+}
+
 export function BackLink({ href, children }: { href: string; children: React.ReactNode }) {
   const label = typeof children === "string" ? children.replace(/^←\s*/, "") : children;
   return (
