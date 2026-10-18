@@ -1,0 +1,18 @@
+{
+  "saathi_fixture": "synthetic",
+  "id": "synthetic-disconnected-0001",
+  "status": "call-disconnected",
+  "conversation_duration": 0,
+  "transcript": "",
+  "telephony_data": {
+    "hangup_reason": "call-disconnected",
+    "to_number": "+910000000000",
+    "from_number": "+910000000000",
+    "call_type": "outbound"
+  },
+  "context_details": {
+    "recipient_data": {
+      "parent_id": "parent_kamla"
+    }
+  }
+}

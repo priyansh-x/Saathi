@@ -1,0 +1,17 @@
+{
+  "saathi_fixture": "synthetic",
+  "id": "synthetic-no-answer-0001",
+  "status": "no-answer",
+  "conversation_duration": 0,
+  "telephony_data": {
+    "hangup_reason": "no-answer",
+    "to_number": "+910000000000",
+    "from_number": "+910000000000",
+    "call_type": "outbound"
+  },
+  "context_details": {
+    "recipient_data": {
+      "parent_id": "parent_kamla"
+    }
+  }
+}

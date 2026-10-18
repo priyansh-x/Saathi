@@ -1,25 +1,78 @@
 import { query } from "@/lib/db/client";
 import { hasRaiseAlert, logMedicine, raiseAlert } from "@/lib/bolna/tools";
 import { transcriptHasParent, transcriptJson } from "@/lib/bolna/transcript";
+import { advanceLadder } from "@/lib/ladder";
 import { nowIstStamp } from "@/lib/time";
 import type { CallRow } from "@/lib/db/types";
+
+export type BolnaExtracted = {
+  medicines?: { name?: string; status?: string; said?: string }[];
+  red_flag?: { category?: string; quote?: string; confidence?: string };
+  mood_quote?: string;
+  summary_en?: string;
+  summary_hi?: string;
+  needs_human_check?: boolean;
+  [key: string]: unknown;
+};
 
 export type BolnaWebhook = {
   id?: string;
   status?: string;
-  conversation_duration?: number;
+  conversation_duration?: number | string;
   transcript?: string;
-  extracted_data?: {
-    medicines?: { name?: string; status?: string; said?: string }[];
-    red_flag?: { category?: string; quote?: string; confidence?: string };
-    mood_quote?: string;
-    summary_en?: string;
-    summary_hi?: string;
-    needs_human_check?: boolean;
-  };
+  summary?: string;
+  extracted_data?: BolnaExtracted;
   tool_call_logs?: { name?: string; category?: string }[];
-  context_details?: { recipient_data?: { parent_id?: string } };
+  context_details?: { recipient_data?: { parent_id?: string; [key: string]: unknown } };
+  telephony_data?: {
+    recording_url?: string | null;
+    hangup_reason?: string;
+    hangup_by?: string;
+    to_number?: string;
+    from_number?: string;
+    call_type?: string;
+  };
 };
+
+const MISSED_STATUSES = new Set(["no-answer", "busy", "failed"]);
+
+export function normalizeBolnaStatus(status?: string) {
+  const raw = (status || "").trim().toLowerCase().replace(/_/g, "-");
+  return raw;
+}
+
+export function isMissedBolnaStatus(status?: string) {
+  return MISSED_STATUSES.has(normalizeBolnaStatus(status));
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+function nestedText(data: BolnaExtracted | undefined, category: string, name: string, field: "subjective" | "objective") {
+  const cat = asRecord(data?.[category]);
+  const node = asRecord(cat?.[name]);
+  const value = node?.[field];
+  return typeof value === "string" ? value : "";
+}
+
+export function parentIdFromPayload(payload: BolnaWebhook) {
+  return payload.context_details?.recipient_data?.parent_id;
+}
+
+function extractedSummaryEn(payload: BolnaWebhook) {
+  const data = payload.extracted_data;
+  if (typeof data?.summary_en === "string" && data.summary_en) return data.summary_en;
+  if (typeof payload.summary === "string" && payload.summary) return payload.summary;
+  const highlights = nestedText(data, "Family summary", "highlights", "subjective");
+  return highlights || undefined;
+}
+
+function extractedMoodQuote(payload: BolnaWebhook) {
+  const data = payload.extracted_data;
+  if (typeof data?.mood_quote === "string" && data.mood_quote) return data.mood_quote;
+  return nestedText(data, "Wellbeing", "mood", "subjective") || undefined;
+}
 
 export async function processBolnaWebhook(payload: BolnaWebhook, executionId: string) {
   const eventId = `wh_${executionId}_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
@@ -44,14 +97,18 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     return { ok: true as const, call_id: already[0].id, replay: true };
   }
 
-  if (payload.status !== "completed") {
-    return { ok: true as const, ignored: true as const, reason: "not_completed" };
+  const status = normalizeBolnaStatus(payload.status);
+  if (isMissedBolnaStatus(status)) {
+    return startMissedFromWebhook(payload, executionId, eventId, already[0]);
+  }
+  if (status !== "completed") {
+    return { ok: true as const, ignored: true as const, reason: status || "not_completed" };
   }
 
-  const parentId = payload.context_details?.recipient_data?.parent_id ?? already[0]?.parent_id;
+  const parentId = parentIdFromPayload(payload) ?? already[0]?.parent_id;
   if (!parentId) return { ok: false as const, error: "missing_parent" };
 
-  const duration = payload.conversation_duration ?? 0;
+  const duration = Number(payload.conversation_duration ?? 0) || 0;
   const noConvo = duration <= 0 || !transcriptHasParent(payload.transcript);
   const callId = already[0]?.id ?? executionId;
   const started = already[0]?.started_at ?? at;
@@ -59,14 +116,19 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     parentId,
   ]);
   const keepWords = consent[0]?.consent_status === "given";
-  const summaryEn = keepWords ? (noConvo ? "No conversation." : (payload.extracted_data?.summary_en ?? "Morning call completed.")) : null;
-  const summaryHi = keepWords ? (noConvo ? "बात नहीं हुई।" : (payload.extracted_data?.summary_hi ?? null)) : null;
-  const quote = keepWords && !noConvo ? (payload.extracted_data?.mood_quote ?? null) : null;
+  const summaryEn = keepWords
+    ? noConvo
+      ? "No conversation."
+      : (extractedSummaryEn(payload) ?? "Morning call completed.")
+    : null;
+  const summaryHi = keepWords ? (noConvo ? "बात नहीं हुई।" : (typeof payload.extracted_data?.summary_hi === "string" ? payload.extracted_data.summary_hi : null)) : null;
+  const quote = keepWords && !noConvo ? (extractedMoodQuote(payload) ?? null) : null;
   const transcript = keepWords && !noConvo ? transcriptJson(payload.transcript) : null;
+  const recordingUrl = payload.telephony_data?.recording_url ?? null;
 
   if (already[0]) {
     await query(
-      `update calls set ended_at=$2, duration_sec=$3, status=$4, summary_en=$5, summary_hi=$6, mood_quote=$7, mood_quote_lang=$8, transcript_json=$9, bolna_execution_id=$10
+      `update calls set ended_at=$2, duration_sec=$3, status=$4, summary_en=$5, summary_hi=$6, mood_quote=$7, mood_quote_lang=$8, transcript_json=$9, recording_url=$10, bolna_execution_id=$11
        where id = $1`,
       [
         callId,
@@ -78,6 +140,7 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
         quote,
         quote ? "hi" : null,
         transcript,
+        recordingUrl,
         executionId,
       ],
     );
@@ -94,7 +157,7 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
       quote,
       quote ? "hi" : null,
       transcript,
-      null,
+      recordingUrl,
       executionId,
       true,
     ]);
@@ -152,4 +215,51 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
 
   await query(`update webhook_events set processed = true where id = $1`, [eventId]);
   return { ok: true as const, call_id: callId, replay: false };
+}
+
+async function startMissedFromWebhook(
+  payload: BolnaWebhook,
+  executionId: string,
+  eventId: string,
+  existing: CallRow | undefined,
+) {
+  const parentId = parentIdFromPayload(payload) ?? existing?.parent_id;
+  if (!parentId) return { ok: false as const, error: "missing_parent" };
+  const at = nowIstStamp();
+  const callId = existing?.id ?? executionId;
+  const status = normalizeBolnaStatus(payload.status);
+  const attemptResult = status === "no-answer" ? "no_answer" : status;
+  if (!existing) {
+    await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
+      callId,
+      parentId,
+      at,
+      null,
+      0,
+      "in_progress",
+      null,
+      null,
+      null,
+      null,
+      null,
+      payload.telephony_data?.recording_url ?? null,
+      executionId,
+      true,
+    ]);
+  }
+  const ladder = await advanceLadder({
+    parentId,
+    callId,
+    elapsedMin: 0,
+    attemptResult,
+  });
+  await query(`update webhook_events set processed = true where id = $1`, [eventId]);
+  return {
+    ok: true as const,
+    call_id: callId,
+    missed: true as const,
+    replay: false as const,
+    status,
+    ladder,
+  };
 }

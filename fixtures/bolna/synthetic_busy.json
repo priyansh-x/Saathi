@@ -1,0 +1,17 @@
+{
+  "saathi_fixture": "synthetic",
+  "id": "synthetic-busy-0001",
+  "status": "busy",
+  "conversation_duration": 0,
+  "telephony_data": {
+    "hangup_reason": "busy",
+    "to_number": "+910000000000",
+    "from_number": "+910000000000",
+    "call_type": "outbound"
+  },
+  "context_details": {
+    "recipient_data": {
+      "parent_id": "parent_kamla"
+    }
+  }
+}
