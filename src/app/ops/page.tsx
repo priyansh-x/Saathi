@@ -4,6 +4,7 @@ import { BrandMark } from "@/components/brand";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { canViewOps } from "@/lib/ops/access";
 import { setOpsKillSwitch } from "@/lib/ops/kill-switch";
+import { postSimulateBolnaWebhook } from "@/lib/ops/bolna-readiness";
 import { loadOpsSnapshot } from "@/lib/ops/snapshot";
 
 export default async function OpsPage() {
@@ -26,6 +27,14 @@ export default async function OpsPage() {
     const session = decodeSession((await cookies()).get(SESSION_COOKIE)?.value);
     if (!canViewOps(session?.email)) notFound();
     await setOpsKillSwitch(false, session!.email);
+    redirect("/ops");
+  }
+
+  async function simulateBolna() {
+    "use server";
+    const session = decodeSession((await cookies()).get(SESSION_COOKIE)?.value);
+    if (!canViewOps(session?.email)) notFound();
+    await postSimulateBolnaWebhook();
     redirect("/ops");
   }
 
@@ -52,6 +61,27 @@ export default async function OpsPage() {
             </button>
           </form>
         </div>
+      </section>
+
+      <section className="card mt-4 p-4">
+        <h2 className="text-sm font-medium text-ink-3">Bolna readiness</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Green or red only. Secrets and full numbers are never shown.</p>
+        <ul className="mt-3 space-y-2 text-sm">
+          {snap.bolna.checks.map((row) => (
+            <li key={row.id} className="flex flex-wrap justify-between gap-2">
+              <span className={row.ok ? "text-good" : "text-alert"}>{row.ok ? "Green" : "Red"}</span>
+              <span className="flex-1">
+                {row.label}
+                <span className="text-ink-3"> · {row.detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <form action={simulateBolna} className="mt-4">
+          <button type="submit" className="btn-secondary">
+            Simulate a Bolna webhook
+          </button>
+        </form>
       </section>
 
       <section className="card mt-4 p-4">
