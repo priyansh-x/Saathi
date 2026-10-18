@@ -77,6 +77,20 @@ Leave cron **off**. `POST /api/cron/tick` stays bearer-authenticated (`CRON_SECR
 1. Open `https://<family-host>/d/example-kamla` — EXAMPLE ribbon, Today, History, Alerts, Settings.
 2. Open `/onboard` — mock email session, no outbound mail.
 3. Confirm env in the Vercel UI: mocks `1`, allowlists empty.
-4. Do not run `bolna:test-call --yes`. Do not set `MOCK_*=0`.
+4. Do not run `bolna:test-call --yes`. Do not set `CALL_PROVIDER=bolna` or `MOCK_*=0`.
+
+## First live call (only when Priyansh says go)
+
+Staging stays mocked. This list is the same as the README runbook. Agents never flip live flags.
+
+1. Env: `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `SAATHI_TOOL_TOKEN`, `BOLNA_WEBHOOK_SECRET`, `CRON_SECRET`, HTTPS `PUBLIC_BASE_URL`. Keep `MOCK_WHATSAPP=1`.
+2. `npm run bolna:sync` (dry). Priyansh only: `npm run bolna:sync -- --apply` — PUT existing agent, never create.
+3. `/ops` Bolna readiness all green (set/missing and last four only; never secret values).
+4. **Simulate a Bolna webhook** on `/ops`. Last webhook time + status updates.
+5. Allowlist exactly Priyansh's number.
+6. Priyansh sets `CALL_PROVIDER=bolna`.
+7. `npm run bolna:test-call -- +91XXXXXXXXXX` dry, then `--yes` only with Priyansh on the line.
+8. Check the desk, then set `CALL_PROVIDER=simulated` / `MOCK_BOLNA=1` again.
+9. `SAATHI_KILL_SWITCH=1` stops everything outbound.
 
 If you are not Priyansh, stop after reviewing this file.
