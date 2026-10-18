@@ -23,10 +23,10 @@ export function toolAuthorized(req: Request) {
  * Requests without the header are rejected.
  */
 export function bolnaWebhookAuthorized(req: Request) {
-  if (isMockBolna()) return toolAuthorized(req);
   const secret = bolnaWebhookSecret();
-  if (!secret) return false;
-  return bearerOk(req, secret);
+  if (secret && bearerOk(req, secret)) return true;
+  if (isMockBolna() && process.env.NODE_ENV !== "production") return toolAuthorized(req);
+  return false;
 }
 
 export function cronAuthorized(req: Request) {
