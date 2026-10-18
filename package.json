@@ -14,7 +14,8 @@
     "test": "npx --yes tsx --test --test-concurrency=1 \"src/**/*.test.ts\"",
     "e2e": "npm run build && playwright test",
     "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts",
-    "bolna:test-call": "npx --yes tsx scripts/bolna/test-call.ts"
+    "bolna:test-call": "npx --yes tsx scripts/bolna/test-call.ts",
+    "whatsapp:templates": "npx --yes tsx scripts/whatsapp/templates.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
