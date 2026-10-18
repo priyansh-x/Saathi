@@ -45,7 +45,7 @@ describe("neighbour opt-in", () => {
       [created.parentId],
     );
     assert.equal(optins.length, 1);
-    assert.match(optins[0]?.body || "", /Will you help if Leela doesn't answer|फ़ोन न उठाएँ/);
+    assert.match(optins[0]?.body || "", /trusted neighbour|भरोसेमंद पड़ोसी/);
 
     const beforeYes = await notifyAlert(created.parentId, {
       id: "n_alert_1",
@@ -72,7 +72,7 @@ describe("neighbour opt-in", () => {
       created_at: "2026-10-18T08:40:00+05:30",
     });
     const respondersAfter = await query<{ n: number }>(
-      `select count(*)::int as n from outbound_messages where parent_id = $1 and template like 'responder_en' or parent_id = $1 and template like 'responder_hi'`,
+      `select count(*)::int as n from outbound_messages where parent_id = $1 and template like 'responder_alert%'`,
       [created.parentId],
     );
     assert.ok((respondersAfter[0]?.n ?? 0) >= 1);

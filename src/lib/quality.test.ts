@@ -85,7 +85,7 @@ describe("outbound fetch", () => {
         parentId: "parent_kamla",
         toPhone: "98765 44110",
         locale: "en",
-        intended: "daily_briefing_en",
+        intended: "daily_briefing_good",
         vars: ["Kamla", "08:30", "Good", "—", "—", "http://local"],
         idempotencyKey: `quality_fetch_${Date.now()}`,
       });
@@ -116,7 +116,7 @@ describe("outbound fetch", () => {
         parentId: "parent_kamla",
         toPhone: "98765 44110",
         locale: "en",
-        intended: "daily_briefing_en",
+        intended: "daily_briefing_good",
         vars: ["Kamla", "08:30", "Good", "—", "—", "http://local"],
         idempotencyKey: `quality_email_${Date.now()}`,
       });

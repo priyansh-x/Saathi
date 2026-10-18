@@ -75,7 +75,7 @@ describe("weekly note", () => {
     assert.equal(first.ok, true);
     const rows = await query<{ template: string; status: string; body: string }>(
       `select template, status, body from outbound_messages
-       where parent_id = 'parent_kamla' and template = 'weekly_summary_en' and status = 'mock'`,
+       where parent_id = 'parent_kamla' and template = 'weekly_summary' and status = 'mock'`,
     );
     assert.equal(rows.length, 1);
     assert.match(rows[0]?.body ?? "", /Maa's week/);
@@ -116,7 +116,7 @@ describe("weekly note", () => {
     assert.equal(after[0]?.n, before[0]?.n);
     const weekly = await query<{ n: number }>(
       `select count(*)::int as n from outbound_messages
-       where parent_id = 'parent_kamla' and template = 'weekly_summary_en' and status = 'mock'`,
+       where parent_id = 'parent_kamla' and template = 'weekly_summary' and status = 'mock'`,
     );
     assert.equal(weekly[0]?.n, 1);
   });

@@ -47,7 +47,7 @@ describe("alerts and first ack", () => {
       [`%${alertId}%`, `%alert_${alertId}%`],
     );
     const templates = await query<{ template: string }>(
-      `select template from outbound_messages where parent_id = 'parent_kamla' and template in ('safety_alert_en','responder_hi','responder_en','safety_alert_hi')`,
+      `select template from outbound_messages where parent_id = 'parent_kamla' and template in ('safety_alert_emergency','responder_alert_emergency','safety_alert_urgent')`,
     );
     assert.ok(templates.length >= 2);
     const first = await ackAlert(alertId, "Rohit");

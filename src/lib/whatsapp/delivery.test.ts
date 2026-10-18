@@ -56,7 +56,7 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,$2,'whatsapp','daily_briefing_en','98765 44110','EXAMPLE body',$3,'sent',true,$4,'sent',$3)`,
+      ) values ($1,$2,'whatsapp','daily_briefing_good','98765 44110','EXAMPLE body',$3,'sent',true,$4,'sent',$3)`,
       [`out_del_${Date.now()}`, "parent_kamla", "2026-10-18T08:40:00+05:30", wamid],
     );
     const applied = await applyWhatsappStatuses(parseWhatsappStatuses(statusPayload(wamid, "delivered", "1760782320")));
@@ -89,20 +89,20 @@ describe("WhatsApp delivery statuses", () => {
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ('out_desk_line','parent_kamla','whatsapp','daily_briefing_en','98765 44110','EXAMPLE',
+      ) values ('out_desk_line','parent_kamla','whatsapp','daily_briefing_good','98765 44110','EXAMPLE',
         '2026-10-18T08:42:00+05:30','sent',true,'wamid.EXAMPLE.desk','delivered','2026-10-18T08:42:00+05:30')`,
     );
     assert.equal(await latestDeliveryLine("parent_kamla"), "Delivered to Rohit 8:42");
   });
 
   it("tries the next ladder person if an alert is not delivered in 5 minutes", async () => {
-    const id = `out_safety_alert_en_late_${Date.now()}`;
+    const id = `out_safety_alert_emergency_late_${Date.now()}`;
     const at = nowIstStamp(new Date(Date.now() - 6 * 60 * 1000));
     await query(
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_en','98765 44110','EXAMPLE alert',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE alert',$2,'sent',true,
         $3,'sent',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );
@@ -114,17 +114,17 @@ describe("WhatsApp delivery statuses", () => {
     );
     assert.ok(next[0]);
     assert.match(next[0]!.to_phone.replace(/\D/g, ""), /9811177821/);
-    assert.equal(next[0]!.template, "safety_alert_hi");
+    assert.equal(next[0]!.template, "safety_alert_emergency");
   });
 
   it("does not escalate a delivered alert or send twice", async () => {
-    const id = `out_safety_alert_en_ok_${Date.now()}`;
+    const id = `out_safety_alert_emergency_ok_${Date.now()}`;
     const at = nowIstStamp(new Date(Date.now() - 10 * 60 * 1000));
     await query(
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_en','98765 44110','EXAMPLE ok',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE ok',$2,'sent',true,
         $3,'delivered',$2)`,
       [id, at, `wamid.EXAMPLE.${id}`],
     );
@@ -133,12 +133,12 @@ describe("WhatsApp delivery statuses", () => {
     const after = await query<{ n: number }>(`select count(*)::int as n from outbound_messages`);
     assert.equal(after[0]?.n, before[0]?.n);
 
-    const lateId = `out_safety_alert_en_once_${Date.now()}`;
+    const lateId = `out_safety_alert_emergency_once_${Date.now()}`;
     await query(
       `insert into outbound_messages (
         id, parent_id, channel, template, to_phone, body, at, status, is_example,
         provider_message_id, delivery_status, delivery_at
-      ) values ($1,'parent_kamla','whatsapp','safety_alert_en','98765 44110','EXAMPLE late',$2,'sent',true,
+      ) values ($1,'parent_kamla','whatsapp','safety_alert_emergency','98765 44110','EXAMPLE late',$2,'sent',true,
         $3,'failed',$2)`,
       [lateId, at, `wamid.EXAMPLE.${lateId}`],
     );

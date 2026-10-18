@@ -564,6 +564,46 @@
     ]
   },
   {
+    "name": "consent_declined",
+    "language": "en",
+    "category": "UTILITY",
+    "body": "{{1}} said no to the daily Saathi call. Morning calls are paused. In an emergency call 112.",
+    "buttons": [],
+    "examples": [
+      "Maa"
+    ]
+  },
+  {
+    "name": "consent_declined",
+    "language": "hi",
+    "category": "UTILITY",
+    "body": "{{1}} ने रोज़ की साथी कॉल मना कर दी। सुबह की कॉल रुक गई। आपात में 112 मिलाएँ।",
+    "buttons": [],
+    "examples": [
+      "माँ"
+    ]
+  },
+  {
+    "name": "consent_later",
+    "language": "en",
+    "category": "UTILITY",
+    "body": "{{1}} has not said yes or no to the daily Saathi call after two mornings. Saathi will not call again until you decide. In an emergency call 112.",
+    "buttons": [],
+    "examples": [
+      "Maa"
+    ]
+  },
+  {
+    "name": "consent_later",
+    "language": "hi",
+    "category": "UTILITY",
+    "body": "{{1}} ने दो सुबह हाँ या नहीं नहीं कहा। आप तय करें तब तक साथी फ़ोन नहीं करेगा। आपात में 112 मिलाएँ।",
+    "buttons": [],
+    "examples": [
+      "माँ"
+    ]
+  },
+  {
     "name": "onboarding_reminder",
     "language": "en",
     "category": "UTILITY",

@@ -118,14 +118,7 @@ async function notifyChild(parentId: string, kind: "consent_declined" | "consent
   if (!children[0] || !parent[0]) return;
   for (const child of children) {
     const locale = child.locale === "hi" ? "hi" : "en";
-    const intended =
-      kind === "consent_later"
-        ? locale === "hi"
-          ? "consent_later_hi"
-          : "consent_later_en"
-        : locale === "hi"
-          ? "consent_declined_hi"
-          : "consent_declined_en";
+    const intended = kind === "consent_later" ? "consent_later" : "consent_declined";
     await sendFamilyMessage({
       parentId,
       toPhone: child.phone,

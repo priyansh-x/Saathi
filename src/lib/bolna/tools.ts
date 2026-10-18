@@ -134,7 +134,13 @@ export async function raiseAlert(input: {
       true,
     ]);
     const { notifyAlert } = await import("@/lib/whatsapp/notify");
-    await notifyAlert(input.parent_id, { id: alertId, quote: input.quote, created_at: nowIst() });
+    await notifyAlert(input.parent_id, {
+      id: alertId,
+      quote: input.quote,
+      created_at: nowIst(),
+      category: input.category,
+      level: alertLevel(input.category),
+    });
     if (input.category === "EMERGENCY") {
       const { optionalChildVoiceAlert } = await import("@/lib/voice-alert");
       await optionalChildVoiceAlert(input.parent_id, alertId);
@@ -166,8 +172,8 @@ export async function relayMessage(input: { call_sid: string; parent_id: string;
           parentId: input.parent_id,
           toPhone: child.phone,
           locale: child.locale === "hi" ? "hi" : "en",
-          intended: "daily_briefing_en",
-          vars: ["Kamla", "08:30", "Needs a look", "—", input.message, ""],
+          intended: "daily_briefing_good",
+          vars: ["Kamla", "08:30", "a message for you", input.message],
           idempotencyKey: `${id}_${child.phone.replace(/\s/g, "")}`,
         });
       }

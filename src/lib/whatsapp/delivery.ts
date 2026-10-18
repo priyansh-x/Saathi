@@ -10,7 +10,13 @@ export type WaStatus = {
   recipient_id?: string;
 };
 
-const ALERT_TEMPLATES = ["safety_alert_en", "safety_alert_hi", "responder_en", "responder_hi"];
+const ALERT_TEMPLATES = [
+  "safety_alert_emergency",
+  "safety_alert_urgent",
+  "safety_alert_unreachable",
+  "responder_alert_emergency",
+  "responder_alert_unreachable",
+];
 
 export function parseWhatsappStatuses(raw: string): WaStatus[] {
   try {
@@ -139,8 +145,7 @@ export async function escalateUndeliveredAlerts(now = new Date()) {
     const next = contacts.find((c) => c.phone.replace(/\D/g, "").slice(-10) !== used);
     if (!next) continue;
     const locale = next.locale === "hi" ? "hi" : "en";
-    const base = row.template.replace(/_en$|_hi$/, "");
-    const intended = `${base}_${locale}` as Exclude<TemplateName, "hello_world">;
+    const intended = row.template.replace(/_en$|_hi$/, "") as Exclude<TemplateName, "hello_world">;
     const idempotencyKey = `esc_${row.id}`;
     const id = outboundMessageId(intended, idempotencyKey);
     const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);

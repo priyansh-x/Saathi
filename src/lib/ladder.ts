@@ -100,8 +100,8 @@ export async function advanceLadder(args: {
             parentId: args.parentId,
             toPhone: child.phone,
             locale: child.locale === "hi" ? "hi" : "en",
-            intended: "daily_briefing_en",
-            vars: ["Kamla", "08:30", "Needs a look", "—", "No answer yet.", ""],
+            intended: "missed_call_soft",
+            vars: ["Kamla", "1", "08:30", "09:00", "+910000000000"],
             idempotencyKey: `soft_${args.callId}_${child.phone.replace(/\s/g, "")}`,
           });
         }
