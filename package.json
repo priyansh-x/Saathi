@@ -10,6 +10,7 @@
     "seed": "npx --yes tsx src/lib/db/seed-cli.ts",
     "db:migrate": "npx --yes tsx src/lib/db/migrate-cli.ts",
     "test": "npx --yes tsx --test --test-concurrency=1 \"src/**/*.test.ts\"",
+    "e2e": "npm run build && playwright test",
     "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts",
     "bolna:test-call": "npx --yes tsx scripts/bolna/test-call.ts"
   },
@@ -27,6 +28,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",

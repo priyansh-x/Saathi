@@ -69,8 +69,10 @@ async function loadKillLatch(io: MigrationExec) {
 async function openPglite() {
   const { mkdirSync } = await import("node:fs");
   const path = await import("node:path");
-  mkdirSync(path.join(process.cwd(), ".data"), { recursive: true });
-  const db = new PGlite(path.join(process.cwd(), ".data/saathi"));
+  const relative = process.env.PGLITE_PATH || ".data/saathi";
+  const full = path.join(process.cwd(), relative);
+  mkdirSync(path.dirname(full), { recursive: true });
+  const db = new PGlite(full);
   await db.waitReady;
   const io = pgliteIo(db);
   await applyMigrations(io);

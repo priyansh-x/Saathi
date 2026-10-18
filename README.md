@@ -22,6 +22,8 @@ npm run dev          # family desk, port 43147
 npm run seed         # reset Kamla Sharma EXAMPLE
 npm test
 npm run lint
+npm run e2e         # Playwright at 360×740, mocks on, isolated PGlite. Under 3 minutes.
+                    # Once: npx playwright install chromium
 
 cd landing && npm install && npm run dev   # landing, port 43211
 ```
