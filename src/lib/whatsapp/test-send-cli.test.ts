@@ -1,0 +1,51 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { canSendTestWhatsapp, parseTestSendArgs, plannedTestSend } from "./test-send-cli";
+
+process.env.MOCK_WHATSAPP = "1";
+process.env.SAATHI_KILL_SWITCH = "0";
+
+describe("whatsapp:test-send CLI", () => {
+  it("parses phone and briefing and prints a Graph template payload", () => {
+    const parsed = parseTestSendArgs(["+91 98765 44110", "briefing"]);
+    assert.equal(parsed.yes, false);
+    assert.equal(parsed.phone.replace(/\D/g, "").slice(-10), "9876544110");
+    assert.equal(parsed.templateArg, "briefing");
+    const plan = plannedTestSend(parsed.phone, parsed.templateArg);
+    assert.equal(plan.example, true);
+    assert.equal(plan.payload?.type, "template");
+    assert.equal(plan.payload?.template?.name, "daily_briefing");
+    assert.equal(plan.url.includes("{phone-number-id}"), true);
+    assert.equal(JSON.stringify(plan).includes("EXAMPLE"), true);
+  });
+
+  it("only allows a live send with --yes, MOCK_WHATSAPP=0, allowlist, and an approved template", () => {
+    const phone = "+919876544110";
+    assert.equal(canSendTestWhatsapp(phone, "briefing", false).reason, "missing_yes");
+    const prev = {
+      mock: process.env.MOCK_WHATSAPP,
+      phones: process.env.ALLOWED_PHONE_NUMBERS,
+      approved: process.env.WHATSAPP_TEMPLATES_APPROVED,
+      list: process.env.WHATSAPP_APPROVED_TEMPLATES,
+    };
+    process.env.MOCK_WHATSAPP = "0";
+    process.env.ALLOWED_PHONE_NUMBERS = "";
+    process.env.WHATSAPP_TEMPLATES_APPROVED = "0";
+    process.env.WHATSAPP_APPROVED_TEMPLATES = "";
+    try {
+      assert.equal(canSendTestWhatsapp(phone, "briefing", true).reason, "unapproved_template");
+      process.env.WHATSAPP_APPROVED_TEMPLATES = "daily_briefing";
+      assert.equal(canSendTestWhatsapp(phone, "briefing", true).reason, "not_allowlisted");
+      process.env.ALLOWED_PHONE_NUMBERS = "+919876544110";
+      const ok = canSendTestWhatsapp(phone, "briefing", true);
+      assert.equal(ok.ok, true);
+      if (ok.ok) assert.equal(ok.template, "daily_briefing_en");
+    } finally {
+      process.env.MOCK_WHATSAPP = prev.mock;
+      process.env.ALLOWED_PHONE_NUMBERS = prev.phones;
+      process.env.WHATSAPP_TEMPLATES_APPROVED = prev.approved;
+      if (prev.list) process.env.WHATSAPP_APPROVED_TEMPLATES = prev.list;
+      else delete process.env.WHATSAPP_APPROVED_TEMPLATES;
+    }
+  });
+});
