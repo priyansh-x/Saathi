@@ -3,7 +3,7 @@ import { childrenFor } from "@/lib/members";
 import { neighbourOptedIn } from "@/lib/neighbour";
 import { nowIstStamp } from "@/lib/time";
 import { outboundMessageId, sendFamilyMessage } from "@/lib/whatsapp/send";
-import type { TemplateName } from "@/lib/whatsapp/templates";
+import { packTemplate, type TemplateName } from "@/lib/whatsapp/templates";
 
 export type WaStatus = {
   id?: string;
@@ -196,8 +196,9 @@ async function relatedAlert(parentId: string, outboundId: string) {
     created_at: string;
     acked_at: string | null;
     resolved_at: string | null;
+    call_id: string | null;
   }>(
-    `select id, quote, created_at, acked_at, resolved_at from alerts where parent_id = $1 order by created_at desc`,
+    `select id, quote, created_at, acked_at, resolved_at, call_id from alerts where parent_id = $1 order by created_at desc`,
     [parentId],
   );
   return alerts.find((alert) => outboundId.includes(alert.id)) ?? null;
@@ -208,23 +209,40 @@ async function alertVars(args: {
   template: string;
   at: string;
   quote?: string | null;
+  callId?: string | null;
+  locale?: "en" | "hi";
 }) {
   const parent = await query<{ first_name: string; address_term: string | null; phone: string }>(
     `select first_name, address_term, phone from parents where id = $1`,
     [args.parentId],
   );
-  const neighbour = await query<{ first_name: string }>(
-    `select first_name from contacts where parent_id = $1 and role = 'neighbour' limit 1`,
+  const neighbour = await query<{ first_name: string; phone: string }>(
+    `select first_name, phone from contacts where parent_id = $1 and role = 'neighbour' limit 1`,
     [args.parentId],
   );
   const who = parent[0]?.address_term?.trim() || parent[0]?.first_name || "family";
   const stamp = args.at.includes("T") ? args.at : "";
   const time = stamp.slice(11, 16) || "08:33";
   const quote = args.quote?.trim() || "—";
-  const neighbourName = neighbour[0]?.first_name || "neighbour";
   const phone = parent[0]?.phone || "";
-  if (args.template === "safety_alert_unreachable") return [who, "4", time, neighbourName, phone];
-  if (args.template === "safety_alert_emergency") return [who, time, quote, neighbourName, phone];
+  const tries = args.callId
+    ? await query<{ n: number }>(`select count(*)::int as n from call_attempts where call_id = $1`, [args.callId])
+    : [{ n: 1 }];
+  const tryCount = String(Math.max(1, tries[0]?.n || 1));
+  const locale = args.locale ?? "en";
+  const responderSent = neighbour[0]
+    ? await query<{ n: number }>(
+        `select count(*)::int as n from outbound_messages
+         where parent_id = $1 and to_phone = $2 and template like 'responder_alert%'`,
+        [args.parentId, neighbour[0].phone],
+      )
+    : [{ n: 0 }];
+  const messaged = Boolean(neighbour[0]) && (await neighbourOptedIn(args.parentId)) && (responderSent[0]?.n ?? 0) > 0;
+  const neighbourVar = messaged
+    ? neighbour[0]!.first_name
+    : packTemplate(args.template, locale)?.examples[3] ?? "";
+  if (args.template === "safety_alert_unreachable") return [who, tryCount, time, neighbourVar, phone];
+  if (args.template === "safety_alert_emergency") return [who, time, quote, neighbourVar, phone];
   if (args.template === "safety_alert_urgent") return [who, time, quote, "uneasy"];
   return [who];
 }
@@ -278,6 +296,8 @@ export async function escalateUndeliveredAlerts(now = new Date()) {
         template: intended,
         at: alert?.created_at || row.at,
         quote: alert?.quote,
+        callId: alert?.call_id,
+        locale: next.locale === "hi" ? "hi" : "en",
       }),
       idempotencyKey,
     });
