@@ -46,6 +46,19 @@ export function publicBaseUrl() {
   return (process.env.PUBLIC_BASE_URL || "http://127.0.0.1:43147").replace(/\/$/, "");
 }
 
+/** Optional HTTPS/HTTP URL of a real test-call recording. Empty keeps /demo silent. Never a local file in the repo. */
+export function demoAudioUrl(raw = process.env.DEMO_AUDIO_URL) {
+  const value = (raw || "").trim();
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+    return value;
+  } catch {
+    return "";
+  }
+}
+
 export function whatsappVerifyToken() {
   return process.env.WHATSAPP_VERIFY_TOKEN || (isMockWhatsapp() ? "dev-wa-verify" : "");
 }

@@ -156,3 +156,12 @@ export function stepRecordIndex(index: number, delta: number, length: number) {
 export function visibleRecordLines(lines: RecordLine[], elapsedMs: number) {
   return lines.filter((line) => line.atMs <= elapsedMs);
 }
+
+/** Stretch beat times to a real recording's duration. Leave them alone if duration is missing. */
+export function scaleLineTimes(lines: RecordLine[], durationMs: number) {
+  if (!lines.length || !Number.isFinite(durationMs) || durationMs < 1000) return lines;
+  const span = (lines[lines.length - 1]?.atMs ?? 0) + RECORD_LINE_MS;
+  if (span <= 0) return lines;
+  const factor = durationMs / span;
+  return lines.map((line) => ({ ...line, atMs: Math.round(line.atMs * factor) }));
+}

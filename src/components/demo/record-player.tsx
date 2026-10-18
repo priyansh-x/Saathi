@@ -1,23 +1,41 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { DemoAudio } from "@/components/demo/demo-audio";
 import { ExamplePill } from "@/components/family/chrome";
 import { PhonePreview } from "@/components/demo/phone-preview";
 import type { Lang } from "@/lib/i18n/messages";
 import {
   type RecordScene,
+  scaleLineTimes,
   stepRecordIndex,
   visibleRecordLines,
 } from "@/lib/demo-record";
 
-export function RecordPlayer({ lang, scenes }: { lang: Lang; scenes: RecordScene[] }) {
+export function RecordPlayer({
+  lang,
+  scenes,
+  audioUrl = "",
+}: {
+  lang: Lang;
+  scenes: RecordScene[];
+  audioUrl?: string;
+}) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [hint, setHint] = useState(true);
   const started = useRef(0);
   const elapsedRef = useRef(0);
+  const [audioDuration, setAudioDuration] = useState(0);
   const scene = scenes[index];
+  const callLines =
+    scene?.kind === "call" && scene.lines
+      ? audioDuration
+        ? scaleLineTimes(scene.lines, audioDuration)
+        : scene.lines
+      : [];
+  const sceneMs = scene?.kind === "call" && audioDuration ? audioDuration : scene?.ms ?? 0;
 
   const go = useCallback((next: number) => {
     setIndex(next);
@@ -65,15 +83,15 @@ export function RecordPlayer({ lang, scenes }: { lang: Lang; scenes: RecordScene
       const next = performance.now() - started.current;
       elapsedRef.current = next;
       setElapsed(next);
-      if (next >= scene.ms && index < scenes.length - 1) {
+      if (next >= sceneMs && index < scenes.length - 1) {
         go(index + 1);
       }
     }, 80);
     return () => window.clearInterval(id);
-  }, [paused, scene, index, scenes.length, go]);
+  }, [paused, scene, index, scenes.length, go, sceneMs]);
 
   if (!scene) return null;
-  const lines = scene.lines ? visibleRecordLines(scene.lines, elapsed) : [];
+  const lines = callLines.length ? visibleRecordLines(callLines, elapsed) : [];
 
   return (
     <div className="record-stage">
@@ -130,6 +148,12 @@ export function RecordPlayer({ lang, scenes }: { lang: Lang; scenes: RecordScene
       </section>
 
       {hint ? <p className="record-hint">Space pauses · arrows step · EXAMPLE</p> : null}
+      <DemoAudio
+        url={audioUrl}
+        playing={Boolean(audioUrl) && scene.kind === "call" && !paused}
+        seekMs={scene.kind === "call" ? elapsed : 0}
+        onDuration={setAudioDuration}
+      />
     </div>
   );
 }
