@@ -54,7 +54,7 @@ New env names go in `.env.example` with no values.
 - Settings → Chest-pain line → Today shows Act now with her quote.
 - `POST /api/webhooks/bolna` the same body three times → one `calls` row.
 - `MOCK_BOLNA=0` without allowlist → placeCall refuses.
-- Env: `MOCK_BOLNA`, `SAATHI_TOOL_TOKEN`, `CRON_SECRET`, `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `PUBLIC_BASE_URL`, `CALL_BUDGET_MINUTES_DAILY`, `MAX_CALL_SECONDS`, `ALLOWED_PHONE_NUMBERS`.
+- Env: `MOCK_BOLNA`, `BOLNA_TOOL_TOKEN`, `CRON_SECRET`, `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `PUBLIC_BASE_URL`, `CALL_BUDGET_MINUTES_DAILY`, `MAX_CALL_SECONDS`, `ALLOWED_PHONE_NUMBERS`.
 
 ## Phase 1 test plan
 

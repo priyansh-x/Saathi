@@ -48,7 +48,7 @@ One gateway (`src/lib/outbound.ts`). Never dial/send outside `ALLOWED_PHONE_NUMB
 
 | Route | Job |
 | --- | --- |
-| `POST /api/tools/*` | Mid-call tools, Bearer `SAATHI_TOOL_TOKEN` |
+| `POST /api/tools/*` | Mid-call tools, Bearer `BOLNA_TOOL_TOKEN` |
 | `POST /api/webhooks/bolna` | Store every delivery; process `status=completed` |
 | `POST /api/cron/tick` | Place today's calls (own scheduler) |
 | `POST /api/demo/bolna` | Mock scenarios when `MOCK_BOLNA=1` |

@@ -31,7 +31,7 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | `VOICE_ALERT_CHILD` | `0` | No child voice alert. |
 | `PUBLIC_BASE_URL` | `https://<family-vercel-host>` | Magic links and tool URLs. |
 | `SESSION_SECRET` | `openssl rand -hex 32` | Required on a public host. Vercel sets `NODE_ENV=production` even with mocks on. Do not leave empty — there is no `dev-magic` fallback. |
-| `SAATHI_TOOL_TOKEN` | `openssl rand -hex 32` | Required on a public host. Must differ from `BOLNA_WEBHOOK_SECRET`. No `dev-tool-token` fallback. |
+| `BOLNA_TOOL_TOKEN` | `openssl rand -hex 32` | Required on a public host. Must differ from `BOLNA_WEBHOOK_SECRET`. No `dev-tool-token` fallback. `SAATHI_TOOL_TOKEN` is a deprecated alias. |
 | `BOLNA_WEBHOOK_SECRET` | `openssl rand -hex 32` | Required on a public host. Must differ from the tool token. Never reuse the tool token. |
 | `PRODUCT_NAME` | `Saathi` | Keep unless renaming. |
 | `BRIEFING_CHANNEL` | `whatsapp` | |
@@ -39,7 +39,7 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | `CALL_BUDGET_MINUTES_DAILY` | `15` | |
 | `MAX_CALL_SECONDS` | `180` | |
 
-Leave live Bolna API keys, WhatsApp Graph tokens, and live email secrets **empty** on staging. Still set `SESSION_SECRET`, `SAATHI_TOOL_TOKEN`, and `BOLNA_WEBHOOK_SECRET` with three different `openssl rand -hex 32` values — public hosts have no `dev-*` fallbacks. `MAGIC_LINK_SECRET` is a deprecated alias for `SESSION_SECRET`.
+Leave live Bolna API keys, WhatsApp Graph tokens, and live email secrets **empty** on staging. Still set `SESSION_SECRET`, `BOLNA_TOOL_TOKEN`, and `BOLNA_WEBHOOK_SECRET` with three different `openssl rand -hex 32` values — public hosts have no `dev-*` fallbacks. `MAGIC_LINK_SECRET` is a deprecated alias for `SESSION_SECRET`. `SAATHI_TOOL_TOKEN` is a deprecated alias for `BOLNA_TOOL_TOKEN`.
 
 Landing project: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` only if the waitlist table is ready; otherwise the waitlist route no-ops outside production.
 
@@ -86,7 +86,7 @@ Leave cron **off**. `POST /api/cron/tick` stays bearer-authenticated (`CRON_SECR
 
 Staging stays mocked. This list is the same as the README runbook. Agents never flip live flags.
 
-1. Env: `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `SAATHI_TOOL_TOKEN`, `BOLNA_WEBHOOK_SECRET`, `CRON_SECRET`, HTTPS `PUBLIC_BASE_URL`. Keep `MOCK_WHATSAPP=1`.
+1. Env: `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `BOLNA_TOOL_TOKEN`, `BOLNA_WEBHOOK_SECRET`, `CRON_SECRET`, HTTPS `PUBLIC_BASE_URL`. Keep `MOCK_WHATSAPP=1`.
 2. `npm run bolna:sync` (dry). Priyansh only: `npm run bolna:sync -- --apply` — PUT existing agent, never create.
 3. `/ops` Bolna readiness all green (set/missing and last four only; never secret values).
 4. **Simulate a Bolna webhook** on `/ops`. Last webhook time + status updates.

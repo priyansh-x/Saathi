@@ -3,7 +3,8 @@
  *
  * Default (no --apply): print the JSON and a diff against scripts/bolna/agent.json. Never fetches.
  * Apply: npm run bolna:sync -- --apply
- *   Requires BOLNA_API_KEY and BOLNA_AGENT_ID. PUT /v2/agent/{id} only — never creates an agent.
+ *   Requires BOLNA_API_KEY, BOLNA_AGENT_ID, BOLNA_TOOL_TOKEN, and a public https PUBLIC_BASE_URL.
+ *   PUT /v2/agent/{id} only — never creates an agent. Secrets are filled in memory, never printed.
  */
 import { runBolnaSync } from "../../src/lib/bolna/agent-config";
 

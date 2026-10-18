@@ -26,18 +26,22 @@ describe("live secrets", () => {
       mock: process.env.MOCK_BOLNA,
       key: process.env.BOLNA_API_KEY,
       tool: process.env.SAATHI_TOOL_TOKEN,
+      bolnaTool: process.env.BOLNA_TOOL_TOKEN,
       cron: process.env.CRON_SECRET,
       hook: process.env.BOLNA_WEBHOOK_SECRET,
     };
     process.env.MOCK_BOLNA = "0";
     delete process.env.BOLNA_API_KEY;
     delete process.env.SAATHI_TOOL_TOKEN;
+    delete process.env.BOLNA_TOOL_TOKEN;
     delete process.env.CRON_SECRET;
     delete process.env.BOLNA_WEBHOOK_SECRET;
     assert.throws(() => assertLiveSecrets(), /MOCK_BOLNA=0/);
     process.env.MOCK_BOLNA = prev.mock;
     if (prev.key) process.env.BOLNA_API_KEY = prev.key;
     if (prev.tool) process.env.SAATHI_TOOL_TOKEN = prev.tool;
+    if (prev.bolnaTool) process.env.BOLNA_TOOL_TOKEN = prev.bolnaTool;
+    else delete process.env.BOLNA_TOOL_TOKEN;
     if (prev.cron) process.env.CRON_SECRET = prev.cron;
     if (prev.hook) process.env.BOLNA_WEBHOOK_SECRET = prev.hook;
   });

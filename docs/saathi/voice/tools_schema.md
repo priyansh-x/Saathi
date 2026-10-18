@@ -44,7 +44,7 @@ Logs one dose per call. The agent calls it once for every dose in today's `{{med
   "value": {
     "method": "POST",
     "url": "https://api.saathi.example/v1/medicine-log",
-    "api_token": "Bearer <SAATHI_TOOL_TOKEN>",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
     "headers": {"Content-Type": "application/json"},
     "param": {
       "medicine_id": "%(medicine_id)s",
@@ -89,7 +89,7 @@ Response: `{"ok": true}`. Backend: upsert on (`call_sid`, `medicine_id`). Comput
   "value": {
     "method": "POST",
     "url": "https://api.saathi.example/v1/alerts",
-    "api_token": "Bearer <SAATHI_TOOL_TOKEN>",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
     "headers": {"Content-Type": "application/json"},
     "param": {
       "severity": "%(severity)s",
@@ -137,7 +137,7 @@ The WhatsApp alert text above is a template draft. Sending from a WhatsApp Busin
   "value": {
     "method": "POST",
     "url": "https://api.saathi.example/v1/relay",
-    "api_token": "Bearer <SAATHI_TOOL_TOKEN>",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
     "headers": {"Content-Type": "application/json"},
     "param": {
       "recipient": "%(recipient)s",
@@ -176,7 +176,7 @@ Backend: map `recipient` to a contact (fall back to the primary child). `today` 
   "value": {
     "method": "POST",
     "url": "https://api.saathi.example/v1/memory",
-    "api_token": "Bearer <SAATHI_TOOL_TOKEN>",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
     "headers": {"Content-Type": "application/json"},
     "param": {
       "category": "%(category)s",
