@@ -83,7 +83,7 @@ describe("first-call consent", () => {
     assert.equal(words[0]?.mood_quote, null);
     assert.equal(words[0]?.transcript_json, null);
 
-    const nextMorning = new Date("2026-10-18T03:00:00.000Z");
+    const nextMorning = new Date("2026-10-19T03:00:00.000Z");
     const retry = await placeMorningCall("parent_kamla", nextMorning);
     assert.equal(retry.ok, true);
   });

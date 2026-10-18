@@ -65,28 +65,35 @@ describe("every dial is recorded", () => {
     const prepared = await prepareMorningCall("parent_kamla", IN_WINDOW);
     assert.equal(isPreparedCall(prepared), true);
     if (!isPreparedCall(prepared)) return;
-    const ok = await postBolnaCall(prepared, async () => {
-      return new Response(JSON.stringify({ execution_id: "exec_ok_1" }), { status: 200 });
-    });
-    assert.equal(ok.ok, true);
-    const row = await query<{ status: string; bolna_execution_id: string }>(
-      `select status, bolna_execution_id from calls where bolna_execution_id = 'exec_ok_1'`,
-    );
-    assert.equal(row[0]?.status, "in_progress");
-    assert.equal(row[0]?.bolna_execution_id, "exec_ok_1");
+    const prevKey = process.env.BOLNA_API_KEY;
+    process.env.BOLNA_API_KEY = "example-test-key-not-live";
+    try {
+      const ok = await postBolnaCall(prepared, async () => {
+        return new Response(JSON.stringify({ execution_id: "exec_ok_1" }), { status: 200 });
+      });
+      assert.equal(ok.ok, true);
+      const row = await query<{ status: string; bolna_execution_id: string }>(
+        `select status, bolna_execution_id from calls where bolna_execution_id = 'exec_ok_1'`,
+      );
+      assert.equal(row[0]?.status, "in_progress");
+      assert.equal(row[0]?.bolna_execution_id, "exec_ok_1");
 
-    await wipeToday();
-    const prepared2 = await prepareMorningCall("parent_kamla", IN_WINDOW);
-    assert.equal(isPreparedCall(prepared2), true);
-    if (!isPreparedCall(prepared2)) return;
-    const fail = await postBolnaCall(prepared2, async () => {
-      return new Response(JSON.stringify({ message: "no" }), { status: 400 });
-    });
-    assert.equal(fail.ok, false);
-    const failed = await query<{ n: number }>(
-      `select count(*)::int as n from calls where parent_id = 'parent_kamla' and status = 'failed' and started_at like '2026-10-17%'`,
-    );
-    assert.equal(failed[0]?.n, 1);
+      await wipeToday();
+      const prepared2 = await prepareMorningCall("parent_kamla", IN_WINDOW);
+      assert.equal(isPreparedCall(prepared2), true);
+      if (!isPreparedCall(prepared2)) return;
+      const fail = await postBolnaCall(prepared2, async () => {
+        return new Response(JSON.stringify({ message: "no" }), { status: 400 });
+      });
+      assert.equal(fail.ok, false);
+      const failed = await query<{ n: number }>(
+        `select count(*)::int as n from calls where parent_id = 'parent_kamla' and status = 'failed' and started_at like '2026-10-17%'`,
+      );
+      assert.equal(failed[0]?.n, 1);
+    } finally {
+      if (prevKey) process.env.BOLNA_API_KEY = prevKey;
+      else delete process.env.BOLNA_API_KEY;
+    }
   });
 
   it("the daily dial cap blocks a second place even with 0 minutes used", async () => {

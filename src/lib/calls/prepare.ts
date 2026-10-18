@@ -79,17 +79,17 @@ export async function prepareMorningCall(parentId: string, clock: Date = new Dat
   if (!isMockBolna() && !(await hasPilotConsent(parentId))) {
     return { ok: false as const, reason: "consent" };
   }
-  const used = await minutesUsedToday(clock);
-  if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
-  if ((await dialsToday(parentId, clock)) >= dailyDialCap()) {
-    return { ok: false as const, reason: "already_called" };
-  }
   const onAllowlist = allowedPhones().map(normalizePhone).includes(normalizePhone(parent.phone));
   if (!parent.is_example && !onAllowlist) {
     return { ok: false as const, reason: "not_allowlisted" };
   }
   const gate = gateOutbound("call", parent.phone);
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
+  const used = await minutesUsedToday(clock);
+  if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
+  if ((await dialsToday(parentId, clock)) >= dailyDialCap()) {
+    return { ok: false as const, reason: "already_called" };
+  }
 
   const userData = await buildCallContext(parentId);
   const payload = {
