@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { toolAuthorized } from "@/lib/bolna/auth";
 import { logMedicine } from "@/lib/bolna/tools";
-import { readJson, unauthorized } from "@/lib/http";
+import { jsonOrLog, readJson, unauthorized } from "@/lib/http";
 
 export async function POST(req: Request) {
   await connection();
@@ -17,6 +17,5 @@ export async function POST(req: Request) {
   if (!body?.call_sid || !body.parent_id || !body.status) {
     return Response.json({ ok: false, error: "bad_request" }, { status: 400 });
   }
-  const result = await logMedicine(body);
-  return Response.json(result);
+  return jsonOrLog("tools.log_medicine", { parent_id: body.parent_id, call_id: body.call_sid }, () => logMedicine(body));
 }

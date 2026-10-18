@@ -1,4 +1,5 @@
 import { callProviderName, isMockBolna, isMockWhatsapp, killSwitchOn } from "@/lib/config";
+import { recentErrors } from "@/lib/log-error";
 import { query } from "@/lib/db/client";
 import { maskPhone } from "@/lib/ops/mask";
 import { istDayBounds, istDayKey } from "@/lib/time";
@@ -65,5 +66,6 @@ export async function loadOpsSnapshot(now = new Date()) {
       mockWhatsapp: isMockWhatsapp(),
     },
     audits,
+    errors: await recentErrors(20),
   };
 }

@@ -114,6 +114,22 @@ export default async function OpsPage() {
       </section>
 
       <section className="card mt-4 p-4">
+        <h2 className="text-sm font-medium text-ink-3">Recent errors</h2>
+        {snap.errors.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">None logged.</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-border text-sm">
+            {snap.errors.map((row) => (
+              <li key={row.id} className="py-2">
+                <span className="text-ink-3">{row.at}</span> · {row.where_at}
+                <p className="mt-0.5">{row.message}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="card mt-4 p-4">
         <h2 className="text-sm font-medium text-ink-3">Open alerts</h2>
         {snap.openAlerts.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">None open.</p>
