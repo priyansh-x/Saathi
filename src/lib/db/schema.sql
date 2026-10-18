@@ -146,7 +146,10 @@ create table if not exists outbound_messages (
   body text not null,
   at text not null,
   status text not null,
-  is_example boolean not null default false
+  is_example boolean not null default false,
+  provider_message_id text,
+  delivery_status text,
+  delivery_at text
 );
 
 create table if not exists webhook_events (

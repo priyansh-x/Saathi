@@ -13,7 +13,7 @@ export type SendResult = {
   reason?: string;
 };
 
-function messageId(template: string, idempotencyKey: string) {
+export function outboundMessageId(template: string, idempotencyKey: string) {
   return `out_${template}_${idempotencyKey}`.slice(0, 80);
 }
 
@@ -25,18 +25,30 @@ export async function logOutbound(row: {
   to: string;
   body: string;
   status: string;
+  providerMessageId?: string | null;
+  deliveryStatus?: string | null;
+  deliveryAt?: string | null;
 }) {
-  await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
-    row.id,
-    row.parentId,
-    row.channel,
-    row.template,
-    row.to,
-    row.body,
-    nowIst(),
-    row.status,
-    true,
-  ]);
+  await query(
+    `insert into outbound_messages (
+      id, parent_id, channel, template, to_phone, body, at, status, is_example,
+      provider_message_id, delivery_status, delivery_at
+    ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+    [
+      row.id,
+      row.parentId,
+      row.channel,
+      row.template,
+      row.to,
+      row.body,
+      nowIst(),
+      row.status,
+      true,
+      row.providerMessageId ?? null,
+      row.deliveryStatus ?? null,
+      row.deliveryAt ?? null,
+    ],
+  );
 }
 
 async function familyEmail(parentId: string) {
@@ -59,7 +71,7 @@ async function sendEmailFallback(args: {
 }): Promise<SendResult> {
   const email = await familyEmail(args.parentId);
   const gate = gateOutbound("email", email);
-  const id = messageId(`email_${args.template}`, args.idempotencyKey);
+  const id = outboundMessageId(`email_${args.template}`, args.idempotencyKey);
   const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);
   if (existing[0]) {
     return { ok: true, id, channel: "email", template: args.template, status: "duplicate" };
@@ -165,7 +177,14 @@ async function postMeta(payload: ReturnType<typeof buildWhatsappPayload>) {
     body: JSON.stringify(payload),
   });
   if (!res.ok) return { ok: false as const, error: `meta_${res.status}` };
-  return { ok: true as const };
+  let wamid: string | undefined;
+  try {
+    const data = (await res.json()) as { messages?: { id?: string }[] };
+    wamid = data.messages?.[0]?.id;
+  } catch {
+    wamid = undefined;
+  }
+  return { ok: true as const, wamid };
 }
 
 export async function sendFamilyMessage(args: {
@@ -186,7 +205,7 @@ export async function sendFamilyMessage(args: {
   const approved = isWhatsappTemplateApproved(args.intended) || useFreeText;
   const template: TemplateName = args.intended;
   const body = useFreeText ? args.freeText! : renderTemplate(template, args.vars);
-  const id = messageId(template, args.idempotencyKey);
+  const id = outboundMessageId(template, args.idempotencyKey);
   const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);
   if (existing[0]) {
     return { ok: true, id, channel: "whatsapp", template, status: "duplicate" };
@@ -234,6 +253,9 @@ export async function sendFamilyMessage(args: {
       to: gate.to,
       body,
       status: useFreeText ? "mock_session" : "mock",
+      providerMessageId: `wamid.mock.${id}`,
+      deliveryStatus: "mock",
+      deliveryAt: nowIst(),
     });
     return { ok: true, id, channel: "whatsapp", template, status: useFreeText ? "mock_session" : "mock" };
   }
@@ -275,6 +297,9 @@ export async function sendFamilyMessage(args: {
     to: gate.to,
     body,
     status: "sent",
+    providerMessageId: posted.wamid ?? null,
+    deliveryStatus: "sent",
+    deliveryAt: nowIst(),
   });
   return { ok: true, id, channel: "whatsapp", template, status: "sent" };
 }

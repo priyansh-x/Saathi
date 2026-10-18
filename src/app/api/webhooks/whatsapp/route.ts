@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import type { NextRequest } from "next/server";
 import { isMockWhatsapp, whatsappVerifyToken } from "@/lib/config";
 import { jsonOrLog } from "@/lib/http";
+import { applyWhatsappStatuses, parseWhatsappStatuses, recordWhatsappWebhook } from "@/lib/whatsapp/delivery";
 import { parseWhatsappWebhookJson, processInboundMessages } from "@/lib/whatsapp/inbound";
 import { verifyWhatsappSignature } from "@/lib/whatsapp/signature";
 
@@ -31,7 +32,11 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: "bad_json" }, { status: 400 });
   }
   return jsonOrLog("webhooks.whatsapp", { route: "whatsapp" }, async () => {
+    const parsedStatuses = parseWhatsappStatuses(raw);
+    const kind = parsedStatuses.length ? "status" : parsed.messages.length ? "inbound" : "empty";
+    await recordWhatsappWebhook(raw, kind);
+    const statuses = await applyWhatsappStatuses(parsedStatuses);
     const results = await processInboundMessages(parsed.messages);
-    return { ok: true, results };
+    return { ok: true, results, statuses };
   });
 }

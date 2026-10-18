@@ -58,7 +58,8 @@ describe("ops snapshot", () => {
     assert.doesNotMatch(blob, /\+91[0-9]{10}/);
     for (const row of snap.outbound) {
       assert.match(row.to, /••••\d{4}|••••@/);
-      assert.equal(Object.keys(row).sort().join(","), "at,gate,kind,to");
+      assert.equal(Object.keys(row).sort().join(","), "at,delivery,gate,kind,to");
+      assert.match(row.delivery, /^(sent|delivered|read|failed|mock|example|—)$/);
     }
     for (const row of snap.openAlerts) {
       assert.equal("quote" in row, false);

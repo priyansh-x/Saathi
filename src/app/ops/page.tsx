@@ -132,7 +132,7 @@ export default async function OpsPage() {
             {snap.outbound.map((row, i) => (
               <li key={`${row.at}-${i}`} className="flex flex-wrap justify-between gap-2 py-2">
                 <span>
-                  {row.kind} · {row.gate}
+                  {row.kind} · {row.gate} · {row.delivery}
                 </span>
                 <span className="text-ink-3">
                   {row.to} · {row.at}

@@ -7,7 +7,7 @@ import { istDayBounds, istDayKey } from "@/lib/time";
 
 export type FamilyStatusCount = { status: string; n: number };
 export type CallStatusCount = { status: string; n: number };
-export type OpsOutbound = { kind: string; gate: string; at: string; to: string };
+export type OpsOutbound = { kind: string; gate: string; at: string; to: string; delivery: string };
 export type OpsAlert = { id: string; category: string; level: string; at: string; late: boolean };
 
 export async function loadOpsSnapshot(now = new Date()) {
@@ -30,14 +30,21 @@ export async function loadOpsSnapshot(now = new Date()) {
     [start, end],
   );
 
-  const outboundRows = await query<{ channel: string; status: string; at: string; to_phone: string }>(
-    `select channel, status, at, to_phone from outbound_messages order by at desc, id desc limit 50`,
+  const outboundRows = await query<{
+    channel: string;
+    status: string;
+    at: string;
+    to_phone: string;
+    delivery_status: string | null;
+  }>(
+    `select channel, status, at, to_phone, delivery_status from outbound_messages order by at desc, id desc limit 50`,
   );
   const outbound: OpsOutbound[] = outboundRows.map((row) => ({
     kind: row.channel,
     gate: row.status,
     at: row.at,
     to: maskPhone(row.to_phone),
+    delivery: row.delivery_status || "—",
   }));
 
   const openAlerts = await query<OpsAlert>(
