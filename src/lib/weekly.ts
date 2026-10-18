@@ -137,8 +137,8 @@ export async function buildWeeklyNote(parentId: string, now = new Date()): Promi
     quote: lastQuote,
     varsEn,
     varsHi,
-    bodyEn: renderTemplate("weekly_summary_en", varsEn),
-    bodyHi: renderTemplate("weekly_summary_hi", varsHi),
+    bodyEn: renderTemplate("weekly_summary", varsEn, "en"),
+    bodyHi: renderTemplate("weekly_summary", varsHi, "hi"),
   };
 }
 
@@ -162,7 +162,7 @@ export async function sendWeeklyNote(parentId: string, now = new Date()) {
         parentId,
         toPhone: child.phone,
         locale: hi ? "hi" : "en",
-        intended: hi ? "weekly_summary_hi" : "weekly_summary_en",
+        intended: "weekly_summary",
         vars: hi ? note.varsHi : note.varsEn,
         idempotencyKey: `week_${monday}_${child.phone.replace(/\s/g, "")}`,
       }),

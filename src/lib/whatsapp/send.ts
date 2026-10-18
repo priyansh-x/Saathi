@@ -2,7 +2,7 @@ import { isMockWhatsapp, isWhatsappTemplateApproved, killSwitchOn } from "@/lib/
 import { query } from "@/lib/db/client";
 import { gateOutbound } from "@/lib/outbound";
 import { nowIst } from "@/lib/bolna/tools";
-import { renderTemplate, type TemplateName } from "@/lib/whatsapp/templates";
+import { packTemplate, renderTemplate, type TemplateName } from "@/lib/whatsapp/templates";
 
 export type SendResult = {
   ok: boolean;
@@ -127,6 +127,7 @@ export function buildWhatsappPayload(args: {
   vars: string[];
   freeText?: string;
   windowOpen?: boolean;
+  buttonUrlVar?: string;
 }): WhatsappGraphPayload {
   if (args.freeText && args.windowOpen) {
     return {
@@ -137,8 +138,28 @@ export function buildWhatsappPayload(args: {
     };
   }
   const name = metaTemplateName(args.template);
-  const components =
-    name === "hello_world" ? [] : [{ type: "body", parameters: args.vars.map((text) => ({ type: "text", text })) }];
+  const pack = packTemplate(name, args.language);
+  const components: unknown[] = [];
+  if (name !== "hello_world") {
+    components.push({ type: "body", parameters: args.vars.map((text) => ({ type: "text", text })) });
+    pack?.buttons.forEach((btn, index) => {
+      if (btn.type === "QUICK_REPLY") {
+        components.push({
+          type: "button",
+          sub_type: "quick_reply",
+          index: String(index),
+          parameters: [{ type: "payload", payload: btn.text }],
+        });
+      } else {
+        components.push({
+          type: "button",
+          sub_type: "url",
+          index: String(index),
+          parameters: [{ type: "text", text: args.buttonUrlVar || btn.example }],
+        });
+      }
+    });
+  }
   return {
     messaging_product: "whatsapp",
     to: args.to,
@@ -195,6 +216,7 @@ export async function sendFamilyMessage(args: {
   vars: string[];
   idempotencyKey: string;
   freeText?: string;
+  buttonUrlVar?: string;
 }): Promise<SendResult> {
   if (killSwitchOn()) {
     return { ok: false, id: "", channel: "whatsapp", template: args.intended, status: "kill_switch" };
@@ -204,7 +226,7 @@ export async function sendFamilyMessage(args: {
   const useFreeText = Boolean(args.freeText && windowOpen);
   const approved = isWhatsappTemplateApproved(args.intended) || useFreeText;
   const template: TemplateName = args.intended;
-  const body = useFreeText ? args.freeText! : renderTemplate(template, args.vars);
+  const body = useFreeText ? args.freeText! : renderTemplate(template, args.vars, language);
   const id = outboundMessageId(template, args.idempotencyKey);
   const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);
   if (existing[0]) {
@@ -267,6 +289,7 @@ export async function sendFamilyMessage(args: {
     vars: args.vars,
     freeText: args.freeText,
     windowOpen,
+    buttonUrlVar: args.buttonUrlVar,
   });
   const posted = await postMeta(payload);
   if (!posted.ok) {

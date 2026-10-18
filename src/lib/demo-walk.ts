@@ -4,44 +4,38 @@ import { renderTemplate } from "@/lib/whatsapp/templates";
 /** EXAMPLE WhatsApp copy for the two demo walks. Never sent unless mocks are on. */
 export function exampleWhatsappPreviews() {
   const desk = `${publicBaseUrl()}/d/${EXAMPLE_TOKEN}`;
-  const alert = `${desk}/alerts/example`;
   return {
-    safety_en: renderTemplate("safety_alert_en", [
-      "Kamla",
-      "Seene mein dard ho raha hai.",
-      "08:33",
-      "Rohit",
-      "Sunita",
-      alert,
-    ]),
-    safety_hi: renderTemplate("safety_alert_hi", [
-      "Kamla",
-      "सीने में दर्द हो रहा है।",
-      "08:33",
-      "Rohit",
-      "Sunita",
-      alert,
-    ]),
-    responder_hi: renderTemplate("responder_hi", ["Kamla", "सीने में दर्द हो रहा है।", "08:33"]),
-    responder_en: renderTemplate("responder_en", ["Kamla", "Seene mein dard ho raha hai.", "08:33"]),
-    ack_en: renderTemplate("alert_ack_update_en", ["Rohit", "8:40 AM IST"]),
-    ack_hi: renderTemplate("alert_ack_update_hi", ["Rohit", "8:40 AM IST"]),
-    missed_soft_en: renderTemplate("daily_briefing_en", [
-      "Kamla",
-      "08:30",
-      "Needs a look",
-      "—",
-      "No answer yet.",
-      desk,
-    ]),
-    neighbour_missed_en: renderTemplate("responder_en", [
-      "Kamla",
-      "Couldn't reach Maa after the morning calls.",
-      "09:30",
-    ]),
+    safety_en: renderTemplate(
+      "safety_alert_emergency",
+      ["Kamla", "08:33", "Seene mein dard ho raha hai.", "Sunita ji", "+910000000000"],
+      "en",
+    ),
+    safety_hi: renderTemplate(
+      "safety_alert_emergency",
+      ["कमला", "08:33", "सीने में दर्द हो रहा है।", "सुनीता जी", "+910000000000"],
+      "hi",
+    ),
+    responder_hi: renderTemplate(
+      "responder_alert_emergency",
+      ["सुनीता", "कमला", "दिल्ली", "सीने में दर्द हो रहा है।", "रोहित"],
+      "hi",
+    ),
+    responder_en: renderTemplate(
+      "responder_alert_emergency",
+      ["Sunita", "Kamla", "Delhi", "Seene mein dard ho raha hai.", "Rohit"],
+      "en",
+    ),
+    ack_en: renderTemplate("alert_ack_update", ["Rohit", "8:40 AM IST", "Kamla"], "en"),
+    ack_hi: renderTemplate("alert_ack_update", ["रोहित", "8:40 AM IST", "कमला"], "hi"),
+    missed_soft_en: renderTemplate("missed_call_soft", ["Kamla", "2", "08:30", "09:00", "+910000000000"], "en"),
+    neighbour_missed_en: renderTemplate(
+      "responder_alert_unreachable",
+      ["Sunita", "Kamla", "Delhi", "Rohit"],
+      "en",
+    ),
+    desk,
   };
 }
-
 export const WALK_COPY = {
   en: {
     title: "Demo walkthroughs",

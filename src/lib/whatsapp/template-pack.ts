@@ -271,6 +271,32 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
       },
     ),
     ...pair(
+      "consent_declined",
+      {
+        body: "{{1}} said no to the daily Saathi call. Morning calls are paused. In an emergency call 112.",
+        buttons: [],
+        examples: ["Maa"],
+      },
+      {
+        body: "{{1}} ने रोज़ की साथी कॉल मना कर दी। सुबह की कॉल रुक गई। आपात में 112 मिलाएँ।",
+        buttons: [],
+        examples: ["माँ"],
+      },
+    ),
+    ...pair(
+      "consent_later",
+      {
+        body: "{{1}} has not said yes or no to the daily Saathi call after two mornings. Saathi will not call again until you decide. In an emergency call 112.",
+        buttons: [],
+        examples: ["Maa"],
+      },
+      {
+        body: "{{1}} ने दो सुबह हाँ या नहीं नहीं कहा। आप तय करें तब तक साथी फ़ोन नहीं करेगा। आपात में 112 मिलाएँ।",
+        buttons: [],
+        examples: ["माँ"],
+      },
+    ),
+    ...pair(
       "onboarding_reminder",
       {
         body: "👋 Your Saathi setup for {{1}} is almost done. It takes about 2 minutes to finish.",

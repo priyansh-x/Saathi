@@ -31,18 +31,18 @@ describe("WhatsApp 24h window, unapproved fallback, and gate", () => {
   it("sends free text only when the window is open; otherwise a template", () => {
     const closed = buildWhatsappPayload({
       to: "+910000000000",
-      template: "daily_briefing_en",
+      template: "daily_briefing_good",
       language: "en",
       vars: ["Maa", "8:04"],
       freeText: "EXAMPLE session reply",
       windowOpen: false,
     });
     assert.equal(closed.type, "template");
-    assert.equal(closed.template?.name, "daily_briefing");
+    assert.equal(closed.template?.name, "daily_briefing_good");
     assert.equal(closed.template?.language.code, "en");
     const open = buildWhatsappPayload({
       to: "+910000000000",
-      template: "daily_briefing_en",
+      template: "daily_briefing_good",
       language: "en",
       vars: ["Maa"],
       freeText: "EXAMPLE session reply",
@@ -62,7 +62,7 @@ describe("WhatsApp 24h window, unapproved fallback, and gate", () => {
       parentId: "parent_kamla",
       toPhone: "98765 44110",
       locale: "en",
-      intended: "daily_briefing_en",
+      intended: "daily_briefing_good",
       vars: ["Maa"],
       idempotencyKey: `win_${Date.now()}`,
       freeText: "EXAMPLE session reply",
@@ -96,7 +96,7 @@ describe("WhatsApp 24h window, unapproved fallback, and gate", () => {
         parentId: "parent_kamla",
         toPhone: "98765 44110",
         locale: "en",
-        intended: "daily_briefing_en",
+        intended: "daily_briefing_good",
         vars: ["Maa", "8:04", "Good", "—", "—", "http://local"],
         idempotencyKey: `unapp_${Date.now()}`,
       });
@@ -126,7 +126,7 @@ describe("WhatsApp 24h window, unapproved fallback, and gate", () => {
         parentId: "parent_kamla",
         toPhone: "98765 44110",
         locale: "en",
-        intended: "daily_briefing_en",
+        intended: "daily_briefing_good",
         vars: ["Maa"],
         idempotencyKey: `gate_${Date.now()}`,
       });

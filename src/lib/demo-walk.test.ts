@@ -9,12 +9,12 @@ describe("demo walkthrough previews", () => {
 
   it("renders EXAMPLE family and neighbour copy from the live templates", () => {
     const previews = exampleWhatsappPreviews();
-    assert.match(previews.safety_en, /Act now/);
+    assert.match(previews.safety_en, /needs help now/);
     assert.match(previews.safety_en, /Kamla/);
-    assert.match(previews.safety_hi, /अभी देखें/);
-    assert.match(previews.responder_hi, /दरवाज़े/);
+    assert.match(previews.safety_hi, /ज़रूरी/);
+    assert.match(previews.responder_hi, /देख सकते हैं/);
     assert.match(previews.ack_en, /Rohit is on it/);
-    assert.match(previews.missed_soft_en, /No answer yet/);
-    assert.match(previews.neighbour_missed_en, /morning calls/);
+    assert.match(previews.missed_soft_en, /Couldn't reach/);
+    assert.match(previews.neighbour_missed_en, /hasn't answered/);
   });
 });

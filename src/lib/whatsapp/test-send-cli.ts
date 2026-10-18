@@ -1,27 +1,19 @@
 import { isMockWhatsapp, isWhatsappTemplateApproved } from "@/lib/config";
 import { gateOutbound, normalizePhone } from "@/lib/outbound";
 import { buildWhatsappPayload, metaTemplateLanguage, type WhatsappGraphPayload } from "@/lib/whatsapp/send";
-import type { TemplateName } from "@/lib/whatsapp/templates";
+import { packTemplate, type TemplateName } from "@/lib/whatsapp/templates";
 
 const ALIASES: Record<string, Exclude<TemplateName, "hello_world"> | "hello_world"> = {
-  briefing: "daily_briefing_en",
-  daily_briefing: "daily_briefing_en",
-  daily_briefing_en: "daily_briefing_en",
-  daily_briefing_hi: "daily_briefing_hi",
-  safety: "safety_alert_en",
-  safety_alert: "safety_alert_en",
-  safety_alert_en: "safety_alert_en",
-  safety_alert_hi: "safety_alert_hi",
+  briefing: "daily_briefing_good",
+  daily_briefing: "daily_briefing_good",
+  daily_briefing_en: "daily_briefing_good",
+  daily_briefing_hi: "daily_briefing_good",
+  daily_briefing_good: "daily_briefing_good",
+  safety: "safety_alert_emergency",
+  safety_alert: "safety_alert_emergency",
+  safety_alert_en: "safety_alert_emergency",
+  safety_alert_hi: "safety_alert_emergency",
   hello_world: "hello_world",
-};
-
-/** EXAMPLE values only — labelled for Meta's template preview, never a real family. */
-const EXAMPLE_VARS: Record<string, string[]> = {
-  daily_briefing_en: ["Maa", "8:04", "Good", "both taken", "EXAMPLE quote", "https://saathi.example/d/example-kamla"],
-  daily_briefing_hi: ["माँ", "8:04", "ठीक", "दोनों लीं", "EXAMPLE quote", "https://saathi.example/d/example-kamla"],
-  safety_alert_en: ["Maa", "EXAMPLE chest pain", "8:42", "Rohit", "Sunita", "https://saathi.example/d/example-kamla"],
-  safety_alert_hi: ["माँ", "EXAMPLE", "8:42", "Rohit", "Sunita", "https://saathi.example/d/example-kamla"],
-  hello_world: [],
 };
 
 export function parseTestSendArgs(argv: string[]) {
@@ -37,14 +29,15 @@ export function resolveTestSendTemplate(templateArg: string) {
   return ALIASES[key] ?? "";
 }
 
-export function exampleVarsFor(template: string) {
-  return EXAMPLE_VARS[template] ?? ["EXAMPLE"];
+export function exampleVarsFor(template: string, language: "en" | "hi" = "en") {
+  if (template === "hello_world") return [];
+  return packTemplate(template, language)?.examples ?? ["EXAMPLE"];
 }
 
 export function plannedTestSend(phone: string, templateArg: string) {
   const template = resolveTestSendTemplate(templateArg);
   const language = template ? metaTemplateLanguage(template, "en") : "en";
-  const vars = template ? exampleVarsFor(template) : ["EXAMPLE"];
+  const vars = template ? exampleVarsFor(template, language) : ["EXAMPLE"];
   const gate = phone ? gateOutbound("whatsapp", phone) : { ok: false as const, reason: "missing_target" as const };
   const payload: WhatsappGraphPayload | null = template
     ? buildWhatsappPayload({
@@ -52,6 +45,7 @@ export function plannedTestSend(phone: string, templateArg: string) {
         template,
         language,
         vars,
+        buttonUrlVar: "example-kamla",
       })
     : null;
   return {

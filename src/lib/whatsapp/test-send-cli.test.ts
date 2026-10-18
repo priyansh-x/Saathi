@@ -14,9 +14,9 @@ describe("whatsapp:test-send CLI", () => {
     const plan = plannedTestSend(parsed.phone, parsed.templateArg);
     assert.equal(plan.example, true);
     assert.equal(plan.payload?.type, "template");
-    assert.equal(plan.payload?.template?.name, "daily_briefing");
+    assert.equal(plan.payload?.template?.name, "daily_briefing_good");
     assert.equal(plan.url.includes("{phone-number-id}"), true);
-    assert.equal(JSON.stringify(plan).includes("EXAMPLE"), true);
+    assert.match(JSON.stringify(plan), /Maa|example-kamla/);
   });
 
   it("only allows a live send with --yes, MOCK_WHATSAPP=0, allowlist, and an approved template", () => {
@@ -34,12 +34,12 @@ describe("whatsapp:test-send CLI", () => {
     process.env.WHATSAPP_APPROVED_TEMPLATES = "";
     try {
       assert.equal(canSendTestWhatsapp(phone, "briefing", true).reason, "unapproved_template");
-      process.env.WHATSAPP_APPROVED_TEMPLATES = "daily_briefing";
+      process.env.WHATSAPP_APPROVED_TEMPLATES = "daily_briefing_good";
       assert.equal(canSendTestWhatsapp(phone, "briefing", true).reason, "not_allowlisted");
       process.env.ALLOWED_PHONE_NUMBERS = "+919876544110";
       const ok = canSendTestWhatsapp(phone, "briefing", true);
       assert.equal(ok.ok, true);
-      if (ok.ok) assert.equal(ok.template, "daily_briefing_en");
+      if (ok.ok) assert.equal(ok.template, "daily_briefing_good");
     } finally {
       process.env.MOCK_WHATSAPP = prev.mock;
       process.env.ALLOWED_PHONE_NUMBERS = prev.phones;

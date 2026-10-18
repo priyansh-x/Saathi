@@ -11,9 +11,16 @@ export async function neighbourOptedIn(parentId: string) {
 }
 
 export async function requestNeighbourOptIn(parentId: string) {
-  const parent = await query<{ first_name: string }>(`select first_name from parents where id = $1`, [parentId]);
+  const parent = await query<{ first_name: string; city: string }>(
+    `select first_name, city from parents where id = $1`,
+    [parentId],
+  );
   const neighbour = await query<{ phone: string; locale: string; first_name: string }>(
     `select phone, locale, first_name from contacts where parent_id = $1 and role = 'neighbour' limit 1`,
+    [parentId],
+  );
+  const child = await query<{ first_name: string }>(
+    `select first_name from contacts where parent_id = $1 and role = 'child' order by is_owner desc limit 1`,
     [parentId],
   );
   if (!parent[0] || !neighbour[0]) return { ok: false as const, reason: "missing_neighbour" };
@@ -23,8 +30,8 @@ export async function requestNeighbourOptIn(parentId: string) {
     parentId,
     toPhone: neighbour[0].phone,
     locale,
-    intended: locale === "hi" ? "responder_optin_hi" : "responder_optin_en",
-    vars: [parent[0].first_name],
+    intended: "responder_optin",
+    vars: [neighbour[0].first_name, child[0]?.first_name ?? "family", parent[0].first_name, parent[0].city],
     idempotencyKey: `optin_${parentId}_${neighbour[0].phone.replace(/\s/g, "")}`,
   });
 }

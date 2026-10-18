@@ -69,24 +69,33 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
     nowMin: 12 * 60,
     callTimeMin: callMin,
   });
-  const label = status === "act" ? "Act now" : status === "look" || status === "trying" ? "Needs a look" : "Good";
   const url = await magicUrl(parentId);
+  const token = url.split("/d/")[1] || EXAMPLE_TOKEN;
+  const missed = doses.find((d) => d.status === "not_taken");
+  const intended =
+    call.status === "missed" || call.status === "no_conversation" || call.status === "failed" || status === "trying"
+      ? "missed_call_soft"
+      : missed
+        ? "daily_briefing_missed_med"
+        : "daily_briefing_good";
+  const who = parent.address_term?.trim() || parent.first_name;
   const results = [];
   for (const child of children) {
+    const locale = localeOf(child);
+    const vars =
+      intended === "missed_call_soft"
+        ? [who, "1", parent.call_time, parent.call_time, parent.phone]
+        : intended === "daily_briefing_missed_med"
+          ? [who, missed?.name ?? "tablet", call.mood_quote || "not taken"]
+          : [who, parent.call_time, medLine(doses), call.mood_quote || "—"];
     results.push(
       await sendFamilyMessage({
         parentId,
         toPhone: child.phone,
-        locale: localeOf(child),
-        intended: localeOf(child) === "hi" ? "daily_briefing_hi" : "daily_briefing_en",
-        vars: [
-          parent.first_name,
-          parent.call_time,
-          label,
-          medLine(doses),
-          call.mood_quote || "—",
-          url,
-        ],
+        locale,
+        intended,
+        vars,
+        buttonUrlVar: token,
         idempotencyKey: `brief_${call.id}_${child.phone.replace(/\s/g, "")}`,
       }),
     );
@@ -94,41 +103,57 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
   return { ok: true as const, results };
 }
 
-export async function notifyAlert(parentId: string, alert: Pick<AlertRow, "id" | "quote" | "created_at">) {
+export async function notifyAlert(
+  parentId: string,
+  alert: Pick<AlertRow, "id" | "quote" | "created_at"> & { category?: string; level?: string },
+) {
   const { parent, neighbour } = await household(parentId);
   if (!parent) return { ok: false as const };
-  const url = `${await magicUrl(parentId)}/alerts/${alert.id}`;
   const time = alert.created_at.includes("T") ? alert.created_at.slice(11, 16) : "08:33";
+  const who = parent.address_term?.trim() || parent.first_name;
+  const neighbourName = neighbour?.first_name ?? "neighbour";
+  const childTemplate =
+    alert.category === "MISSED" || alert.level === "look"
+      ? "safety_alert_unreachable"
+      : alert.category === "EMERGENCY" || alert.level === "act"
+        ? "safety_alert_emergency"
+        : "safety_alert_urgent";
+  const neighbourTemplate =
+    childTemplate === "safety_alert_unreachable" ? "responder_alert_unreachable" : "responder_alert_emergency";
   const results = [];
   const kids = await childrenFor(parentId);
   for (const child of kids) {
+    const vars =
+      childTemplate === "safety_alert_unreachable"
+        ? [who, "4", time, neighbourName, parent.phone]
+        : childTemplate === "safety_alert_emergency"
+          ? [who, time, alert.quote, neighbourName, parent.phone]
+          : [who, time, alert.quote, "uneasy"];
     results.push(
       await sendFamilyMessage({
         parentId,
         toPhone: child.phone,
         locale: localeOf(child),
-        intended: localeOf(child) === "hi" ? "safety_alert_hi" : "safety_alert_en",
-        vars: [
-          parent.first_name,
-          alert.quote,
-          time,
-          child.first_name,
-          neighbour?.first_name ?? "neighbour",
-          url,
-        ],
+        intended: childTemplate,
+        vars,
         idempotencyKey: `alert_${alert.id}_${child.phone.replace(/\s/g, "")}`,
       }),
     );
   }
   await sendPushToFamily(parentId, "Act now", alert.quote, `alert_${alert.id}`);
   if (neighbour && (await neighbourOptedIn(parentId))) {
+    const childName = kids[0]?.first_name ?? "family";
+    const nvars =
+      neighbourTemplate === "responder_alert_unreachable"
+        ? [neighbour.first_name, who, parent.city, childName]
+        : [neighbour.first_name, who, parent.city, alert.quote, childName];
     results.push(
       await sendFamilyMessage({
         parentId,
         toPhone: neighbour.phone,
         locale: localeOf(neighbour),
-        intended: localeOf(neighbour) === "hi" ? "responder_hi" : "responder_en",
-        vars: [parent.first_name, alert.quote, time],
+        intended: neighbourTemplate,
+        vars: nvars,
         idempotencyKey: `resp_${alert.id}_${neighbour.phone.replace(/\s/g, "")}`,
       }),
     );
@@ -148,8 +173,8 @@ export async function broadcastAck(parentId: string, alertId: string, actor: str
         parentId,
         toPhone: person.phone,
         locale: localeOf(person),
-        intended: localeOf(person) === "hi" ? "alert_ack_update_hi" : "alert_ack_update_en",
-        vars: [actor, when],
+        intended: "alert_ack_update",
+        vars: [actor, when, (await household(parentId)).parent?.first_name ?? "Maa"],
         idempotencyKey: `ack_${alertId}_${person.phone.replace(/\s/g, "")}`,
       }),
     );

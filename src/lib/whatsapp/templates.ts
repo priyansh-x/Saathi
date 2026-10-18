@@ -1,59 +1,41 @@
-/** Copy lives in docs/saathi/product/whatsapp_templates.md. These names are the shipped Meta templates. */
+import { bodyVariables, whatsappTemplatePack, type WhatsappTemplate } from "./template-pack";
+
+/** Names as submitted in scripts/whatsapp/templates.json. Language is separate. */
 export type TemplateName =
   | "hello_world"
-  | "daily_briefing_en"
-  | "daily_briefing_hi"
-  | "safety_alert_en"
-  | "safety_alert_hi"
-  | "responder_en"
-  | "responder_hi"
-  | "alert_ack_update_en"
-  | "alert_ack_update_hi"
-  | "consent_declined_en"
-  | "consent_declined_hi"
-  | "consent_later_en"
-  | "consent_later_hi"
-  | "responder_optin_en"
-  | "responder_optin_hi"
-  | "weekly_summary_en"
-  | "weekly_summary_hi";
+  | "daily_briefing_good"
+  | "daily_briefing_missed_med"
+  | "daily_briefing_low_mood"
+  | "missed_call_soft"
+  | "safety_alert_unreachable"
+  | "safety_alert_emergency"
+  | "safety_alert_urgent"
+  | "alert_ack_update"
+  | "responder_optin"
+  | "responder_alert_emergency"
+  | "responder_alert_unreachable"
+  | "weekly_summary"
+  | "onboarding_reminder"
+  | "consent_declined"
+  | "consent_later";
 
-export function renderTemplate(name: TemplateName, vars: string[]) {
-  const v = (i: number) => vars[i] ?? "—";
-  switch (name) {
-    case "hello_world":
-      return "Hello World";
-    case "daily_briefing_en":
-      return `Saathi called ${v(0)} this morning (${v(1)} IST).\nStatus: ${v(2)}\nMedicines: ${v(3)}\nShe said: "${v(4)}"\nOpen today: ${v(5)}`;
-    case "daily_briefing_hi":
-      return `साथी ने सुबह ${v(0)} से बात की (${v(1)} IST)।\nस्थिति: ${v(2)}\nदवाई: ${v(3)}\nउन्होंने कहा: "${v(4)}"\nआज: ${v(5)}`;
-    case "safety_alert_en":
-      return `Act now. ${v(0)} said: "${v(1)}" at ${v(2)} IST.\n${v(3)} and ${v(4)} were notified.\nReply if you are going. Details: ${v(5)}`;
-    case "safety_alert_hi":
-      return `अभी देखें। ${v(0)} ने कहा: "${v(1)}" — ${v(2)} IST।\n${v(3)} और ${v(4)} को सूचना गई।\nजा रहे हैं तो जवाब दें। ${v(5)}`;
-    case "responder_en":
-      return `${v(0)} may need someone at the door. ${v(1)} at ${v(2)} IST.\nQuick replies: I'm going | Can't right now`;
-    case "responder_hi":
-      return `${v(0)} के दरवाज़े पर किसी की ज़रूरत हो सकती है। ${v(1)} — ${v(2)} IST।\nजवाब: मैं जा रहा/रही हूँ | अभी नहीं`;
-    case "alert_ack_update_en":
-      return `${v(0)} is on it (${v(1)}). Saathi will not keep pinging.`;
-    case "alert_ack_update_hi":
-      return `${v(0)} देख रहे हैं (${v(1)})। साथी दोबारा नहीं पूछेगा।`;
-    case "consent_declined_en":
-      return `${v(0)} said no to the daily Saathi call. Morning calls are paused. In an emergency call 112.`;
-    case "consent_declined_hi":
-      return `${v(0)} ने रोज़ की साथी कॉल मना कर दी। सुबह की कॉल रुक गई। आपात में 112 मिलाएँ।`;
-    case "consent_later_en":
-      return `${v(0)} has not said yes or no to the daily Saathi call after two mornings. Saathi will not call again until you decide. In an emergency call 112.`;
-    case "consent_later_hi":
-      return `${v(0)} ने दो सुबह हाँ या नहीं नहीं कहा। आप तय करें तब तक साथी फ़ोन नहीं करेगा। आपात में 112 मिलाएँ।`;
-    case "responder_optin_en":
-      return `Will you help if ${v(0)} doesn't answer?\nReply Yes or No. Saathi will only message you if we cannot reach her.`;
-    case "responder_optin_hi":
-      return `${v(0)} फ़ोन न उठाएँ तो क्या आप देखेंगे?\nहाँ या नहीं लिखें। साथी तभी लिखेगा जब उनसे संपर्क न हो।`;
-    case "weekly_summary_en":
-      return `🗓 ${v(0)}'s week (${v(1)}): answered ${v(2)} of 7 calls, took ${v(3)} of ${v(4)} doses.\nMood: ${v(5)}. Notable: ${v(6)}. Tap below for the full week.`;
-    case "weekly_summary_hi":
-      return `🗓 ${v(0)} का हफ़्ता (${v(1)}): 7 में से ${v(2)} कॉल उठाईं, ${v(4)} में से ${v(3)} दवाइयाँ लीं।\nमन: ${v(5)}। ख़ास बातें: ${v(6)}। पूरा हफ़्ता नीचे देखें।`;
-  }
+export function packTemplate(name: string, language: "en" | "hi"): WhatsappTemplate | undefined {
+  return whatsappTemplatePack().find((tpl) => tpl.name === name && tpl.language === language);
+}
+
+export function renderTemplate(name: TemplateName, vars: string[], language: "en" | "hi" = "en") {
+  if (name === "hello_world") return "Hello World";
+  const tpl = packTemplate(name, language);
+  if (!tpl) return vars.join(" · ");
+  let body = tpl.body;
+  vars.forEach((value, i) => {
+    body = body.replaceAll(`{{${i + 1}}}`, value);
+  });
+  return body;
+}
+
+export function packBodyVarCount(name: string, language: "en" | "hi") {
+  const tpl = packTemplate(name, language);
+  if (!tpl) return 0;
+  return bodyVariables(tpl.body).length;
 }
