@@ -85,6 +85,22 @@ export default async function OpsPage() {
       </section>
 
       <section className="card mt-4 p-4">
+        <h2 className="text-sm font-medium text-ink-3">WhatsApp readiness</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Green or red only. Tokens, ids, and secrets are never shown.</p>
+        <ul className="mt-3 space-y-2 text-sm">
+          {snap.whatsapp.checks.map((row) => (
+            <li key={row.id} className="flex flex-wrap justify-between gap-2">
+              <span className={row.ok ? "text-good" : "text-alert"}>{row.ok ? "Green" : "Red"}</span>
+              <span className="flex-1">
+                {row.label}
+                <span className="text-ink-3"> · {row.detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="card mt-4 p-4">
         <h2 className="text-sm font-medium text-ink-3">Flags (read-only)</h2>
         <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
           <dt className="text-ink-3">CALL_PROVIDER</dt>

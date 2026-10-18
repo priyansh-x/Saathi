@@ -85,3 +85,5 @@ Nothing reaches a real person without Priyansh's explicit go-ahead. Defaults sta
 10. **Kill switch.** `SAATHI_KILL_SWITCH=1` (or `/ops` Turn on) stops cron, dials, and sends. Env `1` still wins over the desk latch.
 
 If you are not Priyansh, stop after the dry-run sync and the dry-run test-call. Do not `--apply`. Do not `--yes`. Do not set `CALL_PROVIDER=bolna`.
+
+WhatsApp stays mocked. `npm run whatsapp:templates` prints copy to paste into Meta (nothing is submitted). `npm run whatsapp:test-send -- +91XXXXXXXXXX briefing` prints the Graph payload with EXAMPLE variables. `/ops` has a WhatsApp readiness card (set/missing, last inbound and last status times — never token values). Do not pass `--yes`. Do not set `MOCK_WHATSAPP=0`.

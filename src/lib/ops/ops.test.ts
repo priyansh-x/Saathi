@@ -73,6 +73,10 @@ describe("ops snapshot", () => {
     for (const check of snap.bolna.checks) {
       assert.doesNotMatch(check.detail, /Bearer /);
     }
+    assert.ok(snap.whatsapp.checks.some((c) => c.id === "token"));
+    for (const check of snap.whatsapp.checks) {
+      assert.doesNotMatch(check.detail, /Bearer /);
+    }
   });
 
   it("kill switch toggle writes an audit row and blocks outbound", async () => {

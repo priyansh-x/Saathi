@@ -15,7 +15,8 @@
     "e2e": "npm run build && playwright test",
     "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts",
     "bolna:test-call": "npx --yes tsx scripts/bolna/test-call.ts",
-    "whatsapp:templates": "npx --yes tsx scripts/whatsapp/templates.ts"
+    "whatsapp:templates": "npx --yes tsx scripts/whatsapp/templates.ts",
+    "whatsapp:test-send": "npx --yes tsx scripts/whatsapp/test-send.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

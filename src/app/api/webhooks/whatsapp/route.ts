@@ -2,16 +2,23 @@ import { connection } from "next/server";
 import type { NextRequest } from "next/server";
 import { isMockWhatsapp, whatsappVerifyToken } from "@/lib/config";
 import { jsonOrLog } from "@/lib/http";
+import { markWhatsappWebhookVerified } from "@/lib/ops/whatsapp-readiness";
 import { applyWhatsappStatuses, parseWhatsappStatuses, recordWhatsappWebhook } from "@/lib/whatsapp/delivery";
 import { parseWhatsappWebhookJson, processInboundMessages } from "@/lib/whatsapp/inbound";
 import { verifyWhatsappSignature } from "@/lib/whatsapp/signature";
 
 export async function GET(req: NextRequest) {
+  await connection();
   const url = req.nextUrl;
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");
   const challenge = url.searchParams.get("hub.challenge");
   if (mode === "subscribe" && token && token === whatsappVerifyToken() && challenge) {
+    try {
+      await markWhatsappWebhookVerified();
+    } catch {
+      // Still complete Meta's handshake if the flag write fails.
+    }
     return new Response(challenge, { status: 200 });
   }
   return new Response("forbidden", { status: 403 });
