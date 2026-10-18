@@ -181,7 +181,7 @@ export async function insertExampleHousehold() {
 
   const weekly = await buildWeeklyNote("parent_kamla");
   if (weekly) {
-    await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+    await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9,null,null,null)`, [
       `out_week_${weekly.monday}`,
       "parent_kamla",
       "whatsapp",
@@ -376,7 +376,7 @@ async function seedCompletedDay(
     null,
     true,
   ]);
-  await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+  await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`, [
     `out_${day}`,
     "parent_kamla",
     "whatsapp",
@@ -386,6 +386,9 @@ async function seedCompletedDay(
     istStamp(day, 8, 36),
     "example",
     true,
+    `wamid.EXAMPLE.out_${day}`,
+    "mock",
+    istStamp(day, 8, 36),
   ]);
   if (opts.skipped) {
     await query(`insert into memory_notes values ($1,$2,$3,$4,$5,$6)`, [

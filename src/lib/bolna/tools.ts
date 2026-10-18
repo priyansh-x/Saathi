@@ -172,7 +172,7 @@ export async function relayMessage(input: { call_sid: string; parent_id: string;
         });
       }
     } else {
-      await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
+      await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9,null,null,null)`, [
         id,
         input.parent_id,
         "whatsapp",

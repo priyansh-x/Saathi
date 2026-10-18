@@ -7,6 +7,7 @@ import { logError } from "@/lib/log-error";
 import { applyRetention } from "@/lib/retention";
 import { istDayBounds, istDayKey, minutesNowIst, parseHhMm } from "@/lib/time";
 import { sendSundayWeeklyNotes } from "@/lib/weekly";
+import { escalateUndeliveredAlerts } from "@/lib/whatsapp/delivery";
 
 const WINDOW_END = parseHhMm("11:00");
 
@@ -93,5 +94,6 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
     }
   }
   const weekly = await sendSundayWeeklyNotes(now);
-  return { ok: true as const, day, results, weekly, retention };
+  const waDelivery = await escalateUndeliveredAlerts(now);
+  return { ok: true as const, day, results, weekly, retention, waDelivery };
 }
