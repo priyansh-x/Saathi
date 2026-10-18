@@ -50,7 +50,7 @@ async function CallBody({
 
   if (!call) {
     return (
-      <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="history" extraQuery={extraQuery}>
+      <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="history" extraQuery={extraQuery} addressTerm={data.parent.address_term}>
         <BackLink href={backHref}>{backLabel}</BackLink>
         <p className="mt-4">{t.emptyCall}</p>
       </FamilyFrame>
@@ -71,6 +71,7 @@ async function CallBody({
       active="history"
       extraQuery={extraQuery}
       updatedAt={call.ended_at || call.started_at}
+      addressTerm={data.parent.address_term}
     >
       <BackLink href={backHref}>{backLabel}</BackLink>
       <p className="mt-3 tabular text-sm text-muted-foreground">

@@ -27,6 +27,7 @@ export default async function AlertsPage({
       alerts={data.actAlerts}
       active="alerts"
       updatedAt={data.actAlerts[0]?.created_at}
+      addressTerm={data.parent.address_term}
     >
       <h1 className="mb-4 text-xl font-semibold">{t.alerts}</h1>
       {list.length === 0 ? (
@@ -41,7 +42,7 @@ export default async function AlertsPage({
               <li key={alert.id}>
                 <Link
                   href={`/d/${token}/alerts/${alert.id}?lang=${lang}&from=alerts`}
-                  className="block rounded-2xl border border-border bg-card px-4 py-3"
+                  className="card block px-4 py-3"
                 >
                   <p className="font-medium">{alertTitle(alert, lang)}</p>
                   <p className={`mt-1 text-sm ${sev?.tone === "act" || pill.tone === "open" ? "text-alert" : "text-muted-foreground"}`}>

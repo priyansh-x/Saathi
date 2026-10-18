@@ -67,7 +67,7 @@ export function SettingsForm({
       ) : null}
       {note ? <p className="text-sm text-muted-foreground">{note}</p> : null}
 
-      <section className="space-y-4 rounded-2xl border border-border bg-card px-4 py-4">
+      <section className="card space-y-4 px-4 py-4">
         <h2 className="font-semibold">{t.callSection}</h2>
         <form
           className="space-y-3"
@@ -116,7 +116,7 @@ export function SettingsForm({
         <p className="text-sm text-muted-foreground">{t.settingsHint}</p>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-border bg-card px-4 py-4">
+      <section className="card space-y-4 px-4 py-4">
         <h2 className="font-semibold">{t.medicinesSection}</h2>
         <p className="text-sm text-muted-foreground">{t.medsDisclaimer}</p>
         <ul className="space-y-4">
@@ -190,7 +190,7 @@ export function SettingsForm({
         </form>
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-border bg-card px-4 py-4">
+      <section className="card space-y-3 px-4 py-4">
         <h2 className="font-semibold">{t.neighbour}</h2>
         <form
           className="space-y-2"
