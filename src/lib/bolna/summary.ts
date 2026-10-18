@@ -1,7 +1,12 @@
 import { contactsFor, medicinesFor } from "@/lib/db/queries";
 import { query } from "@/lib/db/client";
+import { neighbourOptedIn } from "@/lib/neighbour";
 import { formatHeaderDate } from "@/lib/time";
-import { fillConsentSpokenLines, loadConsentSpokenLines } from "@/lib/voice/consent-line";
+import {
+  fillConsentSpokenLines,
+  loadConsentSpokenVersions,
+  pickConsentSpokenLines,
+} from "@/lib/voice/consent-line";
 
 const MEMORY_CAP = 600;
 
@@ -66,13 +71,17 @@ export async function promptVariables(parentId: string) {
   const contacts = await contactsFor(parentId);
   const child = contacts.find((c) => c.role === "child");
   const neighbour = contacts.find((c) => c.role === "neighbour");
+  const optedIn = neighbour ? await neighbourOptedIn(parentId) : false;
   const names = {
     parent_name: parent?.first_name ?? "",
     child_name: child?.first_name ?? "",
-    neighbour_name: neighbour?.first_name ?? "",
+    neighbour_name: optedIn ? neighbour?.first_name ?? "" : "",
     address_term: parent?.first_name ? `${parent.first_name} ji` : "ji",
   };
-  const spoken = fillConsentSpokenLines(loadConsentSpokenLines(), names);
+  const spoken = fillConsentSpokenLines(
+    pickConsentSpokenLines(loadConsentSpokenVersions(), optedIn),
+    names,
+  );
   const meds = await medicinesFor(parentId);
   const medicines = meds
     .map((m, i) => `${i + 1}. id=${m.id} | ${m.name} (${m.dose}) | ${m.meal}, ${m.appearance}`)
