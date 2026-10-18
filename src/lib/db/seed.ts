@@ -1,5 +1,6 @@
 import { EXAMPLE_TOKEN } from "@/lib/config";
 import { query } from "@/lib/db/client";
+import { latchOpsKillSwitch } from "@/lib/ops/flags";
 import { istDayOffset, istStamp, istStampFromOffset } from "@/lib/time";
 import { buildWeeklyNote } from "@/lib/weekly";
 
@@ -40,6 +41,9 @@ export async function seed() {
   await query("delete from family_config");
   await query("delete from family_invites");
   await query("delete from audit_events");
+  await query("delete from ops_audit");
+  await query("delete from ops_flags");
+  latchOpsKillSwitch(false);
   await query("delete from contacts");
   await query("delete from parents");
 

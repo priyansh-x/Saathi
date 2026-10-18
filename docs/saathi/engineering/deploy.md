@@ -26,7 +26,8 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | `ALLOWED_PHONE_NUMBERS` | empty | Even a mock path refuses non-example numbers off this list when mocks are later flipped. Keep it empty so a mistaken `MOCK_*=0` still cannot reach anyone. |
 | `ALLOWED_EMAILS` | empty | Same rule for email. |
 | `WHATSAPP_TEMPLATES_APPROVED` | `0` | Stay on `hello_world` if anything ever tried to send. |
-| `SAATHI_KILL_SWITCH` | `0` | Desk and mock tools still run. Flip to `1` only to freeze outbound. |
+| `SAATHI_KILL_SWITCH` | `0` | Desk and mock tools still run. Flip to `1` only to freeze outbound. `/ops` can also latch a DB kill switch (audit row); env `1` still wins. |
+| `OPS_EMAILS` | empty | Who can open `/ops` after sign-in. Empty = 404 for everyone. |
 | `VOICE_ALERT_CHILD` | `0` | No child voice alert. |
 | `PUBLIC_BASE_URL` | `https://<family-vercel-host>` | Magic links and tool URLs. |
 | `PRODUCT_NAME` | `Saathi` | Keep unless renaming. |

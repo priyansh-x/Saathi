@@ -1,6 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import type { Pool } from "pg";
 import { applyMigrations, type MigrationExec } from "@/lib/db/migrate";
+import { latchOpsKillSwitch } from "@/lib/ops/flags";
 
 const globalForDb = globalThis as unknown as {
   saathiDb?: PGlite;
@@ -56,13 +57,24 @@ export function migrationIo(): MigrationExec {
   };
 }
 
+async function loadKillLatch(io: MigrationExec) {
+  try {
+    const rows = await io.query<{ value: string }>(`select value from ops_flags where key = 'kill_switch'`);
+    latchOpsKillSwitch(rows[0]?.value === "1");
+  } catch {
+    latchOpsKillSwitch(false);
+  }
+}
+
 async function openPglite() {
   const { mkdirSync } = await import("node:fs");
   const path = await import("node:path");
   mkdirSync(path.join(process.cwd(), ".data"), { recursive: true });
   const db = new PGlite(path.join(process.cwd(), ".data/saathi"));
   await db.waitReady;
-  await applyMigrations(pgliteIo(db));
+  const io = pgliteIo(db);
+  await applyMigrations(io);
+  await loadKillLatch(io);
   return db;
 }
 
@@ -71,7 +83,9 @@ async function openPool() {
   const url = databaseUrl();
   const ssl = /sslmode=require|supabase\.co/i.test(url) ? { rejectUnauthorized: false } : undefined;
   const pool = new Pool({ connectionString: url, ssl });
-  await applyMigrations(postgresIo(pool));
+  const io = postgresIo(pool);
+  await applyMigrations(io);
+  await loadKillLatch(io);
   return pool;
 }
 

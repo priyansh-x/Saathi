@@ -1,3 +1,5 @@
+import { opsKillSwitchLatched } from "@/lib/ops/flags";
+
 /** Product defaults. Change via env — do not hard-code elsewhere. */
 export const PRODUCT_NAME = process.env.PRODUCT_NAME || "Saathi";
 export const BRIEFING_CHANNEL = process.env.BRIEFING_CHANNEL || "whatsapp";
@@ -33,7 +35,7 @@ export function whatsappVerifyToken() {
 }
 
 export function killSwitchOn() {
-  return process.env.SAATHI_KILL_SWITCH === "1";
+  return process.env.SAATHI_KILL_SWITCH === "1" || opsKillSwitchLatched();
 }
 
 export function voiceAlertChild() {
