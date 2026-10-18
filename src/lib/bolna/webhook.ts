@@ -98,11 +98,23 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     `select * from calls where bolna_execution_id = $1 or id = $1`,
     [executionId],
   );
-  if (already[0] && already[0].status !== "in_progress") {
-    return { ok: true as const, call_id: already[0].id, replay: true };
+  const incoming = normalizeBolnaStatus(payload.status);
+  if (already[0]) {
+    const hasCompletedData =
+      already[0].status === "completed" ||
+      (already[0].status === "no_conversation" && Boolean(already[0].ended_at));
+    if (hasCompletedData) {
+      return { ok: true as const, call_id: already[0].id, replay: true };
+    }
+    const reopenable = ["missed", "in_progress", "failed"].includes(already[0].status);
+    if (incoming === "completed" && reopenable && !hasCompletedData) {
+      // Fall through: a completed delivery is not a replay.
+    } else if (already[0].status !== "in_progress") {
+      return { ok: true as const, call_id: already[0].id, replay: true };
+    }
   }
 
-  const status = normalizeBolnaStatus(payload.status);
+  const status = incoming;
   if (isMissedBolnaStatus(status)) {
     return startMissedFromWebhook(payload, executionId, eventId, already[0]);
   }
@@ -235,7 +247,7 @@ async function startMissedFromWebhook(
   const callId = existing?.id ?? executionId;
   const status = normalizeBolnaStatus(payload.status);
   const attemptResult = status === "no-answer" ? "no_answer" : isFailedBolnaStatus(status) ? "failed" : status;
-  const callStatus = isFailedBolnaStatus(status) ? "failed" : "in_progress";
+  const callStatus = isFailedBolnaStatus(status) ? "failed" : "missed";
   if (!existing) {
     await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
       callId,
@@ -253,8 +265,8 @@ async function startMissedFromWebhook(
       executionId,
       true,
     ]);
-  } else if (isFailedBolnaStatus(status) && existing.status === "in_progress") {
-    await query(`update calls set status = 'failed', duration_sec = 0 where id = $1`, [existing.id]);
+  } else if (existing.status === "in_progress") {
+    await query(`update calls set status = $2, duration_sec = 0 where id = $1`, [existing.id, callStatus]);
   }
   const ladder = await advanceLadder({
     parentId,
