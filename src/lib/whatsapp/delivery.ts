@@ -175,7 +175,7 @@ export async function latestUndeliveredEmail(parentId: string) {
 
 async function ladderPeople(parentId: string) {
   const kids = await childrenFor(parentId);
-  const neighbour = await query<{ phone: string; locale: string; first_name: string; role: string }>(
+  const neighbour = await query<{ phone: string; locale: string; first_name: string; role: "neighbour" }>(
     `select phone, locale, first_name, role from contacts where parent_id = $1 and role = 'neighbour' limit 1`,
     [parentId],
   );
