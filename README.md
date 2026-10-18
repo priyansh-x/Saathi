@@ -98,7 +98,7 @@ Every call, WhatsApp, SMS, or email goes through `gateOutbound` and `ALLOWED_PHO
 | `BOLNA_API_KEY` / `BOLNA_AGENT_ID` / `BOLNA_BASE_URL` | empty | Live Bolna. |
 | `BOLNA_TOOL_TOKEN` | empty locally; `openssl rand -hex 32` in production | Mid-call tools. Required on a public host. `SAATHI_TOOL_TOKEN` is a deprecated alias. |
 | `BOLNA_WEBHOOK_SECRET` | empty locally; `openssl rand -hex 32` in production | Bolna webhook. Required on a public host. Must differ from the tool token. |
-| `CRON_SECRET` | empty (dev fallback when mocked) | `POST /api/cron/tick`. |
+| `CRON_SECRET` | empty locally; `openssl rand -hex 32` in production | `POST /api/cron/tick`. Required on a public host. Must differ from session, tool, and webhook secrets. No `dev-cron` fallback. |
 | `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_VERIFY_TOKEN` / `WHATSAPP_APP_SECRET` | empty | Live WhatsApp. |
 | `WHATSAPP_TEMPLATES_APPROVED` | `0` | `1` treats every template as approved. |
 | `WHATSAPP_APPROVED_TEMPLATES` | empty | Comma-separated Meta template names. Unlisted templates fall back to email. |

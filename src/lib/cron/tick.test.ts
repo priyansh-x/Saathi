@@ -33,6 +33,21 @@ describe("daily tick window", () => {
     assert.ok(Math.abs(live.now.getTime() - Date.now()) < 5000);
   });
 
+  it("ignores body clock in production even when mocked", () => {
+    const env = process.env as Record<string, string | undefined>;
+    const prev = env.NODE_ENV;
+    env.NODE_ENV = "production";
+    try {
+      const fake = "2020-01-01T00:00:00.000Z";
+      const clock = resolveTickClock({ now: fake, elapsed_min: 99 }, true);
+      assert.notEqual(clock.now.toISOString(), fake);
+      assert.equal(clock.elapsedMin, undefined);
+      assert.ok(Math.abs(clock.now.getTime() - Date.now()) < 5000);
+    } finally {
+      env.NODE_ENV = prev;
+    }
+  });
+
   it("is a half-open IST morning window from call time to 11:00", () => {
     assert.equal(inMorningWindow(IN_WINDOW, "08:30"), true);
     assert.equal(inMorningWindow(BEFORE_WINDOW, "08:30"), false);

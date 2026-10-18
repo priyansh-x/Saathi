@@ -32,6 +32,7 @@ export default defineConfig({
       SESSION_SECRET: "e2e-session-secret-32chars-minimum",
       BOLNA_TOOL_TOKEN: "e2e-bolna-tool-token-32chars-min",
       BOLNA_WEBHOOK_SECRET: "e2e-webhook-secret-32chars-minxx",
+      CRON_SECRET: "e2e-cron-secret-32chars-minimumxxx",
     },
   },
 });

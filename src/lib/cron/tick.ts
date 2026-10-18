@@ -16,12 +16,12 @@ export function inMorningWindow(now: Date, callTime: string) {
   return mins >= parseHhMm(callTime || "08:30") && mins < WINDOW_END;
 }
 
-/** Fake clock from the cron body is mock-only. Live ticks always use wall time. */
+/** Fake clock from the cron body is local-mock only. Production always uses wall time. */
 export function resolveTickClock(
   body: { elapsed_min?: number; now?: string },
   mock = isMockBolna(),
 ): { now: Date; elapsedMin?: number } {
-  if (!mock) return { now: new Date() };
+  if (process.env.NODE_ENV === "production" || !mock) return { now: new Date() };
   return {
     now: body.now ? new Date(body.now) : new Date(),
     elapsedMin: body.elapsed_min,
