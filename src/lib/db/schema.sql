@@ -69,7 +69,8 @@ create table if not exists calls (
   recording_url text,
   bolna_execution_id text,
   is_example boolean not null default false,
-  mood text
+  mood text,
+  parent_call_id text
 );
 
 create table if not exists call_attempts (

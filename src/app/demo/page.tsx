@@ -90,7 +90,7 @@ export default async function DemoPage({
   async function nextLadder() {
     "use server";
     if (!demoModeAllowed()) notFound();
-    if (callId) await advanceLadder({ parentId, callId, elapsedMin: 60 });
+    if (callId) await advanceLadder({ parentId, callId, elapsedMin: 60, redial: false });
     redirect(`/demo?lang=${lang}&step=ladder`);
   }
 

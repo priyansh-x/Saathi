@@ -1,5 +1,6 @@
+import { placeRetryCall } from "@/lib/calls/prepare";
 import { placeCall } from "@/lib/calls/provider";
-import { defaultLadder, isMockBolna } from "@/lib/config";
+import { defaultLadder } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { raiseAlert } from "@/lib/bolna/tools";
 import { istStampFromOffset, istDayKey } from "@/lib/time";
@@ -73,6 +74,7 @@ export async function advanceLadder(
     elapsedMin: number;
     attemptResult?: string;
     redial?: boolean;
+    clock?: Date;
   },
   deps?: { place?: PlaceFn },
 ) {
@@ -87,13 +89,15 @@ export async function advanceLadder(
     { offset: cfg.last_45, kind: "ring" },
     { offset: cfg.escalate_60, kind: "escalate" },
   ];
+  const ringRetries = steps.filter((step) => step.kind === "ring" && step.offset > 0);
   const parent = await query<{ first_name: string; address_term: string | null; call_time: string; phone: string }>(
     `select first_name, address_term, call_time, phone from parents where id = $1`,
     [args.parentId],
   );
   const who = parent[0]?.address_term?.trim() || parent[0]?.first_name || "family";
-  const redial = args.redial ?? !isMockBolna();
-  const place = deps?.place ?? placeCall;
+  const redial = args.redial ?? true;
+  const clock = args.clock ?? new Date();
+  const place = deps?.place;
   let placedRetry = false;
 
   const actions: string[] = [];
@@ -106,7 +110,22 @@ export async function advanceLadder(
       );
       if (!existing[0] && step.offset > 0 && redial) {
         if (placedRetry) continue;
-        const placed = await place(args.parentId);
+        const already = await query<{ n: number }>(
+          `select count(*)::int as n from calls where parent_call_id = $1`,
+          [args.callId],
+        );
+        if ((already[0]?.n ?? 0) >= ringRetries.length) continue;
+        const lastDial = await query<{ started_at: string }>(
+          `select started_at from calls where id = $1 or parent_call_id = $1 order by started_at desc limit 1`,
+          [args.callId],
+        );
+        const lastMs = lastDial[0] ? new Date(lastDial[0].started_at).getTime() : 0;
+        let sinceLast = lastMs ? Math.floor((clock.getTime() - lastMs) / 60000) : args.elapsedMin;
+        if (sinceLast < 0) sinceLast = args.elapsedMin;
+        if (lastMs && sinceLast < cfg.retry_10) continue;
+        const placed = place
+          ? await place(args.parentId, clock)
+          : await placeRetryCall(args.parentId, clock, args.callId);
         placedRetry = true;
         actions.push(placed.ok ? `redial_${step.offset}` : `redial_${step.offset}_${placed.reason || "failed"}`);
       }
@@ -144,6 +163,10 @@ export async function advanceLadder(
       actions.push("soft_notice");
     }
     if (step.kind === "escalate") {
+      if (placedRetry) {
+        actions.push("deferred_escalation");
+        continue;
+      }
       const attempts = await query<{ result: string }>(
         `select result from call_attempts where call_id = $1`,
         [args.callId],

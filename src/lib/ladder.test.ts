@@ -57,6 +57,7 @@ describe("missed ladder", () => {
       callId,
       elapsedMin: 60,
       attemptResult: "busy",
+      redial: false,
     });
     assert.ok(result.actions.includes("skipped_reachable"));
     assert.ok(!result.actions.includes("escalated"));
@@ -136,7 +137,7 @@ describe("missed ladder", () => {
     const alertId = "alert_id" in chest ? chest.alert_id : "";
     const callId = "call_id" in chest && chest.call_id ? chest.call_id : "";
     await ackAlert(alertId, "Rohit");
-    const result = await advanceLadder({ parentId: "parent_kamla", callId, elapsedMin: 60 });
+    const result = await advanceLadder({ parentId: "parent_kamla", callId, elapsedMin: 60, redial: false });
     assert.ok(result.actions.includes("skipped_acked"));
     assert.ok(!result.actions.includes("escalated"));
   });

@@ -17,6 +17,7 @@ export type PlaceCallResult = PlaceCallOk | PlaceCallErr;
 export type PreparedCall = {
   parentId: string;
   clock: Date;
+  parentCallId?: string;
   payload: {
     agent_id: string | undefined;
     recipient_phone_number: string;
@@ -42,11 +43,13 @@ export async function minutesUsedToday(clock: Date = new Date()) {
   return Math.ceil((rows[0]?.secs ?? 0) / 60);
 }
 
-/** Any call row today counts as a dial, including failed and zero-duration. */
+/** Morning dials only. Ladder retries (parent_call_id set) do not count against the cap. */
 export async function dialsToday(parentId: string, clock: Date = new Date()) {
   const { start, end } = istDayBounds(istDayKey(clock));
   const rows = await query<{ n: number }>(
-    `select count(*)::int as n from calls where parent_id = $1 and started_at >= $2 and started_at < $3`,
+    `select count(*)::int as n from calls
+     where parent_id = $1 and started_at >= $2 and started_at < $3
+       and parent_call_id is null`,
     [parentId, start, end],
   );
   return rows[0]?.n ?? 0;
@@ -56,7 +59,11 @@ export function dailyDialCap() {
   return Math.max(1, Number(process.env.CALL_BUDGET_DIALS_DAILY || 1));
 }
 
-export async function prepareMorningCall(parentId: string, clock: Date = new Date()): Promise<PlaceCallResult | PreparedCall> {
+export async function prepareMorningCall(
+  parentId: string,
+  clock: Date = new Date(),
+  opts?: { retryOf?: string },
+): Promise<PlaceCallResult | PreparedCall> {
   if (killSwitchOn()) return { ok: false as const, reason: "kill_switch" };
   const parents = await query<{
     phone: string;
@@ -87,8 +94,20 @@ export async function prepareMorningCall(parentId: string, clock: Date = new Dat
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
   const used = await minutesUsedToday(clock);
   if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
-  if ((await dialsToday(parentId, clock)) >= dailyDialCap()) {
+  if (!opts?.retryOf && (await dialsToday(parentId, clock)) >= dailyDialCap()) {
     return { ok: false as const, reason: "already_called" };
+  }
+  if (opts?.retryOf) {
+    const root = await query<{ parent_id: string; started_at: string }>(
+      `select parent_id, started_at from calls where id = $1`,
+      [opts.retryOf],
+    );
+    if (!root[0] || root[0].parent_id !== parentId) {
+      return { ok: false as const, reason: "unknown_parent" };
+    }
+    if (!root[0].started_at.startsWith(istDayKey(clock))) {
+      return { ok: false as const, reason: "already_called" };
+    }
   }
 
   const userData = await buildCallContext(parentId);
@@ -102,7 +121,7 @@ export async function prepareMorningCall(parentId: string, clock: Date = new Dat
   if ("from_phone_number" in payload) {
     throw new Error("Do not set from_phone_number on POST /call");
   }
-  return { parentId, clock, payload };
+  return { parentId, clock, parentCallId: opts?.retryOf, payload };
 }
 
 export function isPreparedCall(value: PlaceCallResult | PreparedCall): value is PreparedCall {
@@ -114,6 +133,7 @@ export async function recordCallPlacement(args: {
   clock: Date;
   executionId: string;
   status: "in_progress" | "failed";
+  parentCallId?: string;
 }) {
   const dup = await query<{ id: string }>(
     `select id from calls where id = $1 or bolna_execution_id = $1`,
@@ -136,16 +156,23 @@ export async function recordCallPlacement(args: {
     args.executionId,
     true,
   ]);
+  if (args.parentCallId) {
+    await query(`update calls set parent_call_id = $1 where id = $2`, [args.parentCallId, args.executionId]);
+  }
   return args.executionId;
 }
 
-export async function insertSimulatedCall(prepared: PreparedCall): Promise<PlaceCallOk> {
+export async function insertSimulatedCall(
+  prepared: PreparedCall,
+  parentCallId?: string,
+): Promise<PlaceCallOk> {
   const executionId = `mock_${prepared.parentId}_${istDayKey(prepared.clock)}_${Date.now()}`;
   await recordCallPlacement({
     parentId: prepared.parentId,
     clock: prepared.clock,
     executionId,
     status: "in_progress",
+    parentCallId,
   });
   return { ok: true as const, execution_id: executionId, mock: true, user_data: prepared.payload.user_data };
 }
@@ -174,6 +201,7 @@ export async function postBolnaCall(
       clock: prepared.clock,
       executionId,
       status: "failed",
+      parentCallId: prepared.parentCallId,
     });
     return { ok: false as const, reason: "bolna_error", status: res.status };
   }
@@ -182,6 +210,7 @@ export async function postBolnaCall(
     clock: prepared.clock,
     executionId,
     status: "in_progress",
+    parentCallId: prepared.parentCallId,
   });
   return {
     ok: true as const,
@@ -189,4 +218,18 @@ export async function postBolnaCall(
     mock: false,
     user_data: prepared.payload.user_data,
   };
+}
+
+export async function placeRetryCall(
+  parentId: string,
+  clock: Date,
+  parentCallId: string,
+  fetchImpl: PlaceFetch = fetch,
+): Promise<PlaceCallResult> {
+  const prepared = await prepareMorningCall(parentId, clock, { retryOf: parentCallId });
+  if (!isPreparedCall(prepared)) return prepared;
+  if (process.env.BOLNA_API_KEY) {
+    return postBolnaCall(prepared, fetchImpl);
+  }
+  return insertSimulatedCall(prepared, parentCallId);
 }

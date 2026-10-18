@@ -58,8 +58,8 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
       results.push({ parent_id: parent.id, skipped: "consent_later" });
       continue;
     }
-    const today = await query<{ id: string; started_at: string; status: string }>(
-      `select id, started_at, status from calls
+    const today = await query<{ id: string; started_at: string; status: string; parent_call_id: string | null }>(
+      `select id, started_at, status, parent_call_id from calls
        where parent_id = $1 and started_at >= $2 and started_at < $3
        order by started_at desc limit 1`,
       [parent.id, start, end],
@@ -75,12 +75,19 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
       }
       const open = ["missed", "in_progress", "no_conversation", "failed"].includes(today[0].status);
       if (open) {
+        const ladderCallId = today[0].parent_call_id || today[0].id;
+        const root = await query<{ started_at: string }>(`select started_at from calls where id = $1`, [ladderCallId]);
         const mins =
           args?.elapsedMin ??
-          Math.max(0, Math.floor((now.getTime() - new Date(today[0].started_at).getTime()) / 60000));
+          Math.max(0, Math.floor((now.getTime() - new Date(root[0]?.started_at || today[0].started_at).getTime()) / 60000));
         results.push({
           parent_id: parent.id,
-          ladder: await advanceLadder({ parentId: parent.id, callId: today[0].id, elapsedMin: mins }),
+          ladder: await advanceLadder({
+            parentId: parent.id,
+            callId: ladderCallId,
+            elapsedMin: mins,
+            clock: now,
+          }),
         });
         continue;
       }
