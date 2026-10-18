@@ -174,7 +174,11 @@ export default async function TodayPage({
           </p>
         ) : null}
         {copy.sub ? <p className="mt-2 text-[15px] text-foreground/75">{p(copy.sub)}</p> : null}
-        {data.delivery ? (
+        {data.couldntReach ? (
+          <p className="mt-2 text-[15px] font-medium text-alert">
+            {t.couldntReach.replace("{name}", data.couldntReach.name)}
+          </p>
+        ) : data.delivery ? (
           <p className="mt-2 text-[15px] text-foreground/75">
             {t.deliveredTo.replace("{name}", data.delivery.name).replace("{time}", data.delivery.clock)}
           </p>

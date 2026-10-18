@@ -117,6 +117,8 @@ export default async function OpsPage() {
           <dd>{snap.flags.mockBolna ? "1" : "0"}</dd>
           <dt className="text-ink-3">MOCK_WHATSAPP</dt>
           <dd>{snap.flags.mockWhatsapp ? "1" : "0"}</dd>
+          <dt className="text-ink-3">MOCK_EMAIL</dt>
+          <dd>{snap.flags.mockEmail ? "1" : "0"}</dd>
         </dl>
       </section>
 
@@ -161,7 +163,7 @@ export default async function OpsPage() {
           <ul className="mt-2 divide-y divide-border text-sm">
             {snap.outbound.map((row, i) => (
               <li key={`${row.at}-${i}`} className="flex flex-wrap justify-between gap-2 py-2">
-                <span>
+                <span className={row.gate === "undelivered" || row.delivery === "undelivered" ? "text-alert" : undefined}>
                   {row.kind} · {row.gate} · {row.delivery}
                 </span>
                 <span className="text-ink-3">

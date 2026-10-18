@@ -16,7 +16,7 @@ import type { Lang } from "@/lib/i18n/messages";
 import { istDayKey, istDayOffset, minutesNowIst, parseHhMm } from "@/lib/time";
 import { dedupeDoses, todayStatus, type LadderPlan } from "@/lib/today";
 import { latestWeeklyNote } from "@/lib/weekly";
-import { latestDelivery } from "@/lib/whatsapp/delivery";
+import { latestDelivery, latestUndeliveredEmail } from "@/lib/whatsapp/delivery";
 
 export function readLang(value?: string): Lang {
   return value === "hi" ? "hi" : "en";
@@ -73,5 +73,6 @@ export async function loadFamily(token: string) {
     neighbour: contacts.find((c) => c.role === "neighbour") ?? null,
     weekly: await latestWeeklyNote(parent.id),
     delivery: await latestDelivery(parent.id),
+    couldntReach: await latestUndeliveredEmail(parent.id),
   };
 }

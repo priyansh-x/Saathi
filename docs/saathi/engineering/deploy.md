@@ -23,6 +23,7 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | --- | --- | --- |
 | `MOCK_BOLNA` | `1` | No live dials. |
 | `MOCK_WHATSAPP` | `1` | No live WhatsApp. Email sign-in stays the local mock session. |
+| `MOCK_EMAIL` | `1` | No live email fallback. Without Resend/SMTP, a live fallback is `undelivered`, not `sent`. |
 | `ALLOWED_PHONE_NUMBERS` | empty | Even a mock path refuses non-example numbers off this list when mocks are later flipped. Keep it empty so a mistaken `MOCK_*=0` still cannot reach anyone. |
 | `ALLOWED_EMAILS` | empty | Same rule for email. |
 | `WHATSAPP_TEMPLATES_APPROVED` | `0` | Stay on `hello_world` if anything ever tried to send. |
@@ -39,7 +40,7 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | `CALL_BUDGET_MINUTES_DAILY` | `15` | |
 | `MAX_CALL_SECONDS` | `180` | |
 
-Leave live Bolna API keys, WhatsApp Graph tokens, and live email secrets **empty** on staging. Still set `SESSION_SECRET`, `BOLNA_TOOL_TOKEN`, and `BOLNA_WEBHOOK_SECRET` with three different `openssl rand -hex 32` values — public hosts have no `dev-*` fallbacks. `MAGIC_LINK_SECRET` is a deprecated alias for `SESSION_SECRET`. `SAATHI_TOOL_TOKEN` is a deprecated alias for `BOLNA_TOOL_TOKEN`.
+Leave live Bolna API keys, WhatsApp Graph tokens, and live email secrets (`RESEND_API_KEY` / `EMAIL_API_KEY`, `SMTP_*`, `EMAIL_FROM`) **empty** on staging. Still set `SESSION_SECRET`, `BOLNA_TOOL_TOKEN`, and `BOLNA_WEBHOOK_SECRET` with three different `openssl rand -hex 32` values — public hosts have no `dev-*` fallbacks. `MAGIC_LINK_SECRET` is a deprecated alias for `SESSION_SECRET`. `SAATHI_TOOL_TOKEN` is a deprecated alias for `BOLNA_TOOL_TOKEN`.
 
 Landing project: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` only if the waitlist table is ready; otherwise the waitlist route no-ops outside production.
 

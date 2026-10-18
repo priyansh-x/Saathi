@@ -1,4 +1,4 @@
-import { callProviderName, isMockBolna, isMockWhatsapp, killSwitchOn } from "@/lib/config";
+import { callProviderName, isMockBolna, isMockEmail, isMockWhatsapp, killSwitchOn } from "@/lib/config";
 import { recentErrors } from "@/lib/log-error";
 import { query } from "@/lib/db/client";
 import { loadBolnaReadiness } from "@/lib/ops/bolna-readiness";
@@ -74,6 +74,7 @@ export async function loadOpsSnapshot(now = new Date()) {
       callProvider: callProviderName(),
       mockBolna: isMockBolna(),
       mockWhatsapp: isMockWhatsapp(),
+      mockEmail: isMockEmail(),
     },
     audits,
     errors: await recentErrors(20),

@@ -59,7 +59,7 @@ describe("ops snapshot", () => {
     for (const row of snap.outbound) {
       assert.match(row.to, /••••\d{4}|••••@/);
       assert.equal(Object.keys(row).sort().join(","), "at,delivery,gate,kind,to");
-      assert.match(row.delivery, /^(sent|delivered|read|failed|mock|example|—)$/);
+      assert.match(row.delivery, /^(sent|delivered|read|failed|mock|example|undelivered|—)$/);
     }
     for (const row of snap.openAlerts) {
       assert.equal("quote" in row, false);
@@ -69,6 +69,7 @@ describe("ops snapshot", () => {
     assert.equal(snap.flags.callProvider, "simulated");
     assert.equal(snap.flags.mockBolna, true);
     assert.equal(snap.flags.mockWhatsapp, true);
+    assert.equal(snap.flags.mockEmail, true);
     assert.ok(snap.bolna.checks.some((c) => c.id === "call_provider" && c.detail === "simulated"));
     for (const check of snap.bolna.checks) {
       assert.doesNotMatch(check.detail, /Bearer /);

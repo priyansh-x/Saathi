@@ -104,10 +104,12 @@ describe("outbound fetch", () => {
   it("falls back to the child's email, not the first ALLOWED_EMAILS entry", async () => {
     const prev = {
       wa: process.env.MOCK_WHATSAPP,
+      email: process.env.MOCK_EMAIL,
       phones: process.env.ALLOWED_PHONE_NUMBERS,
       emails: process.env.ALLOWED_EMAILS,
     };
     process.env.MOCK_WHATSAPP = "0";
+    process.env.MOCK_EMAIL = "0";
     process.env.ALLOWED_PHONE_NUMBERS = "1111111111";
     process.env.ALLOWED_EMAILS = "other@example.invalid,rohit@example.invalid";
 
@@ -121,12 +123,14 @@ describe("outbound fetch", () => {
         idempotencyKey: `quality_email_${Date.now()}`,
       });
       assert.equal(sent.channel, "email");
-      assert.equal(sent.status, "sent");
+      assert.equal(sent.status, "undelivered");
       const { query } = await import("./db/client");
       const rows = await query<{ to_phone: string }>(`select to_phone from outbound_messages where id = $1`, [sent.id]);
       assert.equal(rows[0]?.to_phone, "rohit@example.invalid");
     } finally {
       process.env.MOCK_WHATSAPP = prev.wa;
+      if (prev.email === undefined) delete process.env.MOCK_EMAIL;
+      else process.env.MOCK_EMAIL = prev.email;
       process.env.ALLOWED_PHONE_NUMBERS = prev.phones;
       process.env.ALLOWED_EMAILS = prev.emails;
     }
