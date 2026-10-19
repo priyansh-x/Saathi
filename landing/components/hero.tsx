@@ -29,7 +29,7 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden pb-20 pt-8 md:pb-28 md:pt-16">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px] bg-[radial-gradient(60%_50%_at_75%_20%,var(--accent-soft),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px] bg-[radial-gradient(60%_50%_at_75%_20%,var(--paper-sunk),transparent_70%)]"
         aria-hidden
       />
       <div className="container-site grid items-center gap-12 lg:grid-cols-[1.02fr_1fr] lg:gap-16">
@@ -37,7 +37,7 @@ export function Hero() {
           <h1 className="h1 rise" style={d(0)}>
             {t.h1a}
             <br />
-            {t.h1bLead} {t.h1b} <span className="serif-line accent-phrase">{t.h1accent}</span>
+            {t.h1bLead} {t.h1b} <span className="serif-line">{t.h1accent}</span>
           </h1>
           <p className="sub rise mt-6" style={d(160)}>
             {t.sub}
@@ -48,7 +48,7 @@ export function Hero() {
               <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
             </a>
             <a href="#listen" className="btn-ghost">
-              <PhoneCall className="size-4 text-accent" strokeWidth={1.75} aria-hidden />
+              <PhoneCall className="size-4" strokeWidth={1.75} aria-hidden />
               {t.secondary}
             </a>
           </div>
@@ -89,7 +89,7 @@ export function Hero() {
                     {t.callTitle} · {t.callClock}
                   </p>
                 </div>
-                <Waveform bars={9} className="text-accent" />
+                <Waveform bars={9} className="text-ink-2" />
               </div>
               <div className="mt-3 rounded-[14px] bg-bg-sunk px-3 py-2.5">
                 <p className={`text-[15px] leading-snug ${line.hi ? "font-deva" : ""}`}>

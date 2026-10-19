@@ -37,6 +37,7 @@
   --color-ink-3: var(--ink-3);
   --color-brand: var(--primary);
   --color-brand-deep: var(--brand-deep);
+  --color-brand-text: var(--brand-text);
   --color-brand-soft: var(--brand-soft);
   --color-sage: var(--sage);
   --color-sage-soft: var(--sage-soft);

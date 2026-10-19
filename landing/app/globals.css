@@ -110,7 +110,7 @@ body {
 }
 
 .accent-phrase {
-  color: var(--accent);
+  color: var(--brand-text);
 }
 
 .h1 {

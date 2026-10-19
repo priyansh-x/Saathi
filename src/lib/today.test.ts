@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { AlertRow, CallRow, DoseLog } from "./db/types";
-import { dedupeDoses, humanQuote, todayStatus } from "./today";
+import { dedupeDoses, heroCopy, humanQuote, todayStatus } from "./today";
 
 function call(status: CallRow["status"]): CallRow {
   return {
@@ -170,6 +170,26 @@ describe("todayStatus", () => {
     const rows = dedupeDoses([dose("not_asked", "a"), dose("taken", "b")]);
     assert.equal(rows.length, 1);
     assert.equal(rows[0]?.status, "taken");
+  });
+
+  it("labels Act now with a chip that is not the look chip", () => {
+    const base = {
+      callTime: "08:30",
+      call: call("completed"),
+      doses: [dose("not_taken")],
+      alert: actAlert,
+      attempts: [],
+      neighbourName: "Priya",
+      ackedBy: null,
+      ackedAt: null,
+    };
+    const actEn = heroCopy({ ...base, state: "act", lang: "en" });
+    const actHi = heroCopy({ ...base, state: "act", lang: "hi" });
+    const lookEn = heroCopy({ ...base, state: "look", lang: "en" });
+    assert.equal(actEn.chip, "Act now");
+    assert.ok(actHi.chip.trim().length > 0);
+    assert.notEqual(lookEn.chip, actEn.chip);
+    assert.equal(lookEn.chip, "Needs a look");
   });
 
   it("never treats a system miss line as her words", () => {
