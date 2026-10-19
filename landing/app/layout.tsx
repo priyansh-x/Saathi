@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Geist_Mono, IBM_Plex_Sans, IBM_Plex_Sans_Devanagari, Instrument_Serif } from "next/font/google";
+import { Geist_Mono, Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
 import { WaitlistProvider } from "@/components/waitlist";
 import { content } from "@/lib/content";
 import "./globals.css";
 
-const plex = IBM_Plex_Sans({
-  variable: "--font-plex",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "600"],
 });
 
 const geistMono = Geist_Mono({
@@ -22,10 +21,10 @@ const instrument = Instrument_Serif({
   style: ["normal", "italic"],
 });
 
-const deva = IBM_Plex_Sans_Devanagari({
+const deva = Noto_Sans_Devanagari({
   variable: "--font-deva",
   subsets: ["devanagari"],
-  weight: ["400", "600"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -50,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${plex.variable} ${geistMono.variable} ${instrument.variable} ${deva.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} ${instrument.variable} ${deva.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg text-ink">
         <WaitlistProvider>{children}</WaitlistProvider>

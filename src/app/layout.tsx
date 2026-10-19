@@ -2,14 +2,13 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { IBM_Plex_Sans, IBM_Plex_Sans_Devanagari, Instrument_Serif } from "next/font/google";
+import { Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
 import { AppStyles } from "@/components/app-styles";
 import { PwaBoot } from "@/components/pwa/boot";
 
-const plex = IBM_Plex_Sans({
-  variable: "--font-plex",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "600"],
   display: "swap",
   preload: false,
 });
@@ -23,7 +22,7 @@ const instrument = Instrument_Serif({
   preload: false,
 });
 
-const devanagari = IBM_Plex_Sans_Devanagari({
+const devanagari = Noto_Sans_Devanagari({
   variable: "--font-devanagari",
   subsets: ["devanagari"],
   weight: ["400", "600"],
@@ -60,7 +59,7 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
   return (
     <html
       lang={hi ? "hi" : "en"}
-      className={`${plex.variable} ${instrument.variable} ${devanagari.variable} h-full ${hi ? "font-devanagari" : ""}`}
+      className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full ${hi ? "font-devanagari" : ""}`}
     >
       <body className="flex min-h-full flex-col">
         <AppStyles />

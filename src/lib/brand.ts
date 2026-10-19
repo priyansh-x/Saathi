@@ -10,3 +10,29 @@ export const TAGLINE_EN = "A morning call for Maa.";
 export const TAGLINE_HI = "माँ के लिए सुबह की घंटी।";
 export const VOICE_LINE_EN = "This is Saathi.";
 export const VOICE_LINE_HI = "Main Saathi hoon.";
+
+/** Terracotta tile and paper glyph. One outlined स for every surface. */
+export const MARK_TILE = "#B0532A";
+export const MARK_GLYPH = "#F7F5F0";
+
+/**
+ * Noto Sans Devanagari U+0938 weight 800, outlined, flattened to the 512 tile,
+ * then hand-tuned: open left-hook counter, 2 px bar/stem at 16 px.
+ */
+export const MARK_PATH =
+  "M210.18 389.31Q175.42 354.31 153.87 328.5Q132.32 302.7 122.18 285.14Q115.45 273.46 112.57 264.08Q109.69 254.71 109.69 246.56Q109.69 232.94 118.09 224.09Q126.5 215.24 130.96 215.24Q148.49 215.24 161.17 225.61Q173.85 235.99 186.33 249.72L148.13 243.76Q161.77 233.78 167.59 223.59Q173.4 213.4 185.4 207.83Q185.4 196.36 182.15 185.73Q178.91 175.11 172.6 167.64L204.75 184L97.28 184L97.28 120L287.08 120L287.08 184L231.12 184L238.94 159.09Q244.11 169.29 247.03 180.04Q249.94 190.8 249.94 204.55Q249.94 221.01 244.07 233.66Q238.2 246.3 229.06 255.38L222.54 262.48Q214.81 269.82 205.41 276.25Q196.01 282.67 184.43 287.13L184.9 279.68Q194.87 291.07 206.49 302.99Q218.1 314.91 231.22 326.96Q244.33 339.01 257.39 350.83ZM278.13 291.92Q260.29 291.92 241.11 287.52Q221.93 283.12 203.17 272.6L219.81 230.68Q236.36 236.37 249.25 238.6Q262.15 240.83 278.37 240.83Q294.27 240.83 309.37 238.07Q324.48 235.31 340.44 228.97L340.44 282.02Q327.34 286.57 311.99 289.24Q296.63 291.92 278.13 291.92ZM313.63 378.67L313.63 184L271.94 184L271.94 120L414.7 120L414.7 184L378.16 184L378.16 378.67Z";
+
+/**
+ * 16 px favicon only. 2 px bar, 2 px stem, open hook, crossbar into the stem.
+ * Snapped to the 32-unit (1 px @ 16) grid so it does not blur.
+ */
+export const MARK_PATH_SMALL =
+  "M128 128H384V192H128ZM320 128H384V384H320ZM128 192H192V320H128ZM192 256H320V320H192Z";
+
+export function markSvgMarkup(opts?: { mono?: boolean; small?: boolean }) {
+  const d = opts?.small ? MARK_PATH_SMALL : MARK_PATH;
+  const tile = opts?.mono ? "" : `<rect width="512" height="512" rx="112" fill="${MARK_TILE}"/>`;
+  const fill = opts?.mono ? "currentColor" : MARK_GLYPH;
+  const crisp = opts?.small ? ' shape-rendering="crispEdges"' : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Saathi">${tile}<path fill="${fill}" d="${d}"${crisp}/></svg>`;
+}

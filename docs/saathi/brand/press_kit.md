@@ -16,9 +16,11 @@ English **Saathi**. Hindi **साथी**. Never "SAATHI" in a lockup. The mark
 
 Do not use indigo. The open-line ring was tried and rejected.
 
+The outlined स is derived from Noto Sans Devanagari (SIL Open Font License). The outline is fine to ship; this notice is the attribution.
+
 ## Files
 
-Production tile: `docs/saathi/brand/mark.svg` and `public/brand/mark.svg` (outlined paths, no `<text>` glyph). Rasters from `npm run brand:build`. Lockups in `docs/saathi/brand/lockups/`. Screens in `public/brand/screens/` after `npm run brand:screens`.
+Production tile: `docs/saathi/brand/mark.svg` and `public/brand/mark.svg` (outlined paths, no `<text>` glyph). The glyph is an outline of Noto Sans Devanagari U+0938 at weight 800, shipped under the SIL Open Font License. Rasters from `npm run brand:build`. Lockups in `docs/saathi/brand/lockups/`. Screens in `public/brand/screens/` after `npm run brand:screens`.
 
 ## How to talk about it
 

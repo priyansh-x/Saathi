@@ -5,6 +5,7 @@ import { Mail } from "lucide-react";
 import { useEffect } from "react";
 import { content } from "@/lib/content";
 import { useReveal } from "@/lib/use-reveal";
+import { MARK_GLYPH, MARK_PATH, MARK_TILE } from "../../src/lib/brand";
 import { Waves } from "./rest";
 
 export function SiteEffects() {
@@ -47,10 +48,9 @@ export function SkipLink() {
 export function LogoTile({ size = "size-8" }: { size?: string; text?: string; dark?: boolean }) {
   return (
     <span className={`inline-grid ${size} place-items-center`} aria-hidden>
-      <svg viewBox="0 0 64 64" className="h-full w-full">
-        <rect width="64" height="64" rx="14" fill="#34507A" />
-        <path fill="none" stroke="#F7F5F0" strokeWidth="5.5" strokeLinecap="round" d="M46.8 20.4a18 18 0 1 0 1.2 8.2" />
-        <circle cx="32" cy="32" r="6.2" fill="#F7F5F0" />
+      <svg viewBox="0 0 512 512" className="h-full w-full">
+        <rect width="512" height="512" rx="112" fill={MARK_TILE} />
+        <path fill={MARK_GLYPH} d={MARK_PATH} />
       </svg>
     </span>
   );

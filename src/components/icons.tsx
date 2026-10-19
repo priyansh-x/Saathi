@@ -80,12 +80,4 @@ export function IconHistory(p: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function MarkSvg({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden>
-      <rect width="64" height="64" rx="14" fill="#34507A" />
-      <path fill="none" stroke="#F7F5F0" strokeWidth="5.5" strokeLinecap="round" d="M46.8 20.4a18 18 0 1 0 1.2 8.2" />
-      <circle cx="32" cy="32" r="6.2" fill="#F7F5F0" />
-    </svg>
-  );
-}
+export { MarkSvg } from "./mark";

@@ -20,8 +20,8 @@ Explorations in `explorations/`: geometric स, Latin SA, morning light, open-li
 
 ## Wordmark
 
-- Latin **Saathi** — IBM Plex Sans Semibold.
-- Devanagari **साथी** — IBM Plex Sans Devanagari Semibold.
+- Latin **Saathi** — Inter Semibold.
+- Devanagari **साथी** — Noto Sans Devanagari Semibold.
 - Horizontal: tile + word. Stacked: tile above the word.
 
 ## Palette
@@ -44,7 +44,7 @@ Status never colour-alone.
 
 ## Type
 
-IBM Plex Sans + IBM Plex Sans Devanagari, 400/600, `next/font`. Landing English headlines may use Instrument Serif; Hindi uses Plex Devanagari.
+Inter + Noto Sans Devanagari, 400/600, `next/font`. Landing English headlines may use Instrument Serif; Hindi uses Noto Sans Devanagari.
 
 ## Voice
 
