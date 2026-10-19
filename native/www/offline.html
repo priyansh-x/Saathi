@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Saathi</title>
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: system-ui, "Noto Sans Devanagari", sans-serif;
+        background: #fbf7f2;
+        color: #1f1b16;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      main { max-width: 32ch; text-align: center; }
+      .tile {
+        width: 48px; height: 48px; margin: 0 auto 16px;
+        border-radius: 12px; background: #b0532a; color: #fffcf8;
+        display: grid; place-items: center; font-size: 22px; font-weight: 600;
+      }
+      h1 { font-size: 1.25rem; margin: 0 0 8px; }
+      p { margin: 0 0 10px; line-height: 1.5; color: #5c534a; }
+      button {
+        min-height: 48px; margin-top: 12px; padding: 0 20px;
+        border: 0; border-radius: 999px; background: #b0532a; color: #fff;
+        font-size: 16px; font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="tile" aria-hidden>स</div>
+      <h1>Couldn't load. Your WhatsApp updates still work.</h1>
+      <p lang="hi">पेज नहीं खुला। व्हाट्सऐप अपडेट चलते रहेंगे।</p>
+      <p>Check the connection, then try again.</p>
+      <button type="button" id="retry">Retry · फिर कोशिश</button>
+    </main>
+    <script>
+      document.getElementById("retry").onclick = function () {
+        var u = decodeURIComponent((location.hash || "").replace(/^#/, ""));
+        location.href = u || "/";
+      };
+    </script>
+  </body>
+</html>
