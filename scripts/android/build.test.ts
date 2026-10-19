@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseAndroidBuildArgs, validateAndroidBuildEnv } from "./build";
+import { parseAndroidBuildArgs, validateAndroidBuildEnv, withCapDev } from "./build";
 
 describe("android build env", () => {
   it("refuses a release without a keystore env", () => {
@@ -29,5 +29,11 @@ describe("android build env", () => {
   it("parses --dev and release flags", () => {
     assert.deepEqual(parseAndroidBuildArgs(["debug", "--dev"]), { release: false, bundle: false, dev: true });
     assert.deepEqual(parseAndroidBuildArgs(["release", "--aab"]), { release: true, bundle: true, dev: false });
+  });
+
+  it("passes CAP_DEV=1 to cap sync and gradle", () => {
+    const env = withCapDev({ SAATHI_APP_URL: "http://10.0.2.2:43147" }, true);
+    assert.equal(env.CAP_DEV, "1");
+    assert.equal(withCapDev({}, false).CAP_DEV, undefined);
   });
 });
