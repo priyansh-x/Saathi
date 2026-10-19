@@ -1,13 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../brand/tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
   --font-devanagari: var(--font-devanagari);
   --color-card: var(--card);
@@ -47,40 +48,30 @@
 }
 
 :root {
-  --background: #fbf7f2;
-  --foreground: #1f1b16;
-  --card: #fffcf8;
-  --card-foreground: #1f1b16;
-  --primary: #b0532a;
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-elevated);
+  --card-foreground: var(--ink);
+  --primary: var(--brand);
   --primary-foreground: #ffffff;
-  --brand-deep: #8e3f1d;
-  --brand-soft: #f6e4d9;
-  --muted: #e8dfd4;
-  --muted-foreground: #5c534a;
-  --ink-3: #8c8176;
-  --border: #ece3d8;
-  --input: #e8dfd4;
-  --ring: #b0532a;
-  --destructive: #b23a2a;
-  --accent: #f4ebe3;
-  --accent-foreground: #1f1b16;
-  --secondary: #f4ebe3;
-  --secondary-foreground: #1f1b16;
-  --good: #276b43;
-  --good-soft: #e3f1e7;
-  --amber-ink: #7a4f0e;
-  --amber-soft: #fcefd6;
-  --amber-line: #b7791f;
-  --alert: #b23a2a;
-  --alert-soft: #f8e6e3;
-  --sunk: #f4ebe3;
-  --sage: #5f7a63;
-  --sage-soft: #e7eee6;
-  --wa: #075e54;
-  --radius: 16px;
+  --muted: var(--paper-sunk);
+  --muted-foreground: var(--ink-2);
+  --input: var(--paper-sunk);
+  --ring: var(--brand);
+  --destructive: var(--act);
+  --accent: var(--brand-soft);
+  --accent-foreground: var(--ink);
+  --secondary: var(--brand-soft);
+  --secondary-foreground: var(--ink);
+  --amber-ink: var(--look);
+  --amber-soft: var(--look-soft);
+  --amber-line: var(--look-line);
+  --alert: var(--act);
+  --alert-soft: var(--act-soft);
+  --sunk: var(--paper-sunk);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --shadow-card: 0 1px 0 rgba(31, 27, 22, 0.03), 0 12px 28px -20px rgba(74, 42, 20, 0.28);
-  --shadow-float: 0 1px 0 rgba(31, 27, 22, 0.05), 0 18px 40px -18px rgba(74, 42, 20, 0.35);
+  --shadow-card: 0 1px 0 rgba(29, 27, 24, 0.03), 0 12px 28px -20px rgba(42, 66, 103, 0.28);
+  --shadow-float: 0 1px 0 rgba(29, 27, 24, 0.05), 0 18px 40px -18px rgba(42, 66, 103, 0.35);
 }
 
 @layer base {

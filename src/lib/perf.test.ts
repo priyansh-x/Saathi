@@ -7,11 +7,11 @@ const root = process.cwd();
 const read = (rel: string) => readFileSync(path.join(root, rel), "utf8");
 
 describe("performance", () => {
-  it("subsets fonts: latin Inter/serif, Devanagari Noto, no extra preloads", () => {
+  it("subsets fonts: latin Plex/serif, Devanagari Plex, no extra preloads", () => {
     const layout = read("src/app/layout.tsx");
-    assert.match(layout, /Inter\(\{[\s\S]*subsets:\s*\["latin"\][\s\S]*preload:\s*false/);
+    assert.match(layout, /IBM_Plex_Sans\(\{[\s\S]*subsets:\s*\["latin"\][\s\S]*preload:\s*false/);
     assert.match(layout, /Instrument_Serif\(\{[\s\S]*subsets:\s*\["latin"\][\s\S]*preload:\s*false/);
-    assert.match(layout, /Noto_Sans_Devanagari\(\{[\s\S]*subsets:\s*\["devanagari"\][\s\S]*preload:\s*false/);
+    assert.match(layout, /IBM_Plex_Sans_Devanagari\(\{[\s\S]*subsets:\s*\["devanagari"\][\s\S]*preload:\s*false/);
   });
 
   it("sizes next/image on the desk avatar and neighbour thumb", () => {

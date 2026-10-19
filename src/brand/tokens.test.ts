@@ -26,4 +26,14 @@ describe("brand tokens", () => {
       assert.equal(a, b, name);
     }
   });
+
+  it("keeps the landing copy of the same token values", () => {
+    const landing = readFileSync(path.join(process.cwd(), "landing/brand/tokens.css"), "utf8");
+    for (const name of ["brand", "paper", "ink", "good", "look", "act", "ink-2"]) {
+      const re = new RegExp(`--${name}:\\s*(#[0-9a-f]+)`, "i");
+      const a = css.match(re)?.[1];
+      const b = landing.match(re)?.[1];
+      assert.equal(a, b, name);
+    }
+  });
 });

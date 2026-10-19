@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../brand/tokens.css";
 
 @theme inline {
   --color-bg: var(--bg);
@@ -27,43 +28,30 @@
   --color-dark-2: var(--dark-2);
   --color-dark-ink: var(--dark-ink);
   --color-dark-muted: var(--dark-muted);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
-  --font-deva: var(--font-deva), var(--font-inter), sans-serif;
+  --font-deva: var(--font-deva), var(--font-plex), sans-serif;
   --ease-out-soft: var(--ease);
   --shadow-mock: var(--shadow-mock);
   --shadow-float: var(--shadow-float);
 }
 
-/* Same palette as the family app (src/app/globals.css). */
 :root {
-  --bg: #fbf7f2;
-  --bg-elevated: #fffcf8;
-  --bg-sunk: #f4ebe3;
-  --ink: #1f1b16;
-  --ink-2: #5c534a;
-  --ink-3: #8c8176;
-  --border: #e8dfd4;
-  --accent: #b0532a;
-  --accent-deep: #8e3f1d;
-  --accent-soft: #f6e4d9;
-  --sage: #5f7a63;
-  --sage-soft: #e7eee6;
-  --good: #276b43;
-  --good-soft: #e3f1e7;
-  --look-ink: #7a4f0e;
-  --look-soft: #fcefd6;
-  --look-line: #b7791f;
-  --act: #b23a2a;
-  --act-soft: #f8e6e3;
-  --wa-head: #075e54;
+  --bg: var(--paper);
+  --bg-elevated: var(--paper-elevated);
+  --bg-sunk: var(--paper-sunk);
+  --accent: var(--brand);
+  --accent-deep: var(--brand-deep);
+  --accent-soft: var(--brand-soft);
+  --look-ink: var(--look);
+  --wa-head: var(--wa);
   --wa-bg: #efe7dc;
   --wa-out: #e2f5d3;
-  --dark: #241c16;
-  --dark-2: #31271f;
-  --dark-ink: #f6efe6;
-  --dark-muted: #b9ab9b;
+  --dark: #1a222e;
+  --dark-2: #243044;
+  --dark-ink: #f4efe6;
+  --dark-muted: #c4bdb2;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: 200ms;
   --dur-enter: 500ms;

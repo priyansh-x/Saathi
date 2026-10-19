@@ -2,7 +2,7 @@ import { CheckCheck, PhoneIncoming, PhoneMissed } from "lucide-react";
 import type { CSSProperties } from "react";
 import { Waveform } from "@/components/kit";
 import { content } from "@/lib/content";
-import { Eyebrow } from "./chrome";
+import { Eyebrow, MiniMark } from "./chrome";
 
 function Strip() {
   return (
@@ -126,9 +126,7 @@ export function Why() {
               <div className="halo pointer-events-none absolute inset-0 opacity-70" aria-hidden />
               <div className="relative">
                 <p className="flex items-center gap-2 text-[13px] text-dark-muted">
-                  <span className="grid size-6 place-items-center rounded-full bg-accent font-deva text-[11px] text-white" aria-hidden>
-                    {content.nav.glyph}
-                  </span>
+                  <MiniMark className="size-6" />
                   {t.nodeTitle}
                 </p>
                 <Waveform bars={16} className="mt-6 text-accent" />

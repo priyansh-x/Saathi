@@ -44,15 +44,20 @@ export function SkipLink() {
   );
 }
 
-export function LogoTile({ size = "size-8", text = "text-sm", dark = false }: { size?: string; text?: string; dark?: boolean }) {
+export function LogoTile({ size = "size-8" }: { size?: string; text?: string; dark?: boolean }) {
   return (
-    <span
-      className={`grid ${size} place-items-center rounded-[10px] font-deva ${text} ${dark ? "bg-accent text-white" : "bg-accent text-white shadow-[0_6px_14px_-8px_rgba(142,63,29,0.8)]"}`}
-      aria-hidden
-    >
-      {content.nav.glyph}
+    <span className={`inline-grid ${size} place-items-center`} aria-hidden>
+      <svg viewBox="0 0 64 64" className="h-full w-full">
+        <rect width="64" height="64" rx="14" fill="#34507A" />
+        <path fill="none" stroke="#F7F5F0" strokeWidth="5.5" strokeLinecap="round" d="M46.8 20.4a18 18 0 1 0 1.2 8.2" />
+        <circle cx="32" cy="32" r="6.2" fill="#F7F5F0" />
+      </svg>
     </span>
   );
+}
+
+export function MiniMark({ className = "size-4" }: { className?: string }) {
+  return <LogoTile size={className} />;
 }
 
 export function Nav() {
@@ -94,7 +99,7 @@ export function Footer() {
           <p className="serif-line mt-6 text-[28px] leading-tight md:text-[34px]">
             {t.signA}
             <br />
-            <span className="text-[#e9a27e]">{t.signB}</span>
+            <span className="text-[#c4bdb2]">{t.signB}</span>
           </p>
           <a
             href={`mailto:${t.email}`}

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Crossfade } from "@/lib/crossfade";
 import { content } from "@/lib/content";
 import { useInView, usePrefersReducedMotion } from "@/lib/use-reveal";
+import { MiniMark } from "./chrome";
 import { Waveform } from "./kit";
 import heroImg from "@/public/images/hero-maa-balcony.jpg";
 
@@ -103,9 +104,7 @@ export function Hero() {
               style={{ "--fd": "-3s" } as CSSProperties}
             >
               <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-wa-head">
-                <span className="grid size-4 place-items-center rounded-full bg-wa-head font-deva text-[9px] text-white" aria-hidden>
-                  {content.nav.glyph}
-                </span>
+                <MiniMark className="size-4" />
                 Saathi · 8:06 AM
               </p>
               {t.briefingShort}

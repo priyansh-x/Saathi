@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { MorningLines } from "@/components/demo/morning-lines";
 import { PhonePreview } from "@/components/demo/phone-preview";
 import { RecordPlayer } from "@/components/demo/record-player";
+import { BrandMark } from "@/components/brand";
 import { ExamplePill } from "@/components/family/chrome";
 import { runMockScenario } from "@/lib/bolna/mock-run";
 import { EXAMPLE_TOKEN, demoAudioUrl } from "@/lib/config";
@@ -110,7 +111,8 @@ export default async function DemoPage({
 
   return (
     <main className="mx-auto max-w-[480px] px-4 py-8 pb-16">
-      <p className="flex items-center gap-2 text-sm font-medium">
+      <BrandMark />
+      <p className="mt-6 flex items-center gap-2 text-sm font-medium">
         <ExamplePill lang={lang} />
         {t.oneMorning}
         <Link href={`/demo?lang=${other}&step=${step}`} className="ml-auto text-primary">
