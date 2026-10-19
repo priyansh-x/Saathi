@@ -6,11 +6,11 @@ import { describe, it } from "node:test";
 describe("brand tokens", () => {
   const css = readFileSync(path.join(process.cwd(), "src/brand/tokens.css"), "utf8");
 
-  it("keeps terracotta on paper with AA status colours", () => {
+  it("keeps terracotta on cool paper with AA status colours", () => {
     assert.doesNotMatch(css, /#34507a/i);
     assert.match(css, /--brand:\s*#b0532a/i);
-    assert.match(css, /--paper:\s*#fbf7f2/i);
-    assert.match(css, /--ink:\s*#1f1b16/i);
+    assert.match(css, /--paper:\s*#f7f5f0/i);
+    assert.match(css, /--ink:\s*#1d1b18/i);
     assert.match(css, /--good:\s*#276b43/i);
     assert.match(css, /--look:\s*#7a4f0e/i);
     assert.match(css, /--act:\s*#b23a2a/i);

@@ -11,12 +11,14 @@
     "lint": "eslint",
     "seed": "npx --yes tsx src/lib/db/seed-cli.ts",
     "db:migrate": "npx --yes tsx src/lib/db/migrate-cli.ts",
-    "test": "npx --yes tsx --test --test-concurrency=1 \"src/**/*.test.ts\"",
+    "test": "npx --yes tsx --test --test-concurrency=1 \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "e2e": "npm run build && playwright test",
     "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts",
     "bolna:test-call": "npx --yes tsx scripts/bolna/test-call.ts",
     "whatsapp:templates": "npx --yes tsx scripts/whatsapp/templates.ts",
-    "whatsapp:test-send": "npx --yes tsx scripts/whatsapp/test-send.ts"
+    "whatsapp:test-send": "npx --yes tsx scripts/whatsapp/test-send.ts",
+    "brand:build": "npx --yes tsx scripts/brand/build.ts",
+    "brand:screens": "npx --yes tsx scripts/brand/screens.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -32,7 +34,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
-    "shadcn": "^4.22.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
@@ -40,6 +41,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
+    "shadcn": "^4.22.0",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

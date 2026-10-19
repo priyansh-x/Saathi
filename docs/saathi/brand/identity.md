@@ -30,8 +30,8 @@ This is the palette the landing and desk already shipped. Status greens/ambers/r
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| `--paper` | `#FBF7F2` | Ground |
-| `--ink` | `#1F1B16` | Body |
+| `--paper` | `#F7F5F0` | Ground (cool paper; terracotta still reads) |
+| `--ink` | `#1D1B18` | Body (≥15:1 on paper) |
 | `--ink-2` | `#5C534A` | Secondary (≥4.5:1 on paper) |
 | `--brand` | `#B0532A` | Mark, primary buttons |
 | `--brand-deep` | `#8E3F1D` | Pressed |
