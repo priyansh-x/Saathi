@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { seed } from "@/lib/db/seed";
 import { decodeSession, encodeSession } from "./session";
 import { startEmailSignIn, validEmail } from "./magic";
 
@@ -59,7 +60,6 @@ describe("email sign-in", () => {
       const ops = await startEmailSignIn("ops@example.com");
       assert.equal(ops.ok, false);
       if (!ops.ok) assert.match(ops.error, /not configured/);
-      assert.ok(!("token" in (ops.ok ? ops : {})));
     } finally {
       process.env.NODE_ENV = prev.node;
       process.env.ALLOWED_EMAILS = prev.emails;
@@ -69,16 +69,19 @@ describe("email sign-in", () => {
   });
 
   it("when mocks are off, refuses addresses that are not on ALLOWED_EMAILS", async () => {
+    await seed();
     const prev = {
       mock: process.env.MOCK_WHATSAPP,
       mockEmail: process.env.MOCK_EMAIL,
       emails: process.env.ALLOWED_EMAILS,
       url: process.env.SUPABASE_URL,
       node: process.env.NODE_ENV,
+      base: process.env.PUBLIC_BASE_URL,
     };
     process.env.MOCK_WHATSAPP = "0";
-    process.env.MOCK_EMAIL = "0";
+    process.env.MOCK_EMAIL = "1";
     process.env.NODE_ENV = "test";
+    process.env.PUBLIC_BASE_URL = "https://family.example";
     process.env.ALLOWED_EMAILS = "pilot@example.com";
     delete process.env.SUPABASE_URL;
     const urls: string[] = [];
@@ -93,8 +96,8 @@ describe("email sign-in", () => {
       if (!blocked.ok) assert.match(blocked.error, /Pilot is invite-only for now/);
       assert.equal(urls.length, 0);
       const allowed = await startEmailSignIn("pilot@example.com");
-      assert.equal(allowed.ok, false);
-      if (!allowed.ok) assert.match(allowed.error, /not configured/);
+      assert.equal(allowed.ok, true);
+      if (allowed.ok) assert.equal(allowed.mode, "email");
       assert.equal(urls.length, 0);
     } finally {
       globalThis.fetch = original;
@@ -102,6 +105,7 @@ describe("email sign-in", () => {
       process.env.MOCK_EMAIL = prev.mockEmail;
       process.env.ALLOWED_EMAILS = prev.emails;
       process.env.NODE_ENV = prev.node;
+      process.env.PUBLIC_BASE_URL = prev.base;
       if (prev.url) process.env.SUPABASE_URL = prev.url;
     }
   });

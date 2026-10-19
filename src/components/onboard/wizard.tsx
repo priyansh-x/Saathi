@@ -75,6 +75,7 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
   const [saving, setSaving] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [code, setCode] = useState("");
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -96,6 +97,29 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
   function patch<K extends keyof OnboardInput>(key: K, value: OnboardInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
     setError(null);
+  }
+
+  async function verifyCode() {
+    setError(null);
+    setSaving(true);
+    try {
+      const res = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, code }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok) {
+        setError(data.error || (lang === "hi" ? "कोड नहीं चला।" : "That code did not work."));
+        return;
+      }
+      setSignedEmail(email.trim().toLowerCase());
+      setStep("you");
+    } catch {
+      setError(t.setupSignFail);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function signIn() {
@@ -189,7 +213,23 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
             />
           </Field>
           {sent ? (
-            <p className="mt-4 text-sm">{t.setupCheckInbox}</p>
+            <div className="mt-4 space-y-3">
+              <p className="text-sm">{t.setupCheckInbox}</p>
+              <p className="text-sm">
+                {lang === "hi" ? "ऐप में कोड टाइप करें — ईमेल का लिंक ब्राउज़र खोल देगा।" : "Type the code in this app. The email link opens the phone browser, not Saathi."}
+              </p>
+              <Field label={lang === "hi" ? "6 अंकों का कोड" : "6-digit code"} htmlFor="code">
+                <Input
+                  id="code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="000000"
+                />
+              </Field>
+            </div>
           ) : null}
         </>
       );
@@ -421,10 +461,19 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
         <p className="mt-3 text-muted-foreground">{t.setupDoneBody}</p>
       </>
     );
-  }, [step, form, email, signedEmail, langs, sent, who, t, lang]);
+  }, [step, form, email, signedEmail, langs, sent, code, who, t, lang]);
 
   const primary = (() => {
-    if (step === "sign") return { label: sent ? t.setupWaitingEmail : saving ? "…" : t.setupContinue, action: signIn, disabled: sent || saving };
+    if (step === "sign") {
+      if (sent) {
+        return {
+          label: saving ? "…" : lang === "hi" ? "कोड डालें" : "Type the code",
+          action: verifyCode,
+          disabled: saving || code.length !== 6,
+        };
+      }
+      return { label: saving ? "…" : t.setupContinue, action: signIn, disabled: saving };
+    }
     if (step === "medicines") {
       return { label: form.medicines.length ? t.setupContinue : t.setupNoTablet, action: next, disabled: saving };
     }

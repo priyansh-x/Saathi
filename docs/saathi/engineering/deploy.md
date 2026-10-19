@@ -50,7 +50,7 @@ Landing project: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` only if the waitli
 Create one project (ap-south-1 if offered). Staging uses it for:
 
 1. **Landing waitlist** (`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on the landing project).
-2. **Family email magic links** later (`SUPABASE_ANON_KEY` or service role on the family project). `MOCK_WHATSAPP=1` does not sign anyone in. Addresses must be on `ALLOWED_EMAILS` or `OPS_EMAILS`, or the form shows "Pilot is invite-only for now". On a public host, `MOCK_EMAIL=1` never mints a cookie — testers use `/d/[token]` (desk links stay independent of the email cookie). Ops bootstrap is below.
+2. **Family email magic links** later (`SUPABASE_ANON_KEY` or service role on the family project). `MOCK_WHATSAPP=1` does not sign anyone in. Addresses must be on `ALLOWED_EMAILS` or `OPS_EMAILS`, or the form shows "Pilot is invite-only for now". On a public host, `MOCK_EMAIL=1` never mints a cookie — testers use `/d/[token]`. The emailed 6-digit code is for the Android app (the link opens the phone browser). Ops bootstrap is below. `/ops` lists pending codes only while `MOCK_EMAIL=1` and only for allowlisted addresses.
 
 The family desk boots **PGlite** (`.data/saathi`) when `DATABASE_URL` is unset, including on Vercel. That store is ephemeral on serverless — cold starts re-seed the EXAMPLE household. That is enough for a mocked staging walk.
 

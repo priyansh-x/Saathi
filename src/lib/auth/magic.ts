@@ -1,8 +1,10 @@
 import { allowedEmails, isMockEmail, publicBaseUrl } from "@/lib/config";
 import { query } from "@/lib/db/client";
+import { deliverEmail } from "@/lib/email/transport";
 import { gateOutbound } from "@/lib/outbound";
 import { canViewOps } from "@/lib/ops/access";
 import { nowIstStamp } from "@/lib/time";
+import { issueSignInCode } from "./code";
 import { encodeSession, newAuthToken } from "./session";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,7 +41,7 @@ export function canIssueSignIn(email: string) {
 const NOT_CONFIGURED = "Email sign-in is not configured.";
 const INVITE_ONLY = "Pilot is invite-only for now";
 
-/** Mock: issue a session immediately on localhost. Live: emailed link (and later, code). */
+/** Localhost mock cookie, or emailed link + 6-digit code. Never a cookie without proof on production. */
 export async function startEmailSignIn(rawEmail: string) {
   const email = normalizeEmail(rawEmail);
   if (!validEmail(email)) return { ok: false as const, error: "Add a working email address." };
@@ -58,27 +60,45 @@ export async function startEmailSignIn(rawEmail: string) {
   const gate = gateOutbound("email", email);
   if (!gate.ok && !ops) return { ok: false as const, error: INVITE_ONLY };
 
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const productionMock = process.env.NODE_ENV === "production" && isMockEmail();
+  if (productionMock && (!supabaseUrl || !supabaseKey)) {
     return { ok: false as const, error: NOT_CONFIGURED };
   }
+
+  const coded = await issueSignInCode(email);
+  if (!coded.ok) return coded;
 
   const token = newAuthToken();
   const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace("Z", "+00:00");
   await query(`insert into auth_tokens (token, email, expires_at) values ($1,$2,$3)`, [token, email, expires]);
 
   const callback = `${publicBaseUrl()}/api/auth/callback?token=${encodeURIComponent(token)}`;
-  const res = await fetch(`${url.replace(/\/$/, "")}/auth/v1/magiclink`, {
-    method: "POST",
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, options: { emailRedirectTo: callback } }),
-  });
-  if (!res.ok) return { ok: false as const, error: "Could not send the sign-in email." };
+  const text = [
+    "Saathi sign-in",
+    "",
+    `Your code is ${coded.code}. It lasts 10 minutes (5 tries).`,
+    "",
+    "Or open this link on this phone:",
+    callback,
+  ].join("\n");
+
+  const sent =
+    productionMock ? { ok: false as const } : await deliverEmail({ to: email, subject: "Saathi sign-in code", text });
+  if (!sent.ok) {
+    if (!supabaseUrl || !supabaseKey) return { ok: false as const, error: NOT_CONFIGURED };
+    const res = await fetch(`${supabaseUrl.replace(/\/$/, "")}/auth/v1/magiclink`, {
+      method: "POST",
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, options: { emailRedirectTo: callback } }),
+    });
+    if (!res.ok) return { ok: false as const, error: "Could not send the sign-in email." };
+  }
   return { ok: true as const, mode: "email" as const };
 }
 

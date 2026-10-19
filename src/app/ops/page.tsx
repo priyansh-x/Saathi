@@ -122,6 +122,26 @@ export default async function OpsPage() {
         </dl>
       </section>
 
+      {snap.flags.mockEmail ? (
+        <section className="card mt-4 p-4">
+          <h2 className="text-sm font-medium text-ink-3">Pending sign-in codes (mock email)</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            MOCK_EMAIL=1 does not send mail. Codes for allowlisted addresses only. Never shown when mock email is off.
+          </p>
+          {snap.pendingCodes.length === 0 ? (
+            <p className="mt-2 text-sm text-muted-foreground">None pending.</p>
+          ) : (
+            <ul className="mt-2 space-y-1 font-mono text-sm">
+              {snap.pendingCodes.map((row) => (
+                <li key={`${row.email}-${row.code}`}>
+                  {row.email} · {row.code}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
       <section className="card mt-4 p-4">
         <h2 className="text-sm font-medium text-ink-3">Waitlist sign-ups</h2>
         <p className="mt-1 text-2xl font-medium">
