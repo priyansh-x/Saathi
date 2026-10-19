@@ -1,0 +1,26 @@
+/* Saathi brand tokens — family app and landing.
+   Spec: docs/saathi/brand/identity.md */
+
+:root {
+  --paper: #f7f5f0;
+  --paper-elevated: #fffcf7;
+  --paper-sunk: #ebe7df;
+  --ink: #1d1b18;
+  --ink-2: #5c534a;
+  --ink-3: #5c534a;
+  --border: #ece3d8;
+  --brand: #b0532a;
+  --brand-deep: #8e3f1d;
+  --brand-soft: #f6e4d9;
+  --good: #276b43;
+  --good-soft: #e3f1e7;
+  --look: #7a4f0e;
+  --look-soft: #fcefd6;
+  --look-line: #b7791f;
+  --act: #b23a2a;
+  --act-soft: #f8e6e3;
+  --wa: #075e54;
+  --radius: 16px;
+  --sage: #5f7a63;
+  --sage-soft: #e7eee6;
+}
