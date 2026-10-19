@@ -207,6 +207,15 @@ async function relatedAlert(parentId: string, outboundId: string) {
   return alerts.find((alert) => outboundId.includes(alert.id)) ?? null;
 }
 
+export async function countResponderSends(parentId: string, phone: string, alertId: string) {
+  return query<{ n: number }>(
+    `select count(*)::int as n from outbound_messages
+     where parent_id = $1 and to_phone = $2 and template like 'responder_alert%'
+       and id like $3`,
+    [parentId, phone, `%resp_${alertId}_%`],
+  );
+}
+
 async function alertVars(args: {
   parentId: string;
   template: string;
@@ -214,6 +223,7 @@ async function alertVars(args: {
   quote?: string | null;
   callId?: string | null;
   locale?: "en" | "hi";
+  alertId?: string | null;
 }) {
   const parent = await query<{ first_name: string; address_term: string | null; phone: string }>(
     `select first_name, address_term, phone from parents where id = $1`,
@@ -233,12 +243,8 @@ async function alertVars(args: {
     : [{ n: 1 }];
   const tryCount = String(Math.max(1, tries[0]?.n || 1));
   const locale = args.locale ?? "en";
-  const responderSent = neighbour[0]
-    ? await query<{ n: number }>(
-        `select count(*)::int as n from outbound_messages
-         where parent_id = $1 and to_phone = $2 and template like 'responder_alert%'`,
-        [args.parentId, neighbour[0].phone],
-      )
+  const responderSent = neighbour[0] && args.alertId
+    ? await countResponderSends(args.parentId, neighbour[0].phone, args.alertId)
     : [{ n: 0 }];
   const messaged = Boolean(neighbour[0]) && (await neighbourOptedIn(args.parentId)) && (responderSent[0]?.n ?? 0) > 0;
   const neighbourVar = messaged ? neighbour[0]!.first_name : "";
@@ -308,6 +314,7 @@ export async function escalateUndeliveredAlerts(now = new Date()) {
         quote: alert?.quote,
         callId: alert?.call_id,
         locale: next.locale === "hi" ? "hi" : "en",
+        alertId: alert?.id,
       }),
       idempotencyKey,
     });

@@ -3,6 +3,7 @@ import { query } from "@/lib/db/client";
 import { deliverEmail, isMockEmail, selectEmailTransport } from "@/lib/email/transport";
 import { gateOutbound } from "@/lib/outbound";
 import { nowIst } from "@/lib/bolna/tools";
+import { mockLoggedWhatsapp } from "@/lib/whatsapp/mock-log";
 import { packTemplate, renderTemplate, type TemplateName } from "@/lib/whatsapp/templates";
 
 export type SendResult = {
@@ -13,15 +14,6 @@ export type SendResult = {
   status: string;
   reason?: string;
 };
-
-export type MockLoggedWhatsapp = {
-  name: string;
-  language: "en" | "hi";
-  vars: string[];
-  buttons: number;
-};
-
-export const mockLoggedWhatsapp: MockLoggedWhatsapp[] = [];
 
 export function outboundMessageId(template: string, idempotencyKey: string) {
   return `out_${template}_${idempotencyKey}`.slice(0, 80);

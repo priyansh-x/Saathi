@@ -11,7 +11,7 @@ import { sendWeeklyNote } from "@/lib/weekly";
 import { escalateUndeliveredAlerts } from "@/lib/whatsapp/delivery";
 import { notifyAlert, sendDailyBriefing } from "@/lib/whatsapp/notify";
 import { bodyVariables, whatsappTemplatePack } from "@/lib/whatsapp/template-pack";
-import { mockLoggedWhatsapp } from "@/lib/whatsapp/send";
+import { mockLoggedWhatsapp } from "@/lib/whatsapp/mock-log";
 
 process.env.MOCK_BOLNA = "1";
 process.env.MOCK_WHATSAPP = "1";

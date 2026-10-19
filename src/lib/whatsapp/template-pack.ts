@@ -14,6 +14,7 @@ export type WhatsappTemplate = {
   body: string;
   buttons: TemplateButton[];
   examples: string[];
+  status?: "DRAFT";
 };
 
 const URL_TODAY = "https://saathi.example/d/{{1}}";
@@ -23,10 +24,12 @@ function pair(
   name: string,
   en: { body: string; buttons: TemplateButton[]; examples: string[] },
   hi: { body: string; buttons: TemplateButton[]; examples: string[] },
+  status?: "DRAFT",
 ): WhatsappTemplate[] {
+  const extra = status ? { status } : {};
   return [
-    { name, language: "en", category: "UTILITY", ...en },
-    { name, language: "hi", category: "UTILITY", ...hi },
+    { name, language: "en", category: "UTILITY", ...en, ...extra },
+    { name, language: "hi", category: "UTILITY", ...hi, ...extra },
   ];
 }
 
@@ -151,6 +154,7 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
         ],
         examples: ["माँ", "4", "8:00", "+910000000000"],
       },
+      "DRAFT",
     ),
     ...pair(
       "safety_alert_emergency",
@@ -193,6 +197,7 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
         ],
         examples: ["माँ", "8:09", "बाथरूम में गिर गई, उठ नहीं पा रही।", "+910000000000"],
       },
+      "DRAFT",
     ),
     ...pair(
       "safety_alert_urgent",
@@ -235,6 +240,7 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
         ],
         examples: ["माँ", "8:10", "बैंक वाले बोले KYC करना है, OTP माँग रहे थे।", "घबराई हुई"],
       },
+      "DRAFT",
     ),
     ...pair(
       "alert_ack_update",
@@ -435,6 +441,7 @@ export function formatTemplatesForMeta(pack: WhatsappTemplate[]) {
   for (const tpl of pack) {
     lines.push(`=== ${tpl.name} / ${tpl.language} ===`);
     lines.push(`Category: ${tpl.category}`);
+    if (tpl.status) lines.push(`Status: ${tpl.status}`);
     lines.push("Body:");
     lines.push(tpl.body);
     lines.push("Example values (EXAMPLE):");

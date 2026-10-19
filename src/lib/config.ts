@@ -39,10 +39,17 @@ export function approvedWhatsappTemplates() {
     .filter(Boolean);
 }
 
+const DRAFT_WHATSAPP_TEMPLATES = [
+  "safety_alert_unreachable_solo",
+  "safety_alert_emergency_solo",
+  "safety_alert_urgent_solo",
+];
+
 export function isWhatsappTemplateApproved(name: string) {
+  const base = name.replace(/_en$|_hi$/, "");
+  if (DRAFT_WHATSAPP_TEMPLATES.includes(base) || DRAFT_WHATSAPP_TEMPLATES.includes(name)) return false;
   const list = approvedWhatsappTemplates();
   if (list === null) return true;
-  const base = name.replace(/_en$|_hi$/, "");
   return list.includes(name) || list.includes(base);
 }
 

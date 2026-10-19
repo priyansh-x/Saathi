@@ -269,7 +269,8 @@
       "4",
       "8:00 AM IST",
       "+910000000000"
-    ]
+    ],
+    "status": "DRAFT"
   },
   {
     "name": "safety_alert_unreachable_solo",
@@ -295,7 +296,8 @@
       "4",
       "8:00",
       "+910000000000"
-    ]
+    ],
+    "status": "DRAFT"
   },
   {
     "name": "safety_alert_emergency",
@@ -375,7 +377,8 @@
       "8:09 AM IST",
       "Bathroom mein gir gayi, uth nahi pa rahi.",
       "+910000000000"
-    ]
+    ],
+    "status": "DRAFT"
   },
   {
     "name": "safety_alert_emergency_solo",
@@ -401,7 +404,8 @@
       "8:09",
       "बाथरूम में गिर गई, उठ नहीं पा रही।",
       "+910000000000"
-    ]
+    ],
+    "status": "DRAFT"
   },
   {
     "name": "safety_alert_urgent",
@@ -479,7 +483,8 @@
       "8:10 AM IST",
       "Bank wale bole KYC karna hai, OTP maang rahe the.",
       "uneasy"
-    ]
+    ],
+    "status": "DRAFT"
   },
   {
     "name": "safety_alert_urgent_solo",
@@ -505,7 +510,8 @@
       "8:10",
       "बैंक वाले बोले KYC करना है, OTP माँग रहे थे।",
       "घबराई हुई"
-    ]
+    ],
+    "status": "DRAFT"
   },
   {
     "name": "alert_ack_update",

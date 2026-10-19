@@ -6,6 +6,7 @@ import { loadOpsSnapshot } from "../ops/snapshot";
 import { nowIstStamp } from "../time";
 import {
   applyWhatsappStatuses,
+  countResponderSends,
   escalateUndeliveredAlerts,
   formatDeliveryClock,
   formatDeliveryLine,
@@ -405,6 +406,35 @@ describe("WhatsApp delivery statuses", () => {
     ]);
     assert.equal(later[0]?.n, 2);
     await query(`delete from contacts where id = 'contact_priya'`);
+  });
+
+  it("scopes responderSent to this alert, not any responder_alert to that phone", async () => {
+    const alertOld = `alert_old_${Date.now()}`;
+    const alertNew = `alert_new_${Date.now()}`;
+    const at = nowIstStamp();
+    const phone = "+910000000002";
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','responder_alert_emergency',$2,'EXAMPLE old resp',$3,'sent',true,
+        $4,'delivered',$3)`,
+      [`out_responder_alert_emergency_resp_${alertOld}_${phone}`, phone, at, "wamid.EXAMPLE.oldresp"],
+    );
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example,
+        provider_message_id, delivery_status, delivery_at
+      ) values ($1,'parent_kamla','whatsapp','responder_alert_emergency',$2,'EXAMPLE new resp',$3,'sent',true,
+        $4,'delivered',$3)`,
+      [`out_responder_alert_emergency_resp_${alertNew}_${phone}`, phone, at, "wamid.EXAMPLE.newresp"],
+    );
+    const oldCount = await countResponderSends("parent_kamla", phone, alertOld);
+    const newCount = await countResponderSends("parent_kamla", phone, alertNew);
+    assert.equal(oldCount[0]?.n, 1);
+    assert.equal(newCount[0]?.n, 1);
+    const none = await countResponderSends("parent_kamla", phone, "alert_missing");
+    assert.equal(none[0]?.n, 0);
   });
 
   it("shows delivery on /ops without raw phones", async () => {
