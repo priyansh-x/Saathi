@@ -178,7 +178,7 @@ describe("todayStatus", () => {
       call: call("completed"),
       doses: [dose("not_taken")],
       alert: actAlert,
-      attempts: [] as const,
+      attempts: [],
       neighbourName: "Priya",
       ackedBy: null,
       ackedAt: null,
