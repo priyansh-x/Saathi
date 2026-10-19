@@ -21,5 +21,9 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/brand/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       { src: "/brand/splash-mark.png", sizes: "512x512", type: "image/png", purpose: "any" },
     ],
+    screenshots: [
+      { src: "/brand/screens/after-today-en.png", sizes: "390x844", type: "image/png", form_factor: "narrow" },
+      { src: "/brand/screens/after-home-en.png", sizes: "390x844", type: "image/png", form_factor: "narrow" },
+    ],
   };
 }

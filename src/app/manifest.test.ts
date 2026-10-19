@@ -15,6 +15,7 @@ describe("PWA", () => {
     assert.equal(PWA_VIEWPORT.height, 740);
     assert.ok((m.icons ?? []).some((i) => i.src === "/brand/icon-192.png"));
     assert.equal(m.theme_color, "#F7F5F0");
+    assert.ok((m.screenshots ?? []).some((s) => s.src?.includes("/brand/screens/")));
   });
 
   it("registers a same-origin service worker that skips /api", () => {
