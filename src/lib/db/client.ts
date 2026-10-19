@@ -66,13 +66,27 @@ async function loadKillLatch(io: MigrationExec) {
   }
 }
 
+/** Disk dir for PGlite, or `null` for in-memory (Vercel / explicit `:memory:`). */
+export function pgliteDataDir(env: NodeJS.ProcessEnv = process.env): string | null {
+  const explicit = (env.PGLITE_PATH || "").trim();
+  if (explicit === ":memory:") return null;
+  if (explicit) return explicit;
+  if (env.VERCEL || env.AWS_LAMBDA_FUNCTION_NAME) return null;
+  return ".data/saathi";
+}
+
 async function openPglite() {
-  const { mkdirSync } = await import("node:fs");
-  const path = await import("node:path");
-  const relative = process.env.PGLITE_PATH || ".data/saathi";
-  const full = path.join(process.cwd(), relative);
-  mkdirSync(path.dirname(full), { recursive: true });
-  const db = new PGlite(full);
+  const dir = pgliteDataDir();
+  let db: PGlite;
+  if (dir) {
+    const { mkdirSync } = await import("node:fs");
+    const path = await import("node:path");
+    const full = path.isAbsolute(dir) ? dir : path.join(process.cwd(), dir);
+    mkdirSync(full, { recursive: true });
+    db = new PGlite(full);
+  } else {
+    db = new PGlite();
+  }
   await db.waitReady;
   const io = pgliteIo(db);
   await applyMigrations(io);

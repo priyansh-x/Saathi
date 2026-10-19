@@ -152,3 +152,42 @@ Optional: point a landing CTA at `https://<family-host>/onboard` once both URLs 
 3. Checklist for the click-deploy: `docs/saathi/engineering/deploy.md`.
 
 Do not bootstrap `/ops` until family HTTPS is up **and** you have a real mail path for your own address. Desk testers keep `/d/example-kamla`.
+
+---
+
+## Step 3 — phone surfaces (PWA + APK)
+
+Still mocked. No Play Store. Family origin: `https://x-navy-tau.vercel.app`
+
+First, in the **family** Vercel project, add (Production + Preview) and Redeploy if they are missing:
+
+| Name | Value |
+| --- | --- |
+| `PUBLIC_BASE_URL` | `https://x-navy-tau.vercel.app` |
+| `SAATHI_APP_URL` | `https://x-navy-tau.vercel.app` |
+
+Confirm `https://x-navy-tau.vercel.app/d/example-kamla` shows the EXAMPLE ribbon (not a Next error page). Then:
+
+### PWA (any phone browser)
+
+1. Open `/d/example-kamla` on the phone. Add to Home Screen.
+2. From the icon: Today, History, Alerts, Settings — each survives a refresh.
+3. Airplane mode: you should still get the app shell / offline copy (“WhatsApp still works”, Retry). Skip if the install is brand new and the shell is not cached yet.
+
+### Android APK (Priyansh builds, testers sideload)
+
+Needs JDK 21, Android SDK, `ANDROID_HOME`. Not a Play listing.
+
+```bash
+export SAATHI_APP_URL=https://x-navy-tau.vercel.app
+npm run android:apk
+# APK: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Sideload from Files / Drive / WhatsApp to yourself. Confirm terracotta splash, hosted desk, bundled offline page if the host is unreachable, back-on-Today (press back twice within two seconds to leave). Full install notes: `docs/saathi/engineering/android.md`.
+
+### Landing
+
+Keep it waitlist-only. Do not promise live calls. Optional: a CTA to `https://x-navy-tau.vercel.app/onboard` — do not import family secrets onto the landing project.
+
+When PWA and (if you have an Android phone) APK both show EXAMPLE, go to Step 4: run A–D on those surfaces and log misses. Postgres is Step 5; do not enable cron; do not `--yes`.
