@@ -49,7 +49,7 @@ describe("whatsapp:test-send CLI", () => {
       const ok = canSendTestWhatsapp(phone, "briefing", true);
       assert.equal(ok.ok, true);
       if (ok.ok) assert.equal(ok.template, "daily_briefing_good");
-      const stranger = "+919998887776";
+      const stranger = "+910000000009";
       process.env.ALLOWED_PHONE_NUMBERS = stranger;
       const plan = plannedTestSend(stranger, "briefing");
       assert.equal(plan.allowlisted, true);

@@ -3,7 +3,7 @@ import { buildCallContext } from "@/lib/bolna/call-context";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
 import { gateOutbound, normalizePhone } from "@/lib/outbound";
-import { istDayBounds, istDayKey, nowIstStamp, parseHhMm } from "@/lib/time";
+import { istDayBounds, istDayKey, minutesNowIst, nowIstStamp, parseHhMm } from "@/lib/time";
 
 export type PlaceCallOk = {
   ok: true;
@@ -220,16 +220,46 @@ export async function postBolnaCall(
   };
 }
 
+async function recordRootRetryOutcome(rootCallId: string, clock: Date, result: string) {
+  const id = `att_${rootCallId}_${result}`.slice(0, 80);
+  const existing = await query<{ id: string }>(`select id from call_attempts where id = $1`, [id]);
+  if (existing[0]) return;
+  await query(`insert into call_attempts values ($1,$2,$3,$4,$5,$6)`, [
+    id,
+    rootCallId,
+    nowIstStamp(clock),
+    0,
+    result,
+    true,
+  ]);
+}
+
 export async function placeRetryCall(
   parentId: string,
   clock: Date,
   parentCallId: string,
   fetchImpl: PlaceFetch = fetch,
 ): Promise<PlaceCallResult> {
-  const prepared = await prepareMorningCall(parentId, clock, { retryOf: parentCallId });
-  if (!isPreparedCall(prepared)) return prepared;
-  if (callProviderName() === "bolna") {
-    return postBolnaCall(prepared, fetchImpl);
+  if (killSwitchOn()) {
+    await recordRootRetryOutcome(parentCallId, clock, "kill_switch");
+    return { ok: false as const, reason: "kill_switch" };
   }
-  return insertSimulatedCall(prepared, parentCallId);
+  if (minutesNowIst(clock) >= 11 * 60) {
+    await recordRootRetryOutcome(parentCallId, clock, "retry_skipped_window");
+    return { ok: false as const, reason: "retry_skipped_window" };
+  }
+  const prepared = await prepareMorningCall(parentId, clock, { retryOf: parentCallId });
+  if (!isPreparedCall(prepared)) {
+    const reason = prepared.ok === false ? prepared.reason : "prepare_failed";
+    await recordRootRetryOutcome(parentCallId, clock, reason);
+    return prepared;
+  }
+  if (callProviderName() === "bolna") {
+    const placed = await postBolnaCall(prepared, fetchImpl);
+    await recordRootRetryOutcome(parentCallId, clock, placed.ok ? "retry_placed" : placed.reason);
+    return placed;
+  }
+  const placed = await insertSimulatedCall(prepared, parentCallId);
+  await recordRootRetryOutcome(parentCallId, clock, "retry_placed");
+  return placed;
 }
