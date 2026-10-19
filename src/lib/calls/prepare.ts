@@ -250,7 +250,8 @@ export async function placeRetryCall(
   }
   const prepared = await prepareMorningCall(parentId, clock, { retryOf: parentCallId });
   if (!isPreparedCall(prepared)) {
-    await recordRootRetryOutcome(parentCallId, clock, prepared.reason);
+    const reason = prepared.ok === false ? prepared.reason : "prepare_failed";
+    await recordRootRetryOutcome(parentCallId, clock, reason);
     return prepared;
   }
   if (callProviderName() === "bolna") {
