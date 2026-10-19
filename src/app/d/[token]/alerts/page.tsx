@@ -41,7 +41,7 @@ export default async function AlertsPage({
     >
       <PageTitle>{t.alerts}</PageTitle>
       {list.length === 0 ? (
-        <EmptyState title={t.emptyAlerts} />
+        <EmptyState title={t.emptyAlerts} body={t.emptyAlertsBody} />
       ) : (
         <ul className="space-y-3">
           {list.map((alert) => {

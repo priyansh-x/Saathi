@@ -75,7 +75,7 @@ async function HistoryBody({ token, lang, days }: { token: string; lang: ReturnT
       </div>
 
       {hist.calls.length === 0 ? (
-        <EmptyState title={t.emptyHistory} />
+        <EmptyState title={t.emptyHistory} body={t.emptyHistoryBody} />
       ) : (
         <ol className="list-group mt-2">
           {keys.map((day) => {

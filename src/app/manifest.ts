@@ -10,12 +10,16 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    background_color: "#fbf7f2",
-    theme_color: "#fbf7f2",
+    background_color: "#F7F5F0",
+    theme_color: "#F7F5F0",
     orientation: "portrait",
     icons: [
-      { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/icon.svg", sizes: "192x192", type: "image/svg+xml", purpose: "maskable" },
+      { src: "/brand/favicon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/brand/maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/brand/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/brand/splash-mark.png", sizes: "512x512", type: "image/png", purpose: "any" },
     ],
   };
 }

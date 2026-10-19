@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { titled } from "@/lib/page-title";
-import { ArrowRight, Check, PhoneCall } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
+import { IconCall } from "@/components/icons";
 import { BrandMark } from "@/components/brand";
 import { AddToHome } from "@/components/pwa/register";
 import hero from "../../public/images/hero-maa-balcony.jpg";
@@ -50,7 +51,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         </div>
         <div className="absolute right-4 bottom-4 left-4 flex items-center gap-3 rounded-[22px] border border-white/50 bg-card/95 p-3.5 shadow-[var(--shadow-float)] backdrop-blur">
           <span className="ring-pulse grid size-10 shrink-0 place-items-center rounded-full bg-good text-white">
-            <PhoneCall className="size-[18px]" aria-hidden />
+            <IconCall className="size-[18px]" />
           </span>
           <div className="min-w-0">
             <p className="text-[13px] text-ink-3">8:00 AM · Saathi is calling</p>

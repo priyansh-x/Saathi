@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { AlertTriangle, Bell, CalendarDays, ChevronLeft, ChevronRight, CloudOff, House, Languages, Link2Off, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, CloudOff, Languages, Link2Off } from "lucide-react";
+import { IconAlert, IconFamily, IconHistory, IconSettings, MarkSvg } from "@/components/icons";
 import kamlaAvatar from "../../../public/images/avatar-kamla.jpg";
 import type { AlertRow } from "@/lib/db/types";
 import { qs } from "@/lib/history";
@@ -72,7 +73,7 @@ export function ActBanner({
       className="mx-4 mb-3 flex min-h-12 items-center gap-3 rounded-full bg-alert py-2 pr-4 pl-2 text-sm text-white shadow-[var(--shadow-float)]"
     >
       <span className="ring-pulse grid size-8 shrink-0 place-items-center rounded-full bg-white/15">
-        <AlertTriangle className="size-4" aria-hidden />
+        <IconAlert className="size-4" />
       </span>
       <span className="min-w-0 flex-1 truncate">
         {categoryWords(first.category, lang)} · {clock}
@@ -142,10 +143,10 @@ export function TabBar({
 }) {
   const t = messages[lang];
   const items = [
-    { href: `/d/${token}`, key: "today", label: t.today, icon: House },
-    { href: `/d/${token}/history`, key: "history", label: t.history, icon: CalendarDays },
-    { href: `/d/${token}/alerts`, key: "alerts", label: t.alerts, icon: Bell },
-    { href: `/d/${token}/settings`, key: "settings", label: t.settings, icon: Settings },
+    { href: `/d/${token}`, key: "today", label: t.today, icon: IconFamily },
+    { href: `/d/${token}/history`, key: "history", label: t.history, icon: IconHistory },
+    { href: `/d/${token}/alerts`, key: "alerts", label: t.alerts, icon: IconAlert },
+    { href: `/d/${token}/settings`, key: "settings", label: t.settings, icon: IconSettings },
   ];
   return (
     <nav
@@ -169,7 +170,7 @@ export function TabBar({
                 <span
                   className={`relative grid h-8 w-14 place-items-center rounded-full ${on ? "bg-brand-soft text-brand-deep" : ""}`}
                 >
-                  <Icon className="size-[21px]" strokeWidth={on ? 2.2 : 1.8} aria-hidden />
+                  <Icon className="size-[21px]" strokeWidth={on ? 2.2 : 1.8} />
                   {item.key === "alerts" && openAlerts > 0 ? (
                     <span className="absolute -top-0.5 right-2 min-w-[18px] rounded-full bg-alert px-1 text-center text-[10px] leading-[18px] text-white ring-2 ring-background">
                       {openAlerts}
@@ -204,6 +205,7 @@ export function EmptyState({
 }) {
   return (
     <div className="card grain flex flex-col items-center px-6 py-10 text-center">
+      <MarkSvg className="mb-4 size-12" />
       <p className="text-[17px] font-semibold">{title}</p>
       {body ? <p className="mt-1.5 max-w-[30ch] text-[15px] text-muted-foreground">{body}</p> : null}
     </div>

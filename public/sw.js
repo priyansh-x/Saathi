@@ -1,5 +1,5 @@
 /* Offline shell. Cache successful GETs. Never cache /api or family writes. */
-const VERSION = "saathi-pwa-v2";
+const VERSION = "saathi-pwa-v3";
 const DESK_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const CACHED_AT = "x-saathi-cached-at";
 
@@ -34,7 +34,7 @@ function banner(html, cachedAt) {
     month: "short",
   });
   const label = lang === "hi" ? `आखिरी अपडेट ${stamp} · ऑफ़लाइन` : `Last updated at ${stamp} · offline`;
-  const bar = `<div id="saathi-offline" style="margin:8px 16px;padding:10px 14px;border-radius:999px;background:#fcefd6;color:#7a4f0e;font-size:13px;text-align:center">${label}</div>`;
+  const bar = `<div id="saathi-offline" style="margin:8px 16px;padding:10px 14px;border-radius:999px;background:#F4E6C8;color:#8A5410;font-size:13px;text-align:center">${label}</div>`;
   return html.replace(/<body([^>]*)>/i, `<body$1>${bar}`);
 }
 

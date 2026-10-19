@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
+import { Geist_Mono, IBM_Plex_Sans, IBM_Plex_Sans_Devanagari, Instrument_Serif } from "next/font/google";
 import { WaitlistProvider } from "@/components/waitlist";
 import { content } from "@/lib/content";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const plex = IBM_Plex_Sans({
+  variable: "--font-plex",
   subsets: ["latin"],
+  weight: ["400", "600"],
 });
 
 const geistMono = Geist_Mono({
@@ -21,20 +22,27 @@ const instrument = Instrument_Serif({
   style: ["normal", "italic"],
 });
 
-const deva = Noto_Sans_Devanagari({
+const deva = IBM_Plex_Sans_Devanagari({
   variable: "--font-deva",
   subsets: ["devanagari"],
-  weight: ["400", "500"],
+  weight: ["400", "600"],
 });
 
 export const metadata: Metadata = {
   title: content.meta.title,
   description: content.meta.description,
   robots: { index: true, follow: true },
+  icons: {
+    icon: [
+      { url: "/brand/favicon.svg", type: "image/svg+xml" },
+      { url: "/brand/favicon.ico" },
+    ],
+    apple: "/brand/apple-touch-icon.png",
+  },
   openGraph: {
     title: content.meta.title,
     description: content.meta.description,
-    images: ["/images/hero-maa-balcony.jpg"],
+    images: ["/brand/og-image.png"],
   },
 };
 
@@ -42,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} ${instrument.variable} ${deva.variable} h-full antialiased`}
+      className={`${plex.variable} ${geistMono.variable} ${instrument.variable} ${deva.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg text-ink">
         <WaitlistProvider>{children}</WaitlistProvider>

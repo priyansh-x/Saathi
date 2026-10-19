@@ -2,6 +2,7 @@
 
 import { MicOff, PhoneOff, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { MiniMark } from "@/components/chrome";
 import { DeviceFrame, ExampleTag, Waveform, WhatsAppBriefing } from "@/components/kit";
 import { content, type LangId } from "@/lib/content";
 import { useInView, usePrefersReducedMotion } from "@/lib/use-reveal";
@@ -79,8 +80,8 @@ export function Listen() {
             <DeviceFrame dark time="8:04" className="max-w-[260px] lg:max-w-[280px]">
               <div className="flex h-full min-h-0 flex-col px-4 pb-5 text-dark-ink" aria-label="Example: morning call transcript">
                 <div className="mt-4 text-center">
-                  <span className="mx-auto grid size-14 place-items-center rounded-full bg-accent font-deva text-xl text-white">
-                    {content.nav.glyph}
+                  <span className="mx-auto grid size-14 place-items-center">
+                    <MiniMark className="size-14" />
                   </span>
                   <p className="mt-2 text-[15px] font-medium">{t.caller}</p>
                   <p className="font-mono text-[12px] text-dark-muted">{t.callClock}</p>

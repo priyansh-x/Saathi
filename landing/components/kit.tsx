@@ -1,5 +1,6 @@
 import { Check, CheckCheck, ChevronLeft } from "lucide-react";
 import type { CSSProperties } from "react";
+import { MiniMark } from "@/components/chrome";
 import { content } from "@/lib/content";
 
 export function ExampleTag({ children, className = "" }: { children?: string; className?: string }) {
@@ -52,9 +53,7 @@ export function WhatsAppBriefing({ compact = false, className = "" }: { compact?
     <div className={`flex h-full min-h-0 flex-col overflow-hidden bg-wa-bg ${className}`}>
       <div className="flex items-center gap-2.5 bg-wa-head px-3 py-2.5 text-white">
         <ChevronLeft className="size-4 opacity-80" strokeWidth={2} aria-hidden />
-        <span className="grid size-8 place-items-center rounded-full bg-white/15 font-deva text-sm" aria-hidden>
-          {content.nav.glyph}
-        </span>
+        <MiniMark className="size-8" />
         <span className="leading-tight">
           <span className="block text-[14px] font-medium">Saathi</span>
           <span className="block text-[11px] opacity-75">Maa&apos;s morning briefing</span>
