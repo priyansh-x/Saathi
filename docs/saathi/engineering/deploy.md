@@ -2,6 +2,8 @@
 
 Priyansh deploys. This file is the checklist only. **Do not turn mocks off. Do not enable cron. Do not put real numbers on the allowlist.**
 
+Walk the product first: [`docs/saathi/product/dry_run.md`](../product/dry_run.md) (local, then again on these HTTPS URLs).
+
 Staging is a public HTTPS preview of the family desk and the landing page, with the same mock Bolna and mock WhatsApp behaviour as `npm run dev`. Nothing dials or sends.
 
 ## Two apps, two Vercel projects

@@ -10,6 +10,8 @@ npm i && npm run dev
 
 Open http://127.0.0.1:43147/demo — one EXAMPLE morning, mocks on, nothing dials. Add `?record=1` to play it through for a film. `?lang=hi` for हिं.
 
+Pass/fail for a dry-run: [`docs/saathi/product/dry_run.md`](./docs/saathi/product/dry_run.md). Run that locally before deploying.
+
 ## How it fits together
 
 ```mermaid
