@@ -3,7 +3,7 @@ import { childrenFor } from "@/lib/members";
 import { neighbourOptedIn } from "@/lib/neighbour";
 import { nowIstStamp } from "@/lib/time";
 import { outboundMessageId, sendFamilyMessage } from "@/lib/whatsapp/send";
-import { packTemplate, type TemplateName } from "@/lib/whatsapp/templates";
+import { type TemplateName } from "@/lib/whatsapp/templates";
 
 export type WaStatus = {
   id?: string;
@@ -14,8 +14,11 @@ export type WaStatus = {
 
 const ALERT_TEMPLATES = [
   "safety_alert_emergency",
+  "safety_alert_emergency_solo",
   "safety_alert_urgent",
+  "safety_alert_urgent_solo",
   "safety_alert_unreachable",
+  "safety_alert_unreachable_solo",
   "responder_alert_emergency",
   "responder_alert_unreachable",
 ];
@@ -238,12 +241,14 @@ async function alertVars(args: {
       )
     : [{ n: 0 }];
   const messaged = Boolean(neighbour[0]) && (await neighbourOptedIn(args.parentId)) && (responderSent[0]?.n ?? 0) > 0;
-  const neighbourVar = messaged
-    ? neighbour[0]!.first_name
-    : packTemplate(args.template, locale)?.examples[3] ?? "";
+  const neighbourVar = messaged ? neighbour[0]!.first_name : "";
   if (args.template === "safety_alert_unreachable") return [who, tryCount, time, neighbourVar, phone];
+  if (args.template === "safety_alert_unreachable_solo") return [who, tryCount, time, phone];
   if (args.template === "safety_alert_emergency") return [who, time, quote, neighbourVar, phone];
-  if (args.template === "safety_alert_urgent") return [who, time, quote, "uneasy"];
+  if (args.template === "safety_alert_emergency_solo") return [who, time, quote, phone];
+  if (args.template === "safety_alert_urgent" || args.template === "safety_alert_urgent_solo") {
+    return [who, time, quote, "uneasy"];
+  }
   return [who];
 }
 

@@ -121,4 +121,28 @@ describe("runtime WhatsApp sends match the pack", () => {
       assertAgainstPack(entry);
     }
   });
+
+  it("uses *_solo safety templates when the neighbour has not opted in", async () => {
+    await seed();
+    await query(`update consents set granted = false where kind = 'neighbour_whatsapp'`);
+    mockLoggedWhatsapp.length = 0;
+    const day = istDayKey(new Date("2026-10-18T03:00:00.000Z"));
+    await notifyAlert("parent_kamla", {
+      id: `alert_solo_${Date.now()}`,
+      quote: "Bathroom mein gir gayi.",
+      created_at: `${day}T08:33:00+05:30`,
+      category: "EMERGENCY",
+      level: "act",
+    });
+    const paired = mockLoggedWhatsapp.filter((row) => row.name === "safety_alert_emergency");
+    const solo = mockLoggedWhatsapp.filter((row) => row.name === "safety_alert_emergency_solo");
+    const responder = mockLoggedWhatsapp.filter((row) => row.name.startsWith("responder_alert"));
+    assert.equal(paired.length, 0);
+    assert.equal(responder.length, 0);
+    assert.ok(solo[0]);
+    assert.equal(solo[0]!.vars.length, 4);
+    assert.equal(solo[0]!.vars[3], "+910000000000");
+    assertAgainstPack(solo[0]!);
+    await query(`update consents set granted = true where kind = 'neighbour_whatsapp'`);
+  });
 });

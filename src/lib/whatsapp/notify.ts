@@ -9,7 +9,7 @@ import { formatIstTime, istDayKey, istStamp, nowIstStamp, parseHhMm } from "@/li
 import { sendPushToFamily } from "@/lib/push";
 import { sendFamilyMessage } from "@/lib/whatsapp/send";
 import { ladderConfig, nextRetryLabel } from "@/lib/ladder";
-import { packTemplate } from "@/lib/whatsapp/templates";
+import { type TemplateName } from "@/lib/whatsapp/templates";
 
 async function magicUrl(parentId: string) {
   const rows = await query<{ token: string }>(
@@ -156,21 +156,26 @@ export async function notifyAlert(
   }
   for (const child of kids) {
     const locale = localeOf(child);
-    const neighbourVar = neighbourMessaged
-      ? neighbour?.first_name ?? ""
-      : packTemplate(childTemplate, locale)?.examples[3] ?? "";
+    const intended = (
+      neighbourMessaged ? childTemplate : `${childTemplate}_solo`
+    ) as Exclude<TemplateName, "hello_world">;
+    const neighbourVar = neighbour?.first_name ?? "";
     const vars =
-      childTemplate === "safety_alert_unreachable"
+      intended === "safety_alert_unreachable"
         ? [who, tryCount, time, neighbourVar, parent.phone]
-        : childTemplate === "safety_alert_emergency"
-          ? [who, time, alert.quote, neighbourVar, parent.phone]
-          : [who, time, alert.quote, "uneasy"];
+        : intended === "safety_alert_unreachable_solo"
+          ? [who, tryCount, time, parent.phone]
+          : intended === "safety_alert_emergency"
+            ? [who, time, alert.quote, neighbourVar, parent.phone]
+            : intended === "safety_alert_emergency_solo"
+              ? [who, time, alert.quote, parent.phone]
+              : [who, time, alert.quote, "uneasy"];
     results.push(
       await sendFamilyMessage({
         parentId,
         toPhone: child.phone,
-        locale: localeOf(child),
-        intended: childTemplate,
+        locale,
+        intended,
         vars,
         idempotencyKey: `alert_${alert.id}_${child.phone.replace(/\s/g, "")}`,
       }),

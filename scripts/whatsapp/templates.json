@@ -246,6 +246,58 @@
     ]
   },
   {
+    "name": "safety_alert_unreachable_solo",
+    "language": "en",
+    "category": "UTILITY",
+    "body": "🔴 Still can't reach {{1}}: {{2}} tries since {{3}}.\nHer number: {{4}}. Please reply when you know she's OK.",
+    "buttons": [
+      {
+        "type": "QUICK_REPLY",
+        "text": "I'm on it"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "She's OK"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "Can't reach her"
+      }
+    ],
+    "examples": [
+      "Maa",
+      "4",
+      "8:00 AM IST",
+      "+910000000000"
+    ]
+  },
+  {
+    "name": "safety_alert_unreachable_solo",
+    "language": "hi",
+    "category": "UTILITY",
+    "body": "🔴 {{1}} से अब भी बात नहीं हुई: {{3}} से {{2}} बार कोशिश।\nउनका नंबर: {{4}}। ठीक होने की ख़बर मिले तो बताइए।",
+    "buttons": [
+      {
+        "type": "QUICK_REPLY",
+        "text": "मैं देख रहा/रही हूँ"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "वो ठीक हैं"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "बात नहीं हुई"
+      }
+    ],
+    "examples": [
+      "माँ",
+      "4",
+      "8:00",
+      "+910000000000"
+    ]
+  },
+  {
     "name": "safety_alert_emergency",
     "language": "en",
     "category": "UTILITY",
@@ -300,6 +352,58 @@
     ]
   },
   {
+    "name": "safety_alert_emergency_solo",
+    "language": "en",
+    "category": "UTILITY",
+    "body": "🔴 URGENT: {{1}} needs help now.\nOn today's call at {{2}} she said: \"{{3}}\". I told her to call 112 or someone nearby. Her number: {{4}}.",
+    "buttons": [
+      {
+        "type": "QUICK_REPLY",
+        "text": "I'm on it"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "Can't reach her"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "False alarm"
+      }
+    ],
+    "examples": [
+      "Maa",
+      "8:09 AM IST",
+      "Bathroom mein gir gayi, uth nahi pa rahi.",
+      "+910000000000"
+    ]
+  },
+  {
+    "name": "safety_alert_emergency_solo",
+    "language": "hi",
+    "category": "UTILITY",
+    "body": "🔴 ज़रूरी: {{1}} को अभी मदद चाहिए।\nआज {{2}} बजे की कॉल पर उन्होंने कहा: \"{{3}}\". मैंने उन्हें 112 या किसी पास वाले को फ़ोन करने को कहा। उनका नंबर: {{4}}।",
+    "buttons": [
+      {
+        "type": "QUICK_REPLY",
+        "text": "मैं देख रहा/रही हूँ"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "बात नहीं हुई"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "ग़लत अलार्म"
+      }
+    ],
+    "examples": [
+      "माँ",
+      "8:09",
+      "बाथरूम में गिर गई, उठ नहीं पा रही।",
+      "+910000000000"
+    ]
+  },
+  {
     "name": "safety_alert_urgent",
     "language": "en",
     "category": "UTILITY",
@@ -338,6 +442,58 @@
       {
         "type": "QUICK_REPLY",
         "text": "पड़ोसी से पूछें"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "देख लिया"
+      }
+    ],
+    "examples": [
+      "माँ",
+      "8:10",
+      "बैंक वाले बोले KYC करना है, OTP माँग रहे थे।",
+      "घबराई हुई"
+    ]
+  },
+  {
+    "name": "safety_alert_urgent_solo",
+    "language": "en",
+    "category": "UTILITY",
+    "body": "⚠️ Please check in with {{1}} today.\nOn the {{2}} call she said: \"{{3}}\". She sounded {{4}}. Nothing else urgent came up.",
+    "buttons": [
+      {
+        "type": "QUICK_REPLY",
+        "text": "I'll call her"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "She's OK"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "Seen"
+      }
+    ],
+    "examples": [
+      "Maa",
+      "8:10 AM IST",
+      "Bank wale bole KYC karna hai, OTP maang rahe the.",
+      "uneasy"
+    ]
+  },
+  {
+    "name": "safety_alert_urgent_solo",
+    "language": "hi",
+    "category": "UTILITY",
+    "body": "⚠️ आज {{1}} से ज़रूर बात कर लीजिए।\n{{2}} बजे की कॉल पर उन्होंने कहा: \"{{3}}\". आवाज़ से वो {{4}} लगीं। और कुछ ज़रूरी नहीं था।",
+    "buttons": [
+      {
+        "type": "QUICK_REPLY",
+        "text": "मैं कॉल करूँ"
+      },
+      {
+        "type": "QUICK_REPLY",
+        "text": "वो ठीक हैं"
       },
       {
         "type": "QUICK_REPLY",

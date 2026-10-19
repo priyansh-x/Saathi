@@ -13,6 +13,9 @@ const ALIASES: Record<string, Exclude<TemplateName, "hello_world"> | "hello_worl
   safety_alert: "safety_alert_emergency",
   safety_alert_en: "safety_alert_emergency",
   safety_alert_hi: "safety_alert_emergency",
+  safety_alert_emergency_solo: "safety_alert_emergency_solo",
+  safety_alert_unreachable_solo: "safety_alert_unreachable_solo",
+  safety_alert_urgent_solo: "safety_alert_urgent_solo",
   hello_world: "hello_world",
 };
 

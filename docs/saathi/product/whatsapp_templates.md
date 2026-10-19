@@ -117,6 +117,8 @@ HI:
 Buttons HI: **"मैं देख रहा/रही हूँ"** (≤25 ✓) · **"वो ठीक हैं"** · **"बात नहीं हुई"**
 Paired with an automatic **voice call** to the child (Bolna outbound, ~15 s script): "Namaste, this is Saathi. We have not been able to reach Kamla ji since 8 AM. Sunita ji has been asked to check. Please see WhatsApp." (Hindi version in voice/ to be written.)
 
+Solo variant `safety_alert_unreachable_solo` (no opted-in neighbour): drop `{{4}} has been asked to check on her` and pass the phone as `{{4}}`. Same buttons.
+
 ### 2b. EMERGENCY (fall with injury, chest pain, breathlessness, stroke signs, unresponsive): `safety_alert_emergency`
 EN:
 ```
@@ -133,6 +135,8 @@ HI:
 ```
 Buttons HI: **"मैं देख रहा/रही हूँ"** · **"बात नहीं हुई"** · **"ग़लत अलार्म"** · Footer HI: "साथी इमरजेंसी सेवा नहीं है। 112 पर कॉल करें।"
 Plus automatic voice call to child at T+0, repeats per J5 timeline.
+
+Solo variant `safety_alert_emergency_solo`: omit "{{4}} has also been alerted" and pass the phone as `{{4}}`. Use this whenever the neighbour has not opted in on WhatsApp, so we never claim someone nearby was messaged.
 
 **Suicidal-talk variant** `safety_alert_emotional` (neighbour gets the generic "please check on her" only):
 ```
@@ -154,6 +158,8 @@ HI:
 {{2}} बजे की कॉल पर उन्होंने कहा: "{{3}}"। आवाज़ से वो {{4}} लगीं। और कुछ ज़रूरी नहीं था।
 ```
 Scam-risk example `{{3}}`: "Bank wale bole KYC karna hai, OTP maang rahe the." with fixed extra line in a dedicated template `safety_alert_scam`: "I told her not to share any OTP or money."
+
+Solo variant `safety_alert_urgent_solo`: same body; replace the **"Ask neighbour"** button with **"She's OK"** so we do not prompt a neighbour hop that cannot run.
 
 ### 2d. Ack broadcast (to everyone already alerted): `alert_ack_update`
 ```
