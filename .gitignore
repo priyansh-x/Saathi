@@ -57,3 +57,15 @@ next-env.d.ts
 
 # hyperframes render cache
 /archives/brag/composition/.hyperframes
+
+# Android / Capacitor build outputs (keep android/ project files)
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/local.properties
+android/.idea/
+*.apk
+*.aab
+*.jks
+*.keystore

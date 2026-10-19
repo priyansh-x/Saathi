@@ -1,0 +1,83 @@
+package app.saathi.family;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebView;
+import android.widget.Toast;
+import androidx.activity.OnBackPressedCallback;
+import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebViewClient;
+
+public class MainActivity extends BridgeActivity {
+  private long lastBack;
+
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    getOnBackPressedDispatcher()
+        .addCallback(
+            this,
+            new OnBackPressedCallback(true) {
+              @Override
+              public void handleOnBackPressed() {
+                WebView web = getBridge().getWebView();
+                String raw = web.getUrl() == null ? "" : web.getUrl();
+                String path = Uri.parse(raw).getPath();
+                boolean today = path != null && path.matches("/d/[^/]+/?");
+                if (web.canGoBack() && !today) {
+                  web.goBack();
+                  return;
+                }
+                long now = System.currentTimeMillis();
+                if (now - lastBack < 2000) {
+                  finish();
+                } else {
+                  lastBack = now;
+                  Toast.makeText(
+                          MainActivity.this,
+                          "Press back again to leave · वापस दबाने से ऐप बंद होगा",
+                          Toast.LENGTH_SHORT)
+                      .show();
+                }
+              }
+            });
+  }
+
+  @Override
+  public void onStart() {
+    super.onStart();
+    getBridge()
+        .getWebView()
+        .setWebViewClient(
+            new BridgeWebViewClient(getBridge()) {
+              @Override
+              public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                String scheme = uri.getScheme() == null ? "" : uri.getScheme();
+                if ("tel".equals(scheme)) {
+                  openOutside(new Intent(Intent.ACTION_DIAL, uri));
+                  return true;
+                }
+                String allowed = Uri.parse(getBridge().getServerUrl()).getHost();
+                String host = uri.getHost();
+                if (("http".equals(scheme) || "https".equals(scheme))
+                    && host != null
+                    && host.equalsIgnoreCase(allowed)) {
+                  return false;
+                }
+                openOutside(new Intent(Intent.ACTION_VIEW, uri));
+                return true;
+              }
+            });
+  }
+
+  private void openOutside(Intent intent) {
+    try {
+      startActivity(intent);
+    } catch (Exception e) {
+      Toast.makeText(this, "Couldn't open that link · लिंक नहीं खुला", Toast.LENGTH_SHORT).show();
+    }
+  }
+}
