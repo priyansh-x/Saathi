@@ -3,7 +3,7 @@ import { query } from "@/lib/db/client";
 import { deliverEmail, isMockEmail, selectEmailTransport } from "@/lib/email/transport";
 import { gateOutbound } from "@/lib/outbound";
 import { nowIst } from "@/lib/bolna/tools";
-import { mockLoggedWhatsapp } from "@/lib/whatsapp/mock-log";
+import { recordMockWhatsapp } from "@/lib/whatsapp/mock-log";
 import { packTemplate, renderTemplate, type TemplateName } from "@/lib/whatsapp/templates";
 
 export type SendResult = {
@@ -16,6 +16,11 @@ export type SendResult = {
 };
 
 export function outboundMessageId(template: string, idempotencyKey: string) {
+  // Responder keys start with resp_<alertId>_ so the alert id is never cut by the 80-char cap.
+  if (idempotencyKey.startsWith("resp_")) {
+    const id = `${idempotencyKey}_${template}`;
+    return id.length <= 80 ? id : idempotencyKey.slice(0, 80);
+  }
   return `out_${template}_${idempotencyKey}`.slice(0, 80);
 }
 
@@ -333,7 +338,7 @@ export async function sendFamilyMessage(args: {
       buttonUrlVar: args.buttonUrlVar,
     });
     const components = (graph.template?.components as { type: string }[] | undefined) ?? [];
-    mockLoggedWhatsapp.push({
+    recordMockWhatsapp({
       name: graph.template?.name ?? template,
       language,
       vars: args.vars,

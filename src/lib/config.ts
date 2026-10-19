@@ -1,4 +1,5 @@
 import { opsKillSwitchLatched } from "@/lib/ops/flags";
+import { whatsappTemplatePack } from "@/lib/whatsapp/template-pack";
 
 /** Product defaults. Change via env — do not hard-code elsewhere. */
 export const PRODUCT_NAME = process.env.PRODUCT_NAME || "Saathi";
@@ -39,15 +40,14 @@ export function approvedWhatsappTemplates() {
     .filter(Boolean);
 }
 
-const DRAFT_WHATSAPP_TEMPLATES = [
-  "safety_alert_unreachable_solo",
-  "safety_alert_emergency_solo",
-  "safety_alert_urgent_solo",
-];
+function draftWhatsappTemplates() {
+  return [...new Set(whatsappTemplatePack().filter((t) => t.status === "DRAFT").map((t) => t.name))];
+}
 
 export function isWhatsappTemplateApproved(name: string) {
   const base = name.replace(/_en$|_hi$/, "");
-  if (DRAFT_WHATSAPP_TEMPLATES.includes(base) || DRAFT_WHATSAPP_TEMPLATES.includes(name)) return false;
+  const drafts = draftWhatsappTemplates();
+  if (drafts.includes(base) || drafts.includes(name)) return false;
   const list = approvedWhatsappTemplates();
   if (list === null) return true;
   return list.includes(name) || list.includes(base);
