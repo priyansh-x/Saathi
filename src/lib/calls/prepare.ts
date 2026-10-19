@@ -1,4 +1,4 @@
-import { allowedPhones, dailyBudgetMinutes, isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
+import { allowedPhones, callProviderName, dailyBudgetMinutes, isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
 import { buildCallContext } from "@/lib/bolna/call-context";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
@@ -228,7 +228,7 @@ export async function placeRetryCall(
 ): Promise<PlaceCallResult> {
   const prepared = await prepareMorningCall(parentId, clock, { retryOf: parentCallId });
   if (!isPreparedCall(prepared)) return prepared;
-  if (process.env.BOLNA_API_KEY) {
+  if (callProviderName() === "bolna") {
     return postBolnaCall(prepared, fetchImpl);
   }
   return insertSimulatedCall(prepared, parentCallId);

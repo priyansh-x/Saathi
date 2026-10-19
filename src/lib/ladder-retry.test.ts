@@ -38,10 +38,11 @@ after(async () => {
 });
 
 describe("ladder redials that can happen", () => {
-  it("cap=1 still records one real retry at 10 min through the fetch-level provider stub", async () => {
+  it("cap=1 still records one simulated retry at 10 min even if BOLNA_API_KEY is set", async () => {
     await seed();
     await wipeDay();
     process.env.CALL_BUDGET_DIALS_DAILY = "1";
+    process.env.CALL_PROVIDER = "simulated";
     process.env.BOLNA_API_KEY = "example-test-key-not-live";
     const original = "exec_morning_root";
     await recordCallPlacement({
@@ -66,12 +67,7 @@ describe("ladder redials that can happen", () => {
         clock: T10,
       });
       assert.ok(result.actions.some((a) => a.startsWith("redial_10")));
-      assert.equal(urls.length, 1);
-      const retry = await query<{ parent_call_id: string | null; status: string }>(
-        `select parent_call_id, status from calls where id = 'exec_retry_10' or bolna_execution_id = 'exec_retry_10'`,
-      );
-      assert.equal(retry[0]?.parent_call_id, original);
-      assert.equal(retry[0]?.status, "in_progress");
+      assert.equal(urls.length, 0);
       const chain = await query<{ id: string; parent_call_id: string | null }>(
         `select id, parent_call_id from calls where id = $1 or parent_call_id = $1`,
         [original],
@@ -82,6 +78,47 @@ describe("ladder redials that can happen", () => {
       globalThis.fetch = originalFetch;
       delete process.env.BOLNA_API_KEY;
       delete process.env.CALL_BUDGET_DIALS_DAILY;
+      process.env.CALL_PROVIDER = "simulated";
+    }
+  });
+
+  it("CALL_PROVIDER=bolna retries through POST /call", async () => {
+    await seed();
+    await wipeDay();
+    process.env.CALL_PROVIDER = "bolna";
+    process.env.BOLNA_API_KEY = "example-test-key-not-live";
+    process.env.BOLNA_AGENT_ID = "agent_example";
+    process.env.ALLOWED_PHONE_NUMBERS = "+910000000000";
+    const original = "exec_morning_bolna";
+    await recordCallPlacement({
+      parentId: "parent_kamla",
+      clock: T0,
+      executionId: original,
+      status: "in_progress",
+    });
+    await query(`update calls set status = 'missed' where id = $1`, [original]);
+    const urls: string[] = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      urls.push(String(input));
+      return new Response(JSON.stringify({ execution_id: "exec_retry_bolna" }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      await advanceLadder({
+        parentId: "parent_kamla",
+        callId: original,
+        elapsedMin: 10,
+        attemptResult: "no_answer",
+        clock: T10,
+      });
+      assert.equal(urls.length, 1);
+      assert.match(urls[0]!, /\/call/);
+    } finally {
+      globalThis.fetch = originalFetch;
+      process.env.CALL_PROVIDER = "simulated";
+      delete process.env.BOLNA_API_KEY;
+      delete process.env.BOLNA_AGENT_ID;
+      delete process.env.ALLOWED_PHONE_NUMBERS;
     }
   });
 
