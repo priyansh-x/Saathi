@@ -18,7 +18,9 @@
     "whatsapp:templates": "npx --yes tsx scripts/whatsapp/templates.ts",
     "whatsapp:test-send": "npx --yes tsx scripts/whatsapp/test-send.ts",
     "brand:build": "npx --yes tsx scripts/brand/build.ts",
-    "brand:screens": "npx --yes tsx scripts/brand/screens.ts"
+    "brand:screens": "npx --yes tsx scripts/brand/screens.ts",
+    "android:apk": "npx --yes tsx scripts/android/build.ts debug",
+    "android:release": "npx --yes tsx scripts/android/build.ts release"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
