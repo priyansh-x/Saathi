@@ -4,7 +4,7 @@ import { deliverEmail } from "@/lib/email/transport";
 import { gateOutbound } from "@/lib/outbound";
 import { canViewOps } from "@/lib/ops/access";
 import { nowIstStamp } from "@/lib/time";
-import { issueSignInCode } from "./code";
+import { countRecentCodes, mintSignInCode, persistSignInCode } from "./code";
 import { encodeSession, newAuthToken } from "./session";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -67,9 +67,11 @@ export async function startEmailSignIn(rawEmail: string) {
     return { ok: false as const, error: NOT_CONFIGURED };
   }
 
-  const coded = await issueSignInCode(email);
-  if (!coded.ok) return coded;
+  if ((await countRecentCodes(email)) >= 5) {
+    return { ok: false as const, error: "Wait a few minutes, then try again." };
+  }
 
+  const code = mintSignInCode();
   const token = newAuthToken();
   const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace("Z", "+00:00");
   await query(`insert into auth_tokens (token, email, expires_at) values ($1,$2,$3)`, [token, email, expires]);
@@ -78,7 +80,7 @@ export async function startEmailSignIn(rawEmail: string) {
   const text = [
     "Saathi sign-in",
     "",
-    `Your code is ${coded.code}. It lasts 10 minutes (5 tries).`,
+    `Your code is ${code}. It lasts 10 minutes (5 tries).`,
     "",
     "Or open this link on this phone:",
     callback,
@@ -99,6 +101,8 @@ export async function startEmailSignIn(rawEmail: string) {
     });
     if (!res.ok) return { ok: false as const, error: "Could not send the sign-in email." };
   }
+  const stored = await persistSignInCode(email, code);
+  if (!stored.ok) return stored;
   return { ok: true as const, mode: "email" as const };
 }
 

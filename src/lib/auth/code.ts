@@ -1,7 +1,6 @@
-import { createHash, randomInt } from "node:crypto";
-import { isMockEmail } from "@/lib/config";
+import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { allowedEmails, sessionSecret } from "@/lib/config";
 import { query } from "@/lib/db/client";
-import { gateOutbound } from "@/lib/outbound";
 import { canViewOps } from "@/lib/ops/access";
 import { nowIstStamp } from "@/lib/time";
 import { encodeSession } from "./session";
@@ -10,47 +9,76 @@ const TTL_MS = 10 * 60 * 1000;
 const MAX_TRIES = 5;
 const ISSUE_WINDOW_MS = 10 * 60 * 1000;
 const ISSUE_MAX = 5;
-const issueHits = new Map<string, number[]>();
 
 function pepper() {
-  return process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET || "dev-code-pepper";
+  const secret = sessionSecret();
+  if (!secret) throw new Error("SESSION_SECRET is required to issue sign-in codes.");
+  return secret;
 }
 
 export function hashSignInCode(email: string, code: string) {
   return createHash("sha256").update(`${pepper()}:${email}:${code}`).digest("hex");
 }
 
+function hashesEqual(a: string, b: string) {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
 function sixDigit() {
   return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
-function allowIssue(email: string, now = Date.now()) {
-  const hits = (issueHits.get(email) || []).filter((t) => now - t < ISSUE_WINDOW_MS);
-  if (hits.length >= ISSUE_MAX) return false;
-  hits.push(now);
-  issueHits.set(email, hits);
-  return true;
+export function canIssueSignIn(email: string) {
+  const n = email.trim().toLowerCase();
+  return allowedEmails().includes(n) || canViewOps(n);
 }
 
-export async function issueSignInCode(rawEmail: string) {
-  const email = rawEmail.trim().toLowerCase();
-  const gate = gateOutbound("email", email);
-  if (!gate.ok && !canViewOps(email)) return { ok: false as const, error: "Pilot is invite-only for now" };
-  if (!allowIssue(email)) return { ok: false as const, error: "Wait a few minutes, then try again." };
+export async function countRecentCodes(email: string) {
+  const since = new Date(Date.now() - ISSUE_WINDOW_MS).toISOString().replace("Z", "+00:00");
+  const rows = await query<{ n: number }>(
+    `select count(*)::int as n from auth_codes where email = $1 and created_at >= $2`,
+    [email, since],
+  );
+  return rows[0]?.n ?? 0;
+}
 
-  const code = sixDigit();
+export function mintSignInCode() {
+  return sixDigit();
+}
+
+export async function persistSignInCode(rawEmail: string, code: string) {
+  const email = rawEmail.trim().toLowerCase();
+  if (!canIssueSignIn(email)) return { ok: false as const, error: "Pilot is invite-only for now" };
+  if ((await countRecentCodes(email)) >= ISSUE_MAX) {
+    return { ok: false as const, error: "Wait a few minutes, then try again." };
+  }
   const expires = new Date(Date.now() + TTL_MS).toISOString().replace("Z", "+00:00");
   const id = `code_${Date.now()}_${randomInt(1e6, 9e6)}`;
+  const plain = process.env.NODE_ENV === "production" ? null : code;
   await query(
     `insert into auth_codes (id, email, code_hash, code_plain, expires_at, tries, created_at)
      values ($1,$2,$3,$4,$5,0,$6)`,
-    [id, email, hashSignInCode(email, code), isMockEmail() ? code : null, expires, nowIstStamp()],
+    [id, email, hashSignInCode(email, code), plain, expires, nowIstStamp()],
   );
-  return { ok: true as const, email, code, expires, plainForOps: isMockEmail() };
+  return { ok: true as const, email, code, expires, plainForOps: Boolean(plain) };
+}
+
+/** @deprecated generate then persist only after mail is accepted */
+export async function issueSignInCode(rawEmail: string) {
+  const email = rawEmail.trim().toLowerCase();
+  if (!canIssueSignIn(email)) return { ok: false as const, error: "Pilot is invite-only for now" };
+  if ((await countRecentCodes(email)) >= ISSUE_MAX) {
+    return { ok: false as const, error: "Wait a few minutes, then try again." };
+  }
+  return persistSignInCode(email, mintSignInCode());
 }
 
 export async function verifySignInCode(rawEmail: string, rawCode: string) {
   const email = rawEmail.trim().toLowerCase();
+  if (!canIssueSignIn(email)) return null;
   const code = rawCode.replace(/\D/g, "");
   if (!/^\d{6}$/.test(code)) return null;
   const rows = await query<{
@@ -67,18 +95,19 @@ export async function verifySignInCode(rawEmail: string, rawCode: string) {
   );
   const row = rows[0];
   if (!row) return null;
-  if (row.tries >= MAX_TRIES) return null;
   if (new Date(row.expires_at).getTime() < Date.now()) return null;
-  if (row.code_hash !== hashSignInCode(email, code)) {
-    await query(`update auth_codes set tries = tries + 1 where id = $1`, [row.id]);
-    return null;
-  }
-  await query(`update auth_codes set consumed_at = $2, tries = tries + 1 where id = $1`, [row.id, nowIstStamp()]);
+  const bumped = await query<{ tries: number }>(
+    `update auth_codes set tries = tries + 1 where id = $1 and tries < $2 returning tries`,
+    [row.id, MAX_TRIES],
+  );
+  if (!bumped[0]) return null;
+  if (!hashesEqual(row.code_hash, hashSignInCode(email, code))) return null;
+  await query(`update auth_codes set consumed_at = $2 where id = $1`, [row.id, nowIstStamp()]);
   return encodeSession(email);
 }
 
 export async function listMockPendingCodes() {
-  if (!isMockEmail()) return [];
+  if (process.env.NODE_ENV === "production") return [];
   const rows = await query<{ email: string; code_plain: string | null; expires_at: string }>(
     `select email, code_plain, expires_at from auth_codes
      where consumed_at is null and code_plain is not null
@@ -87,6 +116,6 @@ export async function listMockPendingCodes() {
   const now = Date.now();
   return rows
     .filter((row) => row.code_plain && new Date(row.expires_at).getTime() > now)
-    .filter((row) => gateOutbound("email", row.email).ok)
+    .filter((row) => canIssueSignIn(row.email))
     .map((row) => ({ email: row.email, code: row.code_plain as string, expiresAt: row.expires_at }));
 }

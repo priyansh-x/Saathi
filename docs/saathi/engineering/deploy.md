@@ -89,7 +89,7 @@ Leave cron **off**. `POST /api/cron/tick` stays bearer-authenticated (`CRON_SECR
 `/ops` 404s until `OPS_EMAILS` has your address **and** you can prove you own it.
 
 1. Keep `MOCK_EMAIL=1` on staging so nobody else gets mail. Instant mock cookies stay off because Vercel is `NODE_ENV=production`.
-2. Put your address on `OPS_EMAILS` and on `ALLOWED_EMAILS` (sign-in and outbound both check these).
+2. Put your address on `OPS_EMAILS`. Sign-in mail to `OPS_EMAILS` skips `gateOutbound` and the kill switch so you can still receive a code and turn the switch off. Other outbound still goes through the gate. Family testers stay on `ALLOWED_EMAILS` / `/d/<token>`.
 3. Configure a real mail path: Resend/SMTP (`EMAIL_FROM` + key) **or** Supabase Auth magic link. `/onboard` will still say "Email sign-in is not configured" for everyone else.
 4. Sign in with the emailed link or 6-digit code — never a cookie minted by the server because mocks are on.
 5. Open `/ops`. Empty `OPS_EMAILS` again after the walk if you want the page 404 for everyone.

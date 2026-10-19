@@ -1,10 +1,14 @@
 import { connection } from "next/server";
+import { allowIp, clientIp } from "@/lib/auth/ip-limit";
 import { startEmailSignIn } from "@/lib/auth/magic";
 import { sessionCookie } from "@/lib/auth/session";
 import { readJson } from "@/lib/http";
 
 export async function POST(req: Request) {
   await connection();
+  if (!allowIp(clientIp(req))) {
+    return Response.json({ ok: false, error: "Wait a few minutes, then try again." }, { status: 429 });
+  }
   const body = await readJson<{ email?: string }>(req);
   const result = await startEmailSignIn(body?.email || "");
   if (!result.ok) return Response.json({ ok: false, error: result.error }, { status: 400 });
