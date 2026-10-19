@@ -19,7 +19,7 @@ android {
     }
     buildTypes {
         debug {
-            manifestPlaceholders = [usesCleartext: "true"]
+            manifestPlaceholders = [usesCleartext: "false"]
         }
         release {
             minifyEnabled false

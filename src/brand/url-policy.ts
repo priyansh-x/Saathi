@@ -19,3 +19,18 @@ export function classifyAppUrl(raw: string, allowedHost: string): AppUrlKind {
 export function isTodayPath(pathname: string) {
   return /^\/d\/[^/]+\/?$/.test(pathname);
 }
+
+/** Offline Retry: https on the configured host. http only for emulator loopback. */
+export function retryUrl(raw: string, allowedHost: string) {
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase();
+    if (host !== allowedHost.toLowerCase()) return null;
+    const loopback = host === "10.0.2.2" || host === "localhost" || host === "127.0.0.1";
+    if (url.protocol === "https:") return url.toString();
+    if (url.protocol === "http:" && loopback) return url.toString();
+    return null;
+  } catch {
+    return null;
+  }
+}

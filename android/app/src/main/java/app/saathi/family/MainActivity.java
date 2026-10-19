@@ -3,7 +3,6 @@ package app.saathi.family;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.widget.Toast;
@@ -58,7 +57,7 @@ public class MainActivity extends BridgeActivity {
                 Uri uri = request.getUrl();
                 String scheme = uri.getScheme() == null ? "" : uri.getScheme();
                 if ("tel".equals(scheme)) {
-                  startActivity(new Intent(Intent.ACTION_DIAL, uri));
+                  openOutside(new Intent(Intent.ACTION_DIAL, uri));
                   return true;
                 }
                 String allowed = Uri.parse(getBridge().getServerUrl()).getHost();
@@ -68,20 +67,17 @@ public class MainActivity extends BridgeActivity {
                     && host.equalsIgnoreCase(allowed)) {
                   return false;
                 }
-                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                openOutside(new Intent(Intent.ACTION_VIEW, uri));
                 return true;
               }
-
-              @Override
-              public void onReceivedError(
-                  WebView view, WebResourceRequest request, WebResourceError error) {
-                if (request != null && request.isForMainFrame()) {
-                  String server = getBridge().getServerUrl();
-                  view.loadUrl(
-                      "file:///android_asset/public/offline.html#"
-                          + Uri.encode(server == null ? "" : server));
-                }
-              }
             });
+  }
+
+  private void openOutside(Intent intent) {
+    try {
+      startActivity(intent);
+    } catch (Exception e) {
+      Toast.makeText(this, "Couldn't open that link · लिंक नहीं खुला", Toast.LENGTH_SHORT).show();
+    }
   }
 }

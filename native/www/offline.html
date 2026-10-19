@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-host="">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -42,8 +42,17 @@
     </main>
     <script>
       document.getElementById("retry").onclick = function () {
-        var u = decodeURIComponent((location.hash || "").replace(/^#/, ""));
-        location.href = u || "/";
+        var host = document.documentElement.getAttribute("data-host") || "";
+        var raw = decodeURIComponent((location.hash || "").replace(/^#/, ""));
+        if (!raw && host) raw = "https://" + host + "/";
+        try {
+          var url = new URL(raw);
+          var loopback = url.hostname === "10.0.2.2" || url.hostname === "localhost" || url.hostname === "127.0.0.1";
+          var okHost = host && url.hostname.toLowerCase() === host.toLowerCase();
+          var okHttps = url.protocol === "https:";
+          var okHttp = url.protocol === "http:" && loopback;
+          if (okHost && (okHttps || okHttp)) location.href = url.toString();
+        } catch (e) {}
       };
     </script>
   </body>

@@ -1,3 +1,5 @@
+import { writeFileSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { APP_ID, APP_NAME, BRAND, EMULATOR_DEV_URL, PAPER } from "./brand";
 
 export type CapEnv = { SAATHI_APP_URL?: string } | NodeJS.ProcessEnv;
@@ -49,6 +51,7 @@ export function buildCapacitorConfig(env: CapEnv, opts: { dev: boolean }) {
       androidScheme: "https",
       cleartext: opts.dev,
       allowNavigation: [host],
+      errorPath: "offline.html",
     },
     plugins: {
       SplashScreen: {
@@ -70,6 +73,15 @@ export function buildCapacitorConfig(env: CapEnv, opts: { dev: boolean }) {
   };
 }
 
-export function isDevArg(argv = process.argv) {
-  return argv.includes("--dev");
+export function isDevArg(argv = process.argv, env: NodeJS.ProcessEnv = process.env) {
+  // Capacitor CLI rejects unknown flags (`npx cap sync --dev` fails). Use CAP_DEV=1.
+  return argv.includes("--dev") || env.CAP_DEV === "1";
+}
+
+export function writeOfflineHost(serverUrl: string, webDir = "native/www") {
+  const file = path.join(process.cwd(), webDir, "offline.html");
+  const html = readFileSync(file, "utf8");
+  const host = new URL(serverUrl).hostname;
+  const next = html.replace(/data-host="[^"]*"/, `data-host="${host}"`);
+  writeFileSync(file, next);
 }

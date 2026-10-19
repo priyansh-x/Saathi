@@ -23,6 +23,7 @@ describe("Capacitor server URL", () => {
     assert.equal(cfg.appName, APP_NAME);
     assert.equal(cfg.server?.url, "https://family.saathi.app");
     assert.deepEqual(cfg.server?.allowNavigation, ["family.saathi.app"]);
+    assert.equal(cfg.server?.errorPath, "offline.html");
     assert.match(APP_ID, /app\.saathi\.family/);
   });
 });
@@ -38,5 +39,19 @@ describe("in-app URL policy", () => {
     const { isTodayPath } = await import("./url-policy");
     assert.equal(isTodayPath("/d/example-kamla"), true);
     assert.equal(isTodayPath("/d/example-kamla/alerts"), false);
+    const { retryUrl } = await import("./url-policy");
+    assert.equal(retryUrl("https://family.saathi.app/onboard", "family.saathi.app"), "https://family.saathi.app/onboard");
+    assert.equal(retryUrl("http://evil.example/", "family.saathi.app"), null);
+    assert.equal(retryUrl("https://evil.example/", "family.saathi.app"), null);
+    assert.equal(retryUrl("javascript:alert(1)", "family.saathi.app"), null);
+  });
+});
+
+describe("Capacitor --dev flag", () => {
+  it("reads CAP_DEV because the CLI rejects --dev", async () => {
+    const { isDevArg } = await import("./capacitor-config");
+    assert.equal(isDevArg(["cap", "sync", "android"], {}), false);
+    assert.equal(isDevArg(["cap", "sync", "android"], { CAP_DEV: "1" }), true);
+    assert.equal(isDevArg(["node", "cap", "--dev"], {}), true);
   });
 });
