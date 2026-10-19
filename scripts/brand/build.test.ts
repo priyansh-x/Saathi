@@ -10,10 +10,15 @@ const tmp = mkdtempSync(path.join(tmpdir(), "saathi-brand-"));
 after(() => rmSync(tmp, { recursive: true, force: true }));
 
 describe("brand:build", () => {
-  it("writes every required raster with a non-empty size", async () => {
+  it("writes every required raster at the exact pixel size into a tmp dir", async () => {
     await renderBrandAssets({ dests: [tmp], writeTracked: false });
     for (const spec of ASSET_SPECS) {
-      assert.ok(assetSize(spec.name, tmp) > 200, spec.name);
+      const file = path.join(tmp, spec.name);
+      assert.ok(assetSize(spec.name, tmp) > 0, spec.name);
+      const meta = await sharp(readFileSync(file)).metadata();
+      const height = "height" in spec && spec.height ? spec.height : spec.size;
+      assert.equal(meta.width, spec.size, `${spec.name} width`);
+      assert.equal(meta.height, height, `${spec.name} height`);
     }
     const mark = readFileSync(path.join(tmp, "mark.svg"), "utf8");
     assert.doesNotMatch(mark, /<text/i);

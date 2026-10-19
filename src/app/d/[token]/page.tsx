@@ -7,16 +7,17 @@ import {
   ChevronRight,
   Circle,
   Clock,
+  Eye,
   HeartHandshake,
   Minus,
   Pause,
   Phone,
-  Pill,
   Quote,
   ShieldCheck,
   UserRound,
   X,
 } from "lucide-react";
+import { IconMedicine } from "@/components/icons";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { titled } from "@/lib/page-title";
@@ -138,7 +139,11 @@ export default async function TodayPage({
         ? Clock
         : state === "good"
           ? Check
-          : AlertTriangle;
+          : state === "look"
+            ? Eye
+            : state === "act"
+              ? AlertTriangle
+              : Clock;
 
   return (
     <FamilyFrame
@@ -319,7 +324,7 @@ export default async function TodayPage({
             {data.doses.map((dose) => (
               <li key={`${dose.medicine_id}-${dose.meal}`} className="list-row">
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-sage-soft text-sage">
-                  <Pill className="size-5" aria-hidden />
+                  <IconMedicine className="size-5" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[16px] font-medium">{dose.name}</span>

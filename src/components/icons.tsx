@@ -26,8 +26,9 @@ export function IconCall(p: SVGProps<SVGSVGElement>) {
 export function IconMedicine(p: SVGProps<SVGSVGElement>) {
   return (
     <Ico {...p}>
-      <rect x="8" y="3.5" width="8" height="17" rx="4" />
-      <path d="M8 12h8" />
+      <path d="M9 8V5.2A1.2 1.2 0 0 1 10.2 4h3.6A1.2 1.2 0 0 1 15 5.2V8" />
+      <rect x="7" y="8" width="10" height="12.5" rx="2" />
+      <path d="M9.5 13h5" />
     </Ico>
   );
 }
