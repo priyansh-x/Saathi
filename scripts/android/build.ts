@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { resolveServerUrl } from "../../src/brand/capacitor-config";
+import { resolveServerUrl, writeOfflineHost } from "../../src/brand/capacitor-config";
 
 const RELEASE_ENV = [
   "ANDROID_KEYSTORE_PATH",
@@ -35,6 +35,12 @@ export function validateAndroidBuildEnv(
   return resolveServerUrl(env, { dev: opts.dev });
 }
 
+export function withCapDev(env: Record<string, string | undefined>, dev: boolean): NodeJS.ProcessEnv {
+  const next: Record<string, string | undefined> = { ...env };
+  if (dev) next.CAP_DEV = "1";
+  return next as NodeJS.ProcessEnv;
+}
+
 function run(command: string, args: string[], cwd?: string, env?: NodeJS.ProcessEnv) {
   const result = spawnSync(command, args, { stdio: "inherit", cwd, env: env ?? process.env, shell: false });
   if (result.status !== 0) {
@@ -47,12 +53,12 @@ function main() {
   const url = validateAndroidBuildEnv(process.env, opts);
   console.log(`SAATHI_APP_URL=${url}${opts.dev ? " (--dev)" : ""}`);
 
-  const env = { ...process.env };
-  if (opts.dev) env.CAP_DEV = "1";
+  const env = withCapDev(process.env, opts.dev);
   run("npx", ["cap", "sync", "android"], undefined, env);
-
+  // cap sync copies native/www (data-host="") over assets/public. Stamp after that copy.
+  writeOfflineHost(url);
   const task = opts.release ? (opts.bundle ? "bundleRelease" : "assembleRelease") : "assembleDebug";
-  run("./gradlew", [task, "--no-daemon"], path.join(process.cwd(), "android"));
+  run("./gradlew", [task, "--no-daemon"], path.join(process.cwd(), "android"), env);
 
   const apk = opts.release
     ? opts.bundle

@@ -1,4 +1,4 @@
-import { buildCapacitorConfig, isDevArg, writeOfflineHost } from "./src/brand/capacitor-config";
+import { buildCapacitorConfig, isDevArg } from "./src/brand/capacitor-config";
 
 type CapacitorConfig = {
   appId: string;
@@ -10,7 +10,6 @@ type CapacitorConfig = {
 };
 
 const built = buildCapacitorConfig(process.env, { dev: isDevArg() });
-writeOfflineHost(built.server.url);
 
 const config: CapacitorConfig = {
   appId: built.appId,

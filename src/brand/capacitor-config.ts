@@ -78,9 +78,14 @@ export function isDevArg(argv = process.argv, env: Record<string, string | undef
   return argv.includes("--dev") || env.CAP_DEV === "1";
 }
 
-export function writeOfflineHost(serverUrl: string) {
+export const ANDROID_OFFLINE_ASSETS_DIR = path.join(
+  process.cwd(),
+  "android/app/src/main/assets/public",
+);
+
+/** Stamp data-host onto the copied offline page. Call after `cap sync` — sync copies webDir over assets/public. */
+export function writeOfflineHost(serverUrl: string, destDir = ANDROID_OFFLINE_ASSETS_DIR) {
   const src = path.join(process.cwd(), "native/www/offline.html");
-  const destDir = path.join(process.cwd(), "android/app/src/main/assets/public");
   mkdirSync(destDir, { recursive: true });
   const html = readFileSync(src, "utf8");
   const host = new URL(serverUrl).hostname;

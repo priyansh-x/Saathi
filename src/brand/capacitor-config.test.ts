@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, it } from "node:test";
 import { APP_ID, APP_NAME, EMULATOR_DEV_URL } from "./brand";
-import { buildCapacitorConfig, resolveServerUrl } from "./capacitor-config";
+import { buildCapacitorConfig, resolveServerUrl, writeOfflineHost } from "./capacitor-config";
 
 describe("Capacitor server URL", () => {
   it("refuses http and localhost unless --dev", () => {
@@ -53,5 +56,30 @@ describe("Capacitor --dev flag", () => {
     assert.equal(isDevArg(["cap", "sync", "android"], {}), false);
     assert.equal(isDevArg(["cap", "sync", "android"], { CAP_DEV: "1" }), true);
     assert.equal(isDevArg(["node", "cap", "--dev"], {}), true);
+  });
+});
+
+describe("offline.html host stamp", () => {
+  it("writes data-host after a cap-sync overwrite of assets/public", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "saathi-offline-"));
+    try {
+      const webDir = path.join(root, "www");
+      const assets = path.join(root, "assets", "public");
+      mkdirSync(webDir, { recursive: true });
+      mkdirSync(assets, { recursive: true });
+      const template = path.join(process.cwd(), "native/www/offline.html");
+      copyFileSync(template, path.join(webDir, "offline.html"));
+
+      writeOfflineHost("https://family.saathi.app", assets);
+      copyFileSync(path.join(webDir, "offline.html"), path.join(assets, "offline.html"));
+      assert.match(readFileSync(path.join(assets, "offline.html"), "utf8"), /data-host=""/);
+
+      writeOfflineHost("https://family.saathi.app", assets);
+      const synced = readFileSync(path.join(assets, "offline.html"), "utf8");
+      assert.match(synced, /data-host="family.saathi.app"/);
+      assert.doesNotMatch(synced, /data-host=""/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
