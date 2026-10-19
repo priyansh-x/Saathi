@@ -1,0 +1,69 @@
+/* Saathi brand tokens — family app and landing both import this file.
+   Spec: docs/saathi/brand/identity.md */
+
+:root {
+  --paper: #f7f5f0;
+  --paper-elevated: #fffcf7;
+  --paper-sunk: #ebe7df;
+  --ink: #1d1b18;
+  --ink-2: #5a564f;
+  --ink-3: #5a564f;
+  --border: #ddd8ce;
+  --brand: #34507a;
+  --brand-deep: #2a4267;
+  --brand-soft: #e4eaf1;
+  --good: #1f6b45;
+  --good-soft: #dcece3;
+  --look: #8a5410;
+  --look-soft: #f4e6c8;
+  --look-line: #8a5410;
+  --act: #a83228;
+  --act-soft: #f6e4e1;
+  --wa: #075e54;
+  --radius: 16px;
+}
+
+/* Family app (shadcn / Tailwind @theme) aliases */
+:root {
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-elevated);
+  --card-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
+  --brand-deep: #2a4267;
+  --muted: var(--paper-sunk);
+  --muted-foreground: var(--ink-2);
+  --input: var(--paper-sunk);
+  --ring: var(--brand);
+  --destructive: var(--act);
+  --accent: var(--brand-soft);
+  --accent-foreground: var(--ink);
+  --secondary: var(--brand-soft);
+  --secondary-foreground: var(--ink);
+  --amber-ink: var(--look);
+  --amber-soft: var(--look-soft);
+  --amber-line: var(--look-line);
+  --alert: var(--act);
+  --alert-soft: var(--act-soft);
+  --sunk: var(--paper-sunk);
+  --sage: #3f6a52;
+  --sage-soft: var(--good-soft);
+}
+
+/* Landing aliases (older --bg / --accent names) */
+:root {
+  --bg: var(--paper);
+  --bg-elevated: var(--paper-elevated);
+  --bg-sunk: var(--paper-sunk);
+  --accent-deep: var(--brand-deep);
+  --accent-soft: var(--brand-soft);
+  --look-ink: var(--look);
+  --dark: #1a222e;
+  --dark-2: #243044;
+  --dark-ink: #f4efe6;
+  --dark-muted: #c4bdb2;
+  --wa-head: var(--wa);
+  --wa-bg: #efe7dc;
+  --wa-out: #e2f5d3;
+}
