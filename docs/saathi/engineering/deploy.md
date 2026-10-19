@@ -22,8 +22,8 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | Name | Staging value | Why |
 | --- | --- | --- |
 | `MOCK_BOLNA` | `1` | No live dials. |
-| `MOCK_WHATSAPP` | `1` | No live WhatsApp. Email sign-in stays the local mock session. |
-| `MOCK_EMAIL` | `1` | No live email fallback. Without Resend/SMTP, a live fallback is `undelivered`, not `sent`. |
+| `MOCK_WHATSAPP` | `1` | No live WhatsApp. Does **not** mint a sign-in cookie. |
+| `MOCK_EMAIL` | `1` | No live email. On Vercel (`NODE_ENV=production`) this never issues a session. Sign-in returns "Email sign-in is not configured" except `OPS_EMAILS`, who still need a real emailed link or code. Instant mock sessions exist only on localhost `npm run dev`. |
 | `ALLOWED_PHONE_NUMBERS` | empty | Even a mock path refuses non-example numbers off this list when mocks are later flipped. Keep it empty so a mistaken `MOCK_*=0` still cannot reach anyone. |
 | `ALLOWED_EMAILS` | empty | Same rule for email. |
 | `WHATSAPP_TEMPLATES_APPROVED` | `0` | Stay on `hello_world` if anything ever tried to send. |
@@ -50,7 +50,7 @@ Landing project: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` only if the waitli
 Create one project (ap-south-1 if offered). Staging uses it for:
 
 1. **Landing waitlist** (`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on the landing project).
-2. **Family email magic links** later, when mocks are off (`SUPABASE_ANON_KEY` or service role on the family project). While `MOCK_WHATSAPP=1`, `/onboard` issues a local session and does not call Auth. When mocks are off, the address must be on `ALLOWED_EMAILS` or the form shows "Pilot is invite-only for now" and no email is sent. Desk `/d/[token]` links stay independent of the email cookie.
+2. **Family email magic links** later (`SUPABASE_ANON_KEY` or service role on the family project). `MOCK_WHATSAPP=1` does not sign anyone in. Addresses must be on `ALLOWED_EMAILS` or `OPS_EMAILS`, or the form shows "Pilot is invite-only for now". On a public host, `MOCK_EMAIL=1` never mints a cookie — testers use `/d/[token]` (desk links stay independent of the email cookie). Ops bootstrap is below.
 
 The family desk boots **PGlite** (`.data/saathi`) when `DATABASE_URL` is unset, including on Vercel. That store is ephemeral on serverless — cold starts re-seed the EXAMPLE household. That is enough for a mocked staging walk.
 
@@ -80,9 +80,20 @@ Leave cron **off**. `POST /api/cron/tick` stays bearer-authenticated (`CRON_SECR
 ## After Priyansh clicks deploy
 
 1. Open `https://<family-host>/d/example-kamla` — EXAMPLE ribbon, Today, History, Alerts, Settings.
-2. Open `/onboard` — mock email session, no outbound mail.
-3. Confirm env in the Vercel UI: mocks `1`, allowlists empty.
+2. Open `/onboard` — no cookie for a typed email. Staging `NODE_ENV` is production, so mock sign-in is closed. Desk still works at `/d/example-kamla`.
+3. Confirm env in the Vercel UI: mocks `1`, allowlists empty, `OPS_EMAILS` empty until you bootstrap ops (below).
 4. Do not run `bolna:test-call --yes`. Do not set `CALL_PROVIDER=bolna` or `MOCK_*=0`.
+
+## Ops bootstrap (Priyansh)
+
+`/ops` 404s until `OPS_EMAILS` has your address **and** you can prove you own it.
+
+1. Keep `MOCK_EMAIL=1` on staging so nobody else gets mail. Instant mock cookies stay off because Vercel is `NODE_ENV=production`.
+2. Put your address on `OPS_EMAILS` and on `ALLOWED_EMAILS` (sign-in and outbound both check these).
+3. Configure a real mail path: Resend/SMTP (`EMAIL_FROM` + key) **or** Supabase Auth magic link. `/onboard` will still say "Email sign-in is not configured" for everyone else.
+4. Sign in with the emailed link or 6-digit code — never a cookie minted by the server because mocks are on.
+5. Open `/ops`. Empty `OPS_EMAILS` again after the walk if you want the page 404 for everyone.
+6. Desk testers keep using `/d/example-kamla`. Do not put a family owner's address on `OPS_EMAILS` unless they should see kill switch and simulate.
 
 ## First live call (only when Priyansh says go)
 
