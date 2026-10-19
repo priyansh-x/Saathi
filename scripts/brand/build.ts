@@ -4,7 +4,7 @@ import sharp from "sharp";
 import { MARK_GLYPH, MARK_PATH, MARK_TILE, markSvgMarkup } from "../../src/lib/brand";
 
 const root = process.cwd();
-const dests = [path.join(root, "public/brand"), path.join(root, "landing/public/brand")];
+const defaultDests = [path.join(root, "public/brand"), path.join(root, "landing/public/brand")];
 
 export const ASSET_SPECS = [
   { name: "icon-512.png", size: 512, pad: 0 },
@@ -20,24 +20,29 @@ export const ASSET_SPECS = [
   { name: "og-image.png", size: 1200, height: 630, pad: 180, paper: true },
 ] as const;
 
-function writeMarkFiles() {
+function writeMarkFiles(dests: string[], writeTracked: boolean) {
   const master = markSvgMarkup();
-  const small = markSvgMarkup({ small: true });
   const mono = markSvgMarkup({ mono: true });
-  for (const dest of dests) mkdirSync(dest, { recursive: true });
-  writeFileSync(path.join(root, "public/brand/mark.svg"), master);
-  writeFileSync(path.join(root, "landing/public/brand/mark.svg"), master);
-  writeFileSync(path.join(root, "docs/saathi/brand/mark.svg"), master);
-  writeFileSync(path.join(root, "public/icon.svg"), master);
-  writeFileSync(path.join(root, "docs/saathi/brand/mark-mono.svg"), mono);
-  writeFileSync(path.join(root, "public/brand/favicon.svg"), master);
-  writeFileSync(path.join(root, "landing/public/brand/favicon.svg"), master);
-  writeFileSync(
-    path.join(root, "landing/lib/mark-path.ts"),
-    `/** Generated from src/lib/brand.ts — do not edit by hand. */\nexport const MARK_TILE = ${JSON.stringify(MARK_TILE)};\nexport const MARK_GLYPH = ${JSON.stringify(MARK_GLYPH)};\nexport const MARK_PATH = ${JSON.stringify(MARK_PATH)};\n`,
-  );
-  writeLockups();
-  return { master, small };
+  for (const dest of dests) {
+    mkdirSync(dest, { recursive: true });
+    writeFileSync(path.join(dest, "mark.svg"), master);
+    writeFileSync(path.join(dest, "favicon.svg"), master);
+  }
+  if (writeTracked) {
+    writeFileSync(path.join(root, "public/brand/mark.svg"), master);
+    writeFileSync(path.join(root, "landing/public/brand/mark.svg"), master);
+    writeFileSync(path.join(root, "docs/saathi/brand/mark.svg"), master);
+    writeFileSync(path.join(root, "public/icon.svg"), master);
+    writeFileSync(path.join(root, "docs/saathi/brand/mark-mono.svg"), mono);
+    writeFileSync(path.join(root, "public/brand/favicon.svg"), master);
+    writeFileSync(path.join(root, "landing/public/brand/favicon.svg"), master);
+    writeFileSync(
+      path.join(root, "landing/lib/mark-path.ts"),
+      `/** Generated from src/lib/brand.ts — do not edit by hand. */\nexport const MARK_TILE = ${JSON.stringify(MARK_TILE)};\nexport const MARK_GLYPH = ${JSON.stringify(MARK_GLYPH)};\nexport const MARK_PATH = ${JSON.stringify(MARK_PATH)};\n`,
+    );
+    writeLockups();
+  }
+  return { master };
 }
 
 function writeLockups() {
@@ -79,8 +84,10 @@ function rasterSvg(markup: string, size: number) {
   return sharp(Buffer.from(sized)).png().toBuffer();
 }
 
-export async function renderBrandAssets() {
-  const { master, small } = writeMarkFiles();
+export async function renderBrandAssets(opts?: { dests?: string[]; writeTracked?: boolean }) {
+  const dests = opts?.dests ?? defaultDests;
+  const writeTracked = opts?.writeTracked ?? !opts?.dests;
+  const { master } = writeMarkFiles(dests, writeTracked);
 
   for (const spec of ASSET_SPECS) {
     const h = "height" in spec && spec.height ? spec.height : spec.size;
@@ -101,7 +108,7 @@ export async function renderBrandAssets() {
     for (const dest of dests) writeFileSync(path.join(dest, spec.name), composed);
   }
 
-  const ico16 = await rasterSvg(small, 16);
+  const ico16 = await rasterSvg(master, 16);
   const ico32 = await rasterSvg(master, 32);
   const ico48 = await rasterSvg(master, 48);
   const ico = packPngIco([
@@ -113,6 +120,8 @@ export async function renderBrandAssets() {
     writeFileSync(path.join(dest, "favicon.ico"), ico);
     writeFileSync(path.join(dest, "icon-16.png"), ico16);
   }
+  if (!writeTracked) return;
+
   writeFileSync(path.join(root, "public/favicon.ico"), ico);
 
   const review = path.join(root, "docs/saathi/brand/identity_review");
@@ -238,8 +247,8 @@ async function renderBrandSheet(m16: Buffer, m32: Buffer, m48: Buffer) {
     .toBuffer();
 }
 
-export function assetSize(name: string) {
-  return statSync(path.join(root, "public/brand", name)).size;
+export function assetSize(name: string, dir = path.join(root, "public/brand")) {
+  return statSync(path.join(dir, name)).size;
 }
 
 const isMain = /scripts\/brand\/build\.ts$/.test(process.argv[1] || "");

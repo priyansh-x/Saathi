@@ -48,7 +48,8 @@ function deltaE(a: { L: number; a: number; b: number }, b: { L: number; a: numbe
 }
 
 const INDIGO = rgbToLab(0x34, 0x50, 0x7a);
-const NAVY = rgbToLab(0x2a, 0x42, 0x67);
+const INDIGO_DEEP = rgbToLab(0x2a, 0x42, 0x67);
+const NAVY = rgbToLab(0x1a, 0x22, 0x2e);
 
 describe("no leftover indigo or navy", () => {
   it("forbids indigo/navy hex in source trees", () => {
@@ -76,6 +77,7 @@ describe("no leftover indigo or navy", () => {
       if (nearWhite) continue;
       const lab = rgbToLab(r, g, b);
       assert.ok(deltaE(lab, INDIGO) > 10, `${file} dominant near indigo ${r},${g},${b}`);
+      assert.ok(deltaE(lab, INDIGO_DEEP) > 10, `${file} dominant near indigo-deep ${r},${g},${b}`);
       assert.ok(deltaE(lab, NAVY) > 10, `${file} dominant near navy ${r},${g},${b}`);
     }
   });

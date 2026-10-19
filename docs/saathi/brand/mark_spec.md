@@ -19,4 +19,4 @@ Review renders: `identity_review/mark_check.png` (main mark beside Noto Sans Dev
 6. **Remove:** the separate solid oval and the curl that wraps under the bar.
 
 ## Status of proposal
-The mechanical Noto 800 outline is committed as the source. Production `mark.svg` is that outline flattened onto the 512 tile, then hand-tuned: the left-hook counter is opened, the shirorekha is 2 px at 16 px, and `MARK_PATH_SMALL` snaps the bar and stem to whole pixels for 16/32 favicons only.
+`identity_review/mark_proposed.svg` is step 1–3 done mechanically: the Noto Bold (800) outline, scaled and centred in the tile. It has not been hand-tuned yet. The extra opening of the left hook and the pixel hinting from step 5 are still to do.
