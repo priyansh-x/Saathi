@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="paper">#fbf7f2</color>
+    <color name="paper">#f7f5f0</color>
     <color name="brand">#b0532a</color>
-    <color name="ink">#1f1b16</color>
+    <color name="ink">#1d1b18</color>
     <color name="colorPrimary">#b0532a</color>
     <color name="colorPrimaryDark">#8e3f1d</color>
     <color name="colorAccent">#b0532a</color>

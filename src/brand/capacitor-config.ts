@@ -1,4 +1,4 @@
-import { writeFileSync, readFileSync } from "node:fs";
+import { writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { APP_ID, APP_NAME, BRAND, EMULATOR_DEV_URL, PAPER } from "./brand";
 
@@ -78,10 +78,12 @@ export function isDevArg(argv = process.argv, env: NodeJS.ProcessEnv = process.e
   return argv.includes("--dev") || env.CAP_DEV === "1";
 }
 
-export function writeOfflineHost(serverUrl: string, webDir = "native/www") {
-  const file = path.join(process.cwd(), webDir, "offline.html");
-  const html = readFileSync(file, "utf8");
+export function writeOfflineHost(serverUrl: string) {
+  const src = path.join(process.cwd(), "native/www/offline.html");
+  const destDir = path.join(process.cwd(), "android/app/src/main/assets/public");
+  mkdirSync(destDir, { recursive: true });
+  const html = readFileSync(src, "utf8");
   const host = new URL(serverUrl).hostname;
   const next = html.replace(/data-host="[^"]*"/, `data-host="${host}"`);
-  writeFileSync(file, next);
+  writeFileSync(path.join(destDir, "offline.html"), next);
 }

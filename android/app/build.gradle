@@ -19,7 +19,8 @@ android {
     }
     buildTypes {
         debug {
-            manifestPlaceholders = [usesCleartext: "false"]
+            // http://10.0.2.2 only when building with CAP_DEV=1. Store/debug APKs stay https.
+            manifestPlaceholders = [usesCleartext: (System.getenv("CAP_DEV") == "1" ? "true" : "false")]
         }
         release {
             minifyEnabled false
