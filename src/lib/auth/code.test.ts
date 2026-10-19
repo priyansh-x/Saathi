@@ -3,7 +3,7 @@ import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "@/lib/db/client";
 import { seed } from "@/lib/db/seed";
 import { decodeSession } from "./session";
-import { countRecentCodes, issueSignInCode, listMockPendingCodes, persistSignInCode, mintSignInCode, verifySignInCode } from "./code";
+import { countRecentCodes, hashSignInCode, issueSignInCode, listMockPendingCodes, persistSignInCode, mintSignInCode, verifySignInCode } from "./code";
 import { setEnv } from "@/lib/test/env";
 
 process.env.MOCK_BOLNA = "1";
@@ -124,6 +124,29 @@ describe("sign-in codes", () => {
     assert.equal(await countRecentCodes("aged@example.com"), 0);
     const issued = await issueSignInCode("aged@example.com");
     assert.equal(issued.ok, true);
+  });
+
+  it("ignores a pre-migration row with null issued_at and verifies the fresh code", async () => {
+    await resetCodes();
+    process.env.ALLOWED_EMAILS = "pilot@example.com,legacy@example.com";
+    const now = Date.now();
+    await query(
+      `insert into auth_codes (id, email, code_hash, expires_at, tries, created_at, issued_at)
+       values ($1,$2,$3,$4,0,$5,null)`,
+      [
+        "code_legacy_null_issued",
+        "legacy@example.com",
+        hashSignInCode("legacy@example.com", "111111"),
+        new Date(now + 10 * 60 * 1000).toISOString().replace("Z", "+00:00"),
+        "2026-10-01T08:00:00+05:30",
+      ],
+    );
+    const issued = await persistSignInCode("legacy@example.com", mintSignInCode());
+    assert.equal(issued.ok, true);
+    if (!issued.ok) return;
+    const session = await verifySignInCode("legacy@example.com", issued.code);
+    assert.ok(session);
+    assert.equal(decodeSession(session)?.email, "legacy@example.com");
   });
 
   it("verifies the later code when two share the same created_at minute", async () => {

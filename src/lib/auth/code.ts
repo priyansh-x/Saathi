@@ -89,7 +89,7 @@ export async function verifySignInCode(rawEmail: string, rawCode: string) {
     consumed_at: string | null;
   }>(
     `select id, code_hash, expires_at, tries, consumed_at from auth_codes
-     where email = $1 and consumed_at is null
+     where email = $1 and consumed_at is null and issued_at is not null
      order by issued_at desc, id desc limit 1`,
     [email],
   );
