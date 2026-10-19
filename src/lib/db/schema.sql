@@ -23,6 +23,17 @@ create table if not exists auth_tokens (
   consumed_at text
 );
 
+create table if not exists auth_codes (
+  id text primary key,
+  email text not null,
+  code_hash text not null,
+  code_plain text,
+  expires_at text not null,
+  tries integer not null default 0,
+  consumed_at text,
+  created_at text not null
+);
+
 create table if not exists contacts (
   id text primary key,
   parent_id text not null references parents(id),

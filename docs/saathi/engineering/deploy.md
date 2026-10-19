@@ -50,7 +50,7 @@ Landing project: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` only if the waitli
 Create one project (ap-south-1 if offered). Staging uses it for:
 
 1. **Landing waitlist** (`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on the landing project).
-2. **Family email magic links** later (`SUPABASE_ANON_KEY` or service role on the family project). `MOCK_WHATSAPP=1` does not sign anyone in. Addresses must be on `ALLOWED_EMAILS` or `OPS_EMAILS`, or the form shows "Pilot is invite-only for now". On a public host, `MOCK_EMAIL=1` never mints a cookie — testers use `/d/[token]` (desk links stay independent of the email cookie). Ops bootstrap is below.
+2. **Family email magic links** later (`SUPABASE_ANON_KEY` or service role on the family project). `MOCK_WHATSAPP=1` does not sign anyone in. Addresses must be on `ALLOWED_EMAILS` or `OPS_EMAILS`, or the form shows "Pilot is invite-only for now". On a public host, `MOCK_EMAIL=1` never mints a cookie — testers use `/d/[token]`. The emailed 6-digit code is for the Android app (the link opens the phone browser). Ops bootstrap is below. `/ops` lists pending codes only while `MOCK_EMAIL=1` and only for allowlisted addresses.
 
 The family desk boots **PGlite** (`.data/saathi`) when `DATABASE_URL` is unset, including on Vercel. That store is ephemeral on serverless — cold starts re-seed the EXAMPLE household. That is enough for a mocked staging walk.
 
@@ -89,7 +89,7 @@ Leave cron **off**. `POST /api/cron/tick` stays bearer-authenticated (`CRON_SECR
 `/ops` 404s until `OPS_EMAILS` has your address **and** you can prove you own it.
 
 1. Keep `MOCK_EMAIL=1` on staging so nobody else gets mail. Instant mock cookies stay off because Vercel is `NODE_ENV=production`.
-2. Put your address on `OPS_EMAILS` and on `ALLOWED_EMAILS` (sign-in and outbound both check these).
+2. Put your address on `OPS_EMAILS`. Sign-in mail to `OPS_EMAILS` skips `gateOutbound` and the kill switch so you can still receive a code and turn the switch off. Other outbound still goes through the gate. Family testers stay on `ALLOWED_EMAILS` / `/d/<token>`.
 3. Configure a real mail path: Resend/SMTP (`EMAIL_FROM` + key) **or** Supabase Auth magic link. `/onboard` will still say "Email sign-in is not configured" for everyone else.
 4. Sign in with the emailed link or 6-digit code — never a cookie minted by the server because mocks are on.
 5. Open `/ops`. Empty `OPS_EMAILS` again after the walk if you want the page 404 for everyone.
