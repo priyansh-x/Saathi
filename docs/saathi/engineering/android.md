@@ -7,10 +7,10 @@ Do not publish to Play Store. Do not create a Play Console listing. Mocks stay o
 ## What you need to build
 
 - Node (same as the family app) and this repo.
-- **JDK 17** (`java -version`). Gradle may run on 21 locally; CI should stay on 17.
+- **JDK 21** for CI (`actions/setup-java`). Locally 17 or 21 both work with this Gradle.
 - **Android SDK**: cmdline-tools, platform 35 (Capacitor 8 also compiles against 36), build-tools.
 - `ANDROID_HOME` / `ANDROID_SDK_ROOT` pointed at that SDK.
-- `SAATHI_APP_URL` — `https://…` hosted family origin. `npm run android:apk` refuses localhost or plain http unless you pass `--dev`, which allows `http://10.0.2.2:43147` for the emulator.
+- `SAATHI_APP_URL` — `https://…` hosted family origin. `npm run android:apk` refuses localhost or plain http unless you pass `--dev` (sets `CAP_DEV=1`; `npx cap sync --dev` is rejected by the CLI). That allows `http://10.0.2.2:43147` for the emulator.
 
 ```bash
 export SAATHI_APP_URL=https://your-family-host.example
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
       - uses: android-actions/setup-android@v3
       - name: SDK platforms
         run: sdkmanager "platforms;android-35" "platforms;android-36" "build-tools;35.0.0"

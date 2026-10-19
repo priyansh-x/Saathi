@@ -35,8 +35,8 @@ export function validateAndroidBuildEnv(
   return resolveServerUrl(env, { dev: opts.dev });
 }
 
-function run(command: string, args: string[], cwd?: string) {
-  const result = spawnSync(command, args, { stdio: "inherit", cwd, shell: false });
+function run(command: string, args: string[], cwd?: string, env?: NodeJS.ProcessEnv) {
+  const result = spawnSync(command, args, { stdio: "inherit", cwd, env: env ?? process.env, shell: false });
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
@@ -47,9 +47,9 @@ function main() {
   const url = validateAndroidBuildEnv(process.env, opts);
   console.log(`SAATHI_APP_URL=${url}${opts.dev ? " (--dev)" : ""}`);
 
-  const capArgs = ["cap", "sync", "android"];
-  if (opts.dev) capArgs.push("--dev");
-  run("npx", capArgs);
+  const env = { ...process.env };
+  if (opts.dev) env.CAP_DEV = "1";
+  run("npx", ["cap", "sync", "android"], undefined, env);
 
   const task = opts.release ? (opts.bundle ? "bundleRelease" : "assembleRelease") : "assembleDebug";
   run("./gradlew", [task, "--no-daemon"], path.join(process.cwd(), "android"));
