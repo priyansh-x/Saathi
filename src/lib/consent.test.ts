@@ -5,6 +5,7 @@ import { closeDb, query } from "./db/client";
 import { ensureSeed, seed } from "./db/seed";
 import { recordSpokenConsent } from "./consent";
 import { placeMorningCall } from "./bolna/place";
+import { istDayOffset } from "./time";
 
 process.env.MOCK_BOLNA = "1";
 process.env.MOCK_WHATSAPP = "1";
@@ -83,7 +84,7 @@ describe("first-call consent", () => {
     assert.equal(words[0]?.mood_quote, null);
     assert.equal(words[0]?.transcript_json, null);
 
-    const nextMorning = new Date("2026-10-19T03:00:00.000Z");
+    const nextMorning = new Date(`${istDayOffset(2)}T03:00:00.000Z`);
     const retry = await placeMorningCall("parent_kamla", nextMorning);
     assert.equal(retry.ok, true);
   });

@@ -36,10 +36,10 @@ export function canIssueSignIn(email: string) {
   return allowedEmails().includes(n) || canViewOps(n);
 }
 
-export async function countRecentCodes(email: string) {
-  const since = new Date(Date.now() - ISSUE_WINDOW_MS).toISOString().replace("Z", "+00:00");
+export async function countRecentCodes(email: string, now = Date.now()) {
+  const since = now - ISSUE_WINDOW_MS;
   const rows = await query<{ n: number }>(
-    `select count(*)::int as n from auth_codes where email = $1 and created_at >= $2`,
+    `select count(*)::int as n from auth_codes where email = $1 and issued_at >= $2`,
     [email, since],
   );
   return rows[0]?.n ?? 0;
@@ -49,19 +49,19 @@ export function mintSignInCode() {
   return sixDigit();
 }
 
-export async function persistSignInCode(rawEmail: string, code: string) {
+export async function persistSignInCode(rawEmail: string, code: string, now = Date.now()) {
   const email = rawEmail.trim().toLowerCase();
   if (!canIssueSignIn(email)) return { ok: false as const, error: "Pilot is invite-only for now" };
-  if ((await countRecentCodes(email)) >= ISSUE_MAX) {
+  if ((await countRecentCodes(email, now)) >= ISSUE_MAX) {
     return { ok: false as const, error: "Wait a few minutes, then try again." };
   }
-  const expires = new Date(Date.now() + TTL_MS).toISOString().replace("Z", "+00:00");
-  const id = `code_${Date.now()}_${randomInt(1e6, 9e6)}`;
+  const expires = new Date(now + TTL_MS).toISOString().replace("Z", "+00:00");
+  const id = `code_${now}_${randomInt(1e6, 9e6)}`;
   const plain = process.env.NODE_ENV === "production" ? null : code;
   await query(
-    `insert into auth_codes (id, email, code_hash, code_plain, expires_at, tries, created_at)
-     values ($1,$2,$3,$4,$5,0,$6)`,
-    [id, email, hashSignInCode(email, code), plain, expires, nowIstStamp()],
+    `insert into auth_codes (id, email, code_hash, code_plain, expires_at, tries, created_at, issued_at)
+     values ($1,$2,$3,$4,$5,0,$6,$7)`,
+    [id, email, hashSignInCode(email, code), plain, expires, nowIstStamp(new Date(now)), now],
   );
   return { ok: true as const, email, code, expires, plainForOps: Boolean(plain) };
 }
@@ -89,8 +89,8 @@ export async function verifySignInCode(rawEmail: string, rawCode: string) {
     consumed_at: string | null;
   }>(
     `select id, code_hash, expires_at, tries, consumed_at from auth_codes
-     where email = $1 and consumed_at is null
-     order by created_at desc limit 1`,
+     where email = $1 and consumed_at is null and issued_at is not null
+     order by issued_at desc, id desc limit 1`,
     [email],
   );
   const row = rows[0];

@@ -73,7 +73,7 @@ export function buildCapacitorConfig(env: CapEnv, opts: { dev: boolean }) {
   };
 }
 
-export function isDevArg(argv = process.argv, env: NodeJS.ProcessEnv = process.env) {
+export function isDevArg(argv = process.argv, env: Record<string, string | undefined> = process.env) {
   // Capacitor CLI rejects unknown flags (`npx cap sync --dev` fails). Use CAP_DEV=1.
   return argv.includes("--dev") || env.CAP_DEV === "1";
 }

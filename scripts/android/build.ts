@@ -18,7 +18,7 @@ export function parseAndroidBuildArgs(argv: string[]) {
 }
 
 export function validateAndroidBuildEnv(
-  env: NodeJS.ProcessEnv,
+  env: Record<string, string | undefined>,
   opts: { release: boolean; dev: boolean },
 ): string {
   if (opts.release && opts.dev) {
