@@ -28,10 +28,10 @@
   --color-dark-2: var(--dark-2);
   --color-dark-ink: var(--dark-ink);
   --color-dark-muted: var(--dark-muted);
-  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
-  --font-deva: var(--font-deva), var(--font-plex), sans-serif;
+  --font-deva: var(--font-deva), var(--font-inter), sans-serif;
   --ease-out-soft: var(--ease);
   --shadow-mock: var(--shadow-mock);
   --shadow-float: var(--shadow-float);
@@ -48,8 +48,8 @@
   --wa-head: var(--wa);
   --wa-bg: #efe7dc;
   --wa-out: #e2f5d3;
-  --dark: #1a222e;
-  --dark-2: #243044;
+  --dark: #1d1b18;
+  --dark-2: #2a2622;
   --dark-ink: #f4efe6;
   --dark-muted: #c4bdb2;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);

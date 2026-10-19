@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
-import { MARK_LETTER, PRODUCT_NAME, PRODUCT_NAME_HI, TAGLINE_EN, WORDMARK_HI } from "@/lib/brand";
+import { PRODUCT_NAME, PRODUCT_NAME_HI, TAGLINE_EN, WORDMARK_HI } from "@/lib/brand";
+import { MarkSvg } from "@/components/mark";
 import { canViewOps } from "@/lib/ops/access";
 import { titled } from "@/lib/page-title";
 
@@ -19,8 +20,8 @@ export default async function BrandPage() {
         {PRODUCT_NAME} / {PRODUCT_NAME_HI}
       </h1>
       <p className="mt-3 text-muted-foreground">{TAGLINE_EN}</p>
-      <div className="mt-8 grid size-24 place-items-center rounded-[22px] bg-primary font-devanagari text-5xl font-semibold text-white">
-        {MARK_LETTER}
+      <div className="mt-8 size-24 overflow-hidden rounded-[22px]">
+        <MarkSvg className="size-24" />
       </div>
       <p className="mt-4 text-lg font-semibold">{WORDMARK_HI}</p>
       <ul className="mt-6 space-y-1 text-sm">
