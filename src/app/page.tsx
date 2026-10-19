@@ -26,7 +26,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
   const lang = (await searchParams).lang === "hi" ? "hi" : "en";
   const hi = lang === "hi";
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col">
+    <main className="mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col overflow-x-clip">
       <div className="relative">
         <div className="grain relative aspect-[4/3.6] overflow-hidden rounded-b-[36px]">
           <Image

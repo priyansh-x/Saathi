@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import { titled } from "@/lib/page-title";
 import { BrandMark } from "@/components/brand";
@@ -12,6 +13,7 @@ import { loadOpsSnapshot } from "@/lib/ops/snapshot";
 export const metadata: Metadata = titled("Ops · Saathi", "ऑप्स · साथी");
 
 export default async function OpsPage() {
+  await connection();
   const email = decodeSession((await cookies()).get(SESSION_COOKIE)?.value)?.email ?? null;
   if (!canViewOps(email)) notFound();
 

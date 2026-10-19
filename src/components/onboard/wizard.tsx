@@ -492,8 +492,8 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
   })();
 
   return (
-    <div className={`mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-4 py-8 ${lang === "hi" ? "font-devanagari" : ""}`}>
-      <div className="flex items-center gap-3">
+    <div className={`mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col overflow-x-clip px-4 py-8 ${lang === "hi" ? "font-devanagari" : ""}`}>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         {step !== "done" && step !== "sign" ? (
           <button type="button" onClick={back} className="btn-quiet -ml-3 text-primary">
             {t.setupBack}

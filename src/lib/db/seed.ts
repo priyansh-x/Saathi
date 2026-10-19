@@ -7,21 +7,22 @@ import { buildWeeklyNote } from "@/lib/weekly";
 export { EXAMPLE_TOKEN };
 
 export async function ensureSeed() {
-  const existing = await query<{ n: number }>("select count(*)::int as n from parents");
-  if ((existing[0]?.n ?? 0) > 0) {
-    await query(
-      `update parents
-       set consent_status = 'given',
-           consent_at = c.at
-       from consents c
-       where c.parent_id = parents.id
-         and c.kind = 'parent_voice'
-         and c.granted = true
-         and parents.consent_status = 'pending'`,
-    );
-    return;
+  const example = await query<{ id: string }>("select id from parents where id = 'parent_kamla'");
+  if (!example[0]) {
+    const others = await query<{ n: number }>("select count(*)::int as n from parents");
+    if ((others[0]?.n ?? 0) === 0) await seed();
+    else await insertExampleHousehold();
   }
-  await seed();
+  await query(
+    `update parents
+     set consent_status = 'given',
+         consent_at = c.at
+     from consents c
+     where c.parent_id = parents.id
+       and c.kind = 'parent_voice'
+       and c.granted = true
+       and parents.consent_status = 'pending'`,
+  );
 }
 
 export async function seed() {

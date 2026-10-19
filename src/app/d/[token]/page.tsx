@@ -163,14 +163,14 @@ export default async function TodayPage({
       <section
         className={`grain mt-3 overflow-hidden rounded-[28px] border border-black/[0.04] p-5 shadow-[var(--shadow-card)] ${HERO_TONE[tone]}`}
       >
-        <div className="flex items-center gap-2.5">
-          <span className={`grid size-9 place-items-center rounded-full ${HERO_ICON_BG[tone]} ${state === "act" || state === "trying" ? "ring-pulse" : ""}`}>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className={`grid size-9 shrink-0 place-items-center rounded-full ${HERO_ICON_BG[tone]} ${state === "act" || state === "trying" ? "ring-pulse" : ""}`}>
             <Icon className="size-[18px]" strokeWidth={2.4} aria-hidden />
           </span>
-          <span className="text-[15px] font-semibold">{copy.chip}</span>
+          <span className="min-w-0 text-[15px] font-semibold break-words">{copy.chip}</span>
         </div>
 
-        <h1 className="mt-4 text-[26px] leading-[1.15] font-semibold tracking-tight text-foreground">{p(copy.headline)}</h1>
+        <h1 className="mt-4 text-[26px] leading-[1.15] font-semibold tracking-tight break-words text-foreground">{p(copy.headline)}</h1>
         {heroQuote ? (
           <p className="font-devanagari mt-3 text-[19px] leading-[1.5] text-foreground">
             <span className="serif-line text-2xl text-alert">“</span>
@@ -246,7 +246,7 @@ export default async function TodayPage({
             </a>
           ) : null}
 
-          <div className="flex gap-2.5">
+          <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))]">
             <a href={`tel:${tel}`} className="action-tile text-foreground">
               <Phone className="size-5" aria-hidden />
               {p(t.callMaa)}
@@ -330,7 +330,9 @@ export default async function TodayPage({
                   <span className="block truncate text-[16px] font-medium">{dose.name}</span>
                   <span className="block text-[13px] text-ink-3">{slotLabel(dose.meal, lang)}</span>
                 </span>
-                <DosePill status={dose.status} lang={lang} />
+                <span className="shrink-0">
+                  <DosePill status={dose.status} lang={lang} />
+                </span>
               </li>
             ))}
           </ul>
@@ -370,7 +372,7 @@ export default async function TodayPage({
           </Link>
         </div>
         <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="card mt-2 block p-4">
-          <ol className="grid grid-cols-7 gap-1">
+          <ol className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {Array.from({ length: 7 }, (_, i) => {
               const [y, m, d] = data.day.split("-").map(Number);
               const dt = new Date(y, m - 1, d + i - 6);
@@ -378,12 +380,12 @@ export default async function TodayPage({
               const call = weekDays.find((c) => c.started_at.startsWith(key));
               const isToday = i === 6;
               return (
-                <li key={key} className="flex flex-col items-center gap-1.5">
-                  <span className={`text-[12px] ${isToday ? "font-semibold text-foreground" : "text-ink-3"}`}>
+                <li key={key} className="flex min-w-0 flex-col items-center gap-1.5">
+                  <span className={`max-w-full truncate text-[10px] sm:text-[12px] ${isToday ? "font-semibold text-foreground" : "text-ink-3"}`}>
                     {weekdayShort(key, lang)}
                   </span>
                   <span
-                    className={`grid size-9 place-items-center rounded-full ${
+                    className={`grid size-8 place-items-center rounded-full sm:size-9 ${
                       call?.status === "completed"
                         ? "bg-good text-white"
                         : call?.status === "missed"

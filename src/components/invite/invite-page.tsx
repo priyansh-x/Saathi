@@ -49,7 +49,7 @@ export function InviteJoin({ lang }: { lang: Lang }) {
   }
 
   return (
-    <main className={`mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-10 ${lang === "hi" ? "font-devanagari" : ""}`}>
+    <main className={`mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col overflow-x-clip px-5 py-10 ${lang === "hi" ? "font-devanagari" : ""}`}>
       <div className="flex items-center justify-between">
         <BrandMark />
         <a href={`?lang=${other}`} className="text-sm font-medium text-primary">

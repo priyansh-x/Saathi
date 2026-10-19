@@ -68,16 +68,20 @@ export async function logMedicine(input: {
   );
   const doseId = existing[0]?.id ?? `dl_${input.call_sid}_${medicineId}`;
   if (!existing[0]) {
-    await query(`insert into dose_logs values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
-      doseId,
-      input.parent_id,
-      input.call_sid,
-      medicineId,
-      day,
-      input.status,
-      input.said ?? null,
-      true,
-    ]);
+    try {
+      await query(`insert into dose_logs values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+        doseId,
+        input.parent_id,
+        input.call_sid,
+        medicineId,
+        day,
+        input.status,
+        input.said ?? null,
+        true,
+      ]);
+    } catch {
+      return { ok: false as const, error: "unknown_medicine" };
+    }
   }
   return { ok: true as const, dose_log_id: doseId, replay: !remembered.fresh };
 }

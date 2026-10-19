@@ -110,8 +110,8 @@ export function TopBar({
     >
       <Avatar name={name} example={example} />
       <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-2">
-          <span className="truncate text-[17px] font-semibold tracking-tight">{name}</span>
+        <p className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="min-w-0 truncate text-[17px] font-semibold tracking-tight">{name}</span>
           {example ? <ExamplePill lang={lang} /> : null}
         </p>
         <p className="mt-0.5 truncate text-xs text-ink-3">
@@ -150,10 +150,10 @@ export function TabBar({
   ];
   return (
     <nav
-      className="glass fixed right-0 bottom-0 left-0 z-20 border-t border-border/70"
+      className="glass fixed bottom-0 left-1/2 z-20 w-full max-w-[480px] -translate-x-1/2 border-t border-border/70"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="mx-auto grid max-w-[480px] grid-cols-4 px-2">
+      <ul className="mx-auto grid w-full max-w-[480px] grid-cols-4 px-1 sm:px-2">
         {items.map((item) => {
           const Icon = item.icon;
           const on = active === item.key;
@@ -163,7 +163,7 @@ export function TabBar({
                 href={`${item.href}${qs({ lang })}`}
                 prefetch={false}
                 aria-current={on ? "page" : undefined}
-                className={`flex h-16 flex-col items-center justify-center gap-1 text-[12px] ${
+                className={`flex h-16 min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[11px] leading-tight sm:text-[12px] ${
                   on ? "font-semibold text-foreground" : "text-ink-3"
                 }`}
               >
@@ -244,7 +244,7 @@ export function FamilyFrame({
   addressTerm?: string | null;
 }) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col">
+    <div className="mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col overflow-x-clip">
       <TopBar
         lang={lang}
         example={example}
@@ -253,7 +253,7 @@ export function FamilyFrame({
         addressTerm={addressTerm || undefined}
       />
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
-      <div className="flex-1 px-4 pt-1 pb-28">{children}</div>
+      <div className="min-w-0 flex-1 px-4 pt-1 pb-28">{children}</div>
       <TabBar token={token} lang={lang} active={active} openAlerts={alerts.length} />
     </div>
   );

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
 import { AppStyles } from "@/components/app-styles";
 import { PwaBoot } from "@/components/pwa/boot";
@@ -71,6 +72,7 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
 }
 
 async function HtmlFromCookie({ children }: { children: ReactNode }) {
+  await connection();
   const hi = (await cookies()).get("saathi_lang")?.value === "hi";
   return <HtmlShell hi={hi}>{children}</HtmlShell>;
 }

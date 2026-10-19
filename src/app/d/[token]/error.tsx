@@ -3,11 +3,11 @@
 import { ErrorState } from "@/components/family/chrome";
 
 export default function FamilyError({
-  retry,
+  reset,
 }: {
-  error: unknown;
-  retry: () => void;
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   const lang = typeof document !== "undefined" && document.documentElement.lang === "hi" ? "hi" : "en";
-  return <ErrorState lang={lang} onRetry={retry} />;
+  return <ErrorState lang={lang} onRetry={reset} />;
 }

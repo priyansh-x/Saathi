@@ -110,7 +110,7 @@ export default async function DemoPage({
   }
 
   return (
-    <main className="mx-auto max-w-[480px] px-4 py-8 pb-16">
+    <main className="mx-auto w-full min-w-0 max-w-[480px] overflow-x-clip px-4 py-8 pb-16">
       <BrandMark />
       <p className="mt-6 flex items-center gap-2 text-sm font-medium">
         <ExamplePill lang={lang} />

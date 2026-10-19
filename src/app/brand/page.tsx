@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { PRODUCT_NAME, PRODUCT_NAME_HI, TAGLINE_EN, WORDMARK_HI } from "@/lib/brand";
@@ -10,6 +11,7 @@ import { titled } from "@/lib/page-title";
 export const metadata: Metadata = titled("Brand · Saathi", "ब्रांड · साथी");
 
 export default async function BrandPage() {
+  await connection();
   const email = decodeSession((await cookies()).get(SESSION_COOKIE)?.value)?.email ?? null;
   if (!canViewOps(email)) notFound();
 
