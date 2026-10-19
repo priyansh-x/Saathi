@@ -32,6 +32,10 @@ function writeMarkFiles() {
   writeFileSync(path.join(root, "docs/saathi/brand/mark-mono.svg"), mono);
   writeFileSync(path.join(root, "public/brand/favicon.svg"), master);
   writeFileSync(path.join(root, "landing/public/brand/favicon.svg"), master);
+  writeFileSync(
+    path.join(root, "landing/lib/mark-path.ts"),
+    `/** Generated from src/lib/brand.ts — do not edit by hand. */\nexport const MARK_TILE = ${JSON.stringify(MARK_TILE)};\nexport const MARK_GLYPH = ${JSON.stringify(MARK_GLYPH)};\nexport const MARK_PATH = ${JSON.stringify(MARK_PATH)};\n`,
+  );
   writeLockups();
   return { master, small };
 }

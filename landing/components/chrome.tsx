@@ -5,7 +5,7 @@ import { Mail } from "lucide-react";
 import { useEffect } from "react";
 import { content } from "@/lib/content";
 import { useReveal } from "@/lib/use-reveal";
-import { MARK_GLYPH, MARK_PATH, MARK_TILE } from "../../src/lib/brand";
+import { MARK_GLYPH, MARK_PATH, MARK_TILE } from "@/lib/mark-path";
 import { Waves } from "./rest";
 
 export function SiteEffects() {
