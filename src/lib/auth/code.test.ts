@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
-import { closeDb } from "@/lib/db/client";
+import { closeDb, query } from "@/lib/db/client";
 import { seed } from "@/lib/db/seed";
 import { decodeSession } from "./session";
-import { issueSignInCode, listMockPendingCodes, verifySignInCode } from "./code";
+import { countRecentCodes, issueSignInCode, listMockPendingCodes, persistSignInCode, mintSignInCode, verifySignInCode } from "./code";
+import { setEnv } from "@/lib/test/env";
 
 process.env.MOCK_BOLNA = "1";
-process.env.MOCK_WHATSAPP = "0";
+process.env.MOCK_WHATSAPP = "1";
 process.env.MOCK_EMAIL = "1";
 process.env.ALLOWED_EMAILS = "pilot@example.com";
 process.env.SESSION_SECRET = "test-session-secret-for-codes-at-least-32ch";
@@ -15,12 +16,18 @@ before(async () => {
   await seed();
 });
 
+async function resetCodes() {
+  await query("delete from auth_codes");
+  process.env.ALLOWED_EMAILS = "pilot@example.com";
+}
+
 after(async () => {
   await closeDb();
 });
 
 describe("sign-in codes", () => {
   it("stores a hash, returns a 6-digit code, and verifies within 10 minutes", async () => {
+    await resetCodes();
     const issued = await issueSignInCode("pilot@example.com");
     assert.equal(issued.ok, true);
     if (!issued.ok) return;
@@ -32,6 +39,7 @@ describe("sign-in codes", () => {
   });
 
   it("refuses a sixth try and ignores a wrong code", async () => {
+    await resetCodes();
     const issued = await issueSignInCode("pilot@example.com");
     assert.equal(issued.ok, true);
     if (!issued.ok) return;
@@ -49,6 +57,7 @@ describe("sign-in codes", () => {
   });
 
   it("lists pending mock codes only for allowlisted emails", async () => {
+    await resetCodes();
     const issued = await issueSignInCode("pilot@example.com");
     assert.equal(issued.ok, true);
     if (!issued.ok) return;
@@ -58,6 +67,7 @@ describe("sign-in codes", () => {
   });
 
   it("rate-limits issuing to five codes per ten minutes even after a cold start", async () => {
+    await resetCodes();
     process.env.ALLOWED_EMAILS = "pilot@example.com,rate@example.com";
     for (let i = 0; i < 5; i++) {
       const issued = await issueSignInCode("rate@example.com");
@@ -68,6 +78,7 @@ describe("sign-in codes", () => {
   });
 
   it("refuses an expired code and a wrong code of the same length", async () => {
+    await resetCodes();
     const issued = await issueSignInCode("pilot@example.com");
     assert.equal(issued.ok, true);
     if (!issued.ok) return;
@@ -82,8 +93,9 @@ describe("sign-in codes", () => {
   });
 
   it("does not store code_plain in production even with MOCK_EMAIL=1", async () => {
+    await resetCodes();
     const prev = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    setEnv("NODE_ENV", "production");
     process.env.ALLOWED_EMAILS = "pilot@example.com,prod@example.com";
     try {
       const issued = await issueSignInCode("prod@example.com");
@@ -97,7 +109,38 @@ describe("sign-in codes", () => {
       );
       assert.equal(rows[0]?.code_plain, null);
     } finally {
-      process.env.NODE_ENV = prev;
+      setEnv("NODE_ENV", prev);
     }
+  });
+
+  it("does not count codes issued 11 minutes ago against the issue cap", async () => {
+    await resetCodes();
+    process.env.ALLOWED_EMAILS = "pilot@example.com,aged@example.com";
+    const aged = Date.now() - 11 * 60 * 1000;
+    for (let i = 0; i < 5; i++) {
+      const saved = await persistSignInCode("aged@example.com", mintSignInCode(), aged + i);
+      assert.equal(saved.ok, true);
+    }
+    assert.equal(await countRecentCodes("aged@example.com"), 0);
+    const issued = await issueSignInCode("aged@example.com");
+    assert.equal(issued.ok, true);
+  });
+
+  it("verifies the later code when two share the same created_at minute", async () => {
+    await resetCodes();
+    process.env.ALLOWED_EMAILS = "pilot@example.com,same-minute@example.com";
+    const now = Date.now();
+    const first = await persistSignInCode("same-minute@example.com", mintSignInCode(), now);
+    const second = await persistSignInCode("same-minute@example.com", mintSignInCode(), now + 1);
+    assert.equal(first.ok && second.ok, true);
+    if (!first.ok || !second.ok) return;
+    const { query } = await import("@/lib/db/client");
+    await query(`update auth_codes set created_at = $2 where email = $1`, [
+      "same-minute@example.com",
+      "2026-10-19T08:30:00+05:30",
+    ]);
+    const session = await verifySignInCode("same-minute@example.com", second.code);
+    assert.ok(session);
+    assert.equal(decodeSession(session)?.email, "same-minute@example.com");
   });
 });

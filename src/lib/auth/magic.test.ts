@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { seed } from "@/lib/db/seed";
 import { decodeSession, encodeSession } from "./session";
 import { startEmailSignIn, validEmail } from "./magic";
+import { setEnv } from "@/lib/test/env";
 
 process.env.MOCK_WHATSAPP = "1";
 process.env.MOCK_BOLNA = "1";
@@ -20,7 +21,7 @@ describe("email sign-in", () => {
 
   it("dev localhost still issues a mock session for an allowlisted address", async () => {
     const prev = process.env.NODE_ENV;
-    process.env.NODE_ENV = "test";
+    setEnv("NODE_ENV", "test");
     try {
       const result = await startEmailSignIn("ananya@example.com");
       assert.equal(result.ok, true);
@@ -29,7 +30,7 @@ describe("email sign-in", () => {
       const session = decodeSession(result.token);
       assert.equal(session?.email, "ananya@example.com");
     } finally {
-      process.env.NODE_ENV = prev;
+      setEnv("NODE_ENV", prev);
     }
   });
 
@@ -46,7 +47,7 @@ describe("email sign-in", () => {
       ops: process.env.OPS_EMAILS,
       base: process.env.PUBLIC_BASE_URL,
     };
-    process.env.NODE_ENV = "production";
+    setEnv("NODE_ENV", "production");
     process.env.PUBLIC_BASE_URL = "https://family.example";
     process.env.ALLOWED_EMAILS = "pilot@example.com";
     process.env.OPS_EMAILS = "ops@example.com";
@@ -61,7 +62,7 @@ describe("email sign-in", () => {
       assert.equal(ops.ok, false);
       if (!ops.ok) assert.match(ops.error, /not configured/);
     } finally {
-      process.env.NODE_ENV = prev.node;
+      setEnv("NODE_ENV", prev.node);
       process.env.ALLOWED_EMAILS = prev.emails;
       process.env.OPS_EMAILS = prev.ops;
       process.env.PUBLIC_BASE_URL = prev.base;
@@ -80,7 +81,7 @@ describe("email sign-in", () => {
     };
     process.env.MOCK_WHATSAPP = "0";
     process.env.MOCK_EMAIL = "1";
-    process.env.NODE_ENV = "test";
+    setEnv("NODE_ENV", "test");
     process.env.PUBLIC_BASE_URL = "https://family.example";
     process.env.ALLOWED_EMAILS = "pilot@example.com";
     delete process.env.SUPABASE_URL;
@@ -104,7 +105,7 @@ describe("email sign-in", () => {
       process.env.MOCK_WHATSAPP = prev.mock;
       process.env.MOCK_EMAIL = prev.mockEmail;
       process.env.ALLOWED_EMAILS = prev.emails;
-      process.env.NODE_ENV = prev.node;
+      setEnv("NODE_ENV", prev.node);
       process.env.PUBLIC_BASE_URL = prev.base;
       if (prev.url) process.env.SUPABASE_URL = prev.url;
     }

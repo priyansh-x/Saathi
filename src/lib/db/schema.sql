@@ -31,7 +31,8 @@ create table if not exists auth_codes (
   expires_at text not null,
   tries integer not null default 0,
   consumed_at text,
-  created_at text not null
+  created_at text not null,
+  issued_at bigint
 );
 
 create table if not exists contacts (

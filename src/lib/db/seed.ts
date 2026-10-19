@@ -38,6 +38,8 @@ export async function seed() {
   await query("delete from push_subscriptions");
   await query("delete from webhook_events");
   await query("delete from magic_links");
+  await query("delete from auth_codes");
+  await query("delete from auth_tokens");
   await query("delete from family_config");
   await query("delete from family_invites");
   await query("delete from audit_events");
