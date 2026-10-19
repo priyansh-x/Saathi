@@ -1,0 +1,25 @@
+/* Keep in lockstep with src/brand/tokens.css */
+
+:root {
+  --paper: #fbf7f2;
+  --paper-elevated: #fffcf8;
+  --paper-sunk: #f4ebe3;
+  --ink: #1f1b16;
+  --ink-2: #5c534a;
+  --ink-3: #5c534a;
+  --border: #ece3d8;
+  --brand: #b0532a;
+  --brand-deep: #8e3f1d;
+  --brand-soft: #f6e4d9;
+  --good: #276b43;
+  --good-soft: #e3f1e7;
+  --look: #7a4f0e;
+  --look-soft: #fcefd6;
+  --look-line: #b7791f;
+  --act: #b23a2a;
+  --act-soft: #f8e6e3;
+  --wa: #075e54;
+  --radius: 16px;
+  --sage: #5f7a63;
+  --sage-soft: #e7eee6;
+}

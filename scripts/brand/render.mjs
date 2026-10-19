@@ -5,8 +5,8 @@ import { pathToFileURL } from "node:url";
 
 const root = path.join(import.meta.dirname, "../..");
 const markSvg = await readFile(path.join(root, "docs/saathi/brand/mark.svg"), "utf8");
-const paper = "#F7F5F0";
-const brand = "#34507A";
+const paper = "#FBF7F2";
+const brand = "#b0532a";
 
 async function pngFromHtml(page, html, file, w, h, omitBackground = false) {
   await page.setViewportSize({ width: w, height: h });
