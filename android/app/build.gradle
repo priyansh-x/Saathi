@@ -17,6 +17,17 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            def store = System.getenv("ANDROID_KEYSTORE_PATH")
+            if (store != null && !store.isEmpty()) {
+                storeFile file(store)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         debug {
             // http://10.0.2.2 only when building with CAP_DEV=1. Store/debug APKs stay https.
@@ -26,6 +37,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             manifestPlaceholders = [usesCleartext: "false"]
+            def store = System.getenv("ANDROID_KEYSTORE_PATH")
+            if (store != null && !store.isEmpty()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
