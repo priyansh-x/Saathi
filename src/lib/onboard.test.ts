@@ -5,7 +5,7 @@ import { closeDb, query } from "./db/client";
 import { parentByToken } from "./db/queries";
 import { seed } from "./db/seed";
 import { CHILD_WRITTEN_TEXT, CHILD_WRITTEN_VERSION } from "./consent-copy";
-import { createHousehold, resolveOnboardEmail } from "./onboard";
+import { createHousehold, onboardSaveError, resolveOnboardEmail } from "./onboard";
 import { parseOnboard, type OnboardInput } from "./onboard-form";
 import { toE164 } from "./phone";
 
@@ -49,6 +49,16 @@ describe("resolveOnboardEmail", () => {
   it("rejects junk", () => {
     assert.equal(resolveOnboardEmail(undefined, "not-an-email"), null);
     assert.equal(resolveOnboardEmail("nope", ""), null);
+  });
+});
+
+describe("onboardSaveError", () => {
+  it("keeps a short family line for unknown failures", () => {
+    assert.equal(onboardSaveError(new Error("boom")), "Could not save.");
+  });
+
+  it("explains a duplicate phone", () => {
+    assert.match(onboardSaveError(new Error("duplicate key value violates unique constraint")), /already be saved/);
   });
 });
 

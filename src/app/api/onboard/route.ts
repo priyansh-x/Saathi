@@ -4,7 +4,7 @@ import { allowIp, clientIp } from "@/lib/auth/ip-limit";
 import { decodeSession, encodeSession, SESSION_COOKIE, sessionCookie } from "@/lib/auth/session";
 import { readJson } from "@/lib/http";
 import { logError } from "@/lib/log-error";
-import { createHousehold, resolveOnboardEmail } from "@/lib/onboard";
+import { createHousehold, onboardSaveError, resolveOnboardEmail } from "@/lib/onboard";
 import { parseOnboard, type OnboardInput } from "@/lib/onboard-form";
 
 export async function POST(req: Request) {
@@ -23,10 +23,16 @@ export async function POST(req: Request) {
   try {
     const created = await createHousehold(parsed.data, email);
     const headers: Record<string, string> = { "content-type": "application/json" };
-    if (!session) headers["set-cookie"] = sessionCookie(encodeSession(email));
+    if (!session) {
+      try {
+        headers["set-cookie"] = sessionCookie(encodeSession(email));
+      } catch (error) {
+        await logError("onboard.session", error, { route: "onboard" });
+      }
+    }
     return new Response(JSON.stringify({ ok: true, ...created }), { status: 200, headers });
   } catch (error) {
     await logError("onboard", error, { route: "onboard" });
-    return Response.json({ ok: false, error: "Could not save." }, { status: 400 });
+    return Response.json({ ok: false, error: onboardSaveError(error) }, { status: 400 });
   }
 }

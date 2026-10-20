@@ -142,3 +142,15 @@ export async function createHousehold(input: OnboardInput, childEmail: string) {
 }
 
 export { parseOnboard } from "@/lib/onboard-form";
+
+export function onboardSaveError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/ENOENT|migrations/i.test(message)) return "Could not save. Try again in a moment.";
+  if (/relation .* does not exist|no such table/i.test(message)) return "Could not save. Try again in a moment.";
+  if (/SESSION_SECRET/i.test(message)) return "Could not save. Sign-in is missing a server secret.";
+  if (/row-level security|rls/i.test(message)) return "Could not save. Database permissions blocked this.";
+  if (/duplicate|unique/i.test(message)) {
+    return "This family may already be saved. Open the last desk link, or use a different phone.";
+  }
+  return "Could not save.";
+}

@@ -8,7 +8,10 @@ const nextConfig: NextConfig = {
   cacheComponents: false,
   serverExternalPackages: ["@electric-sql/pglite"],
   outputFileTracingIncludes: {
-    "/*": ["./node_modules/@electric-sql/pglite/**/*"],
+    "*": ["./node_modules/@electric-sql/pglite/**/*", "./src/lib/db/migrations/**/*"],
+    "/*": ["./node_modules/@electric-sql/pglite/**/*", "./src/lib/db/migrations/**/*"],
+    "/api/*": ["./node_modules/@electric-sql/pglite/**/*", "./src/lib/db/migrations/**/*"],
+    "/d/*": ["./node_modules/@electric-sql/pglite/**/*", "./src/lib/db/migrations/**/*"],
   },
   experimental: {
     optimizePackageImports: ["lucide-react"],

@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { MIGRATION_SOURCES } from "@/lib/db/migration-sources";
 import { nowIstStamp } from "@/lib/time";
 
 export function migrationsDir() {
@@ -27,10 +28,14 @@ export async function applyMigrations(io: MigrationExec) {
   const applied = await io.query<{ id: string }>(`select id from schema_migrations`);
   const done = new Set(applied.map((row) => row.id));
   const appliedNow: string[] = [];
-  for (const file of listMigrationFiles()) {
-    const id = file.replace(/\.sql$/, "");
+  const sources = MIGRATION_SOURCES.length
+    ? MIGRATION_SOURCES
+    : listMigrationFiles().map((file) => ({
+        id: file.replace(/\.sql$/, ""),
+        sql: readFileSync(path.join(migrationsDir(), file), "utf8"),
+      }));
+  for (const { id, sql } of sources) {
     if (done.has(id)) continue;
-    const sql = readFileSync(path.join(migrationsDir(), file), "utf8");
     await io.exec(sql);
     const at = nowIstStamp();
     if (at.endsWith("Z")) throw new Error("schema_migrations timestamps must be +05:30");

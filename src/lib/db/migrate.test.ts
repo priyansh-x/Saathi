@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { closeDb, migrationIo, query, usingPostgres } from "./client";
+import { MIGRATION_SOURCES } from "./migration-sources";
 import { applyMigrations, listMigrationFiles } from "./migrate";
 import { seed } from "./seed";
 
@@ -30,6 +31,15 @@ describe("db migrate", () => {
     assert.ok(files.includes("017_wa_delivery.sql"));
     const ids = files.map((name) => name.slice(0, 3));
     assert.deepEqual(ids, [...ids].sort());
+  });
+
+  it("ships the SQL inside the server bundle so Vercel API routes do not need the folder", () => {
+    const files = listMigrationFiles().map((name) => name.replace(/\.sql$/, ""));
+    assert.deepEqual(
+      MIGRATION_SOURCES.map((row) => row.id),
+      files,
+    );
+    assert.ok(MIGRATION_SOURCES[0]?.sql.includes("create table if not exists parents"));
   });
 
   it("applies migrations idempotently into schema_migrations", async () => {
