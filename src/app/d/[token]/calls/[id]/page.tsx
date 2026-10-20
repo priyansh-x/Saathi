@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import { titled } from "@/lib/page-title";
-import { BackLink, ExpiredLink } from "@/components/family/chrome";
-import { FamilyShell } from "@/components/family/family-shell";
-import { callById, dosesOnDay, openActAlerts, parentByToken } from "@/lib/db/queries";
+import { callById, dosesOnDay, parentByToken } from "@/lib/db/queries";
 import { readLang } from "@/lib/family-load";
 import { callBullets, callLanguageLabel, callTranscriptLines, qs } from "@/lib/history";
 import { messages } from "@/lib/i18n/messages";
 import { formatCallHeader, toIsoString } from "@/lib/time";
 import { doseMark, slotLabel } from "@/lib/today";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   searchParams,
@@ -16,6 +17,22 @@ export async function generateMetadata({
   searchParams: Promise<{ lang?: string }>;
 }): Promise<Metadata> {
   return titled("Call · Saathi", "कॉल · साथी", (await searchParams).lang);
+}
+
+function CallShell({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="app-shell">
+      <div className="app-shell-scroll px-4 pt-3 pb-8">{children}</div>
+    </main>
+  );
+}
+
+function BackTo({ href, label }: { href: string; label: string }) {
+  return (
+    <Link href={href} className="-ml-2 inline-flex h-11 items-center pr-3 text-[15px] font-medium text-primary">
+      {label}
+    </Link>
+  );
 }
 
 export default async function CallDetailPage({
@@ -30,23 +47,38 @@ export default async function CallDetailPage({
   const sp = await searchParams;
   const lang = readLang(sp.lang);
   const t = messages[lang];
-  const extraQuery = { from: sp.from, days: sp.days };
   const backHref =
     sp.from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/history${qs({ lang, days: sp.days })}`;
   const backLabel = sp.from === "today" ? t.backToday : t.backHistory;
 
   try {
     const parent = await parentByToken(token);
-    if (!parent) return <ExpiredLink lang={lang} />;
-    const callId = decodeURIComponent(id);
-    const [call, actAlerts] = await Promise.all([callById(callId), openActAlerts(parent.id)]);
+    if (!parent) {
+      return (
+        <CallShell>
+          <h1 className="app-title mt-8">{t.linkExpired}</h1>
+          <p className="mt-3 text-[16px] text-muted-foreground">{t.linkExpiredHint}</p>
+          <Link href="/" className="btn-secondary mt-8">
+            Saathi
+          </Link>
+        </CallShell>
+      );
+    }
+
+    let callId = id;
+    try {
+      callId = decodeURIComponent(id);
+    } catch {
+      callId = id;
+    }
+    const call = await callById(callId);
 
     if (!call || call.parent_id !== parent.id) {
       return (
-        <FamilyShell token={token} lang={lang} example={parent.is_example} alerts={actAlerts} active="history" extraQuery={extraQuery} addressTerm={parent.address_term}>
-          <BackLink href={backHref}>{backLabel}</BackLink>
+        <CallShell>
+          <BackTo href={backHref} label={backLabel} />
           <p className="mt-4">{t.emptyCall}</p>
-        </FamilyShell>
+        </CallShell>
       );
     }
 
@@ -59,24 +91,16 @@ export default async function CallDetailPage({
       doses = [];
     }
     const lines = callTranscriptLines(call.transcript_json);
-    const spoken = call.mood_quote_lang || parent.languages.split(",")[0];
+    const spoken = call.mood_quote_lang || String(parent.languages || "hi").split(",")[0];
     const bullets = callBullets(lang === "hi" ? call.summary_hi : call.summary_en);
+    const cost = call.total_cost != null ? String(call.total_cost) : "";
 
     return (
-      <FamilyShell
-        token={token}
-        lang={lang}
-        example={Boolean(parent.is_example)}
-        alerts={actAlerts}
-        active="history"
-        extraQuery={extraQuery}
-        updatedAt={toIsoString(call.ended_at || call.started_at) || null}
-        addressTerm={parent.address_term}
-      >
-        <BackLink href={backHref}>{backLabel}</BackLink>
+      <CallShell>
+        <BackTo href={backHref} label={backLabel} />
         <p className="mt-3 tabular text-sm text-muted-foreground">
           {formatCallHeader(started, Number(call.duration_sec) || null, callLanguageLabel(lang, spoken), lang)}
-          {call.total_cost != null ? ` · ${t.callUsage.replace("{cost}", String(call.total_cost))}` : ""}
+          {cost ? ` · ${t.callUsage.replace("{cost}", cost)}` : ""}
         </p>
 
         <section className="mt-5">
@@ -99,7 +123,8 @@ export default async function CallDetailPage({
               {doses.map((dose) => (
                 <li key={String(dose.medicine_id || dose.id)} className="flex items-baseline justify-between gap-3">
                   <span>
-                    {dose.name} <span className="text-sm text-muted-foreground">{slotLabel(dose.meal, lang)}</span>
+                    {String(dose.name || "")}{" "}
+                    <span className="text-sm text-muted-foreground">{slotLabel(String(dose.meal || ""), lang)}</span>
                   </span>
                   <span className="text-sm">{doseMark(dose.status, lang)}</span>
                 </li>
@@ -133,14 +158,14 @@ export default async function CallDetailPage({
         <p className="mt-4 text-sm text-muted-foreground">
           {parent.recording_consent ? t.audioConsentOn : t.audioConsentOff}
         </p>
-      </FamilyShell>
+      </CallShell>
     );
   } catch {
     return (
-      <FamilyShell token={token} lang={lang} example={false} alerts={[]} active="history" extraQuery={extraQuery}>
-        <BackLink href={backHref}>{backLabel}</BackLink>
+      <CallShell>
+        <BackTo href={backHref} label={backLabel} />
         <p className="mt-4">{t.emptyCall}</p>
-      </FamilyShell>
+      </CallShell>
     );
   }
 }

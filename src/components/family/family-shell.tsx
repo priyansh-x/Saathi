@@ -1,16 +1,16 @@
 import { ActBanner, TabBar, TopBar } from "@/components/family/chrome";
+import { clientSafe } from "@/lib/client-safe";
 import type { AlertRow } from "@/lib/db/types";
 import type { Lang } from "@/lib/i18n/messages";
 import { toIsoString } from "@/lib/time";
 
-function plain<T>(value: T): T {
-  try {
-    return JSON.parse(
-      JSON.stringify(value, (_key, item) => (item instanceof Date ? item.toISOString() : item)),
-    ) as T;
-  } catch {
-    return [] as T;
+function extraRecord(extra?: Record<string, string | undefined>) {
+  if (!extra) return undefined;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(extra)) {
+    if (value) out[key] = value;
   }
+  return Object.keys(out).length ? out : undefined;
 }
 
 export function FamilyShell({
@@ -34,19 +34,20 @@ export function FamilyShell({
   extraQuery?: Record<string, string | undefined>;
   addressTerm?: string | null;
 }) {
-  const safeAlerts = plain(alerts ?? []);
+  const safeAlerts = clientSafe(alerts ?? []);
+  const query = extraRecord(extraQuery);
   return (
     <div className="app-shell">
       <TopBar
         lang={lang}
-        example={example}
+        example={Boolean(example)}
         updatedAt={toIsoString(updatedAt) || null}
-        extraQuery={extraQuery}
+        extraQuery={query}
         addressTerm={addressTerm || undefined}
       />
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={safeAlerts} /> : null}
       <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>
-      <TabBar token={token} lang={lang} active={active} openAlerts={safeAlerts.length} extraQuery={extraQuery} />
+      <TabBar token={token} lang={lang} active={active} openAlerts={safeAlerts.length} extraQuery={query} />
     </div>
   );
 }

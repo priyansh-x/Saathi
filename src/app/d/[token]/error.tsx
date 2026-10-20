@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorState } from "@/components/family/chrome";
+import { ErrorState } from "@/components/family/error-state";
 
 export default function FamilyError({
   reset,

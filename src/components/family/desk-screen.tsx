@@ -6,8 +6,10 @@ import { HistoryPanel } from "@/components/family/history-panel";
 import { SettingsPanel } from "@/components/family/settings-panel";
 import { TodayPanel } from "@/components/family/today-panel";
 import type { DeskTab } from "@/lib/desk-tabs";
+import { clientSafe } from "@/lib/client-safe";
 import { loadFamily } from "@/lib/family-load";
 import type { Lang } from "@/lib/i18n/messages";
+import { toIsoString } from "@/lib/time";
 
 export async function DeskScreen({
   token,
@@ -27,15 +29,15 @@ export async function DeskScreen({
   const data = await loadFamily(token, { allAlerts: false, hydrateBolna: false });
   if (!data) return <ExpiredLink lang={lang} />;
   const alert = data.actAlerts[0] ?? null;
-  const updatedAt = alert?.created_at || data.call?.ended_at || data.call?.started_at;
+  const updatedAt = toIsoString(alert?.created_at || data.call?.ended_at || data.call?.started_at) || null;
 
   return (
     <DeskPager
       token={token}
       lang={lang}
       active={active}
-      example={data.parent.is_example}
-      alerts={data.actAlerts}
+      example={Boolean(data.parent.is_example)}
+      alerts={clientSafe(data.actAlerts)}
       addressTerm={data.parent.address_term}
       updatedAt={updatedAt}
       extraQuery={days === 7 ? { days: "7" } : undefined}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BackLink, ExpiredLink } from "@/components/family/chrome";
 import { FamilyShell } from "@/components/family/family-shell";
+import { clientSafe } from "@/lib/client-safe";
 import { titled } from "@/lib/page-title";
 import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
@@ -8,7 +9,7 @@ import { alertById, alertEvents, resolveAlert } from "@/lib/db/queries";
 import { alertLife, alertQuoteLine, alertTitle, eventLine, statusPill } from "@/lib/alerts";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
-import { formatFriendlyTime } from "@/lib/time";
+import { formatFriendlyTime, toIsoString } from "@/lib/time";
 import { redirect } from "next/navigation";
 
 export async function generateMetadata({
@@ -35,7 +36,7 @@ export default async function AlertDetailPage({
   const alert = await alertById(id);
   if (!alert) {
     return (
-      <FamilyShell token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="alerts" addressTerm={data.parent.address_term}>
+      <FamilyShell token={token} lang={lang} example={Boolean(data.parent.is_example)} alerts={clientSafe(data.actAlerts)} active="alerts" addressTerm={data.parent.address_term}>
         <p>{messages[lang].loadError}</p>
       </FamilyShell>
     );
@@ -70,10 +71,10 @@ export default async function AlertDetailPage({
     <FamilyShell
       token={token}
       lang={lang}
-      example={data.parent.is_example}
-      alerts={data.actAlerts}
+      example={Boolean(data.parent.is_example)}
+      alerts={clientSafe(data.actAlerts)}
       active="alerts"
-      updatedAt={alert.created_at}
+      updatedAt={toIsoString(alert.created_at) || null}
       extraQuery={{ from }}
       addressTerm={data.parent.address_term}
     >

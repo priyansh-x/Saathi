@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, CloudOff, Languages, Link2Off } from "lucide-react";
+import { ChevronLeft, ChevronRight, Languages, Link2Off } from "lucide-react";
 import { IconAlert, IconFamily, IconHistory, IconSettings, MarkSvg } from "@/components/icons";
 import kamlaAvatar from "../../../public/images/avatar-kamla.jpg";
 import type { AlertRow } from "@/lib/db/types";
@@ -308,26 +308,6 @@ export function LoadingState({ lang = "en" }: { lang?: Lang }) {
       <div className="mt-6 h-52 animate-pulse rounded-[28px] bg-card" />
       <div className="mt-4 h-24 animate-pulse rounded-[22px] bg-card" />
       <div className="mt-4 h-24 animate-pulse rounded-[22px] bg-card" />
-    </div>
-  );
-}
-
-export function ErrorState({
-  lang = "en",
-  onRetry,
-}: {
-  lang?: Lang;
-  onRetry?: () => void;
-}) {
-  return (
-    <div className="app-shell-scroll px-6 py-16">
-      <span className="grid size-14 place-items-center rounded-full bg-amber-soft text-amber-ink">
-        <CloudOff className="size-6" aria-hidden />
-      </span>
-      <p className="mt-5 text-[19px] font-semibold">{messages[lang].loadError}</p>
-      <button type="button" onClick={onRetry} className="btn-primary mt-6">
-        {messages[lang].retry}
-      </button>
     </div>
   );
 }
