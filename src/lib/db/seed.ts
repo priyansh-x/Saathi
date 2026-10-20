@@ -494,20 +494,8 @@ async function seedCompletedDay(
     true,
   ]);
   if (opts.openAlert && variant === "chest") {
-    await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`, [
-      `out_push_alert_${day}`,
-      "parent_kamla",
-      "push",
-      "web_push",
-      "+910000000001",
-      `Act now\n${quote}`,
-      istStampFromOffset(day, hour, minute, 3),
-      "mock",
-      true,
-      null,
-      "mock",
-      istStampFromOffset(day, hour, minute, 3),
-    ]);
+    const { sendPushToFamily } = await import("@/lib/push");
+    await sendPushToFamily("parent_kamla", "Act now", quote, `alert_${alertId}`);
   }
   if (!opts.openAlert) {
     await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
