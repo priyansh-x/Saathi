@@ -96,15 +96,23 @@ export function formatDuration(sec: number | null | undefined) {
   return `${mins} min`;
 }
 
-export function parseIstParts(iso: string) {
-  const day = iso.slice(0, 10);
-  const time = iso.includes("T") ? iso.slice(11, 16) : iso;
+export function toIsoString(value: unknown): string {
+  if (value == null || value === "") return "";
+  if (typeof value === "string") return value;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  return String(value);
+}
+
+export function parseIstParts(iso: unknown) {
+  const text = toIsoString(iso);
+  const day = text.slice(0, 10) || "1970-01-01";
+  const time = text.includes("T") ? text.slice(11, 16) : text;
   const [y, mo, d] = day.split("-").map((n) => Number(n));
   const [hh, mm] = time.split(":").map((n) => Number(n));
   return { day, y, mo, d, hh, mm, weekday: new Date(y, mo - 1, d).getDay() };
 }
 
-export function formatFriendlyTime(iso: string, lang: "en" | "hi" = "en", viewerZone?: string) {
+export function formatFriendlyTime(iso: unknown, lang: "en" | "hi" = "en", viewerZone?: string) {
   const { day, mo, d, hh, mm, weekday } = parseIstParts(iso);
   const today = istDayKey();
   const clock = `${formatClock(hh, mm)} IST`;
@@ -116,7 +124,7 @@ export function formatFriendlyTime(iso: string, lang: "en" | "hi" = "en", viewer
         : `Today ${clock}`
       : `${weekdayLabel} ${d} ${MONTH_EN[mo - 1]}, ${clock}`;
   if (!viewerZone || viewerZone === IST) return core;
-  const view = new Date(`${iso.replace(" ", "T")}`);
+  const view = new Date(`${toIsoString(iso).replace(" ", "T")}`);
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: viewerZone,
     weekday: "short",
@@ -139,9 +147,10 @@ export function formatHeaderDate(lang: "en" | "hi", date = new Date()) {
   return `${weekday} ${ist.getDate()} ${MONTH_EN[ist.getMonth()]}`;
 }
 
-export function formatUpdated(iso: string | null | undefined, lang: "en" | "hi") {
-  if (!iso) return formatFriendlyTime(istStamp(istDayKey(), istNow().getHours(), istNow().getMinutes()), lang);
-  return formatFriendlyTime(iso, lang);
+export function formatUpdated(iso: unknown, lang: "en" | "hi") {
+  const text = toIsoString(iso);
+  if (!text) return formatFriendlyTime(istStamp(istDayKey(), istNow().getHours(), istNow().getMinutes()), lang);
+  return formatFriendlyTime(text, lang);
 }
 
 export function weekdayShort(day: string, lang: "en" | "hi") {
@@ -179,7 +188,7 @@ export function inSundayEveningWindow(date = new Date()) {
 }
 
 export function formatCallHeader(
-  iso: string,
+  iso: unknown,
   durationSec: number | null | undefined,
   languageLabel: string,
   lang: "en" | "hi" = "en",

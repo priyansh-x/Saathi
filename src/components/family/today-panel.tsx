@@ -259,12 +259,12 @@ export function TodayPanel({
                 </button>
               </form>
             ) : data.call && (state === "good" || state === "look") ? (
-              <Link href={`/d/${token}/calls/${data.call.id}?lang=${lang}&from=today`} className="action-tile text-foreground">
+              <Link href={`/d/${token}/calls/${encodeURIComponent(data.call.id)}?lang=${lang}&from=today`} className="action-tile text-foreground">
                 <UserRound className="size-5" aria-hidden />
                 {t.seeTodaysCall}
               </Link>
             ) : state === "scheduled" && data.yesterday ? (
-              <Link href={`/d/${token}/calls/${data.yesterday.id}?lang=${lang}&from=today`} className="action-tile text-foreground">
+              <Link href={`/d/${token}/calls/${encodeURIComponent(data.yesterday.id)}?lang=${lang}&from=today`} className="action-tile text-foreground">
                 <CalendarDays className="size-5" aria-hidden />
                 {t.seeYesterday}
               </Link>
@@ -308,7 +308,7 @@ export function TodayPanel({
       {state === "scheduled" && data.yesterday ? (
         <section className="rise mt-6" style={{ "--d": "120ms" } as CSSProperties}>
           <p className="section-label">{t.seeYesterday}</p>
-          <Link href={`/d/${token}/calls/${data.yesterday.id}?lang=${lang}&from=today`} className="card mt-2 flex items-center gap-3 p-4">
+          <Link href={`/d/${token}/calls/${encodeURIComponent(data.yesterday.id)}?lang=${lang}&from=today`} className="card mt-2 flex items-center gap-3 p-4">
             <p className="flex-1 text-[15px] leading-6 text-muted-foreground">
               {pickLocale(lang, data.yesterday.summary_en, data.yesterday.summary_hi)}
             </p>

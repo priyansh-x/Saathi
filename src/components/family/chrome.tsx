@@ -64,7 +64,8 @@ export function ActBanner({
   if (alerts.length === 0) return null;
   const first = alerts[0];
   const extra = alerts.length > 1 ? ` · ${alerts.length}` : "";
-  const time = first.created_at.includes("T") ? first.created_at.slice(11, 16) : "";
+  const created = typeof first.created_at === "string" ? first.created_at : String(first.created_at ?? "");
+  const time = created.includes("T") ? created.slice(11, 16) : "";
   const hh = time.slice(0, 2);
   const mm = time.slice(3, 5);
   const clock = hh ? `${Number(hh) % 12 || 12}:${mm} ${Number(hh) < 12 ? "AM" : "PM"}` : formatFriendlyTime(first.created_at, lang);

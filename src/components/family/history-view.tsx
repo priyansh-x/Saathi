@@ -89,7 +89,7 @@ export function HistoryView({
               <li key={day}>
                 {call ? (
                   <Link
-                    href={`/d/${token}/calls/${call.id}${qs({ lang, from: "history", days: String(days) })}`}
+                    href={`/d/${token}/calls/${encodeURIComponent(call.id)}${qs({ lang, from: "history", days: String(days) })}`}
                     className="flex min-h-[92px] flex-col justify-center px-4 py-3"
                   >
                     {body}

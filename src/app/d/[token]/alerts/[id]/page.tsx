@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { BackLink, ExpiredLink, FamilyFrame } from "@/components/family/chrome";
+import { BackLink, ExpiredLink } from "@/components/family/chrome";
+import { FamilyShell } from "@/components/family/family-shell";
 import { titled } from "@/lib/page-title";
 import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
@@ -34,9 +35,9 @@ export default async function AlertDetailPage({
   const alert = await alertById(id);
   if (!alert) {
     return (
-      <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="alerts" addressTerm={data.parent.address_term}>
+      <FamilyShell token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="alerts" addressTerm={data.parent.address_term}>
         <p>{messages[lang].loadError}</p>
-      </FamilyFrame>
+      </FamilyShell>
     );
   }
   const events = await alertEvents(id);
@@ -66,7 +67,7 @@ export default async function AlertDetailPage({
   }
 
   return (
-    <FamilyFrame
+    <FamilyShell
       token={token}
       lang={lang}
       example={data.parent.is_example}
@@ -128,6 +129,6 @@ export default async function AlertDetailPage({
           </form>
         </div>
       ) : null}
-    </FamilyFrame>
+    </FamilyShell>
   );
 }
