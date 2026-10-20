@@ -16,7 +16,7 @@ function isStandalone() {
 
 export function AddToHome({ lang }: { lang: Lang }) {
   const t = messages[lang];
-  const [mode, setMode] = useState<"hidden" | "native" | "ios" | "inapp" | "hint">("hidden");
+  const [mode, setMode] = useState<"hidden" | "native" | "ios" | "inapp" | "hint">("hint");
   const [promptEvent, setPromptEvent] = useState<{ prompt: () => Promise<void> } | null>(null);
 
   useEffect(() => {
