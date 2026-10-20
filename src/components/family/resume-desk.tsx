@@ -1,17 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { loadDeskToken } from "@/lib/storage";
+import { LoadingState } from "@/components/family/chrome";
+import { loadDeskToken, saveDeskToken } from "@/lib/storage";
 import type { Lang } from "@/lib/i18n/messages";
 
 /** Opens the last family desk when the PWA starts on / or /onboard. */
-export function ResumeDesk({ lang }: { lang: Lang }) {
+export function ResumeDesk({ lang, children }: { lang: Lang; children?: ReactNode }) {
   const router = useRouter();
-  useEffect(() => {
+  const [going, setGoing] = useState(false);
+
+  useLayoutEffect(() => {
     const token = loadDeskToken();
-    if (!token) return;
-    router.replace(`/d/${token}?lang=${lang}`);
+    if (token) {
+      setGoing(true);
+      router.replace(`/d/${token}?lang=${lang}`);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { deskToken?: string } | null) => {
+        if (cancelled || !body?.deskToken) return;
+        saveDeskToken(body.deskToken);
+        setGoing(true);
+        router.replace(`/d/${body.deskToken}?lang=${lang}`);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
   }, [lang, router]);
-  return null;
+
+  if (going) return <LoadingState lang={lang} />;
+  return children ?? null;
 }

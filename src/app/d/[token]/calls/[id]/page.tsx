@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { titled } from "@/lib/page-title";
 import { BackLink, ExpiredLink, FamilyFrame, LoadingState } from "@/components/family/chrome";
-import { callNeedsBolnaHydrate, hydrateBolnaCall } from "@/lib/bolna/execution";
-import { callById, dosesOnDay, openActAlerts, parentByToken } from "@/lib/db/queries";
+import { callById, openActAlerts, parentByToken, dosesOnDay } from "@/lib/db/queries";
 import { readLang } from "@/lib/family-load";
-import { callBullets, callLanguageLabel, qs } from "@/lib/history";
+import { callBullets, callLanguageLabel, callTranscriptLines, qs } from "@/lib/history";
 import { messages } from "@/lib/i18n/messages";
 import { formatCallHeader } from "@/lib/time";
 import { doseMark, slotLabel } from "@/lib/today";
@@ -50,18 +49,14 @@ async function CallBody({
 }) {
   const parent = await parentByToken(token);
   if (!parent) return <ExpiredLink lang={lang} />;
-  let [call, actAlerts] = await Promise.all([callById(id), openActAlerts(parent.id)]);
-  if (call && callNeedsBolnaHydrate(call)) {
-    await hydrateBolnaCall(call);
-    call = await callById(id);
-  }
+  const [call, actAlerts] = await Promise.all([callById(id), openActAlerts(parent.id)]);
   const t = messages[lang];
   const extraQuery = { from, days };
   const backHref =
     from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/history${qs({ lang, days })}`;
   const backLabel = from === "today" ? t.backToday : t.backHistory;
 
-  if (!call) {
+  if (!call || call.parent_id !== parent.id) {
     return (
       <FamilyFrame token={token} lang={lang} example={parent.is_example} alerts={actAlerts} active="history" extraQuery={extraQuery} addressTerm={parent.address_term}>
         <BackLink href={backHref}>{backLabel}</BackLink>
@@ -71,7 +66,7 @@ async function CallBody({
   }
   const day = call.started_at.slice(0, 10);
   const doses = await dosesOnDay(parent.id, day);
-  const lines = call.transcript_json ? (JSON.parse(call.transcript_json) as { speaker: string; hi: string; en: string }[]) : [];
+  const lines = callTranscriptLines(call.transcript_json);
   const spoken = call.mood_quote_lang || parent.languages.split(",")[0];
   const bullets = callBullets(lang === "hi" ? call.summary_hi : call.summary_en);
 
@@ -136,8 +131,8 @@ async function CallBody({
           <ol className="mt-3 space-y-2 text-sm">
             {lines.map((line, i) => (
               <li key={i}>
-                <p className="font-devanagari">{line.hi}</p>
-                <p className="text-muted-foreground">{line.en}</p>
+                <p className="font-devanagari">{line.hi || line.en}</p>
+                {line.en && line.en !== line.hi ? <p className="text-muted-foreground">{line.en}</p> : null}
               </li>
             ))}
           </ol>

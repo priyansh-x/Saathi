@@ -60,9 +60,13 @@ export async function hydrateBolnaCall(call: {
   if (isMockBolna() || !callNeedsBolnaHydrate(call)) return false;
   const executionId = call.bolna_execution_id || call.id;
   if (!executionId) return false;
-  const payload = await fetchBolnaExecution(executionId);
-  if (!payload) return false;
-  const id = payload.execution_id || payload.id || executionId;
-  await processBolnaWebhook(payload, id);
-  return true;
+  try {
+    const payload = await fetchBolnaExecution(executionId);
+    if (!payload) return false;
+    const id = payload.execution_id || payload.id || executionId;
+    await processBolnaWebhook(payload, id);
+    return true;
+  } catch {
+    return false;
+  }
 }

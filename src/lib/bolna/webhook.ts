@@ -262,7 +262,11 @@ async function persistCallCost(callId: string, payload: BolnaWebhook) {
   const cost = bolnaTotalCost(payload);
   const breakdown = payload.cost_breakdown ? JSON.stringify(payload.cost_breakdown) : null;
   if (cost == null && !breakdown) return;
-  await query(`update calls set total_cost = $2, cost_breakdown = $3 where id = $1`, [callId, cost, breakdown]);
+  try {
+    await query(`update calls set total_cost = $2, cost_breakdown = $3 where id = $1`, [callId, cost, breakdown]);
+  } catch {
+    /* older databases may not have cost columns yet */
+  }
 }
 
 async function startMissedFromWebhook(

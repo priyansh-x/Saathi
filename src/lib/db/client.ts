@@ -112,7 +112,7 @@ async function openPool() {
     ssl,
     max: 4,
     idleTimeoutMillis: 10_000,
-    connectionTimeoutMillis: 8_000,
+    connectionTimeoutMillis: 4_000,
   });
   const io = postgresIo(pool);
   await migrateAndLatch(io);

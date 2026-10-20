@@ -122,6 +122,17 @@ export function moodLabel(mood: Mood, lang: Lang) {
   return t.moodUnclear;
 }
 
+export function callTranscriptLines(raw: unknown): { speaker: string; hi: string; en: string }[] {
+  if (!raw) return [];
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((line): line is { speaker: string; hi: string; en: string } => Boolean(line) && typeof line === "object");
+  } catch {
+    return [];
+  }
+}
+
 export function callBullets(summary: string | null | undefined) {
   if (!summary) return [];
   return summary

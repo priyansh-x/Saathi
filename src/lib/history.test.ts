@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import type { CallRow, DoseLog } from "@/lib/db/types";
 import {
   callBullets,
+  callTranscriptLines,
   callGlyph,
   cellAria,
   historySummary,
@@ -82,5 +83,12 @@ describe("history helpers", () => {
       "Kamla slept well.",
       "She took Amlodipine.",
     ]);
+  });
+
+  it("reads a conversation whether it is a string or already parsed", () => {
+    const lines = [{ speaker: "parent", hi: "theek hoon", en: "theek hoon" }];
+    assert.deepEqual(callTranscriptLines(JSON.stringify(lines)), lines);
+    assert.deepEqual(callTranscriptLines(lines), lines);
+    assert.deepEqual(callTranscriptLines("{"), []);
   });
 });
