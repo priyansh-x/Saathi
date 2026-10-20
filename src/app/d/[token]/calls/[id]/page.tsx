@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { LiveRefresh } from "@/components/family/live-refresh";
 import { deskLiveStamp } from "@/lib/desk-live";
 import { titled } from "@/lib/page-title";
+import { hydrateBolnaCall } from "@/lib/bolna/execution";
 import { callById, dosesOnDay, parentByToken } from "@/lib/db/queries";
 import { readLang } from "@/lib/family-load";
 import { callBullets, callLanguageLabel, callTranscriptLines, qs } from "@/lib/history";
@@ -82,7 +83,7 @@ export default async function CallDetailPage({
     } catch {
       callId = id;
     }
-    const call = await callById(callId);
+    let call = await callById(callId);
 
     if (!call || call.parent_id !== parent.id) {
       return (
@@ -91,6 +92,11 @@ export default async function CallDetailPage({
           <p className="mt-4">{t.emptyCall}</p>
         </CallShell>
       );
+    }
+
+    if (!parent.is_example) {
+      const pulled = await hydrateBolnaCall(call);
+      if (pulled) call = (await callById(callId)) ?? call;
     }
 
     const started = toIsoString(call.started_at);

@@ -144,7 +144,9 @@ export function TodayPanel({
             ? Eye
             : state === "act"
               ? AlertTriangle
-              : Clock;
+              : state === "calling"
+                ? Phone
+                : Clock;
 
   return (
     <>
@@ -157,7 +159,7 @@ export function TodayPanel({
         className={`grain mt-3 overflow-hidden rounded-[28px] border border-black/[0.04] p-5 shadow-[var(--shadow-card)] ${HERO_TONE[tone]}`}
       >
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className={`grid size-9 shrink-0 place-items-center rounded-full ${HERO_ICON_BG[tone]} ${state === "act" || state === "trying" ? "ring-pulse" : ""}`}>
+          <span className={`grid size-9 shrink-0 place-items-center rounded-full ${HERO_ICON_BG[tone]} ${state === "act" || state === "trying" || state === "calling" ? "ring-pulse" : ""}`}>
             <Icon className="size-[18px]" strokeWidth={2.4} aria-hidden />
           </span>
           <span className="min-w-0 text-[15px] font-semibold break-words">{copy.chip}</span>
@@ -259,7 +261,7 @@ export function TodayPanel({
                   {p(t.shesOk)}
                 </button>
               </form>
-            ) : data.call && (state === "good" || state === "look") ? (
+            ) : data.call && (state === "good" || state === "look" || state === "calling") ? (
               <Link href={`/d/${token}/calls/${encodeURIComponent(data.call.id)}?lang=${lang}&from=today`} className="action-tile text-foreground">
                 <UserRound className="size-5" aria-hidden />
                 {t.seeTodaysCall}

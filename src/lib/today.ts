@@ -2,7 +2,7 @@ import type { AlertRow, AttemptRow, CallRow, DoseLog } from "@/lib/db/types";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { clockFromMinutes, formatClock, formatDuration, formatFriendlyTime, parseHhMm, parseIstParts } from "@/lib/time";
 
-export type DayState = "scheduled" | "trying" | "good" | "look" | "act" | "paused" | "skipped";
+export type DayState = "scheduled" | "calling" | "trying" | "good" | "look" | "act" | "paused" | "skipped";
 
 export type LadderPlan = {
   retry_10: number;
@@ -35,7 +35,8 @@ export function todayStatus(args: {
   const openAct = args.actAlerts.filter((a) => !a.resolved_at && a.level === "act");
   if (openAct.length > 0 || args.escalated) return "act";
   if (args.call?.status === "no_conversation") return "skipped";
-  if (args.call?.status === "missed" || args.call?.status === "in_progress" || args.call?.status === "failed") {
+  if (args.call?.status === "in_progress") return "calling";
+  if (args.call?.status === "missed" || args.call?.status === "failed") {
     return "trying";
   }
   if (!args.call) {
@@ -49,7 +50,7 @@ export function todayStatus(args: {
 
 export function statusTone(state: DayState): "good" | "look" | "act" | "neutral" {
   if (state === "good") return "good";
-  if (state === "look" || state === "trying") return "look";
+  if (state === "look" || state === "trying" || state === "calling") return "look";
   if (state === "act") return "act";
   return "neutral";
 }
@@ -182,13 +183,21 @@ export function heroCopy(args: {
       sub: answeredClock(args.call) ? `${args.lang === "hi" ? "उठी" : "Picked up"} ${answeredClock(args.call)}` : "",
     };
   }
+  if (args.state === "calling") {
+    return {
+      chip: t.chipCalling,
+      headline: t.headlineCalling,
+      sub: t.callingSub,
+    };
+  }
   if (args.state === "trying") {
+    const since = answeredClock(args.call) || clock;
     return {
       chip: t.look,
       headline:
         args.lang === "hi"
-          ? `माँ से बात नहीं हो पाई: ${clock} से ${tries || 1} बार कोशिश`
-          : `Trying to reach Maa: ${tries || 1} ${tries === 1 ? "try" : "tries"} since ${clock}`,
+          ? `माँ से बात नहीं हो पाई: ${since} से ${tries || 1} बार कोशिश`
+          : `Trying to reach Maa: ${tries || 1} ${tries === 1 ? "try" : "tries"} since ${since}`,
       sub: t.nobodyReplied,
     };
   }

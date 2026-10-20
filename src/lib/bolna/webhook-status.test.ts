@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "../db/client";
 import { seed } from "../db/seed";
+import { hydrateBolnaCall } from "./execution";
 import {
   isFailedBolnaStatus,
   isMissedBolnaStatus,
@@ -138,6 +139,46 @@ describe("Bolna status mapping", () => {
     assert.ok(rows[0]?.transcript_json);
   });
 
+  it("attaches a completed webhook to the open settings dial even if ids differ", async () => {
+    const deskId = `st_open_${Date.now()}`;
+    await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
+      deskId,
+      "parent_kamla",
+      "2026-10-20T16:10:00+05:30",
+      null,
+      null,
+      "in_progress",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      deskId,
+      true,
+    ]);
+    const result = await processBolnaWebhook(
+      examplePayload("completed", {
+        conversation_duration: 88,
+        transcript: "assistant: Namaste\nuser: Seene mein dard ho raha hai.",
+        extracted_data: {},
+      }),
+      `st_other_${Date.now()}`,
+    );
+    assert.equal("call_id" in result && result.call_id, deskId);
+    const call = await query<{ status: string; transcript_json: string | null }>(
+      `select status, transcript_json from calls where id = $1`,
+      [deskId],
+    );
+    assert.equal(call[0]?.status, "completed");
+    assert.ok(call[0]?.transcript_json);
+    const alerts = await query<{ n: number }>(
+      `select count(*)::int as n from alerts where call_id = $1 and category = 'EMERGENCY'`,
+      [deskId],
+    );
+    assert.ok((alerts[0]?.n ?? 0) >= 1);
+  });
+
   it("raises an emergency alert from chest pain in the transcript when extraction is empty", async () => {
     const sid = `st_chest_${Date.now()}`;
     await processBolnaWebhook(
@@ -180,5 +221,68 @@ describe("Bolna status mapping", () => {
       [sid],
     );
     assert.equal((attempts[0]?.n ?? 0) > 0, true);
+  });
+
+  it("pulls a finished Bolna execution onto an open settings dial", async () => {
+    const sid = `st_pull_${Date.now()}`;
+    await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
+      sid,
+      "parent_kamla",
+      "2026-10-20T16:20:00+05:30",
+      null,
+      null,
+      "in_progress",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      sid,
+      true,
+    ]);
+    const prevProvider = process.env.CALL_PROVIDER;
+    const prevKey = process.env.BOLNA_API_KEY;
+    process.env.CALL_PROVIDER = "bolna";
+    process.env.BOLNA_API_KEY = "example-test-key-not-live";
+    try {
+      const pulled = await hydrateBolnaCall(
+        {
+          id: sid,
+          parent_id: "parent_kamla",
+          status: "in_progress",
+          ended_at: null,
+          transcript_json: null,
+          bolna_execution_id: sid,
+        },
+        async () =>
+          new Response(
+            JSON.stringify({
+              status: "completed",
+              conversation_duration: 70,
+              transcript: "assistant: Kaisi ho?\nuser: Seene mein dard ho raha hai.",
+              context_details: { recipient_data: { parent_id: "parent_kamla" } },
+            }),
+            { status: 200 },
+          ),
+      );
+      assert.equal(pulled, true);
+      const call = await query<{ status: string; transcript_json: string | null }>(
+        `select status, transcript_json from calls where id = $1`,
+        [sid],
+      );
+      assert.equal(call[0]?.status, "completed");
+      assert.ok(call[0]?.transcript_json);
+      const alerts = await query<{ n: number }>(
+        `select count(*)::int as n from alerts where call_id = $1 and category = 'EMERGENCY'`,
+        [sid],
+      );
+      assert.ok((alerts[0]?.n ?? 0) >= 1);
+    } finally {
+      if (prevProvider) process.env.CALL_PROVIDER = prevProvider;
+      else delete process.env.CALL_PROVIDER;
+      if (prevKey) process.env.BOLNA_API_KEY = prevKey;
+      else delete process.env.BOLNA_API_KEY;
+    }
   });
 });

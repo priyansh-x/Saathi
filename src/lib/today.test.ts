@@ -82,6 +82,20 @@ describe("todayStatus", () => {
     );
   });
 
+  it("is calling while a live dial is still open", () => {
+    assert.equal(
+      todayStatus({
+        paused: false,
+        call: call("in_progress"),
+        doses: [],
+        actAlerts: [],
+        nowMin: 16 * 60,
+        callTimeMin: 8 * 60 + 30,
+      }),
+      "calling",
+    );
+  });
+
   it("is trying while retries are in progress", () => {
     assert.equal(
       todayStatus({
@@ -190,10 +204,13 @@ describe("todayStatus", () => {
     assert.ok(actHi.chip.trim().length > 0);
     assert.notEqual(lookEn.chip, actEn.chip);
     assert.equal(lookEn.chip, "Needs a look");
+    const callingEn = heroCopy({ ...base, state: "calling", lang: "en", call: call("in_progress") });
+    assert.equal(callingEn.chip, "On the line");
+    assert.match(callingEn.headline, /talking with Maa/i);
   });
 
   it("maps Call now results to family copy", () => {
-    assert.equal(ringCopy("placed", "en"), "Saathi is placing the morning call.");
+    assert.equal(ringCopy("placed", "en"), "Saathi is placing the call. Today will update when it ends.");
     assert.equal(ringCopy("not_allowlisted", "en"), "This number is not on the allowlist yet.");
     assert.equal(ringCopy("example", "en"), "The example desk does not place a live call. Open your family desk.");
     assert.equal(ringCopy(undefined, "en"), null);

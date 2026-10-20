@@ -1,4 +1,5 @@
 import { connection } from "next/server";
+import { hydrateBolnaCall } from "@/lib/bolna/execution";
 import { deskSnapshotByToken } from "@/lib/db/queries";
 import { defaultLadder } from "@/lib/config";
 import type { Lang } from "@/lib/i18n/messages";
@@ -11,10 +12,16 @@ export function readLang(value?: string): Lang {
 
 export type FamilyDesk = NonNullable<Awaited<ReturnType<typeof loadFamily>>>;
 
-export async function loadFamily(token: string, _opts?: { allAlerts?: boolean; hydrateBolna?: boolean }) {
+export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hydrateBolna?: boolean }) {
   await connection();
-  const snap = await deskSnapshotByToken(token);
+  let snap = await deskSnapshotByToken(token);
   if (!snap) return null;
+  if (opts?.hydrateBolna !== false && snap.call && !snap.parent.is_example) {
+    const pulled = await hydrateBolnaCall(snap.call);
+    if (pulled) {
+      snap = (await deskSnapshotByToken(token)) ?? snap;
+    }
+  }
   const uniqueDoses = dedupeDoses(snap.doses);
   const escalated = snap.attempts.some((a) => a.result === "escalated");
   return {

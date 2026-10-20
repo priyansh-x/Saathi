@@ -28,6 +28,7 @@ describe("Bolna transcript", () => {
     ]);
     assert.equal(transcriptHasParent("assistant: hi"), false);
     assert.equal(transcriptHasParent("user: haan"), true);
+    assert.equal(transcriptHasParent([{ role: "user", content: "Theek hai." }]), true);
   });
 });
 

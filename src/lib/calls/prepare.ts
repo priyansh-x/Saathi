@@ -193,8 +193,13 @@ export async function postBolnaCall(
     },
     body: JSON.stringify(prepared.payload),
   });
-  const body = (await res.json().catch(() => ({}))) as { execution_id?: string; id?: string };
-  const executionId = body.execution_id || body.id || `fail_${prepared.parentId}_${istDayKey(prepared.clock)}_${Date.now()}`;
+  const body = (await res.json().catch(() => ({}))) as { execution_id?: string; id?: string; data?: { execution_id?: string; id?: string } };
+  const executionId =
+    body.execution_id ||
+    body.id ||
+    body.data?.execution_id ||
+    body.data?.id ||
+    `fail_${prepared.parentId}_${istDayKey(prepared.clock)}_${Date.now()}`;
   if (!res.ok) {
     await recordCallPlacement({
       parentId: prepared.parentId,

@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { callNeedsBolnaHydrate } from "./execution";
+import { bolnaExecutionId, callNeedsBolnaHydrate } from "./execution";
 import { bolnaTotalCost } from "./webhook";
 
 describe("Bolna execution hydrate", () => {
+  it("reads execution_id from nested Bolna bodies", () => {
+    assert.equal(bolnaExecutionId({ execution_id: "exec_1" }), "exec_1");
+    assert.equal(bolnaExecutionId({ message: "done", data: { execution_id: "exec_nested" } }), "exec_nested");
+  });
+
   it("pulls while the desk still has an open call", () => {
     assert.equal(callNeedsBolnaHydrate({ status: "in_progress", ended_at: null }), true);
     assert.equal(callNeedsBolnaHydrate({ status: "failed", ended_at: null }), true);

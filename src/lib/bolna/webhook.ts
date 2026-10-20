@@ -1,9 +1,10 @@
 import { query } from "@/lib/db/client";
 import { flagFromTranscript } from "@/lib/bolna/flag-from-transcript";
 import { hasRaiseAlert, logMedicine, raiseAlert } from "@/lib/bolna/tools";
-import { transcriptHasParent, transcriptJson } from "@/lib/bolna/transcript";
+import { coerceBolnaTranscript, transcriptHasParent, transcriptJson } from "@/lib/bolna/transcript";
 import { advanceLadder } from "@/lib/ladder";
 import { nowIstStamp } from "@/lib/time";
+import { normalizePhone } from "@/lib/outbound";
 import type { CallRow } from "@/lib/db/types";
 
 export type BolnaExtracted = {
@@ -20,7 +21,7 @@ export type BolnaWebhook = {
   id?: string;
   status?: string;
   conversation_duration?: number | string;
-  transcript?: string;
+  transcript?: string | unknown;
   summary?: string;
   extracted_data?: BolnaExtracted;
   tool_call_logs?: { name?: string; category?: string }[];
@@ -65,7 +66,36 @@ function nestedText(data: BolnaExtracted | undefined, category: string, name: st
 }
 
 export function parentIdFromPayload(payload: BolnaWebhook) {
-  return payload.context_details?.recipient_data?.parent_id;
+  const fromContext = payload.context_details?.recipient_data?.parent_id;
+  return typeof fromContext === "string" && fromContext.trim() ? fromContext.trim() : undefined;
+}
+
+function conversationSeconds(payload: BolnaWebhook) {
+  const nested = payload.telephony_data as { duration?: number | string } | undefined;
+  const raw = payload.conversation_duration ?? nested?.duration;
+  const n = Number(raw ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+async function parentIdFromPhone(payload: BolnaWebhook) {
+  const phone = payload.telephony_data?.to_number;
+  if (!phone) return undefined;
+  const want = normalizePhone(phone);
+  const tail = want.replace(/\D/g, "").slice(-10);
+  if (tail.length < 10) return undefined;
+  const rows = await query<{ id: string; phone: string }>(`select id, phone from parents`);
+  return rows.find((row) => normalizePhone(row.phone).replace(/\D/g, "").endsWith(tail))?.id;
+}
+
+async function existingCall(executionId: string, parentId?: string) {
+  const byExec = await query<CallRow>(`select * from calls where bolna_execution_id = $1 or id = $1`, [executionId]);
+  if (byExec[0]) return byExec[0];
+  if (!parentId) return undefined;
+  const open = await query<CallRow>(
+    `select * from calls where parent_id = $1 and status = 'in_progress' order by started_at desc limit 1`,
+    [parentId],
+  );
+  return open[0];
 }
 
 function extractedSummaryEn(payload: BolnaWebhook) {
@@ -88,6 +118,8 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
   if (at.endsWith("Z") || !at.includes("+05:30")) {
     throw new Error("Bolna timestamps must be IST with +05:30, never Z");
   }
+  const transcriptText = coerceBolnaTranscript(payload.transcript);
+  payload = { ...payload, transcript: transcriptText };
   await query(`insert into webhook_events values ($1,$2,$3,$4,$5,$6)`, [
     eventId,
     "bolna",
@@ -97,10 +129,9 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     false,
   ]);
 
-  const already = await query<CallRow>(
-    `select * from calls where bolna_execution_id = $1 or id = $1`,
-    [executionId],
-  );
+  const hintedParent = parentIdFromPayload(payload) ?? (await parentIdFromPhone(payload));
+  const alreadyRow = await existingCall(executionId, hintedParent);
+  const already = alreadyRow ? [alreadyRow] : [];
   const incoming = normalizeBolnaStatus(payload.status);
   let fillingWords = false;
   if (already[0]) {
@@ -130,11 +161,11 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     return { ok: true as const, ignored: true as const, reason: status || "not_completed" };
   }
 
-  const parentId = parentIdFromPayload(payload) ?? already[0]?.parent_id;
+  const parentId = hintedParent ?? already[0]?.parent_id;
   if (!parentId) return { ok: false as const, error: "missing_parent" };
 
-  const duration = Number(payload.conversation_duration ?? 0) || 0;
-  const noConvo = duration <= 0 || !transcriptHasParent(payload.transcript);
+  const duration = conversationSeconds(payload);
+  const noConvo = duration <= 0 && !transcriptHasParent(transcriptText);
   const callId = already[0]?.id ?? executionId;
   const started = already[0]?.started_at ?? at;
   const consent = await query<{ consent_status: string }>(`select consent_status from parents where id = $1`, [
@@ -283,7 +314,7 @@ async function startMissedFromWebhook(
   eventId: string,
   existing: CallRow | undefined,
 ) {
-  const parentId = parentIdFromPayload(payload) ?? existing?.parent_id;
+  const parentId = parentIdFromPayload(payload) ?? existing?.parent_id ?? (await parentIdFromPhone(payload));
   if (!parentId) return { ok: false as const, error: "missing_parent" };
   const at = nowIstStamp();
   const callId = existing?.id ?? executionId;
