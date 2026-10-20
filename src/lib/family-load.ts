@@ -24,6 +24,8 @@ export function readLang(value?: string): Lang {
   return value === "hi" ? "hi" : "en";
 }
 
+export type FamilyDesk = NonNullable<Awaited<ReturnType<typeof loadFamily>>>;
+
 export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hydrateBolna?: boolean }) {
   await connection();
   const parent = await parentByToken(token);

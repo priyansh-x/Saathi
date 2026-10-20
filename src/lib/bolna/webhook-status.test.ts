@@ -110,6 +110,34 @@ describe("Bolna status mapping", () => {
     });
   }
 
+  it("fills words when a completed call is missing the transcript", async () => {
+    const sid = `st_fill_${Date.now()}`;
+    await processBolnaWebhook(
+      examplePayload("completed", {
+        conversation_duration: 40,
+        transcript: "assistant: Namaste\nuser: Theek hoon.",
+        extracted_data: { summary_en: "She is well.", mood_quote: "Theek hoon." },
+      }),
+      sid,
+    );
+    await query(`update calls set transcript_json = null, summary_en = null, mood_quote = null where id = $1`, [sid]);
+    const again = await processBolnaWebhook(
+      examplePayload("completed", {
+        conversation_duration: 40,
+        transcript: "assistant: Namaste\nuser: Theek hoon.",
+        extracted_data: { summary_en: "She is well.", mood_quote: "Theek hoon." },
+      }),
+      sid,
+    );
+    assert.equal("replay" in again && again.replay, false);
+    const rows = await query<{ summary_en: string | null; transcript_json: string | null }>(
+      `select summary_en, transcript_json from calls where id = $1`,
+      [sid],
+    );
+    assert.equal(rows[0]?.summary_en, "She is well.");
+    assert.ok(rows[0]?.transcript_json);
+  });
+
   it("completed with conversation_duration 0 is no_conversation and starts the ladder", async () => {
     const sid = `st_zero_${Date.now()}`;
     const result = await processBolnaWebhook(

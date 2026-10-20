@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { titled } from "@/lib/page-title";
 import { BackLink, ExpiredLink, FamilyFrame, LoadingState } from "@/components/family/chrome";
+import { callNeedsBolnaHydrate, hydrateBolnaCall } from "@/lib/bolna/execution";
 import { callById, dosesOnDay } from "@/lib/db/queries";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { callBullets, callLanguageLabel, qs } from "@/lib/history";
@@ -49,7 +50,11 @@ async function CallBody({
 }) {
   const data = await loadFamily(token, { allAlerts: false, hydrateBolna: true });
   if (!data) return <ExpiredLink lang={lang} />;
-  const call = await callById(id);
+  let call = await callById(id);
+  if (call && callNeedsBolnaHydrate(call)) {
+    await hydrateBolnaCall(call);
+    call = await callById(id);
+  }
   const t = messages[lang];
   const extraQuery = { from, days };
   const backHref =
@@ -125,12 +130,10 @@ async function CallBody({
         </section>
       ) : null}
 
-      <details className="card mt-5 px-4 py-3">
+      <details className="card mt-5 px-4 py-3" open={lines.length > 0}>
         <summary className="cursor-pointer min-h-11">{t.showConversation}</summary>
         {lines.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            {data.parent.consent_status === "given" ? t.emptyCall : t.waitingTranscript}
-          </p>
+          <p className="mt-3 text-sm text-muted-foreground">{t.waitingTranscript}</p>
         ) : (
           <ol className="mt-3 space-y-2 text-sm">
             {lines.map((line, i) => (

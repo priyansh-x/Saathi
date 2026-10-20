@@ -80,9 +80,9 @@ describe("first-call consent", () => {
       `select summary_en, mood_quote, transcript_json from calls where bolna_execution_id = $1`,
       [executionId],
     );
-    assert.equal(words[0]?.summary_en, null);
-    assert.equal(words[0]?.mood_quote, null);
-    assert.equal(words[0]?.transcript_json, null);
+    assert.equal(words[0]?.summary_en, "She hesitated.");
+    assert.equal(words[0]?.mood_quote, "baad mein");
+    assert.ok(words[0]?.transcript_json);
 
     const nextMorning = new Date(`${istDayOffset(2)}T03:00:00.000Z`);
     const retry = await placeMorningCall("parent_kamla", nextMorning);
@@ -114,7 +114,7 @@ describe("first-call consent", () => {
     if (!placed.ok) assert.equal(placed.reason, "consent_later");
   });
 
-  it("does not keep summary, quote, or transcript until consent is given", async () => {
+  it("keeps the conversation on the desk unless she declined", async () => {
     await seed();
     await query(`update parents set consent_status = 'pending', consent_at = null where id = 'parent_kamla'`);
     const executionId = `pending_${Date.now()}`;
@@ -132,9 +132,9 @@ describe("first-call consent", () => {
       `select summary_en, mood_quote, transcript_json from calls where bolna_execution_id = $1`,
       [executionId],
     );
-    assert.equal(row[0]?.summary_en, null);
-    assert.equal(row[0]?.mood_quote, null);
-    assert.equal(row[0]?.transcript_json, null);
+    assert.equal(row[0]?.summary_en, "She is well.");
+    assert.equal(row[0]?.mood_quote, "theek hoon");
+    assert.ok(row[0]?.transcript_json);
   });
 
   it("backfills given from a spoken haan left pending on an old database", async () => {

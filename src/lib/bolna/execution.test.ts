@@ -8,8 +8,22 @@ describe("Bolna execution hydrate", () => {
     assert.equal(callNeedsBolnaHydrate({ status: "in_progress", ended_at: null }), true);
     assert.equal(callNeedsBolnaHydrate({ status: "failed", ended_at: null }), true);
     assert.equal(
-      callNeedsBolnaHydrate({ status: "completed", ended_at: "2026-10-20T08:00:00+05:30", duration_sec: 77 }),
+      callNeedsBolnaHydrate({
+        status: "completed",
+        ended_at: "2026-10-20T08:00:00+05:30",
+        duration_sec: 77,
+        transcript_json: "[]",
+      }),
       false,
+    );
+    assert.equal(
+      callNeedsBolnaHydrate({
+        status: "completed",
+        ended_at: "2026-10-20T08:00:00+05:30",
+        duration_sec: 77,
+        transcript_json: null,
+      }),
+      true,
     );
   });
 

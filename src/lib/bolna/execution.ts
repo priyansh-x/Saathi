@@ -29,6 +29,13 @@ export function callNeedsBolnaHydrate(call: {
   if (call.status === "in_progress" || call.status === "failed") return true;
   if (!call.ended_at) return true;
   if (call.status === "completed" && call.duration_sec == null) return true;
+  if (
+    (call.status === "completed" || call.status === "no_conversation") &&
+    !call.transcript_json &&
+    (call.duration_sec ?? 0) > 0
+  ) {
+    return true;
+  }
   return false;
 }
 

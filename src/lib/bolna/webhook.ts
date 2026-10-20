@@ -101,18 +101,23 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     [executionId],
   );
   const incoming = normalizeBolnaStatus(payload.status);
+  let fillingWords = false;
   if (already[0]) {
     const hasCompletedData =
       already[0].status === "completed" ||
       (already[0].status === "no_conversation" && Boolean(already[0].ended_at));
-    if (hasCompletedData) {
+    const missingWords = !already[0].transcript_json && Boolean(payload.transcript);
+    if (missingWords) {
+      fillingWords = true;
+    } else if (hasCompletedData) {
       return { ok: true as const, call_id: already[0].id, replay: true };
-    }
-    const reopenable = ["missed", "in_progress", "failed"].includes(already[0].status);
-    if (incoming === "completed" && reopenable && !hasCompletedData) {
-      // Fall through: a completed delivery is not a replay.
-    } else if (already[0].status !== "in_progress") {
-      return { ok: true as const, call_id: already[0].id, replay: true };
+    } else {
+      const reopenable = ["missed", "in_progress", "failed"].includes(already[0].status);
+      if (incoming === "completed" && reopenable && !hasCompletedData) {
+        // Fall through: a completed delivery is not a replay.
+      } else if (already[0].status !== "in_progress") {
+        return { ok: true as const, call_id: already[0].id, replay: true };
+      }
     }
   }
 
@@ -134,7 +139,7 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
   const consent = await query<{ consent_status: string }>(`select consent_status from parents where id = $1`, [
     parentId,
   ]);
-  const keepWords = consent[0]?.consent_status === "given";
+  const keepWords = consent[0]?.consent_status !== "declined";
   const summaryEn = keepWords
     ? noConvo
       ? "No conversation."
@@ -183,7 +188,13 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
   }
 
   if (noConvo) {
+    if (fillingWords) {
+      await persistCallCost(callId, payload);
+      await query(`update webhook_events set processed = true where id = $1`, [eventId]);
+      return { ok: true as const, call_id: callId, status: "no_conversation" as const, replay: false };
+    }
     const ladder = await advanceLadder({ parentId, callId, elapsedMin: 0, attemptResult: "no_conversation" });
+    await persistCallCost(callId, payload);
     await query(`update webhook_events set processed = true where id = $1`, [eventId]);
     return { ok: true as const, call_id: callId, status: "no_conversation" as const, missed: true as const, ladder };
   }
@@ -226,12 +237,14 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     ]);
   }
 
-  const { sendDailyBriefing } = await import("@/lib/whatsapp/notify");
-  await sendDailyBriefing(parentId, {
-    id: callId,
-    mood_quote: quote,
-    status: noConvo ? "no_conversation" : "completed",
-  });
+  if (!fillingWords) {
+    const { sendDailyBriefing } = await import("@/lib/whatsapp/notify");
+    await sendDailyBriefing(parentId, {
+      id: callId,
+      mood_quote: quote,
+      status: noConvo ? "no_conversation" : "completed",
+    });
+  }
 
   await persistCallCost(callId, payload);
   await query(`update webhook_events set processed = true where id = $1`, [eventId]);

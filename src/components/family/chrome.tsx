@@ -8,7 +8,7 @@ import { qs } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { categoryWords, humanQuote } from "@/lib/today";
 import { formatFriendlyTime, formatHeaderDate, formatUpdated } from "@/lib/time";
-import { DeskSwipe } from "@/components/family/desk-swipe";
+import type { DeskTab } from "@/lib/desk-tabs";
 
 export function ExamplePill({ lang }: { lang: Lang }) {
   return (
@@ -136,18 +136,22 @@ export function TabBar({
   lang,
   active,
   openAlerts = 0,
+  extraQuery,
+  onTab,
 }: {
   token: string;
   lang: Lang;
   active: string;
   openAlerts?: number;
+  extraQuery?: Record<string, string | undefined>;
+  onTab?: (tab: DeskTab) => void;
 }) {
   const t = messages[lang];
   const items = [
-    { href: `/d/${token}`, key: "today", label: t.today, icon: IconFamily },
-    { href: `/d/${token}/history`, key: "history", label: t.history, icon: IconHistory },
-    { href: `/d/${token}/alerts`, key: "alerts", label: t.alerts, icon: IconAlert },
-    { href: `/d/${token}/settings`, key: "settings", label: t.settings, icon: IconSettings },
+    { href: `/d/${token}`, key: "today" as const, label: t.today, icon: IconFamily },
+    { href: `/d/${token}/history`, key: "history" as const, label: t.history, icon: IconHistory },
+    { href: `/d/${token}/alerts`, key: "alerts" as const, label: t.alerts, icon: IconAlert },
+    { href: `/d/${token}/settings`, key: "settings" as const, label: t.settings, icon: IconSettings },
   ];
   return (
     <nav
@@ -158,12 +162,18 @@ export function TabBar({
         {items.map((item) => {
           const Icon = item.icon;
           const on = active === item.key;
+          const href = `${item.href}${qs({ lang, ...(item.key === "history" ? extraQuery : {}) })}`;
           return (
             <li key={item.key}>
               <Link
-                href={`${item.href}${qs({ lang })}`}
+                href={href}
                 prefetch
                 aria-current={on ? "page" : undefined}
+                onClick={(event) => {
+                  if (!onTab) return;
+                  event.preventDefault();
+                  onTab(item.key);
+                }}
                 className={`flex h-16 min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[11px] leading-tight sm:text-[12px] ${
                   on ? "font-semibold text-foreground" : "text-ink-3"
                 }`}
@@ -245,7 +255,7 @@ export function FamilyFrame({
   addressTerm?: string | null;
 }) {
   return (
-    <DeskSwipe token={token} lang={lang} active={active} extraQuery={extraQuery}>
+    <div className="app-shell">
       <TopBar
         lang={lang}
         example={example}
@@ -255,8 +265,8 @@ export function FamilyFrame({
       />
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
       <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>
-      <TabBar token={token} lang={lang} active={active} openAlerts={alerts.length} />
-    </DeskSwipe>
+      <TabBar token={token} lang={lang} active={active} openAlerts={alerts.length} extraQuery={extraQuery} />
+    </div>
   );
 }
 

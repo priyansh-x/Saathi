@@ -113,6 +113,31 @@
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
   }
+  .desk-pager {
+    position: relative;
+    min-height: 0;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+  .desk-pager-track {
+    display: flex;
+    height: 100%;
+    width: 400%;
+    will-change: transform;
+  }
+  .desk-page {
+    width: 25%;
+    height: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    padding: 0.25rem 1rem 1.5rem;
+  }
   .font-devanagari {
     font-family: var(--font-devanagari), var(--font-sans), sans-serif;
     line-height: 1.6;
