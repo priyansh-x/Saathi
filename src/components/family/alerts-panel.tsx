@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { EmptyState, PageTitle } from "@/components/family/chrome";
 import { alertQuoteLine, alertTitle, severityChip, sortAlerts, statusPill } from "@/lib/alerts";
-import type { FamilyDesk } from "@/lib/family-load";
+import { alertsFor } from "@/lib/db/queries";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { formatFriendlyTime } from "@/lib/time";
 
-export function AlertsPanel({ token, lang, data }: { token: string; lang: Lang; data: FamilyDesk }) {
+export async function AlertsPanel({ token, lang, parentId }: { token: string; lang: Lang; parentId: string }) {
   const t = messages[lang];
-  const list = sortAlerts(data.allAlerts);
+  const list = sortAlerts(await alertsFor(parentId));
 
   return (
     <>

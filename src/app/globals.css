@@ -138,6 +138,10 @@
     touch-action: pan-y;
     padding: 0.25rem 1rem 1.5rem;
   }
+  .desk-page a,
+  .desk-page button {
+    touch-action: manipulation;
+  }
   .font-devanagari {
     font-family: var(--font-devanagari), var(--font-sans), sans-serif;
     line-height: 1.6;

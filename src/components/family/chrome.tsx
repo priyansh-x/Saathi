@@ -167,7 +167,7 @@ export function TabBar({
             <li key={item.key}>
               <Link
                 href={href}
-                prefetch
+                prefetch={!onTab}
                 aria-current={on ? "page" : undefined}
                 onClick={(event) => {
                   if (!onTab) return;
@@ -283,6 +283,16 @@ export function ExpiredLink({ lang = "en" }: { lang?: Lang }) {
         Saathi
       </Link>
     </main>
+  );
+}
+
+export function PaneBusy() {
+  return (
+    <div className="pt-4" aria-busy>
+      <div className="h-8 w-32 animate-pulse rounded-full bg-muted" />
+      <div className="mt-4 h-40 animate-pulse rounded-[22px] bg-card" />
+      <div className="mt-3 h-24 animate-pulse rounded-[22px] bg-card" />
+    </div>
   );
 }
 

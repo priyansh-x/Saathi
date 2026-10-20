@@ -110,7 +110,7 @@ async function openPool() {
   const pool = new Pool({
     connectionString: url,
     ssl,
-    max: 1,
+    max: 4,
     idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 8_000,
   });

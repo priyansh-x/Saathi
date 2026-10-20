@@ -18,6 +18,11 @@ function fromField(target: EventTarget | null) {
   return Boolean(el?.closest("input, textarea, select"));
 }
 
+function isControl(target: EventTarget | null) {
+  const el = target as HTMLElement | null;
+  return Boolean(el?.closest("a, button, [role=button], label"));
+}
+
 export function DeskPager({
   token,
   lang,
@@ -51,10 +56,17 @@ export function DeskPager({
   const [dragging, setDragging] = useState(false);
   const [width, setWidth] = useState(320);
   const pager = useRef<HTMLDivElement>(null);
-  const start = useRef<{ x: number; y: number; axis: "x" | "y" | null; pointerId: number | null } | null>(null);
+  const start = useRef<{
+    x: number;
+    y: number;
+    axis: "x" | "y" | null;
+    pointerId: number | null;
+    control: boolean;
+  } | null>(null);
   const indexRef = useRef(index);
   const dragRef = useRef(0);
   const extraRef = useRef(extraQuery);
+  const suppressClick = useRef(false);
   extraRef.current = extraQuery;
   indexRef.current = index;
   dragRef.current = drag;
@@ -92,20 +104,30 @@ export function DeskPager({
 
     const widthOf = () => el.clientWidth || 320;
 
-    const begin = (x: number, y: number, pointerId: number | null) => {
-      start.current = { x, y, axis: null, pointerId };
-      setDragging(true);
+    const begin = (x: number, y: number, pointerId: number | null, target: EventTarget | null) => {
+      start.current = { x, y, axis: null, pointerId, control: isControl(target) };
     };
 
-    const move = (x: number, y: number, event: Event) => {
+    const move = (x: number, y: number, event: Event, pointerId?: number) => {
       const origin = start.current;
       if (!origin) return;
       const dx = x - origin.x;
       const dy = y - origin.y;
       if (!origin.axis) {
-        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        const slop = origin.control ? 28 : 12;
+        if (Math.abs(dx) < slop && Math.abs(dy) < slop) return;
         origin.axis = Math.abs(dx) > Math.abs(dy) * 1.05 ? "x" : "y";
         start.current = origin;
+        if (origin.axis === "x") {
+          setDragging(true);
+          if (pointerId != null) {
+            try {
+              el.setPointerCapture(pointerId);
+            } catch {
+              /* ignore */
+            }
+          }
+        }
       }
       if (origin.axis !== "x") return;
       if (event.cancelable) event.preventDefault();
@@ -127,6 +149,7 @@ export function DeskPager({
         dragRef.current = 0;
         return;
       }
+      suppressClick.current = true;
       const width = widthOf();
       const dx = dragRef.current;
       if (dx < -width * 0.18) go(indexRef.current + 1);
@@ -141,7 +164,7 @@ export function DeskPager({
       if (fromField(event.target)) return;
       const touch = event.changedTouches[0];
       if (!touch) return;
-      begin(touch.clientX, touch.clientY, null);
+      begin(touch.clientX, touch.clientY, null, event.target);
     };
     const onTouchMove = (event: TouchEvent) => {
       const touch = event.changedTouches[0];
@@ -152,16 +175,17 @@ export function DeskPager({
       if (event.pointerType === "touch") return;
       if (event.pointerType === "mouse" && event.button !== 0) return;
       if (fromField(event.target)) return;
-      begin(event.clientX, event.clientY, event.pointerId);
-      try {
-        el.setPointerCapture(event.pointerId);
-      } catch {
-        /* ignore */
-      }
+      begin(event.clientX, event.clientY, event.pointerId, event.target);
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!start.current) return;
-      move(event.clientX, event.clientY, event);
+      move(event.clientX, event.clientY, event, event.pointerId);
+    };
+    const onClickCapture = (event: Event) => {
+      if (!suppressClick.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClick.current = false;
     };
 
     el.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -172,6 +196,7 @@ export function DeskPager({
     el.addEventListener("pointermove", onPointerMove);
     el.addEventListener("pointerup", end);
     el.addEventListener("pointercancel", end);
+    el.addEventListener("click", onClickCapture, true);
     return () => {
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
@@ -181,6 +206,7 @@ export function DeskPager({
       el.removeEventListener("pointermove", onPointerMove);
       el.removeEventListener("pointerup", end);
       el.removeEventListener("pointercancel", end);
+      el.removeEventListener("click", onClickCapture, true);
     };
   }, [go]);
 

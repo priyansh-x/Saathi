@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import { AlertsPanel } from "@/components/family/alerts-panel";
-import { ExpiredLink } from "@/components/family/chrome";
+import { ExpiredLink, PaneBusy } from "@/components/family/chrome";
 import { DeskPager } from "@/components/family/desk-pager";
 import { HistoryPanel } from "@/components/family/history-panel";
 import { SettingsPanel } from "@/components/family/settings-panel";
@@ -23,7 +24,7 @@ export async function DeskScreen({
   days?: 7 | 30;
   confirm?: string;
 }) {
-  const data = await loadFamily(token, { allAlerts: true, hydrateBolna: true });
+  const data = await loadFamily(token, { allAlerts: false, hydrateBolna: false });
   if (!data) return <ExpiredLink lang={lang} />;
   const alert = data.actAlerts[0] ?? null;
   const updatedAt = alert?.created_at || data.call?.ended_at || data.call?.started_at;
@@ -39,9 +40,21 @@ export async function DeskScreen({
       updatedAt={updatedAt}
       extraQuery={days === 7 ? { days: "7" } : undefined}
       today={<TodayPanel token={token} lang={lang} data={data} callParam={callParam} />}
-      history={<HistoryPanel token={token} lang={lang} data={data} days={days} />}
-      alertsPage={<AlertsPanel token={token} lang={lang} data={data} />}
-      settings={<SettingsPanel token={token} lang={lang} data={data} confirm={confirm} />}
+      history={
+        <Suspense fallback={<PaneBusy />}>
+          <HistoryPanel token={token} lang={lang} data={data} days={days} />
+        </Suspense>
+      }
+      alertsPage={
+        <Suspense fallback={<PaneBusy />}>
+          <AlertsPanel token={token} lang={lang} parentId={data.parent.id} />
+        </Suspense>
+      }
+      settings={
+        <Suspense fallback={<PaneBusy />}>
+          <SettingsPanel token={token} lang={lang} data={data} confirm={confirm} />
+        </Suspense>
+      }
     />
   );
 }

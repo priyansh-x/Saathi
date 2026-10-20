@@ -120,19 +120,20 @@ export async function callById(id: string) {
   return rows[0] ?? null;
 }
 
+export async function callsSince(parentId: string, day: string) {
+  const { start } = istDayBounds(day);
+  return query<CallRow>(
+    `select * from calls where parent_id = $1 and started_at >= $2 order by started_at desc`,
+    [parentId, start],
+  );
+}
+
 export async function historyDays(parentId: string, days: number) {
-  const rows = await query<CallRow>(
-    `select * from calls where parent_id = $1 order by started_at desc limit $2`,
-    [parentId, days],
-  );
-  const doses = await query<DoseLog>(
-    `select * from dose_logs where parent_id = $1 order by schedule_date desc`,
-    [parentId],
-  );
-  const alerts = await query<AlertRow>(
-    `select * from alerts where parent_id = $1 order by created_at desc`,
-    [parentId],
-  );
+  const [rows, doses, alerts] = await Promise.all([
+    query<CallRow>(`select * from calls where parent_id = $1 order by started_at desc limit $2`, [parentId, days]),
+    query<DoseLog>(`select * from dose_logs where parent_id = $1 order by schedule_date desc`, [parentId]),
+    query<AlertRow>(`select * from alerts where parent_id = $1 order by created_at desc`, [parentId]),
+  ]);
   return { calls: rows, doses, alerts };
 }
 

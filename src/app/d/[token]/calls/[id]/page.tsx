@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { titled } from "@/lib/page-title";
 import { BackLink, ExpiredLink, FamilyFrame, LoadingState } from "@/components/family/chrome";
 import { callNeedsBolnaHydrate, hydrateBolnaCall } from "@/lib/bolna/execution";
-import { callById, dosesOnDay } from "@/lib/db/queries";
-import { loadFamily, readLang } from "@/lib/family-load";
+import { callById, dosesOnDay, openActAlerts, parentByToken } from "@/lib/db/queries";
+import { readLang } from "@/lib/family-load";
 import { callBullets, callLanguageLabel, qs } from "@/lib/history";
 import { messages } from "@/lib/i18n/messages";
 import { formatCallHeader } from "@/lib/time";
@@ -48,9 +48,9 @@ async function CallBody({
   from?: string;
   days?: string;
 }) {
-  const data = await loadFamily(token, { allAlerts: false, hydrateBolna: true });
-  if (!data) return <ExpiredLink lang={lang} />;
-  let call = await callById(id);
+  const parent = await parentByToken(token);
+  if (!parent) return <ExpiredLink lang={lang} />;
+  let [call, actAlerts] = await Promise.all([callById(id), openActAlerts(parent.id)]);
   if (call && callNeedsBolnaHydrate(call)) {
     await hydrateBolnaCall(call);
     call = await callById(id);
@@ -58,35 +58,33 @@ async function CallBody({
   const t = messages[lang];
   const extraQuery = { from, days };
   const backHref =
-    from === "today"
-      ? `/d/${token}${qs({ lang })}`
-      : `/d/${token}/history${qs({ lang, days })}`;
+    from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/history${qs({ lang, days })}`;
   const backLabel = from === "today" ? t.backToday : t.backHistory;
 
   if (!call) {
     return (
-      <FamilyFrame token={token} lang={lang} example={data.parent.is_example} alerts={data.actAlerts} active="history" extraQuery={extraQuery} addressTerm={data.parent.address_term}>
+      <FamilyFrame token={token} lang={lang} example={parent.is_example} alerts={actAlerts} active="history" extraQuery={extraQuery} addressTerm={parent.address_term}>
         <BackLink href={backHref}>{backLabel}</BackLink>
         <p className="mt-4">{t.emptyCall}</p>
       </FamilyFrame>
     );
   }
   const day = call.started_at.slice(0, 10);
-  const doses = await dosesOnDay(data.parent.id, day);
+  const doses = await dosesOnDay(parent.id, day);
   const lines = call.transcript_json ? (JSON.parse(call.transcript_json) as { speaker: string; hi: string; en: string }[]) : [];
-  const spoken = call.mood_quote_lang || data.parent.languages.split(",")[0];
+  const spoken = call.mood_quote_lang || parent.languages.split(",")[0];
   const bullets = callBullets(lang === "hi" ? call.summary_hi : call.summary_en);
 
   return (
     <FamilyFrame
       token={token}
       lang={lang}
-      example={data.parent.is_example}
-      alerts={data.actAlerts}
+      example={parent.is_example}
+      alerts={actAlerts}
       active="history"
       extraQuery={extraQuery}
       updatedAt={call.ended_at || call.started_at}
-      addressTerm={data.parent.address_term}
+      addressTerm={parent.address_term}
     >
       <BackLink href={backHref}>{backLabel}</BackLink>
       <p className="mt-3 tabular text-sm text-muted-foreground">
@@ -146,7 +144,7 @@ async function CallBody({
         )}
       </details>
       <p className="mt-4 text-sm text-muted-foreground">
-        {data.parent.recording_consent ? t.audioConsentOn : t.audioConsentOff}
+        {parent.recording_consent ? t.audioConsentOn : t.audioConsentOff}
       </p>
     </FamilyFrame>
   );

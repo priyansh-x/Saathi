@@ -9,9 +9,19 @@ export async function fetchBolnaExecution(
 ): Promise<BolnaExecution | null> {
   const key = (process.env.BOLNA_API_KEY || "").trim();
   if (!key || isMockBolna()) return null;
-  const res = await fetchImpl(`${bolnaBaseUrl()}/executions/${encodeURIComponent(executionId)}`, {
-    headers: { Authorization: `Bearer ${key}` },
-  });
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 2000);
+  let res: Response;
+  try {
+    res = await fetchImpl(`${bolnaBaseUrl()}/executions/${encodeURIComponent(executionId)}`, {
+      headers: { Authorization: `Bearer ${key}` },
+      signal: ctrl.signal,
+    });
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
   if (!res.ok) return null;
   try {
     return (await res.json()) as BolnaExecution;

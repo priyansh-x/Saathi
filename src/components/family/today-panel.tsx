@@ -24,7 +24,6 @@ import { resolveAlert, setPaused } from "@/lib/db/queries";
 import type { DoseLog } from "@/lib/db/types";
 import type { FamilyDesk } from "@/lib/family-load";
 import { greeting, messages, personal, pickLocale, type Lang } from "@/lib/i18n/messages";
-import { neighbourOptedIn } from "@/lib/neighbour";
 import { heroCopy, humanQuote, reachSteps, ringCopy, slotLabel, statusTone, type DayState } from "@/lib/today";
 import { weekdayShort } from "@/lib/time";
 import { weeklyDeskCopy } from "@/lib/weekly";
@@ -67,7 +66,7 @@ function DosePill({ status, lang }: { status: DoseLog["status"]; lang: Lang }) {
   return <span className="pill bg-sunk text-ink-3">{t.notAsked}</span>;
 }
 
-export async function TodayPanel({
+export function TodayPanel({
   token,
   lang,
   data,
@@ -109,7 +108,7 @@ export async function TodayPanel({
   const childName = data.child?.first_name || "family";
   const firstRun = state === "scheduled" && !data.call && weekDays.length === 0;
   const neighbourName = data.neighbour?.first_name;
-  const neighbourReady = data.neighbour ? await neighbourOptedIn(data.parent.id) : true;
+  const neighbourReady = data.neighbour ? data.neighbourReady : true;
 
   async function resume() {
     "use server";

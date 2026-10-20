@@ -17,7 +17,7 @@ describe("performance", () => {
   it("sizes next/image on the desk avatar and neighbour thumb", () => {
     const chrome = read("src/components/family/chrome.tsx");
     assert.match(chrome, /sizes=\{`\$\{size\}px`\}/);
-    const settings = read("src/app/d/[token]/settings/page.tsx");
+    const settings = read("src/components/family/settings-panel.tsx");
     assert.match(settings, /sizes="72px"/);
   });
 
