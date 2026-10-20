@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand";
+import { AddToHome } from "@/components/pwa/register";
 import { Input } from "@/components/ui/input";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { saveDeskToken } from "@/lib/storage";
@@ -132,6 +133,8 @@ export function SignInForm({ lang }: { lang: Lang }) {
         >
           {saving ? t.opening : sent ? t.setupContinue : t.signInCta}
         </button>
+
+        <AddToHome lang={lang} />
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {t.signInNoDesk}{" "}

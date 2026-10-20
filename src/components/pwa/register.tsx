@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Share, SquarePlus } from "lucide-react";
+import { isInAppBrowser, isIosLike } from "@/lib/pwa-install";
 import type { Lang } from "@/lib/i18n/messages";
 import { messages } from "@/lib/i18n/messages";
 
@@ -14,39 +16,79 @@ function isStandalone() {
 
 export function AddToHome({ lang }: { lang: Lang }) {
   const t = messages[lang];
+  const [mode, setMode] = useState<"hidden" | "native" | "ios" | "inapp" | "hint">("hidden");
   const [promptEvent, setPromptEvent] = useState<{ prompt: () => Promise<void> } | null>(null);
-  const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
     if (isStandalone()) {
-      setHidden(true);
+      setMode("hidden");
       return;
     }
+    const ua = navigator.userAgent;
+    if (isInAppBrowser(ua)) setMode("inapp");
+    else if (isIosLike(ua, navigator.maxTouchPoints)) setMode("ios");
+    else setMode("hint");
+
     const onPrompt = (event: Event) => {
       event.preventDefault();
       const ce = event as Event & { prompt: () => Promise<void> };
       setPromptEvent({ prompt: () => ce.prompt() });
-      setHidden(false);
+      setMode("native");
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
     return () => window.removeEventListener("beforeinstallprompt", onPrompt);
   }, []);
 
-  if (hidden || !promptEvent) return null;
+  if (mode === "hidden") return null;
+
+  if (mode === "native" && promptEvent) {
+    return (
+      <div className="card mt-4 space-y-2 px-4 py-4">
+        <p className="font-semibold">{t.addToHome}</p>
+        <p className="text-sm text-muted-foreground">{t.addToHomeNativeHint}</p>
+        <button type="button" className="btn-primary" onClick={() => void promptEvent.prompt()}>
+          {t.addToHome}
+        </button>
+      </div>
+    );
+  }
+
+  if (mode === "inapp") {
+    return (
+      <div className="card mt-4 space-y-2 px-4 py-4">
+        <p className="font-semibold">{t.addToHome}</p>
+        <p className="text-sm text-muted-foreground">{t.addToHomeOpenSafari}</p>
+      </div>
+    );
+  }
+
+  if (mode === "ios") {
+    return (
+      <div className="card mt-4 space-y-3 px-4 py-4">
+        <p className="font-semibold">{t.addToHome}</p>
+        <p className="text-sm text-muted-foreground">{t.addToHomeIosIntro}</p>
+        <ol className="space-y-2 text-sm">
+          <li className="flex gap-3">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-deep">
+              <Share className="size-4" aria-hidden />
+            </span>
+            <span className="pt-1">{t.addToHomeIosShare}</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-deep">
+              <SquarePlus className="size-4" aria-hidden />
+            </span>
+            <span className="pt-1">{t.addToHomeIosAdd}</span>
+          </li>
+        </ol>
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-4 space-y-2">
-      <button
-        type="button"
-        className="btn-secondary"
-        onClick={() => {
-          void promptEvent.prompt();
-        }}
-      >
-        {t.addToHome}
-      </button>
-      <button type="button" className="btn-quiet w-full text-muted-foreground" onClick={() => setHidden(true)}>
-        {t.cancel}
-      </button>
+    <div className="card mt-4 space-y-2 px-4 py-4">
+      <p className="font-semibold">{t.addToHome}</p>
+      <p className="text-sm text-muted-foreground">{t.addToHomeHint}</p>
     </div>
   );
 }

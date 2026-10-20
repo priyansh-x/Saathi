@@ -27,6 +27,7 @@ import { greeting, messages, personal, pickLocale, type Lang } from "@/lib/i18n/
 import { heroCopy, humanQuote, reachSteps, ringCopy, slotLabel, statusTone, type DayState } from "@/lib/today";
 import { weekdayShort } from "@/lib/time";
 import { weeklyDeskCopy } from "@/lib/weekly";
+import { AddToHome } from "@/components/pwa/register";
 
 const HERO_TONE = {
   good: "bg-good-soft text-good",
@@ -410,6 +411,7 @@ export function TodayPanel({
         </Link>
       </section>
 
+      <AddToHome lang={lang} />
       <p className="mt-8 px-2 text-center text-[12px] leading-5 text-ink-3">{t.aboutBody}</p>
     </>
   );
