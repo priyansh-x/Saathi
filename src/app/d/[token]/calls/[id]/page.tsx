@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { LiveRefresh } from "@/components/family/live-refresh";
+import { deskLiveStamp } from "@/lib/desk-live";
 import { titled } from "@/lib/page-title";
 import { callById, dosesOnDay, parentByToken } from "@/lib/db/queries";
 import { readLang } from "@/lib/family-load";
@@ -19,9 +21,18 @@ export async function generateMetadata({
   return titled("Call · Saathi", "कॉल · साथी", (await searchParams).lang);
 }
 
-function CallShell({ children }: { children: React.ReactNode }) {
+function CallShell({
+  token,
+  stamp,
+  children,
+}: {
+  token?: string;
+  stamp?: string;
+  children: React.ReactNode;
+}) {
   return (
     <main className="app-shell">
+      {token && stamp ? <LiveRefresh token={token} stamp={stamp} /> : null}
       <div className="app-shell-scroll px-4 pt-3 pb-8">{children}</div>
     </main>
   );
@@ -96,7 +107,15 @@ export default async function CallDetailPage({
     const cost = call.total_cost != null ? String(call.total_cost) : "";
 
     return (
-      <CallShell>
+      <CallShell
+        token={token}
+        stamp={deskLiveStamp({
+          callId: call.id,
+          status: call.status,
+          endedAt: call.ended_at,
+          hasWords: lines.length > 0,
+        })}
+      >
         <BackTo href={backHref} label={backLabel} />
         <p className="mt-3 tabular text-sm text-muted-foreground">
           {formatCallHeader(started, Number(call.duration_sec) || null, callLanguageLabel(lang, spoken), lang)}

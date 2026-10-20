@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ActBanner, TabBar, TopBar } from "@/components/family/chrome";
+import { LiveRefresh } from "@/components/family/live-refresh";
 import { applyDeskUi } from "@/lib/desk-ui";
 import { DESK_TABS, type DeskTab } from "@/lib/desk-tabs";
 import { qs } from "@/lib/history";
@@ -34,6 +35,7 @@ export function DeskPager({
   parentName,
   updatedAt,
   extraQuery,
+  liveStamp,
   today,
   history,
   alertsPage,
@@ -48,6 +50,7 @@ export function DeskPager({
   parentName?: string | null;
   updatedAt?: string | null;
   extraQuery?: Record<string, string | undefined>;
+  liveStamp?: string;
   today: ReactNode;
   history: ReactNode;
   alertsPage: ReactNode;
@@ -228,6 +231,7 @@ export function DeskPager({
 
   return (
     <div className="app-shell">
+      {liveStamp ? <LiveRefresh token={token} stamp={liveStamp} /> : null}
       <TopBar token={token} lang={lang} example={example} updatedAt={updatedAt} extraQuery={extraQuery} parentName={parentName || addressTerm || undefined} />
       {tab !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
       <div ref={pager} className="desk-pager">

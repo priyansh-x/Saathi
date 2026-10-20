@@ -233,7 +233,7 @@ export async function SettingsPanel({
         <h2 className="font-semibold">{t.aboutSection}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{t.aboutBody}</p>
         <AddToHome lang={lang} />
-        <SignOutButton label={t.signOut} />
+        <SignOutButton label={t.signOut} lang={lang} />
       </section>
     </>
   );

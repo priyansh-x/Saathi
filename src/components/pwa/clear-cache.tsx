@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { clearSaathiCache } from "@/components/pwa/cache";
+import { clearDeskToken } from "@/lib/storage";
 
 export function CachedAction({
   action,
@@ -26,19 +26,18 @@ export function CachedAction({
   );
 }
 
-export function SignOutButton({ label }: { label: string }) {
-  const router = useRouter();
+export function SignOutButton({ label, lang = "en" }: { label: string; lang?: "en" | "hi" }) {
   return (
     <button
       type="button"
       className="btn-quiet w-full text-muted-foreground"
       onClick={async () => {
+        clearDeskToken();
         try {
-          await fetch("/api/auth/sign-out", { method: "POST" });
+          await fetch("/api/auth/sign-out", { method: "POST", credentials: "include" });
         } finally {
           await clearSaathiCache();
-          router.push("/");
-          router.refresh();
+          window.location.href = `/signin?lang=${lang}`;
         }
       }}
     >

@@ -36,6 +36,11 @@ export function saveDeskToken(token: string) {
   window.localStorage.setItem(STORAGE_DESK_TOKEN, token);
 }
 
+export function clearDeskToken() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_DESK_TOKEN);
+}
+
 export function loadLastCall(): CallRecord | null {
   return readJson<CallRecord>(STORAGE_LAST_CALL);
 }

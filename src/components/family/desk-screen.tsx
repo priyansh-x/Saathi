@@ -7,6 +7,7 @@ import { SettingsPanel } from "@/components/family/settings-panel";
 import { TodayPanel } from "@/components/family/today-panel";
 import type { DeskTab } from "@/lib/desk-tabs";
 import { clientSafe } from "@/lib/client-safe";
+import { deskLiveStamp } from "@/lib/desk-live";
 import { loadFamily } from "@/lib/family-load";
 import type { Lang } from "@/lib/i18n/messages";
 import { toIsoString } from "@/lib/time";
@@ -41,6 +42,13 @@ export async function DeskScreen({
       addressTerm={data.parent.address_term}
       parentName={data.parent.first_name || data.parent.full_name}
       updatedAt={updatedAt}
+      liveStamp={deskLiveStamp({
+        callId: data.call?.id,
+        status: data.call?.status,
+        endedAt: data.call?.ended_at,
+        alertId: data.actAlerts[0]?.id,
+        hasWords: Boolean(data.call?.transcript_json),
+      })}
       extraQuery={days === 7 ? { days: "7" } : undefined}
       today={<TodayPanel token={token} lang={lang} data={data} callParam={callParam} />}
       history={

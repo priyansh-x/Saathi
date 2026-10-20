@@ -94,6 +94,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             {hi ? "माँ के लिए कॉल सेट करें" : "Set up a call for Maa"}
             <ArrowRight className="size-[18px]" aria-hidden />
           </Link>
+          <Link href={`/signin?lang=${lang}`} className="btn-secondary">
+            {hi ? "साइन इन — परिवार डेस्क" : "Sign in to your family desk"}
+          </Link>
           <Link href={`/d/example-kamla?lang=${lang}`} className="btn-secondary">
             {hi ? "उदाहरण परिवार देखें" : "See an example family"}
           </Link>
