@@ -1,10 +1,13 @@
 import { EXAMPLE_TOKEN } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { latchOpsKillSwitch } from "@/lib/ops/flags";
-import { istDayOffset, istStamp, istStampFromOffset } from "@/lib/time";
+import { istDayOffset, istStamp, istStampFromOffset, nowIstStamp } from "@/lib/time";
 import { buildWeeklyNote } from "@/lib/weekly";
 
 export { EXAMPLE_TOKEN };
+
+/** Bump when EXAMPLE days must rebuild on hosted Kamla (stale “trying to reach” windows). */
+export const EXAMPLE_SEED_REV = "2026-10-20-test-chest";
 
 export async function ensureSeed() {
   const example = await query<{ id: string }>("select id from parents where id = 'parent_kamla'");
@@ -12,6 +15,8 @@ export async function ensureSeed() {
     const others = await query<{ n: number }>("select count(*)::int as n from parents");
     if ((others[0]?.n ?? 0) === 0) await seed();
     else await insertExampleHousehold();
+  } else {
+    await refreshExampleHistoryIfStale();
   }
   await query(
     `update parents
@@ -160,13 +165,50 @@ export async function insertExampleHousehold() {
     true,
   ]);
 
+  await seedExampleHistory();
+  await stampExampleRev();
+}
+
+async function exampleRev() {
+  const rows = await query<{ value: string }>(`select value from ops_flags where key = 'example_seed_rev'`);
+  return rows[0]?.value ?? "";
+}
+
+async function stampExampleRev() {
+  const at = nowIstStamp();
+  await query(
+    `insert into ops_flags values ('example_seed_rev', $1, $2, 'system')
+     on conflict (key) do update set value = excluded.value, updated_at = excluded.updated_at, updated_by = excluded.updated_by`,
+    [EXAMPLE_SEED_REV, at],
+  );
+}
+
+async function wipeExampleHistory() {
+  await query(`delete from alert_events where alert_id in (select id from alerts where parent_id = 'parent_kamla')`);
+  await query(`delete from alerts where parent_id = 'parent_kamla'`);
+  await query(`delete from dose_logs where parent_id = 'parent_kamla'`);
+  await query(`delete from call_attempts where call_id in (select id from calls where parent_id = 'parent_kamla')`);
+  await query(`delete from memory_notes where parent_id = 'parent_kamla'`);
+  await query(`delete from outbound_messages where parent_id = 'parent_kamla'`);
+  await query(`delete from webhook_events where execution_id in (select id from calls where parent_id = 'parent_kamla')`);
+  await query(`delete from calls where parent_id = 'parent_kamla'`);
+}
+
+async function refreshExampleHistoryIfStale() {
+  if ((await exampleRev()) === EXAMPLE_SEED_REV) return;
+  await wipeExampleHistory();
+  await seedExampleHistory();
+  await stampExampleRev();
+}
+
+async function seedExampleHistory() {
   for (let i = 0; i < 30; i += 1) {
     const day = istDayOffset(i - 29);
     const slot = i % 7;
     const isToday = i === 29;
     const callId = `call_${day}`;
 
-    if (slot === 3 || slot === 6) {
+    if (!isToday && (slot === 3 || slot === 6)) {
       await seedMissedDay(day, callId, slot === 6, i);
       continue;
     }
@@ -179,6 +221,8 @@ export async function insertExampleHousehold() {
       alertDay: alertDay || isToday,
       openAlert: isToday,
       variant: isToday ? "chest" : variant,
+      hour: isToday ? 17 : 8,
+      minute: isToday ? 8 : 30,
     });
   }
 
@@ -299,12 +343,16 @@ async function seedCompletedDay(
     alertDay: boolean;
     openAlert: boolean;
     variant?: "ok" | "chest" | "fall" | "false" | "missed_med";
+    hour?: number;
+    minute?: number;
   },
 ) {
   const variant = opts.variant ?? (opts.alertDay ? "chest" : opts.skipped ? "ok" : "ok");
+  const hour = opts.hour ?? 8;
+  const minute = opts.minute ?? 30;
   const quote =
     variant === "chest"
-      ? "Seene mein dard ho raha hai."
+      ? "I have chest pain. Seene mein dard ho raha hai."
       : variant === "fall"
         ? "Bathroom mein phisal gayi."
         : opts.skipped || variant === "missed_med"
@@ -318,7 +366,7 @@ async function seedCompletedDay(
         : opts.skipped || variant === "missed_med"
           ? "Kamla forgot the morning tablet and said she would take it now."
           : variant === "chest"
-            ? "Kamla said she has pain in her chest."
+            ? "Settings test call. Kamla said she has chest pain."
             : "Kamla slept well and took Amlodipine.";
   const summaryHi =
     variant === "fall"
@@ -329,21 +377,32 @@ async function seedCompletedDay(
           ? "सीने में दर्द बताया।"
           : "नींद ठीक थी, गोली ले ली।";
 
+  const started = istStamp(day, hour, minute);
+  const ended = istStampFromOffset(day, hour, minute, 4);
   await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
     callId,
     "parent_kamla",
-    istStamp(day, 8, 30),
-    istStamp(day, 8, 34),
-    210,
+    started,
+    ended,
+    variant === "chest" ? 248 : 210,
     "completed",
     summaryEn,
     summaryHi,
     quote,
     "hi",
-    JSON.stringify([
-      { speaker: "agent", hi: "नमस्ते कमला जी।", en: "Namaste Kamla ji." },
-      { speaker: "parent", hi: quote, en: quote },
-    ]),
+    JSON.stringify(
+      variant === "chest"
+        ? [
+            { speaker: "saathi", hi: "नमस्ते, मैं साथी बोल रही हूँ।", en: "Namaste, this is Saathi." },
+            { speaker: "parent", hi: "हाँ, बोलो।", en: "Haan, bolo." },
+            { speaker: "saathi", hi: "सीने में कोई दर्द?", en: "Any pain in the chest?" },
+            { speaker: "parent", hi: "I have chest pain. सीने में दर्द हो रहा है।", en: quote },
+          ]
+        : [
+            { speaker: "saathi", hi: "नमस्ते कमला जी।", en: "Namaste Kamla ji." },
+            { speaker: "parent", hi: quote, en: quote },
+          ],
+    ),
     null,
     null,
     true,
@@ -354,7 +413,7 @@ async function seedCompletedDay(
   await query(`insert into call_attempts values ($1,$2,$3,$4,$5,$6)`, [
     `att_${day}_0`,
     callId,
-    istStamp(day, 8, 30),
+    started,
     0,
     "answered",
     true,
@@ -386,12 +445,12 @@ async function seedCompletedDay(
     "daily_briefing_good",
     "+910000000001",
     summaryEn,
-    istStamp(day, 8, 36),
+    istStampFromOffset(day, hour, minute, 6),
     "example",
     true,
     `wamid.EXAMPLE.out_${day}`,
     "mock",
-    istStamp(day, 8, 36),
+    istStampFromOffset(day, hour, minute, 6),
   ]);
   if (opts.skipped) {
     await query(`insert into memory_notes values ($1,$2,$3,$4,$5,$6)`, [
@@ -417,10 +476,10 @@ async function seedCompletedDay(
     category,
     level,
     isFalseAlarm || variant === "missed_med" ? "" : quote,
-    istStamp(day, 8, 33),
-    acked ? istStamp(day, 8, 40) : null,
+    istStampFromOffset(day, hour, minute, 3),
+    acked ? istStampFromOffset(day, hour, minute, 10) : null,
     acked ? "Rohit" : null,
-    resolved ? istStamp(day, 9, 10) : null,
+    resolved ? istStampFromOffset(day, hour, minute, 40) : null,
     false,
     isFalseAlarm ? "false_alarm" : "mid_call",
     true,
@@ -428,12 +487,28 @@ async function seedCompletedDay(
   await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
     `ae_${day}_notify`,
     alertId,
-    istStamp(day, 8, 33),
+    istStampFromOffset(day, hour, minute, 3),
     "notified",
     "Saathi",
     "Rohit and Sunita ji",
     true,
   ]);
+  if (opts.openAlert && variant === "chest") {
+    await query(`insert into outbound_messages values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`, [
+      `out_push_alert_${day}`,
+      "parent_kamla",
+      "push",
+      "web_push",
+      "+910000000001",
+      `Act now\n${quote}`,
+      istStampFromOffset(day, hour, minute, 3),
+      "mock",
+      true,
+      null,
+      "mock",
+      istStampFromOffset(day, hour, minute, 3),
+    ]);
+  }
   if (!opts.openAlert) {
     await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
       `ae_${day}_ack`,

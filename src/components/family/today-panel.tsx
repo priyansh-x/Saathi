@@ -250,10 +250,12 @@ export function TodayPanel({
           ) : null}
 
           <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))]">
-            <a href={`tel:${tel}`} className="action-tile text-foreground">
-              <Phone className="size-5" aria-hidden />
-              {p(t.callMaa)}
-            </a>
+            {state === "trying" ? null : (
+              <a href={`tel:${tel}`} className="action-tile text-foreground">
+                <Phone className="size-5" aria-hidden />
+                {p(t.callMaa)}
+              </a>
+            )}
             {state === "trying" ? (
               <form action={markOk} className="flex flex-1">
                 <button type="submit" className="action-tile text-foreground">

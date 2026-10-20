@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import type { CallRow, DoseLog } from "@/lib/db/types";
 import {
   callBullets,
+  callOnDayKey,
   callTranscriptLines,
   callGlyph,
   cellAria,
@@ -76,6 +77,17 @@ describe("history helpers", () => {
 
   it("aligns a Tuesday to Monday-start padding of 1", () => {
     assert.equal(mondayIndex("2026-10-13"), 1);
+  });
+
+  it("opens the later call on a day that has two rings", () => {
+    const picked = callOnDayKey(
+      [
+        call({ id: "morning", started_at: "2026-10-20T08:30:00+05:30" }),
+        call({ id: "test", started_at: "2026-10-20T17:08:00+05:30", mood_quote: "I have chest pain." }),
+      ],
+      "2026-10-20",
+    );
+    assert.equal(picked?.id, "test");
   });
 
   it("splits a summary into short bullets", () => {

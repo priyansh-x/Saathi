@@ -40,7 +40,9 @@ export function medsOnDay(doses: DoseLog[], day: string, medicineIds: string[]) 
 }
 
 export function callOnDayKey(calls: CallRow[], day: string) {
-  return calls.find((c) => c.started_at.startsWith(day)) ?? null;
+  const onDay = calls.filter((c) => c.started_at.startsWith(day));
+  if (onDay.length === 0) return null;
+  return [...onDay].sort((a, b) => b.started_at.localeCompare(a.started_at))[0] ?? null;
 }
 
 export function dayHasAlert(alerts: AlertRow[], day: string) {
