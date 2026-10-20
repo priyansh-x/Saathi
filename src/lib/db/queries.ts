@@ -1,3 +1,4 @@
+import { EXAMPLE_TOKEN } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { ensureSeed } from "@/lib/db/seed";
 import type {
@@ -13,7 +14,7 @@ import type {
 import { istDayBounds, nowIstStamp } from "@/lib/time";
 
 export async function parentByToken(token: string) {
-  await ensureSeed();
+  if (token === EXAMPLE_TOKEN) await ensureSeed();
   const rows = await query<Parent & { expires_at: string }>(
     `select p.*, m.expires_at
      from magic_links m

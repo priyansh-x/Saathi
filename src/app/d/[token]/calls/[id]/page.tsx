@@ -47,7 +47,7 @@ async function CallBody({
   from?: string;
   days?: string;
 }) {
-  const data = await loadFamily(token);
+  const data = await loadFamily(token, { allAlerts: false, hydrateBolna: true });
   if (!data) return <ExpiredLink lang={lang} />;
   const call = await callById(id);
   const t = messages[lang];
@@ -86,6 +86,7 @@ async function CallBody({
       <BackLink href={backHref}>{backLabel}</BackLink>
       <p className="mt-3 tabular text-sm text-muted-foreground">
         {formatCallHeader(call.started_at, call.duration_sec, callLanguageLabel(lang, spoken), lang)}
+        {call.total_cost != null ? ` · ${t.callUsage.replace("{cost}", String(call.total_cost))}` : ""}
       </p>
 
       <section className="mt-5">
@@ -127,7 +128,9 @@ async function CallBody({
       <details className="card mt-5 px-4 py-3">
         <summary className="cursor-pointer min-h-11">{t.showConversation}</summary>
         {lines.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">{t.emptyCall}</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {data.parent.consent_status === "given" ? t.emptyCall : t.waitingTranscript}
+          </p>
         ) : (
           <ol className="mt-3 space-y-2 text-sm">
             {lines.map((line, i) => (

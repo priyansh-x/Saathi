@@ -1,4 +1,5 @@
 import { connection } from "next/server";
+import { callNeedsBolnaHydrate, hydrateBolnaCall } from "@/lib/bolna/execution";
 import {
   alertsFor,
   attemptsFor,
@@ -10,8 +11,9 @@ import {
   openActAlerts,
   parentByToken,
 } from "@/lib/db/queries";
-import { defaultLadder } from "@/lib/config";
+import { defaultLadder, isMockBolna } from "@/lib/config";
 import { query } from "@/lib/db/client";
+import type { CallRow } from "@/lib/db/types";
 import type { Lang } from "@/lib/i18n/messages";
 import { istDayKey, istDayOffset, minutesNowIst, parseHhMm } from "@/lib/time";
 import { dedupeDoses, todayStatus, type LadderPlan } from "@/lib/today";
@@ -22,28 +24,37 @@ export function readLang(value?: string): Lang {
   return value === "hi" ? "hi" : "en";
 }
 
-export async function loadFamily(token: string) {
+export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hydrateBolna?: boolean }) {
   await connection();
   const parent = await parentByToken(token);
   if (!parent) return null;
-  const [contacts, medicines, actAlerts, allAlerts] = await Promise.all([
-    contactsFor(parent.id),
-    medicinesFor(parent.id),
-    openActAlerts(parent.id),
-    alertsFor(parent.id),
-  ]);
   const day = istDayKey();
-  const [call, yesterday, doses, week, planRows] = await Promise.all([
-    callOnDay(parent.id, day),
-    callOnDay(parent.id, istDayOffset(-1)),
-    dosesOnDay(parent.id, day),
-    historyDays(parent.id, 7),
-    query<LadderPlan>(
-      `select retry_10, retry_25, soft_30, last_45, escalate_60 from family_config where parent_id = $1`,
-      [parent.id],
-    ).catch(() => [] as LadderPlan[]),
-  ]);
-  const attempts = call ? await attemptsFor(call.id) : [];
+  const [contacts, medicines, actAlerts, allAlerts, call, yesterday, doses, week, planRows, weekly, delivery, couldntReach] =
+    await Promise.all([
+      contactsFor(parent.id),
+      medicinesFor(parent.id),
+      openActAlerts(parent.id),
+      opts?.allAlerts === false ? Promise.resolve([]) : alertsFor(parent.id),
+      callOnDay(parent.id, day),
+      callOnDay(parent.id, istDayOffset(-1)),
+      dosesOnDay(parent.id, day),
+      historyDays(parent.id, 7),
+      query<LadderPlan>(
+        `select retry_10, retry_25, soft_30, last_45, escalate_60 from family_config where parent_id = $1`,
+        [parent.id],
+      ).catch(() => [] as LadderPlan[]),
+      latestWeeklyNote(parent.id),
+      latestDelivery(parent.id),
+      latestUndeliveredEmail(parent.id),
+    ]);
+
+  let todayCall: CallRow | null = call;
+  if (opts?.hydrateBolna && todayCall && !isMockBolna() && callNeedsBolnaHydrate(todayCall)) {
+    const pulled = await hydrateBolnaCall(todayCall);
+    if (pulled) todayCall = (await callOnDay(parent.id, day)) ?? todayCall;
+  }
+
+  const attempts = todayCall ? await attemptsFor(todayCall.id) : [];
   const uniqueDoses = dedupeDoses(doses);
   const escalated = attempts.some((a) => a.result === "escalated");
   return {
@@ -53,7 +64,7 @@ export async function loadFamily(token: string) {
     actAlerts,
     allAlerts,
     day,
-    call,
+    call: todayCall,
     yesterday,
     doses: uniqueDoses,
     week,
@@ -61,7 +72,7 @@ export async function loadFamily(token: string) {
     plan: planRows[0] ?? defaultLadder(),
     status: todayStatus({
       paused: parent.paused,
-      call,
+      call: todayCall,
       doses: uniqueDoses,
       actAlerts,
       nowMin: minutesNowIst(),
@@ -71,8 +82,8 @@ export async function loadFamily(token: string) {
     }),
     child: contacts.find((c) => c.role === "child") ?? null,
     neighbour: contacts.find((c) => c.role === "neighbour") ?? null,
-    weekly: await latestWeeklyNote(parent.id),
-    delivery: await latestDelivery(parent.id),
-    couldntReach: await latestUndeliveredEmail(parent.id),
+    weekly,
+    delivery,
+    couldntReach,
   };
 }

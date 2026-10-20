@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, type PointerEvent, type ReactNode, type WheelEvent } from "react";
+import { useEffect, useRef, type PointerEvent, type ReactNode, type TouchEvent } from "react";
 import { qs } from "@/lib/history";
 import type { Lang } from "@/lib/i18n/messages";
 
@@ -17,7 +17,7 @@ function hrefFor(token: string, tab: Tab, lang: Lang, extraQuery?: Record<string
 function fromField(target: EventTarget | null) {
   const el = target as HTMLElement | null;
   if (!el) return false;
-  return Boolean(el.closest("input, textarea, select, button"));
+  return Boolean(el.closest("input, textarea, select"));
 }
 
 export function DeskSwipe({
@@ -37,10 +37,16 @@ export function DeskSwipe({
   const start = useRef<{ x: number; y: number } | null>(null);
   const lastNav = useRef(0);
 
+  useEffect(() => {
+    for (const tab of TABS) {
+      router.prefetch(hrefFor(token, tab, lang, extraQuery));
+    }
+  }, [token, lang, extraQuery, router]);
+
   function go(dx: number) {
-    if (Math.abs(dx) < 64) return;
+    if (Math.abs(dx) < 48) return;
     const now = Date.now();
-    if (now - lastNav.current < 500) return;
+    if (now - lastNav.current < 400) return;
     const index = TABS.indexOf(active as Tab);
     if (index < 0) return;
     const next = dx < 0 ? TABS[index + 1] : TABS[index - 1];
@@ -61,13 +67,27 @@ export function DeskSwipe({
     if (!origin || fromField(event.target)) return;
     const dx = event.clientX - origin.x;
     const dy = event.clientY - origin.y;
-    if (Math.abs(dx) < Math.abs(dy) * 1.15) return;
+    if (Math.abs(dx) < Math.abs(dy) * 1.1) return;
     go(dx);
   }
 
-  function onWheel(event: WheelEvent<HTMLDivElement>) {
-    if (Math.abs(event.deltaX) < 80 || Math.abs(event.deltaX) < Math.abs(event.deltaY)) return;
-    go(-event.deltaX);
+  function onTouchStart(event: TouchEvent<HTMLDivElement>) {
+    if (fromField(event.target)) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    start.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function onTouchEnd(event: TouchEvent<HTMLDivElement>) {
+    const origin = start.current;
+    start.current = null;
+    if (!origin || fromField(event.target)) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const dx = touch.clientX - origin.x;
+    const dy = touch.clientY - origin.y;
+    if (Math.abs(dx) < Math.abs(dy) * 1.1) return;
+    go(dx);
   }
 
   return (
@@ -78,7 +98,8 @@ export function DeskSwipe({
       onPointerCancel={() => {
         start.current = null;
       }}
-      onWheel={onWheel}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       {children}
     </div>

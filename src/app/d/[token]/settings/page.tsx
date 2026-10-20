@@ -46,7 +46,7 @@ export default async function SettingsPage({
   const { token } = await params;
   const sp = await searchParams;
   const lang = readLang(sp.lang);
-  const data = await loadFamily(token);
+  const data = await loadFamily(token, { allAlerts: false });
   if (!data) return <ExpiredLink lang={lang} />;
   const t = messages[lang];
   const parentId = data.parent.id;

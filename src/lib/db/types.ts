@@ -53,6 +53,10 @@ export type CallRow = {
   mood_quote_lang: string | null;
   mood?: "cheerful" | "okay" | "low" | "unclear" | null;
   transcript_json: string | null;
+  recording_url?: string | null;
+  bolna_execution_id?: string | null;
+  total_cost?: number | null;
+  cost_breakdown?: string | null;
 };
 
 export type DoseLog = {

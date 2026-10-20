@@ -162,7 +162,7 @@ export function TabBar({
             <li key={item.key}>
               <Link
                 href={`${item.href}${qs({ lang })}`}
-                prefetch={false}
+                prefetch
                 aria-current={on ? "page" : undefined}
                 className={`flex h-16 min-w-0 flex-col items-center justify-center gap-1 px-0.5 text-center text-[11px] leading-tight sm:text-[12px] ${
                   on ? "font-semibold text-foreground" : "text-ink-3"

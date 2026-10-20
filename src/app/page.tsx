@@ -2,6 +2,9 @@ import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ResumeDesk } from "@/components/family/resume-desk";
+import { deskHrefForSession } from "@/lib/desk-session";
 import { titled } from "@/lib/page-title";
 import { ArrowRight, Check } from "lucide-react";
 import { IconCall } from "@/components/icons";
@@ -25,8 +28,11 @@ export async function generateMetadata({
 export default async function Home({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
   const lang = (await searchParams).lang === "hi" ? "hi" : "en";
   const hi = lang === "hi";
+  const desk = await deskHrefForSession(lang);
+  if (desk) redirect(desk);
   return (
     <main className="app-shell">
+      <ResumeDesk lang={lang} />
       <div className="app-shell-scroll flex min-h-0 flex-1 flex-col">
       <div className="relative">
         <div className="grain relative aspect-[4/3.6] overflow-hidden rounded-b-[36px]">

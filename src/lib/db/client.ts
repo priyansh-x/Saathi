@@ -8,7 +8,14 @@ const globalForDb = globalThis as unknown as {
   saathiReady?: Promise<PGlite>;
   saathiPool?: Pool;
   saathiPoolReady?: Promise<Pool>;
+  saathiMigrated?: boolean;
 };
+
+async function migrateAndLatch(io: MigrationExec) {
+  if (process.env.NODE_ENV === "production" && globalForDb.saathiMigrated) return;
+  await applyMigrations(io);
+  globalForDb.saathiMigrated = true;
+}
 
 export function databaseUrl() {
   return (process.env.DATABASE_URL || "").trim();
@@ -91,7 +98,7 @@ async function openPglite() {
   }
   await db.waitReady;
   const io = pgliteIo(db);
-  await applyMigrations(io);
+  await migrateAndLatch(io);
   await loadKillLatch(io);
   return db;
 }
@@ -100,9 +107,15 @@ async function openPool() {
   const { Pool } = await import("pg");
   const url = databaseUrl();
   const ssl = /sslmode=require|supabase\.co/i.test(url) ? { rejectUnauthorized: false } : undefined;
-  const pool = new Pool({ connectionString: url, ssl });
+  const pool = new Pool({
+    connectionString: url,
+    ssl,
+    max: 1,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 8_000,
+  });
   const io = postgresIo(pool);
-  await applyMigrations(io);
+  await migrateAndLatch(io);
   await loadKillLatch(io);
   return pool;
 }

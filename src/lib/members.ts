@@ -16,6 +16,19 @@ export async function childrenFor(parentId: string) {
   );
 }
 
+export async function deskTokenForEmail(email: string) {
+  const rows = await query<{ token: string }>(
+    `select m.token
+       from contacts c
+       join magic_links m on m.parent_id = c.parent_id
+      where lower(c.email) = $1 and c.role = 'child'
+      order by c.is_owner desc, m.expires_at desc
+      limit 1`,
+    [email.trim().toLowerCase()],
+  );
+  return rows[0]?.token ?? null;
+}
+
 export async function ownerFor(parentId: string) {
   const kids = await childrenFor(parentId);
   return kids.find((c) => c.is_owner) ?? kids[0] ?? null;

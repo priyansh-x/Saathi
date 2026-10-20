@@ -23,6 +23,8 @@ export type BolnaWebhook = {
   summary?: string;
   extracted_data?: BolnaExtracted;
   tool_call_logs?: { name?: string; category?: string }[];
+  total_cost?: number | string;
+  cost_breakdown?: { total_cost_to_deduct?: number | string; [key: string]: unknown };
   context_details?: { recipient_data?: { parent_id?: string; [key: string]: unknown } };
   telephony_data?: {
     recording_url?: string | null;
@@ -231,8 +233,23 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     status: noConvo ? "no_conversation" : "completed",
   });
 
+  await persistCallCost(callId, payload);
   await query(`update webhook_events set processed = true where id = $1`, [eventId]);
   return { ok: true as const, call_id: callId, replay: false };
+}
+
+export function bolnaTotalCost(payload: BolnaWebhook) {
+  const raw = payload.total_cost ?? payload.cost_breakdown?.total_cost_to_deduct;
+  if (raw == null || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function persistCallCost(callId: string, payload: BolnaWebhook) {
+  const cost = bolnaTotalCost(payload);
+  const breakdown = payload.cost_breakdown ? JSON.stringify(payload.cost_breakdown) : null;
+  if (cost == null && !breakdown) return;
+  await query(`update calls set total_cost = $2, cost_breakdown = $3 where id = $1`, [callId, cost, breakdown]);
 }
 
 async function startMissedFromWebhook(
@@ -274,6 +291,7 @@ async function startMissedFromWebhook(
     elapsedMin: 0,
     attemptResult,
   });
+  await persistCallCost(callId, payload);
   await query(`update webhook_events set processed = true where id = $1`, [eventId]);
   return {
     ok: true as const,

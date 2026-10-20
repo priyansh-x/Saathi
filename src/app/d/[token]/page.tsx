@@ -89,7 +89,7 @@ export default async function TodayPage({
   const sp = await searchParams;
   const lang = readLang(sp.lang);
   const ringNote = ringCopy(sp.call, lang);
-  const data = await loadFamily(token);
+  const data = await loadFamily(token, { allAlerts: false, hydrateBolna: true });
   if (!data) return <ExpiredLink lang={lang} />;
   const t = messages[lang];
   const term = data.parent.address_term || t.maa;

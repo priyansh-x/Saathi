@@ -49,3 +49,4 @@ export type CallRecord = {
 export const STORAGE_HOUSEHOLD = "saathi-household";
 export const STORAGE_LAST_CALL = "saathi-last-call";
 export const STORAGE_CALL_LOG = "saathi-call-log";
+export const STORAGE_DESK_TOKEN = "saathi-desk-token";

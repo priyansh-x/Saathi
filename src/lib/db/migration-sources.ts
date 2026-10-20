@@ -79,5 +79,9 @@ export const MIGRATION_SOURCES: { id: string; sql: string }[] = [
   {
     "id": "020_auth_code_issued_at",
     "sql": "alter table auth_codes add column if not exists issued_at bigint;\nupdate auth_codes set consumed_at = coalesce(consumed_at, created_at) where issued_at is null;\n"
+  },
+  {
+    "id": "021_call_cost",
+    "sql": "alter table calls add column if not exists total_cost numeric;\nalter table calls add column if not exists cost_breakdown text;\n"
   }
 ];

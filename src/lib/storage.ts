@@ -3,6 +3,7 @@
 import type { CallRecord, Household } from "@/lib/types";
 import {
   STORAGE_CALL_LOG,
+  STORAGE_DESK_TOKEN,
   STORAGE_HOUSEHOLD,
   STORAGE_LAST_CALL,
 } from "@/lib/types";
@@ -24,6 +25,15 @@ export function loadHousehold(): Household | null {
 
 export function saveHousehold(household: Household) {
   window.localStorage.setItem(STORAGE_HOUSEHOLD, JSON.stringify(household));
+}
+
+export function loadDeskToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(STORAGE_DESK_TOKEN);
+}
+
+export function saveDeskToken(token: string) {
+  window.localStorage.setItem(STORAGE_DESK_TOKEN, token);
 }
 
 export function loadLastCall(): CallRecord | null {

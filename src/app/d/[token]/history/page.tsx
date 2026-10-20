@@ -45,7 +45,7 @@ function dayTitle(day: string, lang: ReturnType<typeof readLang>) {
 }
 
 async function HistoryBody({ token, lang, days }: { token: string; lang: ReturnType<typeof readLang>; days: 7 | 30 }) {
-  const data = await loadFamily(token);
+  const data = await loadFamily(token, { allAlerts: false });
   if (!data) return <ExpiredLink />;
   const hist = await historyDays(data.parent.id, 40);
   const medicines = await medicinesFor(data.parent.id);

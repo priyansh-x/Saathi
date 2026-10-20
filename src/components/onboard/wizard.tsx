@@ -18,6 +18,7 @@ import {
   type ParsedMedicine,
 } from "@/lib/onboard-form";
 import { messages, localeWord, type Lang } from "@/lib/i18n/messages";
+import { saveDeskToken } from "@/lib/storage";
 import { writeHousehold } from "@/lib/store";
 import type { Household, Language, Relation } from "@/lib/types";
 
@@ -189,6 +190,7 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
         return;
       }
       writeHousehold(toHousehold(form));
+      saveDeskToken(data.token);
       sessionStorage.removeItem(DRAFT_KEY);
       setToken(data.token);
       setStep("done");
