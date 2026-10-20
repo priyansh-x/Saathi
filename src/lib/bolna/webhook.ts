@@ -1,4 +1,5 @@
 import { query } from "@/lib/db/client";
+import { flagFromTranscript } from "@/lib/bolna/flag-from-transcript";
 import { hasRaiseAlert, logMedicine, raiseAlert } from "@/lib/bolna/tools";
 import { transcriptHasParent, transcriptJson } from "@/lib/bolna/transcript";
 import { advanceLadder } from "@/lib/ladder";
@@ -211,7 +212,14 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     });
   }
 
-  const flag = payload.extracted_data?.red_flag;
+  const extractedFlag = payload.extracted_data?.red_flag;
+  const spokenFlag = flagFromTranscript(payload.transcript);
+  const flag =
+    extractedFlag?.category === "EMERGENCY" || extractedFlag?.category === "URGENT"
+      ? extractedFlag
+      : spokenFlag
+        ? { category: spokenFlag.category, quote: spokenFlag.quote, confidence: spokenFlag.confidence }
+        : null;
   if (flag?.category === "EMERGENCY" || flag?.category === "URGENT") {
     const midCall = await hasRaiseAlert(callId, flag.category);
     if (!midCall) {
@@ -219,9 +227,9 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
         call_sid: callId,
         parent_id: parentId,
         category: flag.category,
-        quote: flag.quote || "Late extraction flag.",
+        quote: flag.quote || spokenFlag?.quote || "Late extraction flag.",
         late: true,
-        source: "extraction_late",
+        source: extractedFlag?.category ? "extraction_late" : "transcript",
       });
     }
   }

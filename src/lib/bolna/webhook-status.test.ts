@@ -138,6 +138,30 @@ describe("Bolna status mapping", () => {
     assert.ok(rows[0]?.transcript_json);
   });
 
+  it("raises an emergency alert from chest pain in the transcript when extraction is empty", async () => {
+    const sid = `st_chest_${Date.now()}`;
+    await processBolnaWebhook(
+      examplePayload("completed", {
+        conversation_duration: 70,
+        transcript: "assistant: Kaisi ho?\nuser: Seene mein dard ho raha hai.",
+        extracted_data: {},
+      }),
+      sid,
+    );
+    const rows = await query<{ category: string; quote: string; source: string }>(
+      `select category, quote, source from alerts where call_id = $1`,
+      [sid],
+    );
+    assert.equal(rows[0]?.category, "EMERGENCY");
+    assert.match(rows[0]?.quote || "", /Seene mein dard/);
+    assert.equal(rows[0]?.source, "transcript");
+    const push = await query<{ n: number }>(
+      `select count(*)::int as n from outbound_messages where channel = 'push' and id like $1`,
+      [`%alert_alert_${sid}_EMERGENCY%`],
+    );
+    assert.ok((push[0]?.n ?? 0) >= 1);
+  });
+
   it("completed with conversation_duration 0 is no_conversation and starts the ladder", async () => {
     const sid = `st_zero_${Date.now()}`;
     const result = await processBolnaWebhook(

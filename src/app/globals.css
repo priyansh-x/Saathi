@@ -94,6 +94,17 @@
     overscroll-behavior: none;
     touch-action: pan-y;
   }
+  html[data-density="compact"] .card {
+    padding-block: 0.65rem;
+  }
+  html[data-density="compact"] .app-shell-scroll {
+    padding-bottom: 0.5rem;
+  }
+  html[data-look="calm"] {
+    --background: #eef2f4;
+    --card: #f7fafb;
+    --brand-soft: #dce8ea;
+  }
   .app-shell {
     display: flex;
     width: 100%;

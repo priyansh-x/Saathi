@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ActBanner, TabBar, TopBar } from "@/components/family/chrome";
+import { applyDeskUi } from "@/lib/desk-ui";
 import { DESK_TABS, type DeskTab } from "@/lib/desk-tabs";
 import { qs } from "@/lib/history";
 import type { Lang } from "@/lib/i18n/messages";
@@ -30,6 +31,7 @@ export function DeskPager({
   example,
   alerts,
   addressTerm,
+  parentName,
   updatedAt,
   extraQuery,
   today,
@@ -43,6 +45,7 @@ export function DeskPager({
   example: boolean;
   alerts: AlertRow[];
   addressTerm?: string | null;
+  parentName?: string | null;
   updatedAt?: string | null;
   extraQuery?: Record<string, string | undefined>;
   today: ReactNode;
@@ -75,6 +78,10 @@ export function DeskPager({
     setIndex(Math.max(0, DESK_TABS.indexOf(active)));
     setDrag(0);
   }, [active]);
+
+  useEffect(() => {
+    applyDeskUi();
+  }, []);
 
   useEffect(() => {
     const el = pager.current;
@@ -221,7 +228,7 @@ export function DeskPager({
 
   return (
     <div className="app-shell">
-      <TopBar lang={lang} example={example} updatedAt={updatedAt} extraQuery={extraQuery} addressTerm={addressTerm || undefined} />
+      <TopBar token={token} lang={lang} example={example} updatedAt={updatedAt} extraQuery={extraQuery} parentName={parentName || addressTerm || undefined} />
       {tab !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
       <div ref={pager} className="desk-pager">
         <div

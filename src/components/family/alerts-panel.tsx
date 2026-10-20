@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { EmptyState, PageTitle } from "@/components/family/chrome";
 import { alertQuoteLine, alertTitle, severityChip, sortAlerts, statusPill } from "@/lib/alerts";
+import { clientSafe } from "@/lib/client-safe";
 import { alertsFor } from "@/lib/db/queries";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { formatFriendlyTime } from "@/lib/time";
 
 export async function AlertsPanel({ token, lang, parentId }: { token: string; lang: Lang; parentId: string }) {
   const t = messages[lang];
-  const list = sortAlerts(await alertsFor(parentId));
+  const list = sortAlerts(clientSafe(await alertsFor(parentId)));
 
   return (
     <>

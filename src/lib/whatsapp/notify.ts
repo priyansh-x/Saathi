@@ -181,7 +181,7 @@ export async function notifyAlert(
       }),
     );
   }
-  await sendPushToFamily(parentId, "Act now", alert.quote, `alert_${alert.id}`);
+  await sendPushToFamily(parentId, "Act now", alert.quote || "Open the family desk.", `alert_${alert.id}`);
   return { ok: true as const, results };
 }
 

@@ -22,7 +22,7 @@ export function FamilyShell({
   children,
   updatedAt,
   extraQuery,
-  addressTerm,
+  parentName,
 }: {
   token: string;
   lang: Lang;
@@ -33,17 +33,19 @@ export function FamilyShell({
   updatedAt?: string | Date | null;
   extraQuery?: Record<string, string | undefined>;
   addressTerm?: string | null;
+  parentName?: string | null;
 }) {
   const safeAlerts = clientSafe(alerts ?? []);
   const query = extraRecord(extraQuery);
   return (
     <div className="app-shell">
       <TopBar
+        token={token}
         lang={lang}
         example={Boolean(example)}
         updatedAt={toIsoString(updatedAt) || null}
         extraQuery={query}
-        addressTerm={addressTerm || undefined}
+        parentName={parentName || undefined}
       />
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={safeAlerts} /> : null}
       <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>

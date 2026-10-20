@@ -1,5 +1,5 @@
 /* Offline shell. Cache successful GETs. Never cache /api or family writes. */
-const VERSION = "saathi-pwa-v3";
+const VERSION = "saathi-pwa-v4";
 const DESK_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const CACHED_AT = "x-saathi-cached-at";
 
@@ -55,6 +55,35 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "CLEAR_CACHE") {
     event.waitUntil(clearAllCaches());
   }
+});
+
+self.addEventListener("push", (event) => {
+  let data = { title: "Saathi", body: "Open the family desk.", url: "/" };
+  try {
+    data = { ...data, ...(event.data ? event.data.json() : {}) };
+  } catch {
+    /* keep defaults */
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Saathi", {
+      body: data.body || "",
+      data: { url: data.url || "/" },
+      tag: "saathi-alert",
+      renotify: true,
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const existing = windows.find((client) => "focus" in client);
+      if (existing) return existing.focus();
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    }),
+  );
 });
 
 self.addEventListener("fetch", (event) => {

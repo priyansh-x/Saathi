@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { EmptyState, PageTitle } from "@/components/family/chrome";
 import type { AlertRow, CallRow, DoseLog } from "@/lib/db/types";
 import {
@@ -89,10 +90,11 @@ export function HistoryView({
               <li key={day}>
                 {call ? (
                   <Link
-                    href={`/d/${token}/calls/${encodeURIComponent(call.id)}${qs({ lang, from: "history", days: String(days) })}`}
-                    className="flex min-h-[92px] flex-col justify-center px-4 py-3"
+                    href={`/d/${token}/calls/${encodeURIComponent(String(call.id))}${qs({ lang, from: "history", days: String(days) })}`}
+                    className="flex min-h-[92px] items-center gap-2 px-4 py-3"
                   >
-                    {body}
+                    <span className="min-w-0 flex-1">{body}</span>
+                    <ChevronRight className="size-5 shrink-0 text-ink-3" aria-hidden />
                   </Link>
                 ) : (
                   <div className="flex min-h-[92px] flex-col justify-center px-4 py-3 text-muted-foreground">{body}</div>

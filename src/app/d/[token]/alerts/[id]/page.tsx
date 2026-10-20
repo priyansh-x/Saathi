@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { BackLink, ExpiredLink } from "@/components/family/chrome";
-import { FamilyShell } from "@/components/family/family-shell";
-import { clientSafe } from "@/lib/client-safe";
+import Link from "next/link";
 import { titled } from "@/lib/page-title";
 import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
@@ -9,8 +7,10 @@ import { alertById, alertEvents, resolveAlert } from "@/lib/db/queries";
 import { alertLife, alertQuoteLine, alertTitle, eventLine, statusPill } from "@/lib/alerts";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
-import { formatFriendlyTime, toIsoString } from "@/lib/time";
+import { formatFriendlyTime } from "@/lib/time";
 import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   searchParams,
@@ -18,6 +18,14 @@ export async function generateMetadata({
   searchParams: Promise<{ lang?: string }>;
 }): Promise<Metadata> {
   return titled("Alert · Saathi", "अलर्ट · साथी", (await searchParams).lang);
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="app-shell">
+      <div className="app-shell-scroll px-4 pt-3 pb-8">{children}</div>
+    </main>
+  );
 }
 
 export default async function AlertDetailPage({
@@ -31,18 +39,34 @@ export default async function AlertDetailPage({
   const sp = await searchParams;
   const lang = readLang(sp.lang);
   const from = sp.from;
+  const t = messages[lang];
+  const backHref = from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/alerts${qs({ lang })}`;
+  const backLabel = from === "today" ? t.backToday : t.backAlertsShort;
+
   const data = await loadFamily(token);
-  if (!data) return <ExpiredLink />;
+  if (!data) {
+    return (
+      <Shell>
+        <h1 className="app-title mt-8">{t.linkExpired}</h1>
+        <p className="mt-3 text-[16px] text-muted-foreground">{t.linkExpiredHint}</p>
+        <Link href="/" className="btn-secondary mt-8">
+          Saathi
+        </Link>
+      </Shell>
+    );
+  }
   const alert = await alertById(id);
   if (!alert) {
     return (
-      <FamilyShell token={token} lang={lang} example={Boolean(data.parent.is_example)} alerts={clientSafe(data.actAlerts)} active="alerts" addressTerm={data.parent.address_term}>
-        <p>{messages[lang].loadError}</p>
-      </FamilyShell>
+      <Shell>
+        <Link href={backHref} className="-ml-2 inline-flex h-11 items-center pr-3 text-[15px] font-medium text-primary">
+          {backLabel}
+        </Link>
+        <p className="mt-4">{t.emptyAlerts}</p>
+      </Shell>
     );
   }
   const events = await alertEvents(id);
-  const t = messages[lang];
   const actor = data.child?.first_name || data.child?.full_name || "family";
   const life = alertLife({ ...alert, is_false: events.some((e) => e.kind === "false_alarm") });
   const pill = statusPill({ ...alert, is_false: life === "false" }, lang);
@@ -68,25 +92,10 @@ export default async function AlertDetailPage({
   }
 
   return (
-    <FamilyShell
-      token={token}
-      lang={lang}
-      example={Boolean(data.parent.is_example)}
-      alerts={clientSafe(data.actAlerts)}
-      active="alerts"
-      updatedAt={toIsoString(alert.created_at) || null}
-      extraQuery={{ from }}
-      addressTerm={data.parent.address_term}
-    >
-      <BackLink
-        href={
-          from === "today"
-            ? `/d/${token}${qs({ lang })}`
-            : `/d/${token}/alerts${qs({ lang })}`
-        }
-      >
-        {from === "today" ? t.backToday : t.backAlertsShort}
-      </BackLink>
+    <Shell>
+      <Link href={backHref} className="-ml-2 inline-flex h-11 items-center pr-3 text-[15px] font-medium text-primary">
+        {backLabel}
+      </Link>
 
       <p className="mt-4 text-sm text-muted-foreground">{pill.label}</p>
       <h1 className="mt-1 text-2xl font-semibold">{alertTitle(alert, lang)}</h1>
@@ -130,6 +139,6 @@ export default async function AlertDetailPage({
           </form>
         </div>
       ) : null}
-    </FamilyShell>
+    </Shell>
   );
 }

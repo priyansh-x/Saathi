@@ -39,6 +39,7 @@ export async function DeskScreen({
       example={Boolean(data.parent.is_example)}
       alerts={clientSafe(data.actAlerts)}
       addressTerm={data.parent.address_term}
+      parentName={data.parent.first_name || data.parent.full_name}
       updatedAt={updatedAt}
       extraQuery={days === 7 ? { days: "7" } : undefined}
       today={<TodayPanel token={token} lang={lang} data={data} callParam={callParam} />}

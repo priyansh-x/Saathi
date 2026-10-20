@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Languages, Link2Off } from "lucide-react";
+import { ProfileSheet } from "@/components/family/profile-sheet";
 import { IconAlert, IconFamily, IconHistory, IconSettings, MarkSvg } from "@/components/icons";
 import kamlaAvatar from "../../../public/images/avatar-kamla.jpg";
 import type { AlertRow } from "@/lib/db/types";
@@ -90,27 +91,31 @@ export function ActBanner({
 }
 
 export function TopBar({
+  token,
   lang,
   example,
   updatedAt,
   extraQuery,
-  addressTerm,
+  parentName,
 }: {
+  token?: string;
   lang: Lang;
   example?: boolean;
   updatedAt?: string | null;
   extraQuery?: Record<string, string | undefined>;
-  addressTerm?: string;
+  parentName?: string;
 }) {
   const next = lang === "en" ? "hi" : "en";
   const t = messages[lang];
-  const name = addressTerm || t.maa;
+  const name = parentName?.trim() || t.maa;
   return (
     <header
       className="glass z-20 flex shrink-0 items-center gap-3 px-4 pb-3"
       style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}
     >
-      <Avatar name={name} example={example} />
+      <ProfileSheet token={token} lang={lang} parentName={name} example={example}>
+        <Avatar name={name} example={example} />
+      </ProfileSheet>
       <div className="min-w-0 flex-1">
         <p className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="min-w-0 truncate text-[17px] font-semibold tracking-tight">{name}</span>
@@ -243,7 +248,7 @@ export function FamilyFrame({
   children,
   updatedAt,
   extraQuery,
-  addressTerm,
+  parentName,
 }: {
   token: string;
   lang: Lang;
@@ -254,15 +259,17 @@ export function FamilyFrame({
   updatedAt?: string | null;
   extraQuery?: Record<string, string | undefined>;
   addressTerm?: string | null;
+  parentName?: string | null;
 }) {
   return (
     <div className="app-shell">
       <TopBar
+        token={token}
         lang={lang}
         example={example}
         updatedAt={updatedAt}
         extraQuery={extraQuery}
-        addressTerm={addressTerm || undefined}
+        parentName={parentName || undefined}
       />
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
       <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>

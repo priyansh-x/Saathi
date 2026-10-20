@@ -96,10 +96,25 @@ export function formatDuration(sec: number | null | undefined) {
   return `${mins} min`;
 }
 
+function formatIstOffset(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: IST,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const grab = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || "00";
+  return `${grab("year")}-${grab("month")}-${grab("day")}T${grab("hour")}:${grab("minute")}:${grab("second")}+05:30`;
+}
+
 export function toIsoString(value: unknown): string {
   if (value == null || value === "") return "";
   if (typeof value === "string") return value;
-  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return formatIstOffset(value);
   return String(value);
 }
 
