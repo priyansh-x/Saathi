@@ -26,7 +26,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
   const lang = (await searchParams).lang === "hi" ? "hi" : "en";
   const hi = lang === "hi";
   return (
-    <main className="mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col overflow-x-clip">
+    <main className="app-shell">
+      <div className="app-shell-scroll flex min-h-0 flex-1 flex-col">
       <div className="relative">
         <div className="grain relative aspect-[4/3.6] overflow-hidden rounded-b-[36px]">
           <Image
@@ -107,6 +108,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             <span>{hi ? " · आपात सेवा नहीं · 112" : " · Not an emergency service · 112"}</span>
           </p>
         </div>
+      </div>
       </div>
     </main>
   );

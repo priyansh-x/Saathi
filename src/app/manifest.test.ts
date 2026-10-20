@@ -8,6 +8,7 @@ describe("PWA", () => {
   it("ships a standalone portrait manifest sized for 360×740", () => {
     const m = manifest();
     assert.equal(m.display, "standalone");
+    assert.deepEqual(m.display_override, ["standalone", "minimal-ui"]);
     assert.equal(m.name, "Saathi");
     assert.equal(m.start_url, "/");
     assert.equal(m.orientation, "portrait");

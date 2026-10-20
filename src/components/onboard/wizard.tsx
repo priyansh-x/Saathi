@@ -492,8 +492,8 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
   })();
 
   return (
-    <div className={`mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col overflow-x-clip px-4 py-8 ${lang === "hi" ? "font-devanagari" : ""}`}>
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
+    <div className={`app-shell ${lang === "hi" ? "font-devanagari" : ""}`}>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 px-4 pt-8">
         {step !== "done" && step !== "sign" ? (
           <button type="button" onClick={back} className="btn-quiet -ml-3 text-primary">
             {t.setupBack}
@@ -509,15 +509,17 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
           {t.setupExample}
         </Link>
       </div>
-      <div className="flex-1 pt-4 pb-8">{body}</div>
+      <div className="app-shell-scroll px-4 pt-4 pb-4">{body}</div>
       {error ? (
-        <p className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p className="mx-4 mb-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       ) : null}
-      <button type="button" disabled={primary.disabled} className="btn-primary" onClick={primary.action}>
-        {primary.label}
-      </button>
+      <div className="shrink-0 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <button type="button" disabled={primary.disabled} className="btn-primary" onClick={primary.action}>
+          {primary.label}
+        </button>
+      </div>
     </div>
   );
 }

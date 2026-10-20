@@ -7,8 +7,8 @@ describe("pgliteDataDir", () => {
     assert.equal(pgliteDataDir({}), ".data/saathi");
   });
 
-  it("uses in-memory on Vercel so the read-only lambda fs cannot crash EXAMPLE", () => {
-    assert.equal(pgliteDataDir({ VERCEL: "1" }), null);
+  it("uses /tmp on Vercel so the read-only lambda cwd cannot crash EXAMPLE", () => {
+    assert.equal(pgliteDataDir({ VERCEL: "1" }), "/tmp/saathi-pglite");
   });
 
   it("honours PGLITE_PATH, including :memory:", () => {

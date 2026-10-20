@@ -17,7 +17,8 @@ export default async function PrivacyPage({ searchParams }: { searchParams: Prom
   const copy = privacyCopy(lang);
   const next = lang === "en" ? "hi" : "en";
   return (
-    <main className="mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col overflow-x-clip px-5 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+    <main className="app-shell">
+    <div className="app-shell-scroll px-5 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
       <div className="flex items-center justify-between">
         <BrandMark />
         <Link href={`/privacy?lang=${next}`} className="text-sm font-medium text-primary">
@@ -38,6 +39,7 @@ export default async function PrivacyPage({ searchParams }: { searchParams: Prom
       <Link href="/" className="btn-secondary mt-8">
         {lang === "hi" ? "वापस" : "Back"}
       </Link>
+    </div>
     </main>
   );
 }

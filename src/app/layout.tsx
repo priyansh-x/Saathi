@@ -53,6 +53,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#F7F5F0",
 };
 
@@ -60,9 +61,9 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
   return (
     <html
       lang={hi ? "hi" : "en"}
-      className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full ${hi ? "font-devanagari" : ""}`}
+      className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full overflow-hidden ${hi ? "font-devanagari" : ""}`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex h-full min-h-0 flex-col overflow-hidden">
         <AppStyles />
         <PwaBoot />
         {children}

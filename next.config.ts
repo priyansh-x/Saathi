@@ -3,9 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   allowedDevOrigins: ["127.0.0.1"],
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Desk pages use PGlite + Date.now() per request. Cache Components prerendered
+  // a static error shell on Vercel (x-nextjs-prerender + digest) for /d/* and /demo.
+  cacheComponents: false,
   serverExternalPackages: ["@electric-sql/pglite"],
+  outputFileTracingIncludes: {
+    "/*": ["./node_modules/@electric-sql/pglite/**/*"],
+  },
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

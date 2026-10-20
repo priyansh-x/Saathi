@@ -105,7 +105,7 @@ export function TopBar({
   const name = addressTerm || t.maa;
   return (
     <header
-      className="glass sticky top-0 z-20 flex items-center gap-3 px-4 pb-3"
+      className="glass z-20 flex shrink-0 items-center gap-3 px-4 pb-3"
       style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}
     >
       <Avatar name={name} example={example} />
@@ -150,7 +150,7 @@ export function TabBar({
   ];
   return (
     <nav
-      className="glass fixed bottom-0 left-1/2 z-20 w-full max-w-[480px] -translate-x-1/2 border-t border-border/70"
+      className="glass z-20 w-full shrink-0 border-t border-border/70"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="mx-auto grid w-full max-w-[480px] grid-cols-4 px-1 sm:px-2">
@@ -244,7 +244,7 @@ export function FamilyFrame({
   addressTerm?: string | null;
 }) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col overflow-x-clip">
+    <div className="app-shell">
       <TopBar
         lang={lang}
         example={example}
@@ -253,7 +253,7 @@ export function FamilyFrame({
         addressTerm={addressTerm || undefined}
       />
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
-      <div className="min-w-0 flex-1 px-4 pt-1 pb-28">{children}</div>
+      <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>
       <TabBar token={token} lang={lang} active={active} openAlerts={alerts.length} />
     </div>
   );
@@ -262,7 +262,7 @@ export function FamilyFrame({
 export function ExpiredLink({ lang = "en" }: { lang?: Lang }) {
   const t = messages[lang];
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col justify-center px-6 py-16">
+    <main className="app-shell justify-center px-6 py-16">
       <span className="grid size-14 place-items-center rounded-full bg-brand-soft text-brand-deep">
         <Link2Off className="size-6" aria-hidden />
       </span>
@@ -298,7 +298,7 @@ export function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <div className="mx-auto max-w-[480px] px-6 py-16">
+    <div className="app-shell-scroll px-6 py-16">
       <span className="grid size-14 place-items-center rounded-full bg-amber-soft text-amber-ink">
         <CloudOff className="size-6" aria-hidden />
       </span>

@@ -67,11 +67,13 @@ async function loadKillLatch(io: MigrationExec) {
 }
 
 /** Disk dir for PGlite, or `null` for in-memory (Vercel / explicit `:memory:`). */
-export function pgliteDataDir(env: NodeJS.ProcessEnv = process.env): string | null {
+export function pgliteDataDir(env: Record<string, string | undefined> = process.env): string | null {
   const explicit = (env.PGLITE_PATH || "").trim();
   if (explicit === ":memory:") return null;
   if (explicit) return explicit;
-  if (env.VERCEL || env.AWS_LAMBDA_FUNCTION_NAME) return null;
+  // Lambda cwd is read-only; /tmp is writable. In-memory WASM still needs a dir
+  // for some PGlite builds, so prefer /tmp over `new PGlite()`.
+  if (env.VERCEL || env.AWS_LAMBDA_FUNCTION_NAME) return "/tmp/saathi-pglite";
   return ".data/saathi";
 }
 
