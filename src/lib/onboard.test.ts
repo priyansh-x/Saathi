@@ -5,7 +5,7 @@ import { closeDb, query } from "./db/client";
 import { parentByToken } from "./db/queries";
 import { seed } from "./db/seed";
 import { CHILD_WRITTEN_TEXT, CHILD_WRITTEN_VERSION } from "./consent-copy";
-import { createHousehold } from "./onboard";
+import { createHousehold, resolveOnboardEmail } from "./onboard";
 import { parseOnboard, type OnboardInput } from "./onboard-form";
 import { toE164 } from "./phone";
 
@@ -35,6 +35,21 @@ before(async () => {
 
 after(async () => {
   await closeDb();
+});
+
+describe("resolveOnboardEmail", () => {
+  it("prefers a valid session email", () => {
+    assert.equal(resolveOnboardEmail("Ananya@Example.com", "other@example.com"), "ananya@example.com");
+  });
+
+  it("uses the body email when there is no session", () => {
+    assert.equal(resolveOnboardEmail(undefined, "Ananya@Example.com"), "ananya@example.com");
+  });
+
+  it("rejects junk", () => {
+    assert.equal(resolveOnboardEmail(undefined, "not-an-email"), null);
+    assert.equal(resolveOnboardEmail("nope", ""), null);
+  });
 });
 
 describe("onboard validation", () => {
@@ -93,6 +108,23 @@ describe("createHousehold", () => {
     const placed = await placeMorningCall(created.parentId);
     assert.equal(placed.ok, false);
     if (!placed.ok) assert.equal(placed.reason, "not_allowlisted");
+  });
+
+  it("places a simulated morning call once the number is allowlisted", async () => {
+    const prev = process.env.ALLOWED_PHONE_NUMBERS;
+    const parentPhone = "+910000000026";
+    process.env.ALLOWED_PHONE_NUMBERS = parentPhone;
+    try {
+      const created = await createHousehold(
+        { ...valid, parentPhone, childWhatsapp: "+910000000027", neighborName: "", neighborPhone: "" },
+        "allowlist@example.com",
+      );
+      const placed = await placeMorningCall(created.parentId);
+      assert.equal(placed.ok, true);
+      if (placed.ok) assert.equal(placed.mock, true);
+    } finally {
+      process.env.ALLOWED_PHONE_NUMBERS = prev;
+    }
   });
 
   it("throws when consent is missing", async () => {

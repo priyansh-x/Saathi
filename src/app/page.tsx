@@ -10,8 +10,8 @@ import { AddToHome } from "@/components/pwa/register";
 import hero from "../../public/images/hero-maa-balcony.jpg";
 
 const PROMISE = {
-  en: ["No app for her", "Any phone works", "Two lines for you"],
-  hi: ["उनके लिए ऐप नहीं", "कोई भी फ़ोन चलता है", "आपके लिए दो पंक्तियाँ"],
+  en: ["No app for her", "Any phone works", "Two lines for you", "Never a diagnosis"],
+  hi: ["उनके लिए ऐप नहीं", "कोई भी फ़ोन", "आपको दो पंक्तियाँ", "कोई निदान नहीं"],
 };
 
 export async function generateMetadata({
@@ -78,11 +78,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             ? "वे फ़ोन उठाती हैं और बात करती हैं। आपको व्हाट्सऐप पर दो शांत पंक्तियाँ मिलती हैं। कुछ गड़बड़ हो तो पहले आपको पता चलता है।"
             : "She picks up and talks. You get two calm lines on WhatsApp. If something is wrong, you hear first."}
         </p>
-        <ul className="rise mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[14px] text-muted-foreground" style={{ "--d": "140ms" } as CSSProperties}>
+        <ul className="rise mt-5 grid grid-cols-2 gap-2" style={{ "--d": "140ms" } as CSSProperties}>
           {PROMISE[lang].map((item) => (
-            <li key={item} className="flex items-center gap-1.5">
-              <Check className="size-4 text-good" strokeWidth={2.5} aria-hidden />
-              {item}
+            <li key={item} className="card flex min-h-[64px] items-center gap-2.5 px-3.5 py-3 text-[13.5px] leading-snug text-foreground">
+              <Check className="mt-0.5 size-4 shrink-0 text-good" strokeWidth={2.5} aria-hidden />
+              <span>{item}</span>
             </li>
           ))}
         </ul>
@@ -95,11 +95,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           <Link href={`/d/example-kamla?lang=${lang}`} className="btn-secondary">
             {hi ? "उदाहरण परिवार देखें" : "See an example family"}
           </Link>
-          <div className="flex justify-center gap-1 pt-1">
-            <Link href={`/demo?lang=${lang}`} className="btn-quiet text-[14px] text-muted-foreground">
-              {hi ? "एक EXAMPLE सुबह चलें" : "Walk one EXAMPLE morning"}
-            </Link>
-          </div>
           <AddToHome lang={lang} />
           <p className="pt-4 text-center text-[13px] text-ink-3">
             <Link href={`/privacy?lang=${lang}`} className="underline-offset-2 hover:underline">

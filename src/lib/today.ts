@@ -220,3 +220,13 @@ function formatIstClockLabel(hhmm: string) {
   const { hour, minute } = clockFromMinutes(parseHhMm(hhmm));
   return `${formatClock(hour, minute)} IST`;
 }
+
+export function ringCopy(reason: string | undefined, lang: Lang) {
+  const t = messages[lang];
+  if (!reason) return null;
+  if (reason === "placed") return t.ringPlaced;
+  if (reason === "not_allowlisted") return t.ringNotAllowlisted;
+  if (reason === "already_called") return t.ringAlready;
+  if (reason === "paused") return t.ringPaused;
+  return t.ringFail;
+}

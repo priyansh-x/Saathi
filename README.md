@@ -8,7 +8,7 @@ Saathi is a morning phone call for a parent in India, on the phone they already 
 npm i && npm run dev
 ```
 
-Open http://127.0.0.1:43147/demo — one EXAMPLE morning, mocks on, nothing dials. Add `?record=1` to play it through for a film. `?lang=hi` for हिं.
+Open http://127.0.0.1:43147 — set up a family, or open the EXAMPLE desk at `/d/example-kamla`. Mocks stay on locally; nothing dials. `?lang=hi` for हिं.
 
 Pass/fail for a dry-run: [`docs/saathi/product/dry_run.md`](./docs/saathi/product/dry_run.md). Run that locally before deploying.
 
@@ -51,7 +51,7 @@ Two apps:
 | Family desk | repo root | `npm run dev` → http://127.0.0.1:43147 |
 | Marketing landing | `landing/` | `cd landing && npm run dev` → http://127.0.0.1:43211 |
 
-Child setup: `/onboard`. EXAMPLE household: `/d/example-kamla` (fictional, labelled EXAMPLE). Specs in [`docs/saathi/`](./docs/saathi/).
+Child setup: `/onboard`. On Today, a real household can tap **Ask Saathi to call now** (`placeMorningCall`, still gated). EXAMPLE household: `/d/example-kamla` (fictional, labelled EXAMPLE). Specs in [`docs/saathi/`](./docs/saathi/).
 
 The family desk PWA (`/manifest.webmanifest`, `/sw.js`) caches the app shell on successful GETs and never `/api`. Web Push goes through `gateOutbound` and is mocked while `MOCK_WHATSAPP=1`.
 

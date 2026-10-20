@@ -133,6 +133,11 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; mode?: string };
       if (!res.ok) {
+        if (data.error === "Email sign-in is not configured.") {
+          setSignedEmail(email.trim().toLowerCase());
+          setStep("you");
+          return;
+        }
         setError(data.error || t.setupSignFail);
         return;
       }
@@ -172,7 +177,11 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
       const res = await fetch("/api/onboard", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, toldParent: true }),
+        body: JSON.stringify({
+          ...form,
+          toldParent: true,
+          email: (signedEmail || email).trim().toLowerCase(),
+        }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; token?: string };
       if (!res.ok || !data.token) {
@@ -504,9 +513,6 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
         <span className="flex-1" />
         <Link href={`/onboard?lang=${other}`} className="btn-quiet text-primary">
           {lang === "en" ? "हिं" : "EN"}
-        </Link>
-        <Link href={`/d/example-kamla?lang=${lang}`} className="btn-quiet text-ink-3">
-          {t.setupExample}
         </Link>
       </div>
       <div className="app-shell-scroll px-4 pt-4 pb-4">{body}</div>

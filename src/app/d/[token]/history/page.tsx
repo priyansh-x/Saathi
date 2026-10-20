@@ -87,16 +87,14 @@ async function HistoryBody({ token, lang, days }: { token: string; lang: ReturnT
               <>
                 <span className="flex items-baseline justify-between gap-3">
                   <span className="font-medium">{dayTitle(day, lang)}</span>
-                  {alert ? <span className="text-xs text-alert">{t.legendAlert}</span> : null}
+                  <span className={`text-xs ${alert ? "text-alert" : "invisible"}`}>{t.legendAlert}</span>
                 </span>
-                <span className="mt-1 block text-sm text-muted-foreground">
+                <span className="mt-1 block truncate text-sm text-muted-foreground">
                   {dayCallLabel(call, lang)} · {dayMedsLabel(meds, lang)}
                 </span>
-                {call?.status === "completed" ? (
-                  <span className="mt-0.5 block text-sm text-muted-foreground">
-                    {moodLabel(mood, lang)}
-                  </span>
-                ) : null}
+                <span className="mt-0.5 block h-5 truncate text-sm text-muted-foreground">
+                  {call?.status === "completed" ? moodLabel(mood, lang) : "\u00a0"}
+                </span>
               </>
             );
             return (
@@ -104,12 +102,12 @@ async function HistoryBody({ token, lang, days }: { token: string; lang: ReturnT
                 {call ? (
                   <Link
                     href={`/d/${token}/calls/${call.id}${qs({ lang, from: "history", days: String(days) })}`}
-                    className="block px-4 py-3"
+                    className="flex min-h-[92px] flex-col justify-center px-4 py-3"
                   >
                     {body}
                   </Link>
                 ) : (
-                  <div className="px-4 py-3 text-muted-foreground">{body}</div>
+                  <div className="flex min-h-[92px] flex-col justify-center px-4 py-3 text-muted-foreground">{body}</div>
                 )}
               </li>
             );

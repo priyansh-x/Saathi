@@ -8,6 +8,7 @@ import { qs } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { categoryWords, humanQuote } from "@/lib/today";
 import { formatFriendlyTime, formatHeaderDate, formatUpdated } from "@/lib/time";
+import { DeskSwipe } from "@/components/family/desk-swipe";
 
 export function ExamplePill({ lang }: { lang: Lang }) {
   return (
@@ -244,7 +245,7 @@ export function FamilyFrame({
   addressTerm?: string | null;
 }) {
   return (
-    <div className="app-shell">
+    <DeskSwipe token={token} lang={lang} active={active} extraQuery={extraQuery}>
       <TopBar
         lang={lang}
         example={example}
@@ -255,7 +256,7 @@ export function FamilyFrame({
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
       <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>
       <TabBar token={token} lang={lang} active={active} openAlerts={alerts.length} />
-    </div>
+    </DeskSwipe>
   );
 }
 

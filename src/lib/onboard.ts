@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { normalizeEmail, validEmail } from "@/lib/auth/magic";
 import { CHILD_WRITTEN_TEXT, CHILD_WRITTEN_VERSION, languageCodes, parseOnboard, type OnboardInput } from "@/lib/onboard-form";
 import { defaultLadder } from "@/lib/config";
 import { query } from "@/lib/db/client";
@@ -6,6 +7,15 @@ import { firstName } from "@/lib/names";
 import { toE164 } from "@/lib/phone";
 import { requestNeighbourOptIn } from "@/lib/neighbour";
 import { nowIstStamp } from "@/lib/time";
+
+/** Session wins. Body email is for hosts where mock cookies are not issued. */
+export function resolveOnboardEmail(sessionEmail?: string | null, bodyEmail?: string | null) {
+  const session = (sessionEmail || "").trim();
+  if (session && validEmail(session)) return normalizeEmail(session);
+  const body = (bodyEmail || "").trim();
+  if (body && validEmail(body)) return normalizeEmail(body);
+  return null;
+}
 
 function id(prefix: string) {
   return `${prefix}_${randomBytes(6).toString("hex")}`;

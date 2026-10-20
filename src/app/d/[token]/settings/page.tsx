@@ -10,7 +10,7 @@ import { ExpiredLink, FamilyFrame, PageTitle } from "@/components/family/chrome"
 import { AddToHome } from "@/components/pwa/register";
 import { CachedAction, SignOutButton } from "@/components/pwa/clear-cache";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
-import { isMockBolna, isMockWhatsapp, retentionSummaryDays, retentionTranscriptDays } from "@/lib/config";
+import { retentionSummaryDays, retentionTranscriptDays } from "@/lib/config";
 import { consentsFor } from "@/lib/consent";
 import { deleteFamily } from "@/lib/delete-family";
 import { medicinesWithTimes } from "@/lib/db/queries";
@@ -59,7 +59,6 @@ export default async function SettingsPage({
     .split(",")
     .map((code) => localeWord(code.trim(), lang))
     .join(", ");
-  const mockOn = isMockBolna() || isMockWhatsapp();
   const timedMeds = await medicinesWithTimes(parentId);
   const members = await childrenFor(parentId);
   const sessionEmail = decodeSession((await cookies()).get(SESSION_COOKIE)?.value)?.email ?? null;
@@ -218,14 +217,6 @@ export default async function SettingsPage({
         <AddToHome lang={lang} />
         <SignOutButton label={t.signOut} />
       </section>
-
-      {mockOn ? (
-        <p className="mt-8 text-sm">
-          <Link href={`/demo?lang=${lang}`} className="underline-offset-2 hover:underline">
-            {t.demoControls}
-          </Link>
-        </p>
-      ) : null}
     </FamilyFrame>
   );
 }

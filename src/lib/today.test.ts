@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { AlertRow, CallRow, DoseLog } from "./db/types";
-import { dedupeDoses, heroCopy, humanQuote, todayStatus } from "./today";
+import { dedupeDoses, heroCopy, humanQuote, ringCopy, todayStatus } from "./today";
 
 function call(status: CallRow["status"]): CallRow {
   return {
@@ -190,6 +190,12 @@ describe("todayStatus", () => {
     assert.ok(actHi.chip.trim().length > 0);
     assert.notEqual(lookEn.chip, actEn.chip);
     assert.equal(lookEn.chip, "Needs a look");
+  });
+
+  it("maps Call now results to family copy", () => {
+    assert.equal(ringCopy("placed", "en"), "Saathi is placing the morning call.");
+    assert.equal(ringCopy("not_allowlisted", "en"), "This number is not on the allowlist yet.");
+    assert.equal(ringCopy(undefined, "en"), null);
   });
 
   it("never treats a system miss line as her words", () => {

@@ -21,13 +21,14 @@ import { IconMedicine } from "@/components/icons";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { titled } from "@/lib/page-title";
+import { placeMorningCall } from "@/lib/bolna/place";
 import { ExpiredLink, FamilyFrame } from "@/components/family/chrome";
 import { resolveAlert, setPaused } from "@/lib/db/queries";
 import type { DoseLog } from "@/lib/db/types";
 import { loadFamily, readLang } from "@/lib/family-load";
 import { greeting, messages, personal, pickLocale, type Lang } from "@/lib/i18n/messages";
 import { neighbourOptedIn } from "@/lib/neighbour";
-import { heroCopy, humanQuote, reachSteps, slotLabel, statusTone, type DayState } from "@/lib/today";
+import { heroCopy, humanQuote, reachSteps, ringCopy, slotLabel, statusTone, type DayState } from "@/lib/today";
 import { weekdayShort } from "@/lib/time";
 import { weeklyDeskCopy } from "@/lib/weekly";
 
@@ -82,10 +83,12 @@ export default async function TodayPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; call?: string }>;
 }) {
   const { token } = await params;
-  const lang = readLang((await searchParams).lang);
+  const sp = await searchParams;
+  const lang = readLang(sp.lang);
+  const ringNote = ringCopy(sp.call, lang);
   const data = await loadFamily(token);
   if (!data) return <ExpiredLink lang={lang} />;
   const t = messages[lang];
@@ -114,6 +117,7 @@ export default async function TodayPage({
   const showQuote = quote && !heroQuote;
   const weekDays = data.week.calls;
   const parentId = data.parent.id;
+  const isExample = data.parent.is_example;
   const childName = data.child?.first_name || "family";
   const updatedAt = alert?.created_at || data.call?.ended_at || data.call?.started_at;
   const firstRun = state === "scheduled" && !data.call && weekDays.length === 0;
@@ -130,6 +134,16 @@ export default async function TodayPage({
     "use server";
     if (alert) await resolveAlert(alert.id, childName);
     redirect(`/d/${token}?lang=${lang}`);
+  }
+
+  async function ringNow() {
+    "use server";
+    if (isExample) {
+      redirect(`/d/${token}?lang=${lang}`);
+      return;
+    }
+    const placed = await placeMorningCall(parentId);
+    redirect(`/d/${token}?lang=${lang}&call=${placed.ok ? "placed" : placed.reason}`);
   }
 
   const Icon =
@@ -189,6 +203,7 @@ export default async function TodayPage({
           </p>
         ) : null}
         {data.neighbour && !neighbourReady ? <p className="mt-2 text-[15px] font-medium">{t.waitingNeighbour}</p> : null}
+        {ringNote ? <p className="mt-2 text-[15px] font-medium">{ringNote}</p> : null}
 
         {state === "trying" ? (
           <ol className="mt-4 space-y-0">
@@ -244,6 +259,13 @@ export default async function TodayPage({
               <Phone className="size-[18px]" aria-hidden />
               {p(t.callMaa)}
             </a>
+          ) : !isExample && (state === "scheduled" || state === "skipped") ? (
+            <form action={ringNow}>
+              <button type="submit" className="btn-primary">
+                <Phone className="size-[18px]" aria-hidden />
+                {p(t.ringNow)}
+              </button>
+            </form>
           ) : null}
 
           <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))]">

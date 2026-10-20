@@ -5,9 +5,9 @@ Surface: **child**. Parent stays on the phone they already have.
 
 ## Flow
 
-Email sign-in (mock session when `MOCK_WHATSAPP=1`; Supabase Auth magic link in production) → you (name, WhatsApp) → parent (name, address term, phone, languages, city) → morning call time → medicines (optional) → neighbour (optional) → written consent → done with tomorrow’s time and a desk link.
+Email sign-in (mock session on local Next; emailed code when mail is configured) → you (name, WhatsApp) → parent (name, address term, phone, languages, city) → morning call time → medicines (optional) → neighbour (optional) → written consent → done with tomorrow’s time and a desk link.
 
-Progress is kept in `sessionStorage`. `POST /api/onboard` requires the email session cookie.
+If email sign-in is not configured on the host, setup still continues with the address they typed. `POST /api/onboard` uses the session cookie when present, otherwise a valid `email` field on the body, and mints a session cookie for that owner.
 
 ## Rules
 
