@@ -55,7 +55,7 @@ export async function DeskScreen({
       }
       settings={
         <Suspense fallback={<PaneBusy />}>
-          <SettingsPanel token={token} lang={lang} data={data} confirm={confirm} />
+          <SettingsPanel token={token} lang={lang} data={data} confirm={confirm} callParam={callParam} />
         </Suspense>
       }
     />

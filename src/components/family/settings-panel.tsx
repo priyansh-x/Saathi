@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { Phone } from "lucide-react";
 import neighbourImg from "../../../public/images/neighbour-knock.jpg";
 import { redirect } from "next/navigation";
 import { InviteForm } from "@/components/family/invite-form";
@@ -8,16 +9,18 @@ import { SettingsForm } from "@/components/family/settings-form";
 import { PageTitle } from "@/components/family/chrome";
 import { AddToHome } from "@/components/pwa/register";
 import { CachedAction, SignOutButton } from "@/components/pwa/clear-cache";
+import { placeTestCall } from "@/lib/bolna/place";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { retentionSummaryDays, retentionTranscriptDays } from "@/lib/config";
 import { consentsFor } from "@/lib/consent";
 import { deleteFamily } from "@/lib/delete-family";
 import { medicinesWithTimes } from "@/lib/db/queries";
 import type { FamilyDesk } from "@/lib/family-load";
-import { localeWord, messages, type Lang } from "@/lib/i18n/messages";
+import { localeWord, messages, personal, type Lang } from "@/lib/i18n/messages";
 import { canDeleteFamily, childrenFor } from "@/lib/members";
 import { actorName, updatePaused } from "@/lib/settings";
 import { formatFriendlyTime, formatIstTime } from "@/lib/time";
+import { ringCopy } from "@/lib/today";
 
 function optLabel(granted: boolean | undefined, lang: Lang) {
   const t = messages[lang];
@@ -31,14 +34,18 @@ export async function SettingsPanel({
   lang,
   data,
   confirm,
+  callParam,
 }: {
   token: string;
   lang: Lang;
   data: FamilyDesk;
   confirm?: string;
+  callParam?: string;
 }) {
   const t = messages[lang];
   const parentId = data.parent.id;
+  const term = data.parent.address_term || t.maa;
+  const ringNote = ringCopy(callParam, lang);
   const nextPaused = !data.parent.paused;
   const consents = await consentsFor(parentId);
   const voice = consents.find((c) => c.kind === "parent_voice");
@@ -57,6 +64,16 @@ export async function SettingsPanel({
     "use server";
     await updatePaused(parentId, nextPaused, await actorName(parentId));
     redirect(`/d/${token}/settings?lang=${lang}`);
+  }
+
+  async function ringNow() {
+    "use server";
+    if (data.parent.is_example) {
+      redirect(`/d/${token}/settings?lang=${lang}&call=example`);
+      return;
+    }
+    const placed = await placeTestCall(parentId);
+    redirect(`/d/${token}/settings?lang=${lang}&call=${placed.ok ? "placed" : placed.reason}`);
   }
 
   async function wipe() {
@@ -95,7 +112,19 @@ export async function SettingsPanel({
         {t.settings}
       </PageTitle>
 
-      <div className="mt-1">
+      <section className="card mt-4 space-y-3 px-4 py-4">
+        <h2 className="font-semibold">{t.testCall}</h2>
+        <p className="text-sm text-muted-foreground">{t.testCallHint}</p>
+        {ringNote ? <p className="text-sm font-medium">{ringNote}</p> : null}
+        <form action={ringNow}>
+          <button type="submit" className="btn-primary">
+            <Phone className="size-[18px]" aria-hidden />
+            {personal(t.ringNow, term, lang)}
+          </button>
+        </form>
+      </section>
+
+      <div className="mt-6">
         <SettingsForm
           token={token}
           lang={lang}

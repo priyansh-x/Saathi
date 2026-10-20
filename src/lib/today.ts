@@ -228,5 +228,6 @@ export function ringCopy(reason: string | undefined, lang: Lang) {
   if (reason === "not_allowlisted") return t.ringNotAllowlisted;
   if (reason === "already_called") return t.ringAlready;
   if (reason === "paused") return t.ringPaused;
+  if (reason === "example") return t.ringExample;
   return t.ringFail;
 }

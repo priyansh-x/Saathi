@@ -195,6 +195,7 @@ describe("todayStatus", () => {
   it("maps Call now results to family copy", () => {
     assert.equal(ringCopy("placed", "en"), "Saathi is placing the morning call.");
     assert.equal(ringCopy("not_allowlisted", "en"), "This number is not on the allowlist yet.");
+    assert.equal(ringCopy("example", "en"), "The example desk does not place a live call. Open your family desk.");
     assert.equal(ringCopy(undefined, "en"), null);
   });
 

@@ -108,4 +108,18 @@ describe("every dial is recorded", () => {
     assert.equal("ok" in again && again.ok, false);
     if ("ok" in again && !again.ok) assert.equal(again.reason, "already_called");
   });
+
+  it("a settings test dial is allowed after the daily cap", async () => {
+    await wipeToday();
+    await recordCallPlacement({
+      parentId: "parent_kamla",
+      clock: IN_WINDOW,
+      executionId: "exec_cap_test",
+      status: "failed",
+    });
+    const blocked = await prepareMorningCall("parent_kamla", IN_WINDOW);
+    assert.equal("ok" in blocked && blocked.ok, false);
+    const forced = await prepareMorningCall("parent_kamla", IN_WINDOW, { forceTest: true });
+    assert.equal(isPreparedCall(forced), true);
+  });
 });

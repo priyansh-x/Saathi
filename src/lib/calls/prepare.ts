@@ -62,7 +62,7 @@ export function dailyDialCap() {
 export async function prepareMorningCall(
   parentId: string,
   clock: Date = new Date(),
-  opts?: { retryOf?: string },
+  opts?: { retryOf?: string; forceTest?: boolean },
 ): Promise<PlaceCallResult | PreparedCall> {
   if (killSwitchOn()) return { ok: false as const, reason: "kill_switch" };
   const parents = await query<{
@@ -94,7 +94,7 @@ export async function prepareMorningCall(
   if (!gate.ok) return { ok: false as const, reason: gate.reason };
   const used = await minutesUsedToday(clock);
   if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
-  if (!opts?.retryOf && (await dialsToday(parentId, clock)) >= dailyDialCap()) {
+  if (!opts?.retryOf && !opts?.forceTest && (await dialsToday(parentId, clock)) >= dailyDialCap()) {
     return { ok: false as const, reason: "already_called" };
   }
   if (opts?.retryOf) {

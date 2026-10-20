@@ -16,11 +16,17 @@ export default async function SettingsPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ lang?: string; confirm?: string }>;
+  searchParams: Promise<{ lang?: string; confirm?: string; call?: string }>;
 }) {
   const { token } = await params;
   const sp = await searchParams;
   return (
-    <DeskScreen token={token} lang={readLang(sp.lang)} active="settings" confirm={sp.confirm} />
+    <DeskScreen
+      token={token}
+      lang={readLang(sp.lang)}
+      active="settings"
+      confirm={sp.confirm}
+      callParam={sp.call}
+    />
   );
 }
