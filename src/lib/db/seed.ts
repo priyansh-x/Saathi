@@ -8,7 +8,7 @@ import { buildWeeklyNote } from "@/lib/weekly";
 export { EXAMPLE_TOKEN };
 
 /** Bump when EXAMPLE days must rebuild on hosted Kamla (stale “trying to reach” windows). */
-export const EXAMPLE_SEED_REV = "2026-10-20-test-chest";
+export const EXAMPLE_SEED_REV = "2026-10-21-kamla-today";
 
 export async function ensureSeed() {
   const example = await query<{ id: string }>("select id from parents where id = 'parent_kamla'");
@@ -222,15 +222,26 @@ async function seedExampleHistory() {
     }
 
     const skipped = slot === 2 && !isToday;
-    const variant = isToday ? "chest" : slot === 5 ? (i % 2 === 0 ? "fall" : "false") : slot === 1 ? "missed_med" : "ok";
+    const isYesterday = i === 28;
+    const variant = isToday
+      ? "ok"
+      : isYesterday
+        ? "chest"
+        : slot === 5
+          ? i % 2 === 0
+            ? "fall"
+            : "false"
+          : slot === 1
+            ? "missed_med"
+            : "ok";
     const alertDay = variant !== "ok";
     await seedCompletedDay(day, callId, {
       skipped,
-      alertDay: alertDay || isToday,
-      openAlert: isToday,
-      variant: isToday ? "chest" : variant,
-      hour: isToday ? 17 : 8,
-      minute: isToday ? 8 : 30,
+      alertDay,
+      openAlert: false,
+      variant,
+      hour: isToday ? 10 : isYesterday ? 17 : 8,
+      minute: isToday ? 5 : isYesterday ? 8 : 30,
     });
   }
 
@@ -304,8 +315,8 @@ async function seedMissedDay(day: string, callId: string, fullLadder: boolean, i
   ]);
   if (!fullLadder) return;
   const alertId = `alert_miss_${day}`;
-  const acked = i < 28;
-  const resolved = i < 26;
+  const acked = true;
+  const resolved = true;
   await query(`insert into alerts values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, [
     alertId,
     "parent_kamla",

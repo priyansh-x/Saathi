@@ -29,16 +29,13 @@ describe("desk snapshot", () => {
     assert.equal(typeof snap?.neighbourReady, "boolean");
   });
 
-  it("puts today's Kamla test call in history with an open chest-pain alert", async () => {
+  it("puts today's Kamla call on the desk with a transcript, not an open miss", async () => {
     const snap = await deskSnapshotByToken(EXAMPLE_TOKEN);
     assert.equal(snap?.call?.status, "completed");
-    assert.match(snap?.call?.mood_quote || "", /chest pain/i);
-    assert.match(snap?.call?.transcript_json || "", /chest pain|dard/i);
-    assert.ok(snap?.actAlerts.some((row) => row.category === "EMERGENCY" && !row.resolved_at));
-    const push = await query<{ n: number }>(
-      `select count(*)::int as n from outbound_messages where parent_id = 'parent_kamla' and channel = 'push' and body ilike '%chest pain%'`,
-    );
-    assert.ok((push[0]?.n ?? 0) >= 1);
+    assert.ok(snap?.call?.transcript_json);
+    assert.match(snap?.call?.mood_quote || snap?.call?.summary_en || "", /Neend|slept|Amlodipine/i);
+    assert.equal(snap?.actAlerts.length, 0);
+    assert.ok(!snap?.doses.some((row) => row.status === "not_taken"));
   });
 
   it("rebuilds EXAMPLE days when the seed rev is stale", async () => {
@@ -55,6 +52,6 @@ describe("desk snapshot", () => {
       [`${day}%`],
     );
     assert.equal(today[0]?.status, "completed");
-    assert.match(today[0]?.mood_quote || "", /chest pain/i);
+    assert.match(today[0]?.mood_quote || "", /Neend|theek/i);
   });
 });
