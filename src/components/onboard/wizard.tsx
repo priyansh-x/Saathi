@@ -8,7 +8,6 @@ import setupImg from "../../../public/images/setup-child-phone.jpg";
 import neighbourImg from "../../../public/images/neighbour-knock.jpg";
 import { BrandMark } from "@/components/brand";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CHILD_WRITTEN_TEXT } from "@/lib/consent-copy";
 import {
@@ -77,7 +76,7 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
   const [saving, setSaving] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-  const [link, setLink] = useState("");
+  const [code, setCode] = useState("");
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -101,21 +100,21 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
     setError(null);
   }
 
-  async function verifyLink() {
+  async function verifyCode() {
     setError(null);
     setSaving(true);
     try {
-      const res = await fetch("/api/auth/verify-link", {
+      const res = await fetch("/api/auth/verify-code", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ link }),
+        body: JSON.stringify({ email, code }),
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string; email?: string };
+      const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok) {
-        setError(data.error || t.setupSignFail);
+        setError(data.error || (lang === "hi" ? "कोड नहीं चला।" : "That code did not work."));
         return;
       }
-      setSignedEmail((data.email || email).trim().toLowerCase());
+      setSignedEmail(email.trim().toLowerCase());
       setStep("you");
     } catch {
       setError(t.setupSignFail);
@@ -224,19 +223,22 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
               placeholder="you@example.com"
             />
           </Field>
-          <div className="mt-4 space-y-3">
-            <p className="text-sm">{t.setupCheckInbox}</p>
-            <Field label={t.setupPasteLink} htmlFor="link">
-              <Textarea
-                id="link"
-                className="min-h-24"
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-                placeholder="https://"
-                autoComplete="off"
-              />
-            </Field>
-          </div>
+          {sent ? (
+            <div className="mt-4 space-y-3">
+              <p className="text-sm">{t.setupCheckInbox}</p>
+              <Field label={lang === "hi" ? "ईमेल वाला कोड" : "Code from the email"} htmlFor="code">
+                <Input
+                  id="code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={8}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                  placeholder="000000"
+                />
+              </Field>
+            </div>
+          ) : null}
         </>
       );
     }
@@ -467,15 +469,15 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
         <p className="mt-3 text-muted-foreground">{t.setupDoneBody}</p>
       </>
     );
-  }, [step, form, email, signedEmail, langs, sent, link, who, t, lang]);
+  }, [step, form, email, signedEmail, langs, sent, code, who, t, lang]);
 
   const primary = (() => {
     if (step === "sign") {
-      if (link.trim().length > 12) {
+      if (sent) {
         return {
-          label: saving ? "…" : t.setupUseLink,
-          action: verifyLink,
-          disabled: saving,
+          label: saving ? "…" : lang === "hi" ? "कोड डालें" : "Enter the code",
+          action: verifyCode,
+          disabled: saving || code.length < 6,
         };
       }
       return { label: saving ? "…" : t.setupContinue, action: signIn, disabled: saving || !email.trim() };

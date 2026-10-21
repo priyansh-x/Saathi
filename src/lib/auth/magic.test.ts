@@ -80,37 +80,53 @@ describe("email sign-in", () => {
     }
   });
 
-  it("production + mocks emails an allowlisted address through Supabase", async () => {
+  it("production emails an allowlisted address a 6-digit code from Gmail", async () => {
     const prev = {
       node: process.env.NODE_ENV,
       base: process.env.PUBLIC_BASE_URL,
-      url: process.env.SUPABASE_URL,
-      anon: process.env.SUPABASE_ANON_KEY,
+      refresh: process.env.GMAIL_REFRESH_TOKEN,
+      client: process.env.GMAIL_CLIENT_ID,
+      secret: process.env.GMAIL_CLIENT_SECRET,
+      smtp: process.env.SMTP_PASS,
     };
     setEnv("NODE_ENV", "production");
     process.env.PUBLIC_BASE_URL = "https://family.example";
-    process.env.SUPABASE_URL = "https://example.supabase.co";
-    process.env.SUPABASE_ANON_KEY = "anon-test-key";
+    process.env.GMAIL_REFRESH_TOKEN = "refresh-test";
+    process.env.GMAIL_CLIENT_ID = "client-test";
+    process.env.GMAIL_CLIENT_SECRET = "secret-test";
+    delete process.env.SMTP_PASS;
     const urls: string[] = [];
     const original = globalThis.fetch;
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
-      urls.push(String(input));
-      return new Response("{}", { status: 200 });
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      urls.push(url);
+      if (url.includes("oauth2.googleapis.com/token")) {
+        return new Response(JSON.stringify({ access_token: "ya29.test" }), { status: 200 });
+      }
+      const body = JSON.parse(String(init?.body || "{}")) as { raw?: string };
+      const mime = Buffer.from((body.raw || "").replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+      assert.match(mime, /To: adit@gmail.com/);
+      assert.match(mime, /Your Saathi code is \d{6}/);
+      return new Response(JSON.stringify({ id: "msg_otp" }), { status: 200 });
     }) as typeof fetch;
     try {
       const allowed = await startEmailSignIn("adit@gmail.com");
       assert.equal(allowed.ok, true);
       if (allowed.ok) assert.equal(allowed.mode, "email");
-      assert.equal(urls.length, 1);
-      assert.match(urls[0]!, /auth\/v1\/otp/);
+      assert.equal(urls.length, 2);
+      assert.match(urls[1]!, /gmail\.googleapis\.com/);
     } finally {
       globalThis.fetch = original;
       setEnv("NODE_ENV", prev.node);
       process.env.PUBLIC_BASE_URL = prev.base;
-      if (prev.url) process.env.SUPABASE_URL = prev.url;
-      else delete process.env.SUPABASE_URL;
-      if (prev.anon) process.env.SUPABASE_ANON_KEY = prev.anon;
-      else delete process.env.SUPABASE_ANON_KEY;
+      if (prev.refresh) process.env.GMAIL_REFRESH_TOKEN = prev.refresh;
+      else delete process.env.GMAIL_REFRESH_TOKEN;
+      if (prev.client) process.env.GMAIL_CLIENT_ID = prev.client;
+      else delete process.env.GMAIL_CLIENT_ID;
+      if (prev.secret) process.env.GMAIL_CLIENT_SECRET = prev.secret;
+      else delete process.env.GMAIL_CLIENT_SECRET;
+      if (prev.smtp) process.env.SMTP_PASS = prev.smtp;
+      else delete process.env.SMTP_PASS;
     }
   });
 
@@ -123,18 +139,27 @@ describe("email sign-in", () => {
       url: process.env.SUPABASE_URL,
       node: process.env.NODE_ENV,
       base: process.env.PUBLIC_BASE_URL,
+      refresh: process.env.GMAIL_REFRESH_TOKEN,
+      client: process.env.GMAIL_CLIENT_ID,
+      secret: process.env.GMAIL_CLIENT_SECRET,
     };
     process.env.MOCK_WHATSAPP = "0";
     process.env.MOCK_EMAIL = "1";
     setEnv("NODE_ENV", "test");
     process.env.PUBLIC_BASE_URL = "https://family.example";
     process.env.ALLOWED_EMAILS = "pilot@example.com";
+    process.env.GMAIL_REFRESH_TOKEN = "refresh-test";
+    process.env.GMAIL_CLIENT_ID = "client-test";
+    process.env.GMAIL_CLIENT_SECRET = "secret-test";
     delete process.env.SUPABASE_URL;
     const urls: string[] = [];
     const original = globalThis.fetch;
     globalThis.fetch = (async (input: RequestInfo | URL) => {
       urls.push(String(input));
-      return new Response("{}", { status: 200 });
+      if (String(input).includes("oauth2.googleapis.com/token")) {
+        return new Response(JSON.stringify({ access_token: "ya29.test" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ id: "msg_otp" }), { status: 200 });
     }) as typeof fetch;
     try {
       const blocked = await startEmailSignIn("visitor@example.com");
@@ -144,7 +169,7 @@ describe("email sign-in", () => {
       const allowed = await startEmailSignIn("pilot@example.com");
       assert.equal(allowed.ok, true);
       if (allowed.ok) assert.equal(allowed.mode, "email");
-      assert.equal(urls.length, 0);
+      assert.equal(urls.length, 2);
     } finally {
       globalThis.fetch = original;
       process.env.MOCK_WHATSAPP = prev.mock;
@@ -153,6 +178,12 @@ describe("email sign-in", () => {
       setEnv("NODE_ENV", prev.node);
       process.env.PUBLIC_BASE_URL = prev.base;
       if (prev.url) process.env.SUPABASE_URL = prev.url;
+      if (prev.refresh) process.env.GMAIL_REFRESH_TOKEN = prev.refresh;
+      else delete process.env.GMAIL_REFRESH_TOKEN;
+      if (prev.client) process.env.GMAIL_CLIENT_ID = prev.client;
+      else delete process.env.GMAIL_CLIENT_ID;
+      if (prev.secret) process.env.GMAIL_CLIENT_SECRET = prev.secret;
+      else delete process.env.GMAIL_CLIENT_SECRET;
     }
   });
 

@@ -1,12 +1,11 @@
 import { allowedEmails, isMockEmail, publicBaseUrl } from "@/lib/config";
-import { query } from "@/lib/db/client";
-import { deliverEmail } from "@/lib/email/transport";
+import { deliverSignInOtp, signInOtpConfigured } from "@/lib/email/gmail-otp";
 import { emailMaySignIn } from "@/lib/members";
 import { canViewOps } from "@/lib/ops/access";
 import { nowIstStamp } from "@/lib/time";
 import { countRecentCodes, mintSignInCode, persistSignInCode } from "./code";
-import { encodeSession, newAuthToken } from "./session";
-import { sendSupabaseEmailOtp } from "./supabase-otp";
+import { encodeSession } from "./session";
+import { query } from "@/lib/db/client";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "10.0.2.2"]);
@@ -42,7 +41,7 @@ export function canIssueSignIn(email: string) {
 const NOT_CONFIGURED = "Email sign-in is not configured.";
 const INVITE_ONLY = "Pilot is invite-only for now";
 
-/** Localhost mock cookie, or emailed link + 6-digit code. Never a cookie without proof on production. */
+/** Localhost mock cookie, or a 6-digit code from priyansh.joshi07@gmail.com. */
 export async function startEmailSignIn(rawEmail: string) {
   const email = normalizeEmail(rawEmail);
   if (!validEmail(email)) return { ok: false as const, error: "Add a working email address." };
@@ -53,10 +52,7 @@ export async function startEmailSignIn(rawEmail: string) {
     return { ok: true as const, mode: "mock" as const, token: encodeSession(email) };
   }
 
-  const supabaseUrl = (process.env.SUPABASE_URL || "").trim();
-  const supabaseKey = (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
-  const productionMock = process.env.NODE_ENV === "production" && isMockEmail();
-  if (productionMock && (!supabaseUrl || !supabaseKey)) {
+  if (!signInOtpConfigured()) {
     return { ok: false as const, error: NOT_CONFIGURED };
   }
 
@@ -65,29 +61,8 @@ export async function startEmailSignIn(rawEmail: string) {
   }
 
   const code = mintSignInCode();
-  const token = newAuthToken();
-  const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString().replace("Z", "+00:00");
-  await query(`insert into auth_tokens (token, email, expires_at) values ($1,$2,$3)`, [token, email, expires]);
-
-  const callback = `${publicBaseUrl()}/api/auth/callback?token=${encodeURIComponent(token)}`;
-  const text = [
-    "Saathi sign-in",
-    "",
-    `Your code is ${code}. It lasts 10 minutes (5 tries).`,
-    "",
-    "Or open this link on this phone:",
-    callback,
-  ].join("\n");
-
-  const sent = productionMock
-    ? await sendSupabaseEmailOtp(email)
-    : await deliverEmail({ to: email, subject: "Saathi sign-in code", text });
-  if (!sent.ok) {
-    if (productionMock) return { ok: false as const, error: sent.error || NOT_CONFIGURED };
-    if (!supabaseUrl || !supabaseKey) return { ok: false as const, error: NOT_CONFIGURED };
-    const otp = await sendSupabaseEmailOtp(email);
-    if (!otp.ok) return { ok: false as const, error: otp.error || NOT_CONFIGURED };
-  }
+  const sent = await deliverSignInOtp(email, code);
+  if (!sent.ok) return { ok: false as const, error: NOT_CONFIGURED };
   const stored = await persistSignInCode(email, code);
   if (!stored.ok) return stored;
   return { ok: true as const, mode: "email" as const };

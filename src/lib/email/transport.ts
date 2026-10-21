@@ -68,8 +68,16 @@ async function postResend(message: EmailMessage): Promise<EmailSendResult> {
   }
 }
 
-function smtpPort() {
-  const port = Number(process.env.SMTP_PORT || 587);
+export type SmtpAuth = {
+  host?: string;
+  port?: number;
+  user?: string;
+  pass?: string;
+  from?: string;
+};
+
+function smtpPort(raw?: number) {
+  const port = Number(raw ?? process.env.SMTP_PORT ?? 587);
   return Number.isFinite(port) && port > 0 ? port : 587;
 }
 
@@ -78,12 +86,12 @@ function encodeLogin(value: string) {
 }
 
 /** Implicit TLS on 465. STARTTLS on other ports. Exported for the local fake-server test. */
-export async function sendSmtp(message: EmailMessage): Promise<EmailSendResult> {
-  const host = smtpHost();
-  const port = smtpPort();
-  const user = (process.env.SMTP_USER || "").trim();
-  const pass = process.env.SMTP_PASS || "";
-  const from = emailFrom();
+export async function sendSmtp(message: EmailMessage, auth: SmtpAuth = {}): Promise<EmailSendResult> {
+  const host = (auth.host || smtpHost()).trim();
+  const port = smtpPort(auth.port);
+  const user = (auth.user ?? process.env.SMTP_USER ?? "").trim();
+  const pass = auth.pass ?? process.env.SMTP_PASS ?? "";
+  const from = (auth.from || emailFrom()).trim();
   const timeoutMs = 12_000;
 
   return new Promise((resolve) => {
