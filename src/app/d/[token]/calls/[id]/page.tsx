@@ -94,7 +94,7 @@ export default async function CallDetailPage({
       );
     }
 
-    if (!parent.is_example) {
+    {
       const pulled = await hydrateBolnaCall(call);
       if (pulled) call = (await callById(callId)) ?? call;
     }

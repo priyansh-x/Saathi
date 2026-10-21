@@ -1,3 +1,4 @@
+import { isLiveBolnaExecutionId } from "@/lib/bolna/example-desk";
 import { EXAMPLE_TOKEN } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { latchOpsKillSwitch } from "@/lib/ops/flags";
@@ -196,11 +197,10 @@ async function wipeExampleHistory() {
 
 async function refreshExampleHistoryIfStale() {
   if ((await exampleRev()) === EXAMPLE_SEED_REV) return;
-  const live = await query<{ n: number }>(
-    `select count(*)::int as n from calls
-     where parent_id = 'parent_kamla' and bolna_execution_id is not null and bolna_execution_id <> ''`,
+  const rows = await query<{ id: string; bolna_execution_id: string | null }>(
+    `select id, bolna_execution_id from calls where parent_id = 'parent_kamla'`,
   );
-  if ((live[0]?.n ?? 0) > 0) {
+  if (rows.some((row) => isLiveBolnaExecutionId(row.bolna_execution_id || row.id))) {
     await stampExampleRev();
     return;
   }

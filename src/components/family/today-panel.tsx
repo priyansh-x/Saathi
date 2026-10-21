@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import { IconMedicine } from "@/components/icons";
 import { redirect } from "next/navigation";
-import { placeMorningCall } from "@/lib/bolna/place";
+import { placeExampleDeskCall } from "@/lib/bolna/example-desk";
+import { placeTestCall } from "@/lib/bolna/place";
 import { resolveAlert, setPaused } from "@/lib/db/queries";
 import type { DoseLog } from "@/lib/db/types";
 import type { FamilyDesk } from "@/lib/family-load";
@@ -126,12 +127,8 @@ export function TodayPanel({
 
   async function ringNow() {
     "use server";
-    if (isExample) {
-      redirect(`/d/${token}?lang=${lang}`);
-      return;
-    }
-    const placed = await placeMorningCall(parentId);
-    redirect(`/d/${token}?lang=${lang}&call=${placed.ok ? "placed" : placed.reason}`);
+    const placed = isExample ? await placeExampleDeskCall(parentId) : await placeTestCall(parentId);
+    redirect(`/d/${token}?lang=${lang}&call=${placed.ok ? "placed" : "reason" in placed ? placed.reason : "fail"}`);
   }
 
   const Icon =
@@ -238,12 +235,12 @@ export function TodayPanel({
                 {t.resumeCalls}
               </button>
             </form>
-          ) : state === "trying" ? (
+          ) : state === "trying" && !isExample ? (
             <a href={`tel:${tel}`} className="btn-primary">
               <Phone className="size-[18px]" aria-hidden />
               {p(t.callMaa)}
             </a>
-          ) : !isExample && (state === "scheduled" || state === "skipped") ? (
+          ) : state === "scheduled" || state === "skipped" || (isExample && (state === "trying" || state === "look")) ? (
             <form action={ringNow}>
               <button type="submit" className="btn-primary">
                 <Phone className="size-[18px]" aria-hidden />
