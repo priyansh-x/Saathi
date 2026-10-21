@@ -3,7 +3,7 @@ import { buildCallContext } from "@/lib/bolna/call-context";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
 import { gateOutbound } from "@/lib/outbound";
-import { sameIndiaMobile } from "@/lib/phone";
+import { sameIndiaMobile, toE164 } from "@/lib/phone";
 import { istDayBounds, istDayKey, minutesNowIst, nowIstStamp, parseHhMm } from "@/lib/time";
 
 export type PlaceCallOk = {
@@ -89,10 +89,14 @@ export async function prepareMorningCall(
   }
   const onAllowlist = allowedPhones().some((row) => sameIndiaMobile(row, parent.phone));
   if (!parent.is_example && !onAllowlist) {
+    await rememberBlockedDial(parentId, parent.phone, "not_allowlisted");
     return { ok: false as const, reason: "not_allowlisted" };
   }
   const gate = gateOutbound("call", parent.phone);
-  if (!gate.ok) return { ok: false as const, reason: gate.reason };
+  if (!gate.ok) {
+    await rememberBlockedDial(parentId, parent.phone, gate.reason);
+    return { ok: false as const, reason: gate.reason };
+  }
   const used = await minutesUsedToday(clock);
   if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
   if (!opts?.retryOf && !opts?.forceTest && (await dialsToday(parentId, clock)) >= dailyDialCap()) {
@@ -114,7 +118,7 @@ export async function prepareMorningCall(
   const userData = await buildCallContext(parentId);
   const payload = {
     agent_id: process.env.BOLNA_AGENT_ID,
-    recipient_phone_number: gate.to,
+    recipient_phone_number: toE164(gate.to) || gate.to,
     user_data: userData,
     agent_data: { language: bolnaAgentLanguage(parent.languages) },
     max_duration: maxCallSeconds(),
@@ -127,6 +131,30 @@ export async function prepareMorningCall(
 
 export function isPreparedCall(value: PlaceCallResult | PreparedCall): value is PreparedCall {
   return "payload" in value && "parentId" in value;
+}
+
+async function rememberBlockedDial(parentId: string, phone: string, reason: string) {
+  const id = `out_call_${reason}_${parentId}_${Date.now()}`.slice(0, 80);
+  try {
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example
+      ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [
+        id,
+        parentId,
+        "call",
+        "place_call",
+        phone,
+        `blocked ${reason}`,
+        nowIstStamp(),
+        `blocked_${reason}`,
+        false,
+      ],
+    );
+  } catch {
+    /* never fail a ring on the audit row */
+  }
 }
 
 export async function recordCallPlacement(args: {

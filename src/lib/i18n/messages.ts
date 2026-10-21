@@ -182,7 +182,8 @@ export const messages = {
     demoControls: "Demo (EXAMPLE)",
     ringNow: "Ask Saathi to call now",
     ringPlaced: "Saathi is placing the call. This page, History, and alerts update as soon as it ends.",
-    ringNotAllowlisted: "This number is not on the allowlist yet.",
+    ringNotAllowlisted:
+      "Saathi only rings the parent number on this desk, and that number is not on the allowlist. No call was placed.",
     ringAlready: "Saathi already called today.",
     ringPaused: "Calls are paused.",
     ringFail: "Could not place the call.",
@@ -453,7 +454,8 @@ export const messages = {
     demoControls: "डेमो (उदाहरण)",
     ringNow: "साथी से अभी कॉल लगवाएँ",
     ringPlaced: "साथी कॉल लगा रहा है। खत्म होते ही यह पेज, इतिहास और अलर्ट अपडेट होंगे।",
-    ringNotAllowlisted: "यह नंबर अभी अनुमति सूची में नहीं है।",
+    ringNotAllowlisted:
+      "साथी इस डेस्क के माता-पिता वाले नंबर पर ही कॉल करता है, और वह नंबर अनुमति सूची में नहीं है। कॉल नहीं लगी।",
     ringAlready: "साथी ने आज कॉल कर दी है।",
     ringPaused: "कॉल रुकी हुई हैं।",
     ringFail: "कॉल नहीं लग सकी।",
