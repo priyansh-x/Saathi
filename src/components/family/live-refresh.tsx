@@ -16,7 +16,7 @@ export function LiveRefresh({ token, stamp }: { token: string; stamp: string }) 
     async function tick() {
       if (stopped) return;
       if (typeof document !== "undefined" && document.hidden) {
-        timer = window.setTimeout(tick, 8000);
+        timer = window.setTimeout(tick, 4000);
         return;
       }
       try {
@@ -29,15 +29,21 @@ export function LiveRefresh({ token, stamp }: { token: string; stamp: string }) 
       } catch {
         /* keep the last cadence */
       }
-      timer = window.setTimeout(tick, busy ? 2500 : 8000);
+      timer = window.setTimeout(tick, busy ? 900 : 4000);
     }
 
-    timer = window.setTimeout(tick, busy ? 2500 : 4000);
+    function onVisible() {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") void tick();
+    }
+
+    timer = window.setTimeout(tick, 200);
+    if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisible);
     return () => {
       stopped = true;
       window.clearTimeout(timer);
+      if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [router, token]);
+  }, [router, token, stamp]);
 
   return null;
 }

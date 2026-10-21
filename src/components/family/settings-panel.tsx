@@ -9,6 +9,7 @@ import { SettingsForm } from "@/components/family/settings-form";
 import { PageTitle } from "@/components/family/chrome";
 import { AddToHome } from "@/components/pwa/register";
 import { CachedAction, SignOutButton } from "@/components/pwa/clear-cache";
+import { deskCallHref } from "@/lib/bolna/after-test-call";
 import { placeExampleDeskCall } from "@/lib/bolna/example-desk";
 import { placeTestCall } from "@/lib/bolna/place";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
@@ -70,9 +71,7 @@ export async function SettingsPanel({
   async function ringNow() {
     "use server";
     const placed = data.parent.is_example ? await placeExampleDeskCall(parentId) : await placeTestCall(parentId);
-    redirect(
-      `/d/${token}/settings?lang=${lang}&call=${placed.ok ? "placed" : "reason" in placed ? placed.reason : "fail"}`,
-    );
+    redirect(deskCallHref(token, lang, placed, "settings"));
   }
 
   async function wipe() {

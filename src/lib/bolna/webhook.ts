@@ -1,7 +1,7 @@
 import { query } from "@/lib/db/client";
 import { flagFromTranscript } from "@/lib/bolna/flag-from-transcript";
 import { hasRaiseAlert, logMedicine, raiseAlert } from "@/lib/bolna/tools";
-import { coerceBolnaTranscript, transcriptHasParent, transcriptJson } from "@/lib/bolna/transcript";
+import { coerceBolnaTranscript, transcriptHasParent, transcriptJson, transcriptJsonHasWords } from "@/lib/bolna/transcript";
 import { advanceLadder } from "@/lib/ladder";
 import { nowIstStamp } from "@/lib/time";
 import { last10Digits, sameIndiaMobile } from "@/lib/phone";
@@ -170,8 +170,29 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     const hasCompletedData =
       already[0].status === "completed" ||
       (already[0].status === "no_conversation" && Boolean(already[0].ended_at));
-    const missingWords = !already[0].transcript_json && Boolean(payload.transcript);
-    if (missingWords) {
+    const incomingWords = Boolean(transcriptText && (transcriptHasParent(transcriptText) || transcriptText.trim().length > 2));
+    const missingWords = incomingWords && !transcriptJsonHasWords(already[0].transcript_json);
+    let missingMeds = false;
+    if (hasCompletedData && (payload.extracted_data?.medicines?.length ?? 0) > 0) {
+      const doses = await query<{ n: number }>(
+        `select count(*)::int as n from dose_logs where call_id = $1`,
+        [already[0].id],
+      );
+      missingMeds = (doses[0]?.n ?? 0) === 0;
+    }
+    const incomingFlag =
+      payload.extracted_data?.red_flag?.category === "EMERGENCY" ||
+      payload.extracted_data?.red_flag?.category === "URGENT" ||
+      flagFromTranscript(payload.transcript)?.category === "EMERGENCY";
+    let missingAlert = false;
+    if (hasCompletedData && incomingFlag) {
+      const alerts = await query<{ n: number }>(
+        `select count(*)::int as n from alerts where call_id = $1 and category in ('EMERGENCY','URGENT')`,
+        [already[0].id],
+      );
+      missingAlert = (alerts[0]?.n ?? 0) === 0;
+    }
+    if (missingWords || missingMeds || missingAlert) {
       fillingWords = true;
     } else if (hasCompletedData) {
       return { ok: true as const, call_id: already[0].id, replay: true };

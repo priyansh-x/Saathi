@@ -23,7 +23,11 @@ function turnFromUnknown(entry: unknown): TranscriptTurn | null {
 
 export function coerceBolnaTranscript(raw?: unknown): string | undefined {
   if (raw == null) return undefined;
-  if (typeof raw === "string") return raw;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed === "[]" || trimmed === "null" || trimmed === "undefined") return undefined;
+    return raw;
+  }
   if (Array.isArray(raw)) {
     const lines = raw
       .map((entry) => {
@@ -77,6 +81,24 @@ export function transcriptHasParent(raw?: unknown) {
 export function transcriptJson(raw?: unknown) {
   const turns = parseBolnaTranscript(raw);
   const text = coerceBolnaTranscript(raw);
-  if (turns.length === 0) return text ? JSON.stringify([{ speaker: "parent", hi: text, en: text }]) : null;
+  if (turns.length === 0) {
+    if (!text) return null;
+    const trimmed = text.trim();
+    if (trimmed === "[]" || trimmed === "null") return null;
+    return JSON.stringify([{ speaker: "parent", hi: text, en: text }]);
+  }
   return JSON.stringify(turns.map((turn) => ({ speaker: turn.speaker, hi: turn.text, en: turn.text })));
+}
+
+/** True when a stored transcript_json actually has spoken turns, not `[]` / null. */
+export function transcriptJsonHasWords(raw?: string | null) {
+  const value = (raw || "").trim();
+  if (!value || value === "[]" || value === "null" || value === "undefined") return false;
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (Array.isArray(parsed)) return parsed.length > 0;
+  } catch {
+    /* plain text */
+  }
+  return parseBolnaTranscript(value).length > 0 || value.length > 2;
 }

@@ -67,7 +67,13 @@ export async function logMedicine(input: {
     [input.call_sid, medicineId, day],
   );
   const doseId = existing[0]?.id ?? `dl_${input.call_sid}_${medicineId}`;
-  if (!existing[0]) {
+  if (existing[0]) {
+    await query(`update dose_logs set status = $2, said = $3 where id = $1`, [
+      doseId,
+      input.status,
+      input.said ?? null,
+    ]);
+  } else {
     try {
       await query(`insert into dose_logs values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
         doseId,

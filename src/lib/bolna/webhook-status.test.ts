@@ -422,4 +422,40 @@ describe("Bolna status mapping", () => {
       else delete process.env.BOLNA_API_KEY;
     }
   });
+
+  it("fills a later transcript onto a completed call that still had no words", async () => {
+    const sid = `st_fill_${Date.now()}`;
+    await processBolnaWebhook(
+      examplePayload("completed", {
+        conversation_duration: 55,
+        transcript: "[]",
+      }),
+      sid,
+    );
+    const empty = await query<{ transcript_json: string | null; status: string }>(
+      `select transcript_json, status from calls where id = $1`,
+      [sid],
+    );
+    assert.equal(empty[0]?.status, "completed");
+    assert.equal(!empty[0]?.transcript_json || empty[0]?.transcript_json === "[]", true);
+    const again = await processBolnaWebhook(
+      examplePayload("completed", {
+        conversation_duration: 90,
+        transcript: "assistant: Kaisi ho?\nuser: Seene mein dard ho raha hai.",
+        extracted_data: { medicines: [{ name: "Amlodipine", status: "taken", said: "le li" }] },
+      }),
+      sid,
+    );
+    assert.equal("replay" in again && again.replay, false);
+    const filled = await query<{ transcript_json: string | null }>(
+      `select transcript_json from calls where id = $1`,
+      [sid],
+    );
+    assert.match(filled[0]?.transcript_json || "", /Seene mein dard/i);
+    const alerts = await query<{ n: number }>(
+      `select count(*)::int as n from alerts where call_id = $1 and category = 'EMERGENCY'`,
+      [sid],
+    );
+    assert.equal(alerts[0]?.n, 1);
+  });
 });

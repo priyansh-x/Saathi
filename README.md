@@ -51,7 +51,7 @@ Two apps:
 | Family desk | repo root | `npm run dev` → http://127.0.0.1:43147 |
 | Marketing landing | `landing/` | `cd landing && npm run dev` → http://127.0.0.1:43211 |
 
-Child setup: `/onboard`. On Today, a real household can tap **Ask Saathi to call now** (`placeMorningCall`, still gated). EXAMPLE household: `/d/example-kamla` (fictional, labelled EXAMPLE). Specs in [`docs/saathi/`](./docs/saathi/).
+Child setup: `/onboard`. On Today, a real household can tap **Ask Saathi to call now** (`placeMorningCall`, still gated). Settings **Test call** (`placeTestCall`) is an extra same-day ring: the transcript, medicines, and alerts land on History and Today as soon as Bolna finishes, even when it is not the morning call. EXAMPLE household: `/d/example-kamla` (fictional, labelled EXAMPLE). Specs in [`docs/saathi/`](./docs/saathi/).
 
 The family desk PWA (`/manifest.webmanifest`, `/sw.js`) caches the app shell on successful GETs and never `/api`. Web Push goes through `gateOutbound` and is mocked while `MOCK_WHATSAPP=1`.
 

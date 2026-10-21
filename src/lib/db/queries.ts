@@ -92,10 +92,11 @@ export async function deskSnapshotByToken(token: string) {
               med.meal
             from medicines med
             left join dose_logs dl on dl.medicine_id = med.id and dl.schedule_date = $6
+            left join calls cl on cl.id = dl.call_id
             where med.parent_id = p.id
-            order by med.id, dl.id desc
+            order by med.id, coalesce(cl.started_at, '') desc, dl.id desc
         ) d) as doses,
-        (select coalesce(json_agg(w.*), '[]'::json)
+        (select coalesce(json_agg(w.* order by w.started_at desc), '[]'::json)
            from calls w
           where w.parent_id = p.id and w.started_at >= $7) as week_calls,
         (select row_to_json(cfg) from (
@@ -217,8 +218,9 @@ export async function dosesOnDay(parentId: string, day: string) {
         m.meal
      from medicines m
      left join dose_logs d on d.medicine_id = m.id and d.schedule_date = $2
+     left join calls cl on cl.id = d.call_id
      where m.parent_id = $1
-     order by m.id, d.id desc`,
+     order by m.id, coalesce(cl.started_at, '') desc, d.id desc`,
     [parentId, day],
   );
 }
@@ -257,7 +259,10 @@ export async function alertEvents(alertId: string) {
 }
 
 export async function callById(id: string) {
-  const rows = await query<CallRow>(`select * from calls where id = $1`, [id]);
+  const rows = await query<CallRow>(
+    `select * from calls where id = $1 or bolna_execution_id = $1 order by started_at desc limit 1`,
+    [id],
+  );
   return rows[0] ?? null;
 }
 
@@ -271,7 +276,10 @@ export async function callsSince(parentId: string, day: string) {
 
 export async function historyDays(parentId: string, days: number) {
   const [rows, doses, alerts] = await Promise.all([
-    query<CallRow>(`select * from calls where parent_id = $1 order by started_at desc limit $2`, [parentId, days]),
+    query<CallRow>(`select * from calls where parent_id = $1 order by started_at desc limit $2`, [
+      parentId,
+      Math.max(days, 200),
+    ]),
     query<DoseLog>(`select * from dose_logs where parent_id = $1 order by schedule_date desc`, [parentId]),
     query<AlertRow>(`select * from alerts where parent_id = $1 order by created_at desc`, [parentId]),
   ]);

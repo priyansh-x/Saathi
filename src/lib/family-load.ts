@@ -1,16 +1,32 @@
 import { connection } from "next/server";
 import { ensureExampleTodayDesk } from "@/lib/bolna/example-desk";
-import {
-  backfillAlertsFromTranscripts,
-  callNeedsBolnaHydrate,
-  hydrateBolnaCall,
-  importRecentBolnaExecutions,
-} from "@/lib/bolna/execution";
+import { callNeedsBolnaHydrate, hydrateBolnaCall, syncDeskFromBolna } from "@/lib/bolna/execution";
 import { defaultLadder } from "@/lib/config";
 import { deskSnapshotByToken } from "@/lib/db/queries";
 import type { Lang } from "@/lib/i18n/messages";
+import type { AlertRow, CallRow } from "@/lib/db/types";
 import { minutesNowIst, parseHhMm } from "@/lib/time";
 import { dedupeDoses, todayStatus } from "@/lib/today";
+
+/** Today’s act banner follows this morning’s latest ring, not an earlier same-day miss. */
+export function todayDeskAlerts(
+  actAlerts: AlertRow[],
+  todayCallIds: Set<string>,
+  latest?: Pick<CallRow, "id" | "status"> | null,
+) {
+  return actAlerts.filter((alert) => {
+    if (!alert.call_id || !todayCallIds.has(alert.call_id)) return false;
+    if (
+      alert.category === "MISSED" &&
+      latest &&
+      (latest.status === "completed" || latest.status === "no_conversation") &&
+      alert.call_id !== latest.id
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
 
 export function readLang(value?: string): Lang {
   return value === "hi" ? "hi" : "en";
@@ -27,13 +43,12 @@ export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hy
     snap = (await deskSnapshotByToken(token)) ?? snap;
   }
   if (opts?.hydrateBolna !== false) {
-    const recent = [snap.call, snap.yesterday, ...snap.weekCalls].filter(Boolean);
+    const todayCalls = snap.weekCalls.filter((call) => call.started_at.startsWith(snap.day));
+    const recent = [snap.call, snap.yesterday, ...todayCalls, ...snap.weekCalls.slice(0, 8)];
     const needsPull = !snap.call || recent.some((call) => call && callNeedsBolnaHydrate(call));
-    if (needsPull) await importRecentBolnaExecutions(snap.parent);
-    if (snap.call) await hydrateBolnaCall(snap.call);
+    if (needsPull) await syncDeskFromBolna(snap.parent, snap.call);
     if (snap.yesterday) await hydrateBolnaCall(snap.yesterday);
-    for (const call of snap.weekCalls.slice(0, 6)) await hydrateBolnaCall(call);
-    await backfillAlertsFromTranscripts(snap.parent.id);
+    for (const call of todayCalls) await hydrateBolnaCall(call);
     snap = (await deskSnapshotByToken(token)) ?? snap;
   }
   const uniqueDoses = dedupeDoses(snap.doses);
@@ -43,7 +58,7 @@ export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hy
       .filter((call): call is NonNullable<typeof call> => Boolean(call?.id && call.started_at.startsWith(snap.day)))
       .map((call) => call.id),
   );
-  const actAlerts = snap.actAlerts.filter((alert) => alert.call_id && todayCallIds.has(alert.call_id));
+  const actAlerts = todayDeskAlerts(snap.actAlerts, todayCallIds, snap.call);
   return {
     parent: snap.parent,
     contacts: snap.contacts,

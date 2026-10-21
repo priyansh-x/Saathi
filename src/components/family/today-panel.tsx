@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { IconMedicine } from "@/components/icons";
 import { redirect } from "next/navigation";
+import { deskCallHref } from "@/lib/bolna/after-test-call";
 import { placeExampleDeskCall } from "@/lib/bolna/example-desk";
 import { placeTestCall } from "@/lib/bolna/place";
 import { resolveAlert, setPaused } from "@/lib/db/queries";
@@ -128,7 +129,7 @@ export function TodayPanel({
   async function ringNow() {
     "use server";
     const placed = isExample ? await placeExampleDeskCall(parentId) : await placeTestCall(parentId);
-    redirect(`/d/${token}?lang=${lang}&call=${placed.ok ? "placed" : "reason" in placed ? placed.reason : "fail"}`);
+    redirect(deskCallHref(token, lang, placed, "today"));
   }
 
   const Icon =

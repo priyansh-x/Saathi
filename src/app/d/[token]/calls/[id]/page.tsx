@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { LiveRefresh } from "@/components/family/live-refresh";
-import { deskLiveStamp } from "@/lib/desk-live";
+import { deskLiveStamp, deskMedsStamp } from "@/lib/desk-live";
 import { titled } from "@/lib/page-title";
-import { hydrateBolnaCall } from "@/lib/bolna/execution";
+import { syncDeskFromBolna } from "@/lib/bolna/execution";
 import { callById, dosesOnDay, parentByToken } from "@/lib/db/queries";
 import { readLang } from "@/lib/family-load";
 import { callBullets, callLanguageLabel, callTranscriptLines, qs } from "@/lib/history";
 import { messages } from "@/lib/i18n/messages";
 import { formatCallHeader, toIsoString } from "@/lib/time";
-import { doseMark, slotLabel } from "@/lib/today";
+import { doseMark, ringCopy, slotLabel } from "@/lib/today";
 
 export const dynamic = "force-dynamic";
 
@@ -52,13 +52,14 @@ export default async function CallDetailPage({
   searchParams,
 }: {
   params: Promise<{ token: string; id: string }>;
-  searchParams: Promise<{ lang?: string; from?: string; days?: string }>;
+  searchParams: Promise<{ lang?: string; from?: string; days?: string; call?: string }>;
 }) {
   await connection();
   const { token, id } = await params;
   const sp = await searchParams;
   const lang = readLang(sp.lang);
   const t = messages[lang];
+  const placedNote = ringCopy(sp.call, lang);
   const backHref =
     sp.from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/history${qs({ lang, days: sp.days })}`;
   const backLabel = sp.from === "today" ? t.backToday : t.backHistory;
@@ -84,18 +85,22 @@ export default async function CallDetailPage({
       callId = id;
     }
     let call = await callById(callId);
-
+    if (!call || call.parent_id !== parent.id) {
+      await syncDeskFromBolna(parent);
+      call = await callById(callId);
+    }
     if (!call || call.parent_id !== parent.id) {
       return (
-        <CallShell>
+        <CallShell token={token} stamp={deskLiveStamp({ callId, status: "in_progress", hasWords: false })}>
           <BackTo href={backHref} label={backLabel} />
-          <p className="mt-4">{t.emptyCall}</p>
+          {placedNote ? <p className="mt-4 text-sm text-muted-foreground">{placedNote}</p> : null}
+          <p className="mt-4">{t.waitingTranscript}</p>
         </CallShell>
       );
     }
 
     {
-      const pulled = await hydrateBolnaCall(call);
+      const pulled = await syncDeskFromBolna(parent, call);
       if (pulled) call = (await callById(callId)) ?? call;
     }
 
@@ -120,9 +125,13 @@ export default async function CallDetailPage({
           status: call.status,
           endedAt: call.ended_at,
           hasWords: lines.length > 0,
+          meds: deskMedsStamp(doses),
         })}
       >
         <BackTo href={backHref} label={backLabel} />
+        {placedNote && call.status === "in_progress" ? (
+          <p className="mt-3 text-sm text-muted-foreground">{placedNote}</p>
+        ) : null}
         <p className="mt-3 tabular text-sm text-muted-foreground">
           {formatCallHeader(started, Number(call.duration_sec) || null, callLanguageLabel(lang, spoken), lang)}
           {cost ? ` · ${t.callUsage.replace("{cost}", cost)}` : ""}

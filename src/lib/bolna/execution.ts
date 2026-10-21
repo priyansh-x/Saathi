@@ -1,5 +1,6 @@
 import { flagFromTranscript } from "@/lib/bolna/flag-from-transcript";
 import { raiseAlert } from "@/lib/bolna/tools";
+import { transcriptJsonHasWords } from "@/lib/bolna/transcript";
 import { processBolnaWebhook, parentIdFromPayload, type BolnaWebhook } from "@/lib/bolna/webhook";
 import { bolnaBaseUrl, callProviderName, isMockBolna } from "@/lib/config";
 import { query } from "@/lib/db/client";
@@ -50,11 +51,6 @@ export async function fetchBolnaExecution(
   }
 }
 
-function callHasWords(transcript?: string | null) {
-  const raw = (transcript || "").trim();
-  return Boolean(raw && raw !== "[]" && raw !== "null");
-}
-
 export function callNeedsBolnaHydrate(call: {
   status: string;
   ended_at?: string | null;
@@ -64,7 +60,7 @@ export function callNeedsBolnaHydrate(call: {
   if (call.status === "in_progress" || call.status === "failed" || call.status === "missed") return true;
   if (!call.ended_at) return true;
   if (call.status === "completed" && call.duration_sec == null) return true;
-  if ((call.status === "completed" || call.status === "no_conversation") && !callHasWords(call.transcript_json)) {
+  if ((call.status === "completed" || call.status === "no_conversation") && !transcriptJsonHasWords(call.transcript_json)) {
     return true;
   }
   return false;
@@ -96,8 +92,8 @@ export async function hydrateBolnaCall(
         nested.context_details = {
           ...nested.context_details,
           recipient_data: {
-            parent_id: call.parent_id,
             ...nested.context_details?.recipient_data,
+            parent_id: call.parent_id,
           },
         };
       }
@@ -169,7 +165,7 @@ export async function importRecentBolnaExecutions(
     }
     nested.context_details = {
       ...nested.context_details,
-      recipient_data: { parent_id: parent.id, ...nested.context_details?.recipient_data },
+      recipient_data: { ...nested.context_details?.recipient_data, parent_id: parent.id },
     };
     try {
       await processBolnaWebhook(nested, executionId);
@@ -179,6 +175,30 @@ export async function importRecentBolnaExecutions(
     }
   }
   return imported;
+}
+
+const lastImportAt = new Map<string, number>();
+
+/** Pull Bolna into the desk as soon as a test/morning call has words. */
+export async function syncDeskFromBolna(
+  parent: { id: string; phone: string },
+  call?: Parameters<typeof hydrateBolnaCall>[0] | null,
+  fetchImpl: typeof fetch = fetch,
+) {
+  if (!bolnaFetchEnabled()) {
+    if (call) await backfillAlertsFromTranscripts(parent.id);
+    return false;
+  }
+  const now = Date.now();
+  const prev = lastImportAt.get(parent.id) ?? 0;
+  let changed = false;
+  if (now - prev >= 1200) {
+    lastImportAt.set(parent.id, now);
+    changed = (await importRecentBolnaExecutions(parent, fetchImpl)) > 0;
+  }
+  if (call) changed = (await hydrateBolnaCall(call, fetchImpl)) || changed;
+  await backfillAlertsFromTranscripts(parent.id);
+  return changed;
 }
 
 export async function backfillAlertsFromTranscripts(parentId: string) {

@@ -4,7 +4,9 @@ import { closeDb, query } from "./db/client";
 import { EXAMPLE_TOKEN } from "./config";
 import { EXAMPLE_SEED_REV, ensureSeed, seed } from "./db/seed";
 import { deskSnapshotByToken } from "./db/queries";
+import { todayDeskAlerts } from "./family-load";
 import { istDayKey } from "./time";
+import type { AlertRow } from "./db/types";
 
 process.env.MOCK_BOLNA = "1";
 process.env.MOCK_WHATSAPP = "1";
@@ -53,5 +55,36 @@ describe("desk snapshot", () => {
     );
     assert.equal(today[0]?.status, "completed");
     assert.match(today[0]?.mood_quote || "", /Neend|theek/i);
+  });
+});
+
+describe("todayDeskAlerts", () => {
+  it("drops an earlier same-day MISSED once a later call completes", () => {
+    const missed: AlertRow = {
+      id: "a_miss",
+      parent_id: "p",
+      call_id: "morning",
+      category: "MISSED",
+      level: "act",
+      quote: "No answer",
+      created_at: "2026-10-21T08:40:00+05:30",
+      acked_at: null,
+      acked_by: null,
+      resolved_at: null,
+      late: false,
+      source: "ladder",
+    };
+    const chest: AlertRow = {
+      ...missed,
+      id: "a_chest",
+      call_id: "test",
+      category: "EMERGENCY",
+      quote: "Seene mein dard ho raha hai.",
+      source: "transcript",
+    };
+    const ids = new Set(["morning", "test"]);
+    const filtered = todayDeskAlerts([missed, chest], ids, { id: "test", status: "completed" });
+    assert.equal(filtered.length, 1);
+    assert.equal(filtered[0]?.id, "a_chest");
   });
 });
