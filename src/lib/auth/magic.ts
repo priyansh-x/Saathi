@@ -62,7 +62,15 @@ export async function startEmailSignIn(rawEmail: string) {
 
   const code = mintSignInCode();
   const sent = await deliverSignInOtp(email, code);
-  if (!sent.ok) return { ok: false as const, error: NOT_CONFIGURED };
+  if (!sent.ok) {
+    if (sent.error.startsWith("smtp_5") || sent.error === "gmail_oauth") {
+      return {
+        ok: false as const,
+        error: "Gmail rejected the mail login. Use the 16-character App Password as SMTP_PASS, then Redeploy.",
+      };
+    }
+    return { ok: false as const, error: "Could not send the sign-in email from Gmail." };
+  }
   const stored = await persistSignInCode(email, code);
   if (!stored.ok) return stored;
   return { ok: true as const, mode: "email" as const };

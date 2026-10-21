@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   deliverSignInOtp,
   gmailApiConfigured,
+  gmailAppPassword,
   signInOtpConfigured,
   signInOtpFrom,
   signInOtpText,
@@ -16,6 +17,22 @@ function restore(prev: Record<string, string | undefined>) {
 }
 
 describe("Gmail sign-in OTP", () => {
+  it("reads SMTP_PASS with spaces stripped", () => {
+    const prev = {
+      SMTP_PASS: process.env.SMTP_PASS,
+      SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+      GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
+    };
+    delete process.env.SMTP_PASSWORD;
+    delete process.env.GMAIL_APP_PASSWORD;
+    process.env.SMTP_PASS = "abcd efgh ijkl mnop";
+    try {
+      assert.equal(gmailAppPassword(), "abcdefghijklmnop");
+    } finally {
+      restore(prev);
+    }
+  });
+
   it("mails from priyansh.joshi07@gmail.com by default", () => {
     const prev = { EMAIL_FROM: process.env.EMAIL_FROM };
     delete process.env.EMAIL_FROM;

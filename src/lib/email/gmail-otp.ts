@@ -14,8 +14,14 @@ export function gmailApiConfigured() {
   );
 }
 
+export function gmailAppPassword() {
+  const raw =
+    process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASSWORD || "";
+  return raw.replace(/\s+/g, "").trim();
+}
+
 export function gmailSmtpConfigured() {
-  return Boolean((process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "").trim());
+  return Boolean(gmailAppPassword());
 }
 
 export function signInOtpConfigured() {
@@ -92,7 +98,7 @@ export async function deliverSignInOtp(to: string, code: string): Promise<EmailS
     host: (process.env.SMTP_HOST || "smtp.gmail.com").trim(),
     port: Number.isFinite(port) && port > 0 ? port : 465,
     user: (process.env.SMTP_USER || GMAIL_OTP_USER).trim(),
-    pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "",
+    pass: gmailAppPassword(),
     from: signInOtpFrom(),
   });
 }
