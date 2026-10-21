@@ -3,7 +3,15 @@ import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "./db/client";
 import { seed } from "./db/seed";
 import { notifyAlert, sendDailyBriefing } from "./whatsapp/notify";
-import { acceptInvite, canDeleteFamily, childrenFor, createInvite, deskTokenForEmail, MAX_FAMILY_MEMBERS } from "./members";
+import {
+  acceptInvite,
+  canDeleteFamily,
+  childrenFor,
+  createInvite,
+  deskTokenForEmail,
+  emailMaySignIn,
+  MAX_FAMILY_MEMBERS,
+} from "./members";
 
 process.env.MOCK_BOLNA = "1";
 process.env.MOCK_WHATSAPP = "1";
@@ -22,6 +30,9 @@ describe("family members", () => {
   it("opens the desk from the owner's email", async () => {
     assert.equal(await deskTokenForEmail("rohit@example.invalid"), "example-kamla");
     assert.equal(await deskTokenForEmail("nobody@example.com"), null);
+    assert.equal(await emailMaySignIn("rohit@example.invalid"), true);
+    assert.equal(await emailMaySignIn("adit@gmail.com"), true);
+    assert.equal(await emailMaySignIn("nobody@example.com"), false);
   });
 
   it("lets the first child invite up to two others, and only the first can delete", async () => {

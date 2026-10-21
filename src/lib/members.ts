@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { writeAudit } from "@/lib/audit";
-import { publicBaseUrl } from "@/lib/config";
+import { allowedEmails, publicBaseUrl } from "@/lib/config";
+import { canViewOps } from "@/lib/ops/access";
 import { query } from "@/lib/db/client";
 import type { Contact } from "@/lib/db/types";
 import { firstName } from "@/lib/names";
@@ -27,6 +28,13 @@ export async function deskTokenForEmail(email: string) {
     [email.trim().toLowerCase()],
   );
   return rows[0]?.token ?? null;
+}
+
+export async function emailMaySignIn(email: string) {
+  const n = email.trim().toLowerCase();
+  if (!n) return false;
+  if (allowedEmails().includes(n) || canViewOps(n)) return true;
+  return Boolean(await deskTokenForEmail(n));
 }
 
 export async function ownerFor(parentId: string) {

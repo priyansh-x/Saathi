@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { after, before, describe, it } from "node:test";
+import { closeDb } from "@/lib/db/client";
 import { seed } from "@/lib/db/seed";
 import { decodeSession, encodeSession } from "./session";
 import { startEmailSignIn, validEmail } from "./magic";
@@ -14,6 +15,13 @@ process.env.OPS_EMAILS = "ops@example.com";
 process.env.SESSION_SECRET = "test-session-secret-for-sign-in-at-least-32ch";
 
 describe("email sign-in", () => {
+  before(async () => {
+    await seed();
+  });
+  after(async () => {
+    await closeDb();
+  });
+
   it("accepts a simple address", () => {
     assert.equal(validEmail("Ananya@Example.com"), true);
     assert.equal(validEmail("nope"), false);
@@ -54,7 +62,10 @@ describe("email sign-in", () => {
     try {
       const arbitrary = await startEmailSignIn("stranger@example.com");
       assert.equal(arbitrary.ok, false);
-      if (!arbitrary.ok) assert.match(arbitrary.error, /not configured/);
+      if (!arbitrary.ok) assert.match(arbitrary.error, /invite-only/);
+      delete process.env.SUPABASE_URL;
+      delete process.env.SUPABASE_ANON_KEY;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
       const allowlisted = await startEmailSignIn("pilot@example.com");
       assert.equal(allowlisted.ok, false);
       if (!allowlisted.ok) assert.match(allowlisted.error, /not configured/);
@@ -66,6 +77,40 @@ describe("email sign-in", () => {
       process.env.ALLOWED_EMAILS = prev.emails;
       process.env.OPS_EMAILS = prev.ops;
       process.env.PUBLIC_BASE_URL = prev.base;
+    }
+  });
+
+  it("production + mocks emails an allowlisted address through Supabase", async () => {
+    const prev = {
+      node: process.env.NODE_ENV,
+      base: process.env.PUBLIC_BASE_URL,
+      url: process.env.SUPABASE_URL,
+      anon: process.env.SUPABASE_ANON_KEY,
+    };
+    setEnv("NODE_ENV", "production");
+    process.env.PUBLIC_BASE_URL = "https://family.example";
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_ANON_KEY = "anon-test-key";
+    const urls: string[] = [];
+    const original = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      urls.push(String(input));
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+    try {
+      const allowed = await startEmailSignIn("adit@gmail.com");
+      assert.equal(allowed.ok, true);
+      if (allowed.ok) assert.equal(allowed.mode, "email");
+      assert.equal(urls.length, 1);
+      assert.match(urls[0]!, /auth\/v1\/magiclink/);
+    } finally {
+      globalThis.fetch = original;
+      setEnv("NODE_ENV", prev.node);
+      process.env.PUBLIC_BASE_URL = prev.base;
+      if (prev.url) process.env.SUPABASE_URL = prev.url;
+      else delete process.env.SUPABASE_URL;
+      if (prev.anon) process.env.SUPABASE_ANON_KEY = prev.anon;
+      else delete process.env.SUPABASE_ANON_KEY;
     }
   });
 

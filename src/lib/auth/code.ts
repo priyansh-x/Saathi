@@ -1,6 +1,7 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { allowedEmails, sessionSecret } from "@/lib/config";
 import { query } from "@/lib/db/client";
+import { emailMaySignIn } from "@/lib/members";
 import { canViewOps } from "@/lib/ops/access";
 import { nowIstStamp } from "@/lib/time";
 import { encodeSession } from "./session";
@@ -51,7 +52,7 @@ export function mintSignInCode() {
 
 export async function persistSignInCode(rawEmail: string, code: string, now = Date.now()) {
   const email = rawEmail.trim().toLowerCase();
-  if (!canIssueSignIn(email)) return { ok: false as const, error: "Pilot is invite-only for now" };
+  if (!(await emailMaySignIn(email))) return { ok: false as const, error: "Pilot is invite-only for now" };
   if ((await countRecentCodes(email, now)) >= ISSUE_MAX) {
     return { ok: false as const, error: "Wait a few minutes, then try again." };
   }
@@ -69,7 +70,7 @@ export async function persistSignInCode(rawEmail: string, code: string, now = Da
 /** @deprecated generate then persist only after mail is accepted */
 export async function issueSignInCode(rawEmail: string) {
   const email = rawEmail.trim().toLowerCase();
-  if (!canIssueSignIn(email)) return { ok: false as const, error: "Pilot is invite-only for now" };
+  if (!(await emailMaySignIn(email))) return { ok: false as const, error: "Pilot is invite-only for now" };
   if ((await countRecentCodes(email)) >= ISSUE_MAX) {
     return { ok: false as const, error: "Wait a few minutes, then try again." };
   }
@@ -78,7 +79,7 @@ export async function issueSignInCode(rawEmail: string) {
 
 export async function verifySignInCode(rawEmail: string, rawCode: string) {
   const email = rawEmail.trim().toLowerCase();
-  if (!canIssueSignIn(email)) return null;
+  if (!(await emailMaySignIn(email))) return null;
   const code = rawCode.replace(/\D/g, "");
   if (!/^\d{6}$/.test(code)) return null;
   const rows = await query<{

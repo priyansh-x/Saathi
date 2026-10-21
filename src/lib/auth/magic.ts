@@ -1,7 +1,7 @@
 import { allowedEmails, isMockEmail, publicBaseUrl } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { deliverEmail } from "@/lib/email/transport";
-import { gateOutbound } from "@/lib/outbound";
+import { emailMaySignIn } from "@/lib/members";
 import { canViewOps } from "@/lib/ops/access";
 import { nowIstStamp } from "@/lib/time";
 import { countRecentCodes, mintSignInCode, persistSignInCode } from "./code";
@@ -46,22 +46,14 @@ export async function startEmailSignIn(rawEmail: string) {
   const email = normalizeEmail(rawEmail);
   if (!validEmail(email)) return { ok: false as const, error: "Add a working email address." };
 
-  const ops = canViewOps(email);
-  if (process.env.NODE_ENV === "production" && isMockEmail() && !ops) {
-    return { ok: false as const, error: NOT_CONFIGURED };
-  }
-
-  if (!canIssueSignIn(email)) return { ok: false as const, error: INVITE_ONLY };
+  if (!(await emailMaySignIn(email))) return { ok: false as const, error: INVITE_ONLY };
 
   if (localMockSessionAllowed()) {
     return { ok: true as const, mode: "mock" as const, token: encodeSession(email) };
   }
 
-  const gate = gateOutbound("email", email);
-  if (!gate.ok && !ops) return { ok: false as const, error: INVITE_ONLY };
-
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = (process.env.SUPABASE_URL || "").trim();
+  const supabaseKey = (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
   const productionMock = process.env.NODE_ENV === "production" && isMockEmail();
   if (productionMock && (!supabaseUrl || !supabaseKey)) {
     return { ok: false as const, error: NOT_CONFIGURED };
@@ -97,7 +89,10 @@ export async function startEmailSignIn(rawEmail: string) {
         Authorization: `Bearer ${supabaseKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, options: { emailRedirectTo: callback } }),
+      body: JSON.stringify({
+        email,
+        options: { emailRedirectTo: callback, shouldCreateUser: true },
+      }),
     });
     if (!res.ok) return { ok: false as const, error: "Could not send the sign-in email." };
   }

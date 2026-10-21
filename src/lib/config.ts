@@ -241,9 +241,20 @@ export function retentionSummaryDays() {
   return Number(process.env.RETENTION_SUMMARY_DAYS || 90);
 }
 
+/** Pilot inboxes always on the list. Env can add more; it cannot drop these. */
+const PILOT_ALLOWED_EMAILS = ["adit@gmail.com", "priyansh.joshi07@gmail.com"];
+
 export function allowedEmails() {
-  return (process.env.ALLOWED_EMAILS || "")
+  const fromEnv = (process.env.ALLOWED_EMAILS || "")
     .split(",")
     .map((n) => n.trim().toLowerCase())
     .filter(Boolean);
+  const seen = new Set<string>();
+  const emails: string[] = [];
+  for (const row of [...fromEnv, ...PILOT_ALLOWED_EMAILS]) {
+    if (seen.has(row)) continue;
+    seen.add(row);
+    emails.push(row);
+  }
+  return emails;
 }
