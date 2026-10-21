@@ -102,7 +102,7 @@ describe("email sign-in", () => {
       assert.equal(allowed.ok, true);
       if (allowed.ok) assert.equal(allowed.mode, "email");
       assert.equal(urls.length, 1);
-      assert.match(urls[0]!, /auth\/v1\/magiclink/);
+      assert.match(urls[0]!, /auth\/v1\/otp/);
     } finally {
       globalThis.fetch = original;
       setEnv("NODE_ENV", prev.node);

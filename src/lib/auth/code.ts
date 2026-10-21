@@ -5,6 +5,7 @@ import { emailMaySignIn } from "@/lib/members";
 import { canViewOps } from "@/lib/ops/access";
 import { nowIstStamp } from "@/lib/time";
 import { encodeSession } from "./session";
+import { verifySupabaseEmailOtp } from "./supabase-otp";
 
 const TTL_MS = 10 * 60 * 1000;
 const MAX_TRIES = 5;
@@ -95,16 +96,23 @@ export async function verifySignInCode(rawEmail: string, rawCode: string) {
     [email],
   );
   const row = rows[0];
-  if (!row) return null;
-  if (new Date(row.expires_at).getTime() < Date.now()) return null;
-  const bumped = await query<{ tries: number }>(
-    `update auth_codes set tries = tries + 1 where id = $1 and tries < $2 returning tries`,
-    [row.id, MAX_TRIES],
-  );
-  if (!bumped[0]) return null;
-  if (!hashesEqual(row.code_hash, hashSignInCode(email, code))) return null;
-  await query(`update auth_codes set consumed_at = $2 where id = $1`, [row.id, nowIstStamp()]);
-  return encodeSession(email);
+  if (row && new Date(row.expires_at).getTime() >= Date.now()) {
+    if (hashesEqual(row.code_hash, hashSignInCode(email, code))) {
+      const bumped = await query<{ tries: number }>(
+        `update auth_codes set tries = tries + 1 where id = $1 and tries < $2 returning tries`,
+        [row.id, MAX_TRIES],
+      );
+      if (bumped[0]) {
+        await query(`update auth_codes set consumed_at = $2 where id = $1`, [row.id, nowIstStamp()]);
+        return encodeSession(email);
+      }
+    }
+  }
+  if (await verifySupabaseEmailOtp(email, code)) return encodeSession(email);
+  if (row) {
+    await query(`update auth_codes set tries = tries + 1 where id = $1 and tries < $2`, [row.id, MAX_TRIES]);
+  }
+  return null;
 }
 
 export async function listMockPendingCodes() {

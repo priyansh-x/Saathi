@@ -230,7 +230,8 @@ export const messages = {
     setupEmail: "Email",
     setupContinue: "Continue",
     setupWaitingEmail: "Waiting for the email",
-    setupCheckInbox: "Check that inbox for a sign-in link. It expires in 30 minutes.",
+    setupCheckInbox:
+      "Check that inbox for a 6-digit code and type it here. If the mail also has a link to localhost, ignore the link — it is not the family desk.",
     setupYouKicker: "You",
     setupYouTitle: "Who gets the morning note?",
     setupYourName: "Your name",
@@ -507,7 +508,8 @@ export const messages = {
     setupEmail: "ईमेल",
     setupContinue: "आगे",
     setupWaitingEmail: "ईमेल का इंतज़ार",
-    setupCheckInbox: "उस इनबॉक्स में साइन-इन लिंक देखें। तीस मिनट में खत्म होगा।",
+    setupCheckInbox:
+      "उस इनबॉक्स में 6 अंकों का कोड देखकर यहाँ लिखें। मेल में localhost वाला लिंक हो तो उसे छोड़ दें — वह परिवार डेस्क नहीं है।",
     setupYouKicker: "आप",
     setupYouTitle: "सुबह का नोट किसे जाए?",
     setupYourName: "आपका नाम",

@@ -11,6 +11,9 @@ process.env.MOCK_WHATSAPP = "1";
 process.env.MOCK_EMAIL = "1";
 process.env.ALLOWED_EMAILS = "pilot@example.com";
 process.env.SESSION_SECRET = "test-session-secret-for-codes-at-least-32ch";
+delete process.env.SUPABASE_URL;
+delete process.env.SUPABASE_ANON_KEY;
+delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 before(async () => {
   await seed();
@@ -165,5 +168,24 @@ describe("sign-in codes", () => {
     const session = await verifySignInCode("same-minute@example.com", second.code);
     assert.ok(session);
     assert.equal(decodeSession(session)?.email, "same-minute@example.com");
+  });
+
+  it("accepts a Supabase email OTP when our hashed code is different", async () => {
+    await resetCodes();
+    const issued = await issueSignInCode("pilot@example.com");
+    assert.equal(issued.ok, true);
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_ANON_KEY = "anon-test-key";
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () => new Response("{}", { status: 200 })) as typeof fetch;
+    try {
+      const session = await verifySignInCode("pilot@example.com", "654321");
+      assert.ok(session);
+      assert.equal(decodeSession(session)?.email, "pilot@example.com");
+    } finally {
+      globalThis.fetch = original;
+      delete process.env.SUPABASE_URL;
+      delete process.env.SUPABASE_ANON_KEY;
+    }
   });
 });

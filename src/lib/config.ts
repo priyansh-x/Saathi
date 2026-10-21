@@ -54,7 +54,14 @@ export function isWhatsappTemplateApproved(name: string) {
 }
 
 export function publicBaseUrl() {
-  return (process.env.PUBLIC_BASE_URL || "http://127.0.0.1:43147").replace(/\/$/, "");
+  const fromEnv = (process.env.PUBLIC_BASE_URL || "").trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  const vercel =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+    (process.env.VERCEL_ENV === "production" ? process.env.VERCEL_URL : "") ||
+    "";
+  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
+  return "http://127.0.0.1:43147";
 }
 
 /** Optional HTTPS/HTTP URL of a real test-call recording. Empty keeps /demo silent. Never a local file in the repo. */

@@ -6,6 +6,7 @@ import { canViewOps } from "@/lib/ops/access";
 import { nowIstStamp } from "@/lib/time";
 import { countRecentCodes, mintSignInCode, persistSignInCode } from "./code";
 import { encodeSession, newAuthToken } from "./session";
+import { sendSupabaseEmailOtp } from "./supabase-otp";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "10.0.2.2"]);
@@ -78,23 +79,14 @@ export async function startEmailSignIn(rawEmail: string) {
     callback,
   ].join("\n");
 
-  const sent =
-    productionMock ? { ok: false as const } : await deliverEmail({ to: email, subject: "Saathi sign-in code", text });
+  const sent = productionMock
+    ? await sendSupabaseEmailOtp(email)
+    : await deliverEmail({ to: email, subject: "Saathi sign-in code", text });
   if (!sent.ok) {
+    if (productionMock) return { ok: false as const, error: sent.error || NOT_CONFIGURED };
     if (!supabaseUrl || !supabaseKey) return { ok: false as const, error: NOT_CONFIGURED };
-    const res = await fetch(`${supabaseUrl.replace(/\/$/, "")}/auth/v1/magiclink`, {
-      method: "POST",
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        options: { emailRedirectTo: callback, shouldCreateUser: true },
-      }),
-    });
-    if (!res.ok) return { ok: false as const, error: "Could not send the sign-in email." };
+    const otp = await sendSupabaseEmailOtp(email);
+    if (!otp.ok) return { ok: false as const, error: otp.error || NOT_CONFIGURED };
   }
   const stored = await persistSignInCode(email, code);
   if (!stored.ok) return stored;
