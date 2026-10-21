@@ -231,7 +231,9 @@ export const messages = {
     setupContinue: "Continue",
     setupWaitingEmail: "Waiting for the email",
     setupCheckInbox:
-      "Type the code from that email here. If the mail also has a link to localhost, ignore the link — it is not the family desk.",
+      "Supabase sends a sign-in link, not a 6-digit code. Copy the full link from the email and paste it below. Do not tap it if it opens localhost.",
+    setupPasteLink: "Paste the sign-in link",
+    setupUseLink: "Use this link",
     setupYouKicker: "You",
     setupYouTitle: "Who gets the morning note?",
     setupYourName: "Your name",
@@ -509,7 +511,9 @@ export const messages = {
     setupContinue: "आगे",
     setupWaitingEmail: "ईमेल का इंतज़ार",
     setupCheckInbox:
-      "उस मेल का कोड यहाँ लिखें। मेल में localhost वाला लिंक हो तो उसे छोड़ दें — वह परिवार डेस्क नहीं है।",
+      "सुपाबेस कोड नहीं भेजता — साइन-इन लिंक भेजता है। मेल से पूरा लिंक कॉपी करके नीचे चिपकाएँ। localhost खुलता हो तो लिंक न दबाएँ।",
+    setupPasteLink: "साइन-इन लिंक चिपकाएँ",
+    setupUseLink: "यह लिंक चलाएँ",
     setupYouKicker: "आप",
     setupYouTitle: "सुबह का नोट किसे जाए?",
     setupYourName: "आपका नाम",

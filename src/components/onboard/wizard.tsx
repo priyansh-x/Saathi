@@ -8,6 +8,7 @@ import setupImg from "../../../public/images/setup-child-phone.jpg";
 import neighbourImg from "../../../public/images/neighbour-knock.jpg";
 import { BrandMark } from "@/components/brand";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CHILD_WRITTEN_TEXT } from "@/lib/consent-copy";
 import {
@@ -76,7 +77,7 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
   const [saving, setSaving] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-  const [code, setCode] = useState("");
+  const [link, setLink] = useState("");
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -100,21 +101,21 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
     setError(null);
   }
 
-  async function verifyCode() {
+  async function verifyLink() {
     setError(null);
     setSaving(true);
     try {
-      const res = await fetch("/api/auth/verify-code", {
+      const res = await fetch("/api/auth/verify-link", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ link }),
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
+      const data = (await res.json()) as { ok?: boolean; error?: string; email?: string };
       if (!res.ok) {
-        setError(data.error || (lang === "hi" ? "कोड नहीं चला।" : "That code did not work."));
+        setError(data.error || t.setupSignFail);
         return;
       }
-      setSignedEmail(email.trim().toLowerCase());
+      setSignedEmail((data.email || email).trim().toLowerCase());
       setStep("you");
     } catch {
       setError(t.setupSignFail);
@@ -223,25 +224,19 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
               placeholder="you@example.com"
             />
           </Field>
-          {sent ? (
-            <div className="mt-4 space-y-3">
-              <p className="text-sm">{t.setupCheckInbox}</p>
-              <p className="text-sm">
-                {lang === "hi" ? "ऐप में कोड टाइप करें — ईमेल का लिंक ब्राउज़र खोल देगा।" : "Type the code in this app. The email link opens the phone browser, not Saathi."}
-              </p>
-              <Field label={lang === "hi" ? "ईमेल वाला कोड" : "Code from the email"} htmlFor="code">
-                <Input
-                  id="code"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={8}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                  placeholder="000000"
-                />
-              </Field>
-            </div>
-          ) : null}
+          <div className="mt-4 space-y-3">
+            <p className="text-sm">{t.setupCheckInbox}</p>
+            <Field label={t.setupPasteLink} htmlFor="link">
+              <Textarea
+                id="link"
+                className="min-h-24"
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                placeholder="https://"
+                autoComplete="off"
+              />
+            </Field>
+          </div>
         </>
       );
     }
@@ -472,18 +467,18 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
         <p className="mt-3 text-muted-foreground">{t.setupDoneBody}</p>
       </>
     );
-  }, [step, form, email, signedEmail, langs, sent, code, who, t, lang]);
+  }, [step, form, email, signedEmail, langs, sent, link, who, t, lang]);
 
   const primary = (() => {
     if (step === "sign") {
-      if (sent) {
+      if (link.trim().length > 12) {
         return {
-          label: saving ? "…" : lang === "hi" ? "कोड डालें" : "Type the code",
-          action: verifyCode,
-          disabled: saving || code.length < 6,
+          label: saving ? "…" : t.setupUseLink,
+          action: verifyLink,
+          disabled: saving,
         };
       }
-      return { label: saving ? "…" : t.setupContinue, action: signIn, disabled: saving };
+      return { label: saving ? "…" : t.setupContinue, action: signIn, disabled: saving || !email.trim() };
     }
     if (step === "medicines") {
       return { label: form.medicines.length ? t.setupContinue : t.setupNoTablet, action: next, disabled: saving };

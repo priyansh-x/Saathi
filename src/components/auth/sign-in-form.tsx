@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand";
 import { AddToHome } from "@/components/pwa/register";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { saveDeskToken } from "@/lib/storage";
 
@@ -19,14 +20,50 @@ async function openDesk(lang: Lang) {
   window.location.href = `/onboard?lang=${lang}`;
 }
 
+function hrefLooksLikeAuthLink(href: string) {
+  return /token_hash=|type=magiclink|type=signup|access_token=|\/auth\/v1\/verify/i.test(href);
+}
+
 export function SignInForm({ lang }: { lang: Lang }) {
   const t = messages[lang];
   const other = lang === "hi" ? "en" : "hi";
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  const [link, setLink] = useState("");
   const [sent, setSent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function useLink(raw: string) {
+    setError(null);
+    setSaving(true);
+    try {
+      const res = await fetch("/api/auth/verify-link", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ link: raw }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok) {
+        setError(data.error || t.setupSignFail);
+        return;
+      }
+      await openDesk(lang);
+    } catch {
+      setError(t.setupSignFail);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const href = window.location.href;
+    if (hrefLooksLikeAuthLink(href)) {
+      void useLink(href);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot landing from a clicked mail
+  }, []);
 
   async function sendCode() {
     setError(null);
@@ -55,28 +92,7 @@ export function SignInForm({ lang }: { lang: Lang }) {
     }
   }
 
-  async function verify() {
-    setError(null);
-    setSaving(true);
-    try {
-      const res = await fetch("/api/auth/verify-code", {
-        method: "POST",
-        credentials: "include",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, code }),
-      });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok) {
-        setError(data.error || t.setupSignFail);
-        return;
-      }
-      await openDesk(lang);
-    } catch {
-      setError(t.setupSignFail);
-    } finally {
-      setSaving(false);
-    }
-  }
+  const hasLink = link.trim().length > 12;
 
   return (
     <main className="app-shell">
@@ -104,35 +120,40 @@ export function SignInForm({ lang }: { lang: Lang }) {
           autoComplete="email"
         />
 
-        {sent ? (
-          <>
-            <p className="mt-4 text-sm">{t.setupCheckInbox}</p>
-            <label className="mt-4 block text-sm font-medium" htmlFor="code">
-              {lang === "hi" ? "ईमेल वाला कोड" : "Code from the email"}
-            </label>
-            <Input
-              id="code"
-              className="mt-2"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={8}
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
-              placeholder="000000"
-            />
-          </>
-        ) : null}
+        <p className="mt-4 text-sm">{t.setupCheckInbox}</p>
+        <label className="mt-4 block text-sm font-medium" htmlFor="link">
+          {t.setupPasteLink}
+        </label>
+        <Textarea
+          id="link"
+          className="mt-2 min-h-24"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          placeholder="https://"
+          autoComplete="off"
+        />
 
         {error ? <p className="mt-3 text-sm text-alert">{error}</p> : null}
 
-        <button
-          type="button"
-          className="btn-primary mt-6"
-          disabled={saving || !email.trim() || (sent && code.length < 6)}
-          onClick={() => void (sent ? verify() : sendCode())}
-        >
-          {saving ? t.opening : sent ? t.setupContinue : t.signInCta}
-        </button>
+        {hasLink ? (
+          <button
+            type="button"
+            className="btn-primary mt-6"
+            disabled={saving}
+            onClick={() => void useLink(link)}
+          >
+            {saving ? t.opening : t.setupUseLink}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn-primary mt-6"
+            disabled={saving || !email.trim()}
+            onClick={() => void sendCode()}
+          >
+            {saving ? t.opening : t.signInCta}
+          </button>
+        )}
 
         <AddToHome lang={lang} />
 
