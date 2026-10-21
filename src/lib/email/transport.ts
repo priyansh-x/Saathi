@@ -85,6 +85,14 @@ function encodeLogin(value: string) {
   return Buffer.from(value, "utf8").toString("base64");
 }
 
+function encodePlain(user: string, pass: string) {
+  return Buffer.from(`\0${user}\0${pass}`, "utf8").toString("base64");
+}
+
+export function smtpEnvelopeFrom(from: string) {
+  return from.match(/<([^>]+)>/)?.[1]?.trim() || from.trim();
+}
+
 /** Implicit TLS on 465. STARTTLS on other ports. Exported for the local fake-server test. */
 export async function sendSmtp(message: EmailMessage, auth: SmtpAuth = {}): Promise<EmailSendResult> {
   const host = (auth.host || smtpHost()).trim();
@@ -92,7 +100,8 @@ export async function sendSmtp(message: EmailMessage, auth: SmtpAuth = {}): Prom
   const user = (auth.user ?? process.env.SMTP_USER ?? "").trim();
   const pass = auth.pass ?? process.env.SMTP_PASS ?? "";
   const from = (auth.from || emailFrom()).trim();
-  const timeoutMs = 12_000;
+  const envelope = smtpEnvelopeFrom(from);
+  const timeoutMs = 20_000;
 
   return new Promise((resolve) => {
     let socket: net.Socket | tls.TLSSocket | null = null;
@@ -104,6 +113,7 @@ export async function sendSmtp(message: EmailMessage, auth: SmtpAuth = {}): Prom
     const finish = (result: EmailSendResult) => {
       if (settled) return;
       settled = true;
+      clearTimeout(timer);
       socket?.destroy();
       resolve(result);
     };
@@ -114,6 +124,20 @@ export async function sendSmtp(message: EmailMessage, auth: SmtpAuth = {}): Prom
       socket?.write(cmd.endsWith("\r\n") ? cmd : `${cmd}\r\n`);
     };
 
+    const beginMail = () => {
+      step = 5;
+      write(`MAIL FROM:<${envelope}>`);
+    };
+
+    const beginAuth = () => {
+      if (!user) {
+        beginMail();
+        return;
+      }
+      step = 4;
+      write(`AUTH PLAIN ${encodePlain(user, pass)}`);
+    };
+
     const onCode = (code: number, text: string) => {
       if (step === 0 && code === 220) {
         step = 1;
@@ -122,12 +146,7 @@ export async function sendSmtp(message: EmailMessage, auth: SmtpAuth = {}): Prom
       }
       if (step === 1 && code === 250) {
         if (port === 465) {
-          step = 3;
-          if (user) write(`AUTH LOGIN`);
-          else {
-            step = 5;
-            write(`MAIL FROM:<${from}>`);
-          }
+          beginAuth();
           return;
         }
         step = 2;
@@ -147,31 +166,21 @@ export async function sendSmtp(message: EmailMessage, auth: SmtpAuth = {}): Prom
         return;
       }
       if (step === 3 && code === 250) {
-        if (user) {
-          step = 4;
-          write("AUTH LOGIN");
-        } else {
-          step = 5;
-          write(`MAIL FROM:<${from}>`);
-        }
+        beginAuth();
         return;
       }
       if (step === 4) {
-        if (code === 334 && /username/i.test(Buffer.from(text.replace(/^334\s+/, ""), "base64").toString("utf8") || "Username")) {
-          write(encodeLogin(user));
+        if (code === 235) {
+          beginMail();
           return;
         }
         if (code === 334) {
-          if (!lines.some((line) => line.startsWith("334") && line !== text)) {
+          const prompt = Buffer.from(text.replace(/^334\s+/, ""), "base64").toString("utf8");
+          if (/username/i.test(prompt) || !lines.filter((line) => line.startsWith("334")).slice(0, -1).length) {
             write(encodeLogin(user));
             return;
           }
           write(encodeLogin(pass));
-          return;
-        }
-        if (code === 235) {
-          step = 5;
-          write(`MAIL FROM:<${from}>`);
           return;
         }
       }
@@ -202,12 +211,10 @@ export async function sendSmtp(message: EmailMessage, auth: SmtpAuth = {}): Prom
       }
       if (step === 8 && code === 250) {
         write("QUIT");
-        clearTimeout(timer);
         finish({ ok: true, providerId: "smtp" });
         return;
       }
       if (code >= 400) {
-        clearTimeout(timer);
         finish({ ok: false, error: `smtp_${code}` });
       }
     };

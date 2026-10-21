@@ -3,7 +3,7 @@ import net from "node:net";
 import tls from "node:tls";
 import { EventEmitter } from "node:events";
 import { describe, it } from "node:test";
-import { sendSmtp } from "./transport";
+import { sendSmtp, smtpEnvelopeFrom } from "./transport";
 
 process.env.MOCK_EMAIL = "1";
 
@@ -20,7 +20,9 @@ class FakeSmtpSocket extends EventEmitter {
     this.chunks.push(String(chunk));
     const text = String(chunk);
     queueMicrotask(() => {
-      if (text.startsWith("EHLO")) this.emit("data", "250-HI\r\n250 OK\r\n");
+      if (text.startsWith("EHLO")) this.emit("data", "250-HI\r\n250 AUTH PLAIN LOGIN\r\n");
+      else if (text.startsWith("AUTH PLAIN")) this.emit("data", "235 ok\r\n");
+      else if (text.startsWith("AUTH LOGIN")) this.emit("data", "334 VXNlcm5hbWU6\r\n");
       else if (text.startsWith("MAIL")) this.emit("data", "250 OK\r\n");
       else if (text.startsWith("RCPT")) this.emit("data", "250 OK\r\n");
       else if (text.startsWith("DATA")) this.emit("data", "354 go\r\n");
@@ -80,6 +82,41 @@ describe("SMTP 465", () => {
       else delete process.env.SMTP_PORT;
       if (prev.from) process.env.EMAIL_FROM = prev.from;
       else delete process.env.EMAIL_FROM;
+    }
+  });
+
+  it("authenticates on 465 and uses the address inside EMAIL_FROM", async () => {
+    assert.equal(smtpEnvelopeFrom("Saathi <priyansh.joshi07@gmail.com>"), "priyansh.joshi07@gmail.com");
+    const origTls = tls.connect;
+    const sock = new FakeSmtpSocket();
+    tls.connect = (() => {
+      queueMicrotask(() => sock.emit("data", "220 fake\r\n"));
+      return sock as unknown as tls.TLSSocket;
+    }) as typeof tls.connect;
+    try {
+      const result = await sendSmtp(
+        { to: "adit@gmail.com", subject: "Saathi sign-in code", text: "code" },
+        {
+          host: "smtp.gmail.com",
+          port: 465,
+          user: "priyansh.joshi07@gmail.com",
+          pass: "abcdefghijklmnop",
+          from: "Saathi <priyansh.joshi07@gmail.com>",
+        },
+      );
+      assert.equal(result.ok, true, JSON.stringify(result));
+      assert.equal(
+        sock.chunks.some((chunk) => chunk.startsWith("AUTH PLAIN ")),
+        true,
+        sock.chunks.join(" | "),
+      );
+      assert.equal(
+        sock.chunks.some((chunk) => chunk.includes("MAIL FROM:<priyansh.joshi07@gmail.com>")),
+        true,
+        sock.chunks.join(" | "),
+      );
+    } finally {
+      tls.connect = origTls;
     }
   });
 });

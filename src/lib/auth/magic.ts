@@ -69,7 +69,7 @@ export async function startEmailSignIn(rawEmail: string) {
         error: "Gmail rejected the mail login. Use the 16-character App Password as SMTP_PASS, then Redeploy.",
       };
     }
-    return { ok: false as const, error: "Could not send the sign-in email from Gmail." };
+    return { ok: false as const, error: `Could not send the sign-in email from Gmail (${sent.error}).` };
   }
   const stored = await persistSignInCode(email, code);
   if (!stored.ok) return stored;
