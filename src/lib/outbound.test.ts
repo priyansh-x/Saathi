@@ -11,6 +11,16 @@ describe("allowlist", () => {
     assert.equal(decision.ok, true);
   });
 
+  it("allows the pilot India mobiles even without plus-91 formatting", () => {
+    process.env.ALLOWED_PHONE_NUMBERS = "";
+    process.env.MOCK_BOLNA = "0";
+    process.env.SAATHI_KILL_SWITCH = "0";
+    assert.equal(gateOutbound("call", "+918840540908").ok, true);
+    assert.equal(gateOutbound("call", "9008453129").ok, true);
+    assert.equal(gateOutbound("call", "+919845467710").ok, true);
+    assert.equal(gateOutbound("call", "+919999999999").ok, false);
+  });
+
   it("mocks web push when WhatsApp mocks are on", () => {
     process.env.SAATHI_KILL_SWITCH = "0";
     process.env.MOCK_WHATSAPP = "1";

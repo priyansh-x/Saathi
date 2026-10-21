@@ -2,7 +2,8 @@ import { allowedPhones, callProviderName, dailyBudgetMinutes, isMockBolna, killS
 import { buildCallContext } from "@/lib/bolna/call-context";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
-import { gateOutbound, normalizePhone } from "@/lib/outbound";
+import { gateOutbound } from "@/lib/outbound";
+import { sameIndiaMobile } from "@/lib/phone";
 import { istDayBounds, istDayKey, minutesNowIst, nowIstStamp, parseHhMm } from "@/lib/time";
 
 export type PlaceCallOk = {
@@ -86,7 +87,7 @@ export async function prepareMorningCall(
   if (!isMockBolna() && !(await hasPilotConsent(parentId))) {
     return { ok: false as const, reason: "consent" };
   }
-  const onAllowlist = allowedPhones().map(normalizePhone).includes(normalizePhone(parent.phone));
+  const onAllowlist = allowedPhones().some((row) => sameIndiaMobile(row, parent.phone));
   if (!parent.is_example && !onAllowlist) {
     return { ok: false as const, reason: "not_allowlisted" };
   }

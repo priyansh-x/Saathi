@@ -215,11 +215,22 @@ export function maxCallSeconds() {
   return Number(process.env.MAX_CALL_SECONDS || 180);
 }
 
+/** Pilot mobiles always on the list. Env can add more; it cannot drop these. */
+const PILOT_ALLOWED_PHONES = ["+918840540908", "+919008453129", "+919845467710"];
+
 export function allowedPhones() {
-  return (process.env.ALLOWED_PHONE_NUMBERS || "")
+  const fromEnv = (process.env.ALLOWED_PHONE_NUMBERS || "")
     .split(",")
     .map((n) => n.replace(/\s/g, ""))
     .filter(Boolean);
+  const seen = new Set<string>();
+  const phones: string[] = [];
+  for (const row of [...fromEnv, ...PILOT_ALLOWED_PHONES]) {
+    if (seen.has(row)) continue;
+    seen.add(row);
+    phones.push(row);
+  }
+  return phones;
 }
 
 export function retentionTranscriptDays() {

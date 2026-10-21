@@ -21,7 +21,7 @@ function set(value: string | undefined) {
 export function bolnaEnvChecks(): ReadinessCheck[] {
   const base = publicBaseUrl();
   const phones = allowedPhones();
-  const allowOk = phones.length === 1;
+  const allowOk = phones.length >= 1;
   return [
     {
       id: "call_provider",
@@ -61,9 +61,9 @@ export function bolnaEnvChecks(): ReadinessCheck[] {
     },
     {
       id: "allowlist",
-      label: "Allowlist is exactly one number",
+      label: "Allowlist has at least one number",
       ok: allowOk,
-      detail: allowOk ? maskPhone(phones[0]!) : phones.length === 0 ? "empty" : `${phones.length} numbers`,
+      detail: allowOk ? phones.map((row) => maskPhone(row)).join(", ") : "empty",
     },
   ];
 }
@@ -127,7 +127,7 @@ export async function loadBolnaReadiness(opts: { fetchImpl?: SyncFetch } = {}): 
     checks,
     allGreen: checks.filter((c) => c.id !== "call_provider").every((c) => c.ok),
     lastWebhook,
-    allowlistMasked: phones.length === 1 ? maskPhone(phones[0]!) : null,
+    allowlistMasked: phones.length ? phones.map((row) => maskPhone(row)).join(", ") : null,
   };
 }
 

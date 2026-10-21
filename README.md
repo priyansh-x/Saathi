@@ -123,9 +123,9 @@ Nothing reaches a real person without Priyansh's explicit go-ahead. Defaults sta
 
 1. **Env.** Set `BOLNA_API_KEY`, `BOLNA_AGENT_ID`, `BOLNA_TOOL_TOKEN`, `BOLNA_WEBHOOK_SECRET`, `CRON_SECRET`, and `PUBLIC_BASE_URL` (HTTPS). Keep `MOCK_WHATSAPP=1`. Leave `SAATHI_KILL_SWITCH=0` until you need to freeze.
 2. **Sync dry, then apply.** `npm run bolna:sync` prints the v2 agent JSON (placeholders only) and a line-by-line diff against `scripts/bolna/agent.json` (no network). Only Priyansh runs `npm run bolna:sync -- --apply`, which PUTs the existing agent with secrets in memory. It never creates a new one, never writes secrets to disk, and refuses localhost/`http` `PUBLIC_BASE_URL`. After apply, set Bolna Extractions → Add headers to `{"Authorization":"Bearer <BOLNA_WEBHOOK_SECRET>"}` — the agent API has `webhook_url` only.
-3. **Readiness all green.** Sign in with an `OPS_EMAILS` address. `/ops` Bolna card: CALL_PROVIDER, agent id / API key / `BOLNA_TOOL_TOKEN` / webhook secret set, `PUBLIC_BASE_URL` HTTPS, **Reachable** (our `/api/health` over HTTPS), allowlist exactly one number (last four only). Secrets are never shown.
+3. **Readiness all green.** Sign in with an `OPS_EMAILS` address. `/ops` Bolna card: CALL_PROVIDER, agent id / API key / `BOLNA_TOOL_TOKEN` / webhook secret set, `PUBLIC_BASE_URL` HTTPS, **Reachable** (our `/api/health` over HTTPS), allowlist has at least one number (last four only). Secrets are never shown.
 4. **Simulate webhook.** On `/ops`, **Simulate a Bolna webhook** is a separate control. Last Bolna webhook counts real deliveries only, not this button. EXAMPLE synthetic payload only.
-5. **Allowlist own number.** `ALLOWED_PHONE_NUMBERS` is exactly Priyansh's E.164 number. `ALLOWED_EMAILS` is his inbox.
+5. **Allowlist.** `ALLOWED_PHONE_NUMBERS` is a comma-separated E.164 list (currently the pilot mobiles). `ALLOWED_EMAILS` is the matching inbox list.
 6. **Provider.** Priyansh sets `CALL_PROVIDER=bolna` (do not leave this on).
 7. **Test-call dry, then `--yes`.** `npm run bolna:test-call -- +91XXXXXXXXXX` prints the payload and does not fetch. Live dial only with `--yes`, `CALL_PROVIDER=bolna`, and the allowlisted number, with Priyansh on the line.
 8. **Desk.** Confirm Today, the call row, and the briefing path on the family desk (EXAMPLE data stays labelled EXAMPLE).
