@@ -6,7 +6,7 @@ import { ChevronRight } from "lucide-react";
 import { EmptyState, PageTitle } from "@/components/family/chrome";
 import type { AlertRow, CallRow, DoseLog } from "@/lib/db/types";
 import {
-  callOnDayKey,
+  callsOnDay,
   dayCallLabel,
   dayHasAlert,
   dayMedsLabel,
@@ -17,7 +17,7 @@ import {
   qs,
 } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
-import { MONTH_EN, istDayOffset, parseIstParts, weekdayShort } from "@/lib/time";
+import { MONTH_EN, formatClock, istDayOffset, parseIstParts, weekdayShort } from "@/lib/time";
 
 function dayTitle(day: string, lang: Lang) {
   const { d, mo } = parseIstParts(`${day}T12:00:00+05:30`);
@@ -67,40 +67,52 @@ export function HistoryView({
         <EmptyState title={t.emptyHistory} body={t.emptyHistoryBody} />
       ) : (
         <ol className="list-group mt-2">
-          {keys.map((day) => {
-            const call = callOnDayKey(calls, day);
+          {keys.flatMap((day) => {
+            const dayCalls = callsOnDay(calls, day);
             const meds = medsOnDay(doses, day, medicineIds);
-            const mood = moodFromCall(call);
             const alert = dayHasAlert(alerts, day);
-            const body = (
-              <>
-                <span className="flex items-baseline justify-between gap-3">
-                  <span className="font-medium">{dayTitle(day, lang)}</span>
-                  <span className={`text-xs ${alert ? "text-alert" : "invisible"}`}>{t.legendAlert}</span>
-                </span>
-                <span className="mt-1 block truncate text-sm text-muted-foreground">
-                  {dayCallLabel(call, lang)} · {dayMedsLabel(meds, lang)}
-                </span>
-                <span className="mt-0.5 block h-5 truncate text-sm text-muted-foreground">
-                  {call?.status === "completed" ? moodLabel(mood, lang) : "\u00a0"}
-                </span>
-              </>
-            );
-            return (
-              <li key={day}>
-                {call ? (
+            if (dayCalls.length === 0) {
+              return [
+                <li key={day}>
+                  <div className="flex min-h-[92px] flex-col justify-center px-4 py-3 text-muted-foreground">
+                    <span className="font-medium">{dayTitle(day, lang)}</span>
+                    <span className="mt-1 block truncate text-sm">
+                      {dayCallLabel(null, lang)} · {dayMedsLabel(meds, lang)}
+                    </span>
+                  </div>
+                </li>,
+              ];
+            }
+            return dayCalls.map((call, index) => {
+              const mood = moodFromCall(call);
+              const { hh, mm } = parseIstParts(call.started_at);
+              const stamp = formatClock(hh, mm);
+              return (
+                <li key={call.id}>
                   <Link
                     href={`/d/${token}/calls/${encodeURIComponent(String(call.id))}${qs({ lang, from: "history", days: String(days) })}`}
                     className="flex min-h-[92px] items-center gap-2 px-4 py-3"
                   >
-                    <span className="min-w-0 flex-1">{body}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-baseline justify-between gap-3">
+                        <span className="font-medium">
+                          {dayTitle(day, lang)}
+                          {dayCalls.length > 1 ? ` · ${stamp}` : ""}
+                        </span>
+                        <span className={`text-xs ${alert && index === 0 ? "text-alert" : "invisible"}`}>{t.legendAlert}</span>
+                      </span>
+                      <span className="mt-1 block truncate text-sm text-muted-foreground">
+                        {dayCallLabel(call, lang)} · {dayMedsLabel(meds, lang)}
+                      </span>
+                      <span className="mt-0.5 block h-5 truncate text-sm text-muted-foreground">
+                        {call.status === "completed" ? moodLabel(mood, lang) : "\u00a0"}
+                      </span>
+                    </span>
                     <ChevronRight className="size-5 shrink-0 text-ink-3" aria-hidden />
                   </Link>
-                ) : (
-                  <div className="flex min-h-[92px] flex-col justify-center px-4 py-3 text-muted-foreground">{body}</div>
-                )}
-              </li>
-            );
+                </li>
+              );
+            });
           })}
         </ol>
       )}

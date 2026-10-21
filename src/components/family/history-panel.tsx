@@ -15,7 +15,7 @@ export async function HistoryPanel({
   data: FamilyDesk;
   days: 7 | 30;
 }) {
-  const hist = await historyDays(data.parent.id, 40);
+  const hist = await historyDays(data.parent.id, 80);
   const medicines = await medicinesFor(data.parent.id);
   return (
     <HistoryView

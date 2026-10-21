@@ -25,7 +25,7 @@ import type { DoseLog } from "@/lib/db/types";
 import type { FamilyDesk } from "@/lib/family-load";
 import { greeting, messages, personal, pickLocale, type Lang } from "@/lib/i18n/messages";
 import { heroCopy, humanQuote, reachSteps, ringCopy, slotLabel, statusTone, type DayState } from "@/lib/today";
-import { weekdayShort } from "@/lib/time";
+import { minutesNowIst, parseHhMm, weekdayShort } from "@/lib/time";
 import { weeklyDeskCopy } from "@/lib/weekly";
 import { AddToHome } from "@/components/pwa/register";
 
@@ -98,6 +98,7 @@ export function TodayPanel({
     neighbourName: data.neighbour?.first_name || "Sunita",
     ackedBy: alert?.acked_by ?? null,
     ackedAt: alert?.acked_at ?? null,
+    overdue: !data.call && minutesNowIst() >= parseHhMm(data.parent.call_time) + 10,
   });
   const steps = reachSteps({ attempts: data.attempts, plan: data.plan, callTime: data.parent.call_time });
   const quote = data.call?.mood_quote;
@@ -183,7 +184,9 @@ export function TodayPanel({
             {t.deliveredTo.replace("{name}", data.delivery.name).replace("{time}", data.delivery.clock)}
           </p>
         ) : null}
-        {data.neighbour && !neighbourReady ? <p className="mt-2 text-[15px] font-medium">{t.waitingNeighbour}</p> : null}
+        {data.neighbour && !neighbourReady && (state === "trying" || state === "act") ? (
+          <p className="mt-2 text-[15px] font-medium">{t.waitingNeighbour}</p>
+        ) : null}
         {ringNote ? <p className="mt-2 text-[15px] font-medium">{ringNote}</p> : null}
 
         {state === "trying" ? (
@@ -250,7 +253,7 @@ export function TodayPanel({
           ) : null}
 
           <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))]">
-            {state === "trying" ? null : (
+            {state === "trying" || state === "scheduled" || state === "skipped" ? null : (
               <a href={`tel:${tel}`} className="action-tile text-foreground">
                 <Phone className="size-5" aria-hidden />
                 {p(t.callMaa)}

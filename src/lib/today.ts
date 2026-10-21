@@ -40,8 +40,7 @@ export function todayStatus(args: {
     return "trying";
   }
   if (!args.call) {
-    if (args.neverCalled) return "scheduled";
-    return args.nowMin < args.callTimeMin + 10 ? "scheduled" : "trying";
+    return "scheduled";
   }
   if (args.call.status === "completed" && args.doses.some((d) => d.status === "not_taken")) return "look";
   if (args.call.status === "completed") return "good";
@@ -153,6 +152,7 @@ export function heroCopy(args: {
   neighbourName: string;
   ackedBy: string | null;
   ackedAt: string | null;
+  overdue?: boolean;
 }): { chip: string; headline: string; sub: string } {
   const t = messages[args.lang];
   const clock = formatIstClockLabel(args.callTime);
@@ -160,6 +160,13 @@ export function heroCopy(args: {
   const missed = args.doses.find((d) => d.status === "not_taken");
 
   if (args.state === "scheduled") {
+    if (args.overdue && !args.call) {
+      return {
+        chip: t.chipLater,
+        headline: t.headlineNoCallYet,
+        sub: t.noCallYetHint,
+      };
+    }
     return {
       chip: t.chipLater,
       headline: args.lang === "hi" ? `आज की कॉल सुबह ${clock} है` : `Today's call is at ${clock}`,

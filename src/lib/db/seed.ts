@@ -196,6 +196,14 @@ async function wipeExampleHistory() {
 
 async function refreshExampleHistoryIfStale() {
   if ((await exampleRev()) === EXAMPLE_SEED_REV) return;
+  const live = await query<{ n: number }>(
+    `select count(*)::int as n from calls
+     where parent_id = 'parent_kamla' and bolna_execution_id is not null and bolna_execution_id <> ''`,
+  );
+  if ((live[0]?.n ?? 0) > 0) {
+    await stampExampleRev();
+    return;
+  }
   await wipeExampleHistory();
   await seedExampleHistory();
   await stampExampleRev();

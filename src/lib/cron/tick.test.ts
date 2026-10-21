@@ -48,9 +48,11 @@ describe("daily tick window", () => {
     }
   });
 
-  it("is a half-open IST morning window from call time to 11:00", () => {
+  it("is a half-open IST morning window from call time to 12:00", () => {
     assert.equal(inMorningWindow(IN_WINDOW, "08:30"), true);
     assert.equal(inMorningWindow(BEFORE_WINDOW, "08:30"), false);
+    assert.equal(inMorningWindow(new Date("2026-10-21T04:30:00.000Z"), "10:00"), true);
+    assert.equal(inMorningWindow(new Date("2026-10-21T06:30:00.000Z"), "10:00"), false);
   });
 
   it("places at most one mock call per parent per IST day and skips before the window", async () => {

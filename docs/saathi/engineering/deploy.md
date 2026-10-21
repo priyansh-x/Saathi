@@ -78,7 +78,7 @@ Auth redirect (later, live only): Site URL = `PUBLIC_BASE_URL`; additional redir
 
 ## Vercel Cron
 
-Leave cron **off**. `POST /api/cron/tick` stays bearer-authenticated (`CRON_SECRET`). Do not add an enabled `vercel.json` schedule until Priyansh says go. See `docs/saathi/engineering/cron.md`.
+Family desk `vercel.json` now schedules `GET /api/cron/tick` every 5 minutes. Set `CRON_SECRET` in the Vercel project so Vercel can authorize the job. Live Bolna still needs `CALL_PROVIDER=bolna` / `MOCK_BOLNA=0` and `ALLOWED_PHONE_NUMBERS`. See `docs/saathi/engineering/cron.md`.
 
 ## After Priyansh clicks deploy
 

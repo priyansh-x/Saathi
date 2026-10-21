@@ -1,5 +1,9 @@
+import { flagFromTranscript } from "@/lib/bolna/flag-from-transcript";
+import { raiseAlert } from "@/lib/bolna/tools";
+import { processBolnaWebhook, parentIdFromPayload, type BolnaWebhook } from "@/lib/bolna/webhook";
 import { bolnaBaseUrl, isMockBolna } from "@/lib/config";
-import { processBolnaWebhook, type BolnaWebhook } from "@/lib/bolna/webhook";
+import { query } from "@/lib/db/client";
+import { normalizePhone } from "@/lib/outbound";
 
 export type BolnaExecution = BolnaWebhook & { execution_id?: string; id?: string; data?: BolnaExecution };
 
@@ -99,4 +103,101 @@ export async function hydrateBolnaCall(
   })().finally(() => inflight.delete(executionId));
   inflight.set(executionId, work);
   return work;
+}
+
+function executionList(body: unknown): BolnaExecution[] {
+  if (Array.isArray(body)) return body as BolnaExecution[];
+  if (!body || typeof body !== "object") return [];
+  const row = body as Record<string, unknown>;
+  if (Array.isArray(row.executions)) return row.executions as BolnaExecution[];
+  if (Array.isArray(row.data)) return row.data as BolnaExecution[];
+  if (Array.isArray(row.items)) return row.items as BolnaExecution[];
+  return [];
+}
+
+function samePhone(a?: string | null, b?: string | null) {
+  const left = normalizePhone(a || "").replace(/\D/g, "").slice(-10);
+  const right = normalizePhone(b || "").replace(/\D/g, "").slice(-10);
+  return left.length >= 10 && left === right;
+}
+
+export async function importRecentBolnaExecutions(
+  parent: { id: string; phone: string },
+  fetchImpl: typeof fetch = fetch,
+) {
+  if (isMockBolna()) return 0;
+  const agent = (process.env.BOLNA_AGENT_ID || "").trim();
+  const key = (process.env.BOLNA_API_KEY || "").trim();
+  if (!agent || !key) return 0;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  let res: Response;
+  try {
+    res = await fetchImpl(
+      `${bolnaBaseUrl()}/v2/agent/${encodeURIComponent(agent)}/executions?page_number=1&page_size=20`,
+      { headers: { Authorization: `Bearer ${key}` }, signal: ctrl.signal },
+    );
+  } catch {
+    return 0;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) return 0;
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch {
+    return 0;
+  }
+  let imported = 0;
+  for (const row of executionList(body).slice(0, 12)) {
+    const executionId = bolnaExecutionId(row);
+    if (!executionId) continue;
+    const full = (await fetchBolnaExecution(executionId, fetchImpl)) ?? row;
+    const nested = full.data && typeof full.data === "object" ? { ...full, ...full.data } : full;
+    const fromContext = parentIdFromPayload(nested);
+    const toNumber = nested.telephony_data?.to_number;
+    if (fromContext && fromContext !== parent.id) continue;
+    if (!fromContext && toNumber && !samePhone(toNumber, parent.phone)) continue;
+    nested.context_details = {
+      ...nested.context_details,
+      recipient_data: { parent_id: parent.id, ...nested.context_details?.recipient_data },
+    };
+    try {
+      await processBolnaWebhook(nested, executionId);
+      imported += 1;
+    } catch {
+      /* keep going */
+    }
+  }
+  return imported;
+}
+
+export async function backfillAlertsFromTranscripts(parentId: string) {
+  const rows = await query<{ id: string; parent_id: string; transcript_json: string | null }>(
+    `select id, parent_id, transcript_json from calls
+     where parent_id = $1 and status = 'completed'
+     order by started_at desc limit 8`,
+    [parentId],
+  );
+  let raised = 0;
+  for (const call of rows) {
+    const flag = flagFromTranscript(call.transcript_json);
+    if (flag?.category !== "EMERGENCY") continue;
+    const existing = await query<{ id: string }>(`select id from alerts where call_id = $1 and category = $2`, [
+      call.id,
+      flag.category,
+    ]);
+    if (existing[0]) continue;
+    await raiseAlert({
+      call_sid: call.id,
+      parent_id: call.parent_id,
+      category: "EMERGENCY",
+      quote: flag.quote,
+      late: true,
+      source: "transcript",
+    });
+    raised += 1;
+  }
+  return raised;
 }

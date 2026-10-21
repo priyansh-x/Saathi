@@ -9,7 +9,7 @@ import { istDayBounds, istDayKey, minutesNowIst, parseHhMm } from "@/lib/time";
 import { sendSundayWeeklyNotes } from "@/lib/weekly";
 import { escalateUndeliveredAlerts } from "@/lib/whatsapp/delivery";
 
-const WINDOW_END = parseHhMm("11:00");
+const WINDOW_END = parseHhMm("12:00");
 
 export function inMorningWindow(now: Date, callTime: string) {
   const mins = minutesNowIst(now);
@@ -43,9 +43,14 @@ export async function runDailyTick(args?: { now?: Date; elapsedMin?: number }) {
     consent_status: string;
     call_time: string;
     consent_later_count: number;
-  }>(`select id, paused, consent_status, call_time, consent_later_count from parents`);
+    is_example: boolean;
+  }>(`select id, paused, consent_status, call_time, consent_later_count, is_example from parents`);
   const results = [];
   for (const parent of parents) {
+    if (parent.is_example && !isMockBolna()) {
+      results.push({ parent_id: parent.id, skipped: "example" });
+      continue;
+    }
     if (parent.paused) {
       results.push({ parent_id: parent.id, skipped: "paused" });
       continue;

@@ -39,10 +39,14 @@ export function medsOnDay(doses: DoseLog[], day: string, medicineIds: string[]) 
   return { taken, total: medicineIds.length };
 }
 
+export function callsOnDay(calls: CallRow[], day: string) {
+  return calls
+    .filter((c) => c.started_at.startsWith(day))
+    .sort((a, b) => b.started_at.localeCompare(a.started_at));
+}
+
 export function callOnDayKey(calls: CallRow[], day: string) {
-  const onDay = calls.filter((c) => c.started_at.startsWith(day));
-  if (onDay.length === 0) return null;
-  return [...onDay].sort((a, b) => b.started_at.localeCompare(a.started_at))[0] ?? null;
+  return callsOnDay(calls, day)[0] ?? null;
 }
 
 export function dayHasAlert(alerts: AlertRow[], day: string) {
@@ -62,11 +66,9 @@ export function historySummary(
   let taken = 0;
   let expected = 0;
   for (const day of days) {
-    const call = callOnDayKey(calls, day);
-    if (call) {
-      placed += 1;
-      if (call.status === "completed") answered += 1;
-    }
+    const dayCalls = callsOnDay(calls, day);
+    placed += dayCalls.length;
+    answered += dayCalls.filter((call) => call.status === "completed").length;
     const meds = medsOnDay(doses, day, medicineIds);
     taken += meds.taken;
     expected += meds.total;

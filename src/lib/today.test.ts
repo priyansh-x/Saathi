@@ -68,17 +68,17 @@ describe("todayStatus", () => {
     );
   });
 
-  it("is trying after the window with no call", () => {
+  it("stays scheduled when no call was placed, even after the window", () => {
     assert.equal(
       todayStatus({
         paused: false,
         call: null,
         doses: [],
         actAlerts: [],
-        nowMin: 9 * 60,
-        callTimeMin: 8 * 60 + 30,
+        nowMin: 12 * 60,
+        callTimeMin: 10 * 60,
       }),
-      "trying",
+      "scheduled",
     );
   });
 
@@ -204,6 +204,8 @@ describe("todayStatus", () => {
     assert.ok(actHi.chip.trim().length > 0);
     assert.notEqual(lookEn.chip, actEn.chip);
     assert.equal(lookEn.chip, "Needs a look");
+    const late = heroCopy({ ...base, state: "scheduled", lang: "en", call: null, overdue: true });
+    assert.match(late.headline, /has not called yet/i);
     const callingEn = heroCopy({ ...base, state: "calling", lang: "en", call: call("in_progress") });
     assert.equal(callingEn.chip, "On the line");
     assert.match(callingEn.headline, /talking with Maa/i);

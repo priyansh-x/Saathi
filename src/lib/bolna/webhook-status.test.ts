@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "../db/client";
 import { seed } from "../db/seed";
-import { hydrateBolnaCall } from "./execution";
+import { backfillAlertsFromTranscripts, hydrateBolnaCall } from "./execution";
 import {
   isFailedBolnaStatus,
   isMissedBolnaStatus,
@@ -284,5 +284,32 @@ describe("Bolna status mapping", () => {
       if (prevKey) process.env.BOLNA_API_KEY = prevKey;
       else delete process.env.BOLNA_API_KEY;
     }
+  });
+
+  it("raises a chest-pain alert from a stored transcript that never got a webhook flag", async () => {
+    const sid = `st_backfill_${Date.now()}`;
+    await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
+      sid,
+      "parent_kamla",
+      "2026-10-20T17:08:00+05:30",
+      "2026-10-20T17:12:00+05:30",
+      240,
+      "completed",
+      "Settings test call.",
+      null,
+      "I have chest pain.",
+      "en",
+      JSON.stringify([{ speaker: "parent", hi: "I have chest pain.", en: "I have chest pain." }]),
+      null,
+      sid,
+      true,
+    ]);
+    const raised = await backfillAlertsFromTranscripts("parent_kamla");
+    assert.ok(raised >= 1);
+    const alerts = await query<{ quote: string }>(
+      `select quote from alerts where call_id = $1 and category = 'EMERGENCY'`,
+      [sid],
+    );
+    assert.match(alerts[0]?.quote || "", /chest pain/i);
   });
 });

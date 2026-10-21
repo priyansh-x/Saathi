@@ -16,8 +16,8 @@ const POSITIVE = [
 
 const DENIED = /(nahi|nahin|nahīn|नहीं|no|not).{0,24}(dard|pain|seene|chest|सीने)|(dard|pain|seene|chest|सीने).{0,24}(nahi|nahin|nahīn|नहीं|no)/i;
 
-export function flagFromTranscript(raw?: string | null) {
-  if (!raw) return null;
+export function flagFromTranscript(raw?: unknown) {
+  if (raw == null || raw === "") return null;
   for (const turn of parseBolnaTranscript(raw)) {
     if (turn.speaker !== "parent") continue;
     const text = turn.text.trim();

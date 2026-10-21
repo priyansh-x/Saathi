@@ -115,7 +115,7 @@ Full list: [`.env.example`](./.env.example). Never commit values.
 
 ## Staging (Priyansh deploys)
 
-Checklist: [`docs/saathi/engineering/deploy.md`](./docs/saathi/engineering/deploy.md). Vercel (family root + `landing/`) and optional Supabase. Keep `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, empty allowlists, cron off.
+Checklist: [`docs/saathi/engineering/deploy.md`](./docs/saathi/engineering/deploy.md). Vercel (family root + `landing/`) and optional Supabase. Keep WhatsApp mocked until Priyansh says go. Morning ticks use `vercel.json` + `CRON_SECRET`.
 
 ## First live call (runbook)
 

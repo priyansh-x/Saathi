@@ -4,6 +4,7 @@ import type { CallRow, DoseLog } from "@/lib/db/types";
 import {
   callBullets,
   callOnDayKey,
+  callsOnDay,
   callTranscriptLines,
   callGlyph,
   cellAria,
@@ -88,6 +89,16 @@ describe("history helpers", () => {
       "2026-10-20",
     );
     assert.equal(picked?.id, "test");
+    assert.equal(
+      callsOnDay(
+        [
+          call({ id: "morning", started_at: "2026-10-20T08:30:00+05:30" }),
+          call({ id: "test", started_at: "2026-10-20T17:08:00+05:30" }),
+        ],
+        "2026-10-20",
+      ).length,
+      2,
+    );
   });
 
   it("splits a summary into short bullets", () => {
