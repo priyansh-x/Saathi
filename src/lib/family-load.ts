@@ -61,7 +61,7 @@ export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hy
       paused: snap.parent.paused,
       call: snap.call,
       doses: uniqueDoses,
-      actAlerts: snap.actAlerts,
+      actAlerts,
       nowMin: minutesNowIst(),
       callTimeMin: parseHhMm(snap.parent.call_time),
       escalated,
