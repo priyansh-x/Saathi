@@ -1,6 +1,6 @@
 # User flows to implement
 
-Detailed narrative lives in [prd.md](../prd.md) §9. This file is the build checklist.
+Detailed narrative lives in [saathi/product/prd.md](./saathi/product/prd.md). This file is the build checklist.
 
 ## 1. First-run
 

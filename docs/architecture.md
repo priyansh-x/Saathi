@@ -1,83 +1,65 @@
 # Architecture
 
-Product specs in [docs/saathi/](./saathi/) win over this file when they disagree. Working name: **Saathi**.
+Product specs in [saathi/](./saathi/) win when they disagree with this file.
 
 ## Surfaces
 
 ```
-Parent  -- PSTN -->  Bolna agent (Phase 2)
-Child   -- WhatsApp briefing (Phase 3) + /d/[token] magic-link web view
-Neighbour -- alert only (Phase 3–4)
+Parent   -- PSTN -->  Bolna agent
+Child    -- WhatsApp briefing + /d/[token] family desk (PWA)
+Neighbour -- alert only, if they opted in
 ```
 
 The parent never opens this website.
 
-## Routes (Phase 1)
+## Apps
+
+| App | Directory | Dev |
+| --- | --- | --- |
+| Family desk | repo root | `npm run dev` → :43147 |
+| Marketing | `landing/` | `cd landing && npm run dev` → :43211 |
+| Android shell | `android/` | `npm run android:apk` |
+
+## Routes
 
 | Route | Job |
 | --- | --- |
-| `/` | One screen, one CTA |
+| `/` | Sign in / start |
 | `/onboard` | Household form + consent |
-| `/d/[token]` | Today (family web view) |
-| `/d/[token]/history` | 7 / 30 calendar |
+| `/d/[token]` | Today |
+| `/d/[token]/history` | 7 / 30 calendar; every same-day ring is its own row |
 | `/d/[token]/alerts` | Alert list |
 | `/d/[token]/alerts/[id]` | Alert detail |
-| `/d/[token]/calls/[id]` | Call detail |
-| `/d/[token]/settings` | Read-only settings |
-| `/demo` | EXAMPLE morning walk (missed + red-flag ladder) |
-| `/demo?record=1` | Film mode — autoplay, 1080×1920 / 1920×1080 |
-| `/demo/call` | Offline scripted simulator (judge fallback) |
-| `/demo/controls` | Redirects to `/demo` |
-| `/family`, `/call` | Redirect into `/d/example-kamla` or `/demo/call` |
+| `/d/[token]/calls/[id]` | Call detail (transcript, meds) |
+| `/d/[token]/settings` | Pause, test call, consents, install |
+| `/ops` | Kill switch, Bolna / WhatsApp readiness (`OPS_EMAILS`) |
+| `/demo` | EXAMPLE walkthrough |
+| `/privacy` | Retention and 112 |
 
 ## Data
 
-Postgres-shaped schema (Supabase in prod). Local: PGlite file `.data/saathi`.  
-Source of truth is the database. **localStorage is not used for the family view.** `/demo/call` may keep a local transcript as an offline judge fallback.
+Postgres-shaped schema. Local: PGlite at `.data/saathi`. Production: `DATABASE_URL` via `pg`.
 
-Tables: parents, contacts, medicines, schedules, calls, call_attempts, dose_logs, alerts, alert_events, memory_notes, consents, outbound_messages, webhook_events, magic_links.
+`npm run db:migrate` applies `src/lib/db/migrations/` in order. Source of truth is the database — not `localStorage` (except the offline `/demo/call` fallback).
 
-`is_example=true` on seed rows. UI shows **EXAMPLE DATA**.
+Core tables: `parents`, `contacts`, `medicines`, `schedules`, `calls`, `call_attempts`, `dose_logs`, `alerts`, `alert_events`, `memory_notes`, `consents`, `outbound_messages`, `webhook_events`, `magic_links`.
 
-When `DATABASE_URL` is set, `src/lib/db/client.ts` uses `pg` (service role). Empty `DATABASE_URL` keeps PGlite. `npm run db:migrate` applies numbered SQL in order. Staging steps: `docs/saathi/engineering/deploy.md`.
+Seed rows set `is_example`. The UI shows **EXAMPLE**.
 
-## Outbound (Phase 2)
+## Outbound
 
-One gateway (`src/lib/outbound.ts`). Never dial/send outside `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.  
-`MOCK_BOLNA=1` and `MOCK_WHATSAPP=1` by default.
+One gateway: `src/lib/outbound.ts`. Never dial or send outside `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.
 
 | Route | Job |
 | --- | --- |
 | `POST /api/tools/*` | Mid-call tools, Bearer `BOLNA_TOOL_TOKEN` |
-| `POST /api/webhooks/bolna` | Store every delivery; process `status=completed` |
-| `POST /api/cron/tick` | Place today's calls (own scheduler) |
+| `POST /api/webhooks/bolna` | Store every delivery; hydrate completed calls |
+| `GET/POST /api/cron/tick` | Morning calls (`CRON_SECRET`) |
+| `GET /api/d/[token]/live` | Desk poll stamp (transcript, meds, alerts) |
 | `POST /api/demo/bolna` | Mock scenarios when `MOCK_BOLNA=1` |
 
-Agent config: built from `docs/saathi/voice/system_prompt_bolna.md` + `tools_schema.md` into `scripts/bolna/agent.json`. Sync: `npm run bolna:sync` prints JSON and a snapshot diff (never fetches). `--apply` PUTs `/v2/agent/$BOLNA_AGENT_ID` only — it never creates an agent.
+Agent JSON: `scripts/bolna/agent.json`, built from `docs/saathi/voice/`. `npm run bolna:sync` prints a diff. `--apply` is owner-only.
 
-Trial verification still pending — write results into `docs/saathi/engineering/bolna_api_notes.md`. Do not invent them.
+## Desk refresh
 
-## WhatsApp (Phase 3)
-
-`MOCK_WHATSAPP=1` by default. Until `WHATSAPP_TEMPLATES_APPROVED=1`, we send `hello_world` (or email fallback) and still log the intended Utility copy.
-
-| Route | Job |
-| --- | --- |
-| `GET/POST /api/webhooks/whatsapp` | Verify + quick-reply acks. First ack wins. |
-| `POST /api/demo/whatsapp` | Mock “I'm on it” |
-
-A completed call writes a child briefing. `raise_alert` writes safety_alert + responder. Ack broadcasts `alert_ack_update`.
-
-## Escalation + pilot (Phase 4)
-
-Missed-call ladder (per-family `family_config`): T, +10, +25, soft notice +30, last try +45, child+neighbour +60 if nobody acked. Busy/declined ≠ unreachable.
-
-`SAATHI_KILL_SWITCH=1` stops `/api/cron/tick`, dialling, and sending. Real calls need child written consent + parent voice haan. Settings can delete all of Maa's data. `VOICE_ALERT_CHILD=1` queues an optional child voice alert on EMERGENCY only.
-
-## What not to add
-
-- A second component library
-- FastAPI / extra services
-- Diagnosis or dose advice
-- Third-party analytics
-- Parent-facing mobile app
+After a Settings test call or a morning ring, `LiveRefresh` polls `/api/d/[token]/live`. The stamp covers call id, status, transcript presence, open alert, and medicine status so Today and History update as soon as Bolna has words.

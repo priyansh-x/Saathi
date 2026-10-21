@@ -1,5 +1,7 @@
 # Context: Saathi for the Bolna x YC Voice AI Buildathon
 
+Historical notes from the Oct 2026 buildathon. Current product behaviour lives in the rest of `docs/` and in the code.
+
 ## The hackathon
 - **Bolna x Y Combinator "Path to YC" Voice AI Buildathon.** Virtual build, any idea, as long as voice is a core part of it.
 - **Timeline:** build Oct 15–31, 2026 (submission deadline Oct 31) -> shortlist Nov 3 -> interviews Nov 5–7 -> finalists Nov 8 -> top 3 pitch live at Symphony, Abhyas Hall, The Lalit Ashok, Bengaluru on Nov 20.

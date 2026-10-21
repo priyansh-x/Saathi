@@ -1,9 +1,5 @@
-# Files larger than 1 MB
+# Large files
 
-Do not delete these. Priyansh decides what stays in git.
-
-| Path | Notes |
-| --- | --- |
-| `docs/saathi/product/wireframes_overview.png` | Product wireframe overview. |
-| `archives/brag/brag.mp4` | Paused launch film archive. |
-| `archives/brag/composition/assets/music/happy-beats-business-moves-vol-12-by-ende-dot-app.mp3` | mp3 licence: unknown — Priyansh to decide. |
+Keep product wireframes and brand assets in git. Do not add launch-film
+archives, raw audio beds, or duplicate screenshot dumps. Recapture UI shots
+with the scripts in `scripts/brand/` when you need new evidence.

@@ -49,6 +49,7 @@ next-env.d.ts
 
 # local research dumps
 /agent-tools
+/archives
 
 # local PGlite
 /.data

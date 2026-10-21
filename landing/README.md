@@ -1,6 +1,6 @@
 # Saathi marketing site
 
-v1, 17 Oct 2026. Lives in `landing/` inside the Saathi repo (not its own repository). Structure and motion follow a measured teardown of storeos.in; copy, tokens and mocks are Saathi's. Original engineering prompt kept conceptually as this brief — no storeOS text, logos or source.
+Lives in `landing/` inside this repo. Copy, tokens, and mocks are Saathi’s.
 
 ```bash
 cd landing

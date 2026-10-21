@@ -1,4 +1,4 @@
-/** Contracts from prd.md §8 and §11.3. Persist these; do not invent parallel shapes. */
+/** Contracts from docs/saathi/product/prd.md. Persist these; do not invent parallel shapes. */
 
 export type Relation = "Amma" | "Aai" | "Nani" | "Papa" | "Appa";
 
