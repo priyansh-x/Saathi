@@ -6,7 +6,7 @@ import {
   hydrateBolnaCall,
   importRecentBolnaExecutions,
 } from "@/lib/bolna/execution";
-import { defaultLadder, isMockBolna } from "@/lib/config";
+import { defaultLadder } from "@/lib/config";
 import { deskSnapshotByToken } from "@/lib/db/queries";
 import type { Lang } from "@/lib/i18n/messages";
 import { minutesNowIst, parseHhMm } from "@/lib/time";
@@ -26,7 +26,7 @@ export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hy
     await ensureExampleTodayDesk(snap.parent.id);
     snap = (await deskSnapshotByToken(token)) ?? snap;
   }
-  if (opts?.hydrateBolna !== false && !isMockBolna()) {
+  if (opts?.hydrateBolna !== false) {
     const recent = [snap.call, snap.yesterday, ...snap.weekCalls].filter(Boolean);
     const needsPull = !snap.call || recent.some((call) => call && callNeedsBolnaHydrate(call));
     if (needsPull) await importRecentBolnaExecutions(snap.parent);

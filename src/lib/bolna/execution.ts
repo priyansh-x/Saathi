@@ -1,9 +1,9 @@
 import { flagFromTranscript } from "@/lib/bolna/flag-from-transcript";
 import { raiseAlert } from "@/lib/bolna/tools";
 import { processBolnaWebhook, parentIdFromPayload, type BolnaWebhook } from "@/lib/bolna/webhook";
-import { bolnaBaseUrl, isMockBolna } from "@/lib/config";
+import { bolnaBaseUrl, callProviderName, isMockBolna } from "@/lib/config";
 import { query } from "@/lib/db/client";
-import { normalizePhone } from "@/lib/outbound";
+import { sameIndiaMobile } from "@/lib/phone";
 
 export type BolnaExecution = BolnaWebhook & { execution_id?: string; id?: string; data?: BolnaExecution };
 
@@ -18,12 +18,17 @@ export function bolnaExecutionId(body: unknown): string | undefined {
   return undefined;
 }
 
+function bolnaFetchEnabled() {
+  if (!(process.env.BOLNA_API_KEY || "").trim()) return false;
+  return callProviderName() === "bolna" || !isMockBolna();
+}
+
 export async function fetchBolnaExecution(
   executionId: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<BolnaExecution | null> {
   const key = (process.env.BOLNA_API_KEY || "").trim();
-  if (!key || isMockBolna()) return null;
+  if (!key || !bolnaFetchEnabled()) return null;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   let res: Response;
@@ -45,20 +50,21 @@ export async function fetchBolnaExecution(
   }
 }
 
+function callHasWords(transcript?: string | null) {
+  const raw = (transcript || "").trim();
+  return Boolean(raw && raw !== "[]" && raw !== "null");
+}
+
 export function callNeedsBolnaHydrate(call: {
   status: string;
   ended_at?: string | null;
   transcript_json?: string | null;
   duration_sec?: number | null;
 }) {
-  if (call.status === "in_progress" || call.status === "failed") return true;
+  if (call.status === "in_progress" || call.status === "failed" || call.status === "missed") return true;
   if (!call.ended_at) return true;
   if (call.status === "completed" && call.duration_sec == null) return true;
-  if (
-    (call.status === "completed" || call.status === "no_conversation") &&
-    !call.transcript_json &&
-    (call.duration_sec ?? 0) > 0
-  ) {
+  if ((call.status === "completed" || call.status === "no_conversation") && !callHasWords(call.transcript_json)) {
     return true;
   }
   return false;
@@ -76,7 +82,7 @@ export async function hydrateBolnaCall(
   },
   fetchImpl: typeof fetch = fetch,
 ) {
-  if (isMockBolna() || !callNeedsBolnaHydrate(call)) return false;
+  if (!bolnaFetchEnabled() || !callNeedsBolnaHydrate(call)) return false;
   const executionId = call.bolna_execution_id || call.id;
   if (!executionId) return false;
   const running = inflight.get(executionId);
@@ -115,17 +121,11 @@ function executionList(body: unknown): BolnaExecution[] {
   return [];
 }
 
-function samePhone(a?: string | null, b?: string | null) {
-  const left = normalizePhone(a || "").replace(/\D/g, "").slice(-10);
-  const right = normalizePhone(b || "").replace(/\D/g, "").slice(-10);
-  return left.length >= 10 && left === right;
-}
-
 export async function importRecentBolnaExecutions(
   parent: { id: string; phone: string },
   fetchImpl: typeof fetch = fetch,
 ) {
-  if (isMockBolna()) return 0;
+  if (!bolnaFetchEnabled()) return 0;
   const agent = (process.env.BOLNA_AGENT_ID || "").trim();
   const key = (process.env.BOLNA_API_KEY || "").trim();
   if (!agent || !key) return 0;
@@ -157,8 +157,16 @@ export async function importRecentBolnaExecutions(
     const nested = full.data && typeof full.data === "object" ? { ...full, ...full.data } : full;
     const fromContext = parentIdFromPayload(nested);
     const toNumber = nested.telephony_data?.to_number;
-    if (fromContext && fromContext !== parent.id) continue;
-    if (!fromContext && toNumber && !samePhone(toNumber, parent.phone)) continue;
+    const matchesPhone = toNumber ? sameIndiaMobile(toNumber, parent.phone) : false;
+    if (matchesPhone || fromContext === parent.id) {
+      /* this household's line */
+    } else if (fromContext && fromContext !== parent.id) {
+      continue;
+    } else if (toNumber && !matchesPhone) {
+      continue;
+    } else {
+      continue;
+    }
     nested.context_details = {
       ...nested.context_details,
       recipient_data: { parent_id: parent.id, ...nested.context_details?.recipient_data },

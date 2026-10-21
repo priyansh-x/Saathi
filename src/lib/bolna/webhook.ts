@@ -4,7 +4,7 @@ import { hasRaiseAlert, logMedicine, raiseAlert } from "@/lib/bolna/tools";
 import { coerceBolnaTranscript, transcriptHasParent, transcriptJson } from "@/lib/bolna/transcript";
 import { advanceLadder } from "@/lib/ladder";
 import { nowIstStamp } from "@/lib/time";
-import { normalizePhone } from "@/lib/outbound";
+import { last10Digits, sameIndiaMobile } from "@/lib/phone";
 import type { CallRow } from "@/lib/db/types";
 
 export type BolnaExtracted = {
@@ -80,11 +80,31 @@ function conversationSeconds(payload: BolnaWebhook) {
 async function parentIdFromPhone(payload: BolnaWebhook) {
   const phone = payload.telephony_data?.to_number;
   if (!phone) return undefined;
-  const want = normalizePhone(phone);
-  const tail = want.replace(/\D/g, "").slice(-10);
+  const tail = last10Digits(phone);
   if (tail.length < 10) return undefined;
-  const rows = await query<{ id: string; phone: string }>(`select id, phone from parents`);
-  return rows.find((row) => normalizePhone(row.phone).replace(/\D/g, "").endsWith(tail))?.id;
+  const parents = await query<{ id: string; phone: string; is_example: boolean }>(
+    `select id, phone, is_example from parents`,
+  );
+  const live = parents.find((row) => !row.is_example && sameIndiaMobile(row.phone, phone));
+  if (live) return live.id;
+  const any = parents.find((row) => sameIndiaMobile(row.phone, phone));
+  if (any) return any.id;
+  const contacts = await query<{ parent_id: string; phone: string }>(`select parent_id, phone from contacts`);
+  return contacts.find((row) => sameIndiaMobile(row.phone, phone))?.parent_id;
+}
+
+async function pickWebhookParent(fromContext?: string, fromPhone?: string) {
+  if (fromPhone && fromContext && fromPhone !== fromContext) {
+    const rows = await query<{ id: string; is_example: boolean }>(
+      `select id, is_example from parents where id = $1 or id = $2`,
+      [fromContext, fromPhone],
+    );
+    const context = rows.find((row) => row.id === fromContext);
+    const phoneParent = rows.find((row) => row.id === fromPhone);
+    if (context?.is_example && phoneParent && !phoneParent.is_example) return fromPhone;
+    return fromPhone;
+  }
+  return fromContext ?? fromPhone;
 }
 
 async function existingCall(executionId: string, parentId?: string) {
@@ -129,8 +149,20 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     false,
   ]);
 
-  const hintedParent = parentIdFromPayload(payload) ?? (await parentIdFromPhone(payload));
+  const hintedParent = await pickWebhookParent(parentIdFromPayload(payload), await parentIdFromPhone(payload));
   const alreadyRow = await existingCall(executionId, hintedParent);
+  if (alreadyRow && hintedParent && alreadyRow.parent_id !== hintedParent) {
+    const owners = await query<{ id: string; is_example: boolean }>(
+      `select id, is_example from parents where id = $1 or id = $2`,
+      [alreadyRow.parent_id, hintedParent],
+    );
+    const current = owners.find((row) => row.id === alreadyRow.parent_id);
+    const next = owners.find((row) => row.id === hintedParent);
+    if (current?.is_example && next && !next.is_example) {
+      await query(`update calls set parent_id = $1 where id = $2`, [hintedParent, alreadyRow.id]);
+      alreadyRow.parent_id = hintedParent;
+    }
+  }
   const already = alreadyRow ? [alreadyRow] : [];
   const incoming = normalizeBolnaStatus(payload.status);
   let fillingWords = false;

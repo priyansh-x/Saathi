@@ -12,6 +12,7 @@ describe("Bolna execution hydrate", () => {
   it("pulls while the desk still has an open call", () => {
     assert.equal(callNeedsBolnaHydrate({ status: "in_progress", ended_at: null }), true);
     assert.equal(callNeedsBolnaHydrate({ status: "failed", ended_at: null }), true);
+    assert.equal(callNeedsBolnaHydrate({ status: "missed", ended_at: "2026-10-21T10:00:00+05:30" }), true);
     assert.equal(
       callNeedsBolnaHydrate({
         status: "completed",
@@ -19,7 +20,7 @@ describe("Bolna execution hydrate", () => {
         duration_sec: 77,
         transcript_json: "[]",
       }),
-      false,
+      true,
     );
     assert.equal(
       callNeedsBolnaHydrate({

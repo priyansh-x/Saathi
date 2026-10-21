@@ -7,6 +7,16 @@ export function digitsOf(phone: string) {
   return raw;
 }
 
+export function last10Digits(phone: string) {
+  return digitsOf(phone).slice(-10);
+}
+
+export function sameIndiaMobile(a?: string | null, b?: string | null) {
+  const left = last10Digits(a || "");
+  const right = last10Digits(b || "");
+  return left.length === 10 && left === right;
+}
+
 export function toE164(phone: string): string | null {
   const trimmed = phone.trim();
   const digits = trimmed.replace(/\D/g, "");
