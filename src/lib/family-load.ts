@@ -42,15 +42,18 @@ export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hy
     await ensureExampleTodayDesk(snap.parent.id);
     snap = (await deskSnapshotByToken(token)) ?? snap;
   }
+  if (!snap) return null;
   if (opts?.hydrateBolna !== false) {
-    const todayCalls = snap.weekCalls.filter((call) => call.started_at.startsWith(snap.day));
-    const recent = [snap.call, snap.yesterday, ...todayCalls, ...snap.weekCalls.slice(0, 8)];
-    const needsPull = !snap.call || recent.some((call) => call && callNeedsBolnaHydrate(call));
-    if (needsPull) await syncDeskFromBolna(snap.parent, snap.call);
-    if (snap.yesterday) await hydrateBolnaCall(snap.yesterday);
+    const desk = snap;
+    const todayCalls = desk.weekCalls.filter((call) => call.started_at.startsWith(desk.day));
+    const recent = [desk.call, desk.yesterday, ...todayCalls, ...desk.weekCalls.slice(0, 8)];
+    const needsPull = !desk.call || recent.some((call) => call && callNeedsBolnaHydrate(call));
+    if (needsPull) await syncDeskFromBolna(desk.parent, desk.call);
+    if (desk.yesterday) await hydrateBolnaCall(desk.yesterday);
     for (const call of todayCalls) await hydrateBolnaCall(call);
-    snap = (await deskSnapshotByToken(token)) ?? snap;
+    snap = (await deskSnapshotByToken(token)) ?? desk;
   }
+  if (!snap) return null;
   const uniqueDoses = dedupeDoses(snap.doses);
   const escalated = snap.attempts.some((a) => a.result === "escalated");
   const todayCallIds = new Set(

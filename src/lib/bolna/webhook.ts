@@ -183,7 +183,7 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     const incomingFlag =
       payload.extracted_data?.red_flag?.category === "EMERGENCY" ||
       payload.extracted_data?.red_flag?.category === "URGENT" ||
-      flagFromTranscript(payload.transcript)?.category === "EMERGENCY";
+      flagFromTranscript(transcriptText ?? payload.transcript)?.category === "EMERGENCY";
     let missingAlert = false;
     if (hasCompletedData && incomingFlag) {
       const alerts = await query<{ n: number }>(
@@ -231,8 +231,8 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
       : (extractedSummaryEn(payload) ?? "Morning call completed.")
     : null;
   const summaryHi = keepWords ? (noConvo ? "बात नहीं हुई।" : (typeof payload.extracted_data?.summary_hi === "string" ? payload.extracted_data.summary_hi : null)) : null;
-  const quote = keepWords && !noConvo ? (extractedMoodQuote(payload) ?? null) : null;
-  const transcript = keepWords && !noConvo ? transcriptJson(payload.transcript) : null;
+  const quote: string | null = keepWords && !noConvo ? (extractedMoodQuote(payload) ?? null) : null;
+  const transcript: string | null = keepWords && !noConvo ? transcriptJson(transcriptText ?? payload.transcript) : null;
   const recordingUrl = payload.telephony_data?.recording_url ?? null;
 
   if (already[0]) {
@@ -297,7 +297,7 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
   }
 
   const extractedFlag = payload.extracted_data?.red_flag;
-  const spokenFlag = flagFromTranscript(payload.transcript);
+  const spokenFlag = flagFromTranscript(transcriptText ?? payload.transcript);
   const flag =
     extractedFlag?.category === "EMERGENCY" || extractedFlag?.category === "URGENT"
       ? extractedFlag

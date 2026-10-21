@@ -90,7 +90,7 @@ async function openPglite() {
   if (dir) {
     const { mkdirSync } = await import("node:fs");
     const path = await import("node:path");
-    const full = path.isAbsolute(dir) ? dir : path.join(process.cwd(), dir);
+    const full = path.isAbsolute(dir) ? dir : path.join(/* turbopackIgnore: true */ process.cwd(), dir);
     mkdirSync(full, { recursive: true });
     db = new PGlite(full);
   } else {
