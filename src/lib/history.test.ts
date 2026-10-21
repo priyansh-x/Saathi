@@ -3,8 +3,10 @@ import { describe, it } from "node:test";
 import type { CallRow, DoseLog } from "@/lib/db/types";
 import {
   callBullets,
+  callHasAlert,
   callOnDayKey,
   callsOnDay,
+  historyRowShowsAlert,
   callTranscriptLines,
   callGlyph,
   cellAria,
@@ -74,6 +76,30 @@ describe("history helpers", () => {
       { id: "4", medicine_id: "b", schedule_date: "2026-10-14", status: "not_asked", said: null },
     ];
     assert.equal(historySummary(days, calls, doses, ["a", "b"], "en"), "Answered 1 of 2 calls · 2 of 4 medicines");
+  });
+
+  it("marks the call that raised the alert, not the first row of the day", () => {
+    const morning = call({ id: "morning", started_at: "2026-10-21T08:32:00+05:30" });
+    const test = call({ id: "test_chest", started_at: "2026-10-21T18:10:00+05:30" });
+    const alerts = [
+      {
+        id: "a1",
+        parent_id: "p",
+        call_id: "test_chest",
+        category: "EMERGENCY" as const,
+        level: "act" as const,
+        quote: "Seene mein dard",
+        created_at: "2026-10-21T18:12:00+05:30",
+        acked_at: null,
+        acked_by: null,
+        resolved_at: null,
+        late: true,
+        source: "transcript",
+      },
+    ];
+    assert.equal(callHasAlert(alerts, "test_chest"), true);
+    assert.equal(historyRowShowsAlert(alerts, [morning, test], morning, 0), false);
+    assert.equal(historyRowShowsAlert(alerts, [morning, test], test, 1), true);
   });
 
   it("aligns a Tuesday to Monday-start padding of 1", () => {

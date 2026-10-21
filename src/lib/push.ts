@@ -75,7 +75,11 @@ async function deliverWebPush(sub: { endpoint: string; keys_json: string | null 
   }
   if (!keys.p256dh || !keys.auth) return "no_keys";
   const pair = await vapidPair();
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:saathi@localhost", pair.publicKey, pair.privateKey);
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT || "mailto:priyansh.joshi07@gmail.com",
+    pair.publicKey,
+    pair.privateKey,
+  );
   await webpush.sendNotification(
     { endpoint: sub.endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } },
     JSON.stringify({ title, body, url }),
@@ -94,11 +98,15 @@ export async function sendPushToFamily(parentId: string, title: string, body: st
   const url = `${publicBaseUrl()}/d/${desk[0]?.token || ""}`;
   let delivery = "no_subscription";
   for (const sub of subs) {
+    if (!sub.endpoint.startsWith("http")) continue;
     try {
       const status = await deliverWebPush(sub, title, body, `${url}/alerts`);
-      if (status === "sent" || status === "mock") delivery = status;
+      if (status === "sent") delivery = "sent";
+      else if (delivery !== "sent" && (status === "mock" || status === "no_keys")) {
+        delivery = status === "mock" ? "mock" : delivery === "no_subscription" ? "no_keys" : delivery;
+      }
     } catch {
-      delivery = "failed";
+      if (delivery !== "sent") delivery = "failed";
     }
   }
   const results = [];

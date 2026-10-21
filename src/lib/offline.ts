@@ -1,4 +1,4 @@
-export const SW_VERSION = "saathi-pwa-v3";
+export const SW_VERSION = "saathi-pwa-v4";
 export const DESK_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export const CLEAR_CACHE_MESSAGE = "CLEAR_CACHE";
 export const CACHED_AT_HEADER = "x-saathi-cached-at";

@@ -11,25 +11,36 @@ export async function deskPushState() {
   return Notification.permission;
 }
 
-export async function enableDeskPush(token: string) {
-  if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+export async function subscribeDeskPush(token: string) {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
     return { ok: false as const, reason: "unsupported" as const };
   }
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") return { ok: false as const, reason: "denied" as const };
   const ready = await navigator.serviceWorker.ready;
   const keyRes = await fetch(`/api/d/${encodeURIComponent(token)}/push`);
   const keyJson = (await keyRes.json()) as { ok?: boolean; publicKey?: string };
   if (!keyJson.publicKey) return { ok: false as const, reason: "no_key" as const };
-  const sub = await ready.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(keyJson.publicKey),
-  });
+  let sub = await ready.pushManager.getSubscription();
+  if (!sub) {
+    sub = await ready.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(keyJson.publicKey),
+    });
+  }
   const json = sub.toJSON();
+  if (!json.endpoint) return { ok: false as const, reason: "no_key" as const };
   await fetch(`/api/d/${encodeURIComponent(token)}/push`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
   });
   return { ok: true as const };
+}
+
+export async function enableDeskPush(token: string) {
+  if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    return { ok: false as const, reason: "unsupported" as const };
+  }
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") return { ok: false as const, reason: "denied" as const };
+  return subscribeDeskPush(token);
 }

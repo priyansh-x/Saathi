@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { query } from "@/lib/db/client";
-import { istDayKey, istStamp } from "@/lib/time";
+import { istDayKey, istStamp, nowIstStamp } from "@/lib/time";
 
 function sha(text: string) {
   return createHash("sha256").update(text).digest("hex").slice(0, 24);
@@ -126,7 +126,7 @@ export async function raiseAlert(input: {
       input.category,
       alertLevel(input.category),
       input.quote,
-      nowIst(),
+      nowIstStamp(),
       null,
       null,
       null,
@@ -137,20 +137,24 @@ export async function raiseAlert(input: {
     await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
       `ae_${alertId}_notify`,
       alertId,
-      nowIst(),
+      nowIstStamp(),
       "notified",
       "Saathi",
-      "Rohit and Sunita ji",
+      "family",
       true,
     ]);
-    const { notifyAlert } = await import("@/lib/whatsapp/notify");
-    await notifyAlert(input.parent_id, {
-      id: alertId,
-      quote: input.quote,
-      created_at: nowIst(),
-      category: input.category,
-      level: alertLevel(input.category),
-    });
+    try {
+      const { notifyAlert } = await import("@/lib/whatsapp/notify");
+      await notifyAlert(input.parent_id, {
+        id: alertId,
+        quote: input.quote,
+        created_at: nowIstStamp(),
+        category: input.category,
+        level: alertLevel(input.category),
+      });
+    } catch {
+      /* Desk alert stays even if WhatsApp or web push fails. */
+    }
     if (input.category === "EMERGENCY") {
       const { optionalChildVoiceAlert } = await import("@/lib/voice-alert");
       await optionalChildVoiceAlert(input.parent_id, alertId);

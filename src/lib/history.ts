@@ -53,6 +53,16 @@ export function dayHasAlert(alerts: AlertRow[], day: string) {
   return alerts.some((a) => a.created_at.startsWith(day));
 }
 
+export function callHasAlert(alerts: AlertRow[], callId: string) {
+  return alerts.some((a) => a.call_id === callId);
+}
+
+export function historyRowShowsAlert(alerts: AlertRow[], dayCalls: CallRow[], call: CallRow, index: number) {
+  if (callHasAlert(alerts, call.id)) return true;
+  if (dayCalls.some((row) => callHasAlert(alerts, row.id))) return false;
+  return index === 0 && alerts.some((row) => row.created_at.startsWith(call.started_at.slice(0, 10)));
+}
+
 export function historySummary(
   days: string[],
   calls: CallRow[],

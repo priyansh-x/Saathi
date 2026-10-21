@@ -8,8 +8,8 @@ import type { AlertRow, CallRow, DoseLog } from "@/lib/db/types";
 import {
   callsOnDay,
   dayCallLabel,
-  dayHasAlert,
   dayMedsLabel,
+  historyRowShowsAlert,
   historySummary,
   medsOnDay,
   moodFromCall,
@@ -70,7 +70,7 @@ export function HistoryView({
           {keys.flatMap((day) => {
             const dayCalls = callsOnDay(calls, day);
             const meds = medsOnDay(doses, day, medicineIds);
-            const alert = dayHasAlert(alerts, day);
+            const alertsOnDay = alerts.filter((row) => row.created_at.startsWith(day) || dayCalls.some((call) => call.id === row.call_id));
             if (dayCalls.length === 0) {
               return [
                 <li key={day}>
@@ -99,7 +99,9 @@ export function HistoryView({
                           {dayTitle(day, lang)}
                           {dayCalls.length > 1 ? ` · ${stamp}` : ""}
                         </span>
-                        <span className={`text-xs ${alert && index === 0 ? "text-alert" : "invisible"}`}>{t.legendAlert}</span>
+                        <span className={`text-xs ${historyRowShowsAlert(alertsOnDay, dayCalls, call, index) ? "text-alert" : "invisible"}`}>
+                          {t.legendAlert}
+                        </span>
                       </span>
                       <span className="mt-1 block truncate text-sm text-muted-foreground">
                         {dayCallLabel(call, lang)} · {dayMedsLabel(meds, lang)}

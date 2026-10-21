@@ -1,4 +1,5 @@
 import { ActBanner, TabBar, TopBar } from "@/components/family/chrome";
+import { DeskNotifyPrompt } from "@/components/pwa/desk-notify";
 import { clientSafe } from "@/lib/client-safe";
 import type { AlertRow } from "@/lib/db/types";
 import type { Lang } from "@/lib/i18n/messages";
@@ -47,6 +48,7 @@ export function FamilyShell({
         extraQuery={query}
         parentName={parentName || undefined}
       />
+      {token ? <DeskNotifyPrompt token={token} lang={lang} /> : null}
       {active !== "today" ? <ActBanner token={token} lang={lang} alerts={safeAlerts} /> : null}
       <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>
       <TabBar token={token} lang={lang} active={active} openAlerts={safeAlerts.length} extraQuery={query} />
