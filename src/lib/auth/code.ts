@@ -82,7 +82,7 @@ export async function verifySignInCode(rawEmail: string, rawCode: string) {
   const email = rawEmail.trim().toLowerCase();
   if (!(await emailMaySignIn(email))) return null;
   const code = rawCode.replace(/\D/g, "");
-  if (!/^\d{6}$/.test(code)) return null;
+  if (!/^\d{6,8}$/.test(code)) return null;
   const rows = await query<{
     id: string;
     code_hash: string;

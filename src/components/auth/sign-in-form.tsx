@@ -108,16 +108,16 @@ export function SignInForm({ lang }: { lang: Lang }) {
           <>
             <p className="mt-4 text-sm">{t.setupCheckInbox}</p>
             <label className="mt-4 block text-sm font-medium" htmlFor="code">
-              {lang === "hi" ? "6 अंकों का कोड" : "6-digit code"}
+              {lang === "hi" ? "ईमेल वाला कोड" : "Code from the email"}
             </label>
             <Input
               id="code"
               className="mt-2"
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={6}
+              maxLength={8}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
               placeholder="000000"
             />
           </>

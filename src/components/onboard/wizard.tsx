@@ -229,14 +229,14 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
               <p className="text-sm">
                 {lang === "hi" ? "ऐप में कोड टाइप करें — ईमेल का लिंक ब्राउज़र खोल देगा।" : "Type the code in this app. The email link opens the phone browser, not Saathi."}
               </p>
-              <Field label={lang === "hi" ? "6 अंकों का कोड" : "6-digit code"} htmlFor="code">
+              <Field label={lang === "hi" ? "ईमेल वाला कोड" : "Code from the email"} htmlFor="code">
                 <Input
                   id="code"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  maxLength={6}
+                  maxLength={8}
                   value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
                   placeholder="000000"
                 />
               </Field>
@@ -480,7 +480,7 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
         return {
           label: saving ? "…" : lang === "hi" ? "कोड डालें" : "Type the code",
           action: verifyCode,
-          disabled: saving || code.length !== 6,
+          disabled: saving || code.length < 6,
         };
       }
       return { label: saving ? "…" : t.setupContinue, action: signIn, disabled: saving };

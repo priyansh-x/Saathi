@@ -231,7 +231,7 @@ export const messages = {
     setupContinue: "Continue",
     setupWaitingEmail: "Waiting for the email",
     setupCheckInbox:
-      "Check that inbox for a 6-digit code and type it here. If the mail also has a link to localhost, ignore the link — it is not the family desk.",
+      "Type the code from that email here. If the mail also has a link to localhost, ignore the link — it is not the family desk.",
     setupYouKicker: "You",
     setupYouTitle: "Who gets the morning note?",
     setupYourName: "Your name",
@@ -509,7 +509,7 @@ export const messages = {
     setupContinue: "आगे",
     setupWaitingEmail: "ईमेल का इंतज़ार",
     setupCheckInbox:
-      "उस इनबॉक्स में 6 अंकों का कोड देखकर यहाँ लिखें। मेल में localhost वाला लिंक हो तो उसे छोड़ दें — वह परिवार डेस्क नहीं है।",
+      "उस मेल का कोड यहाँ लिखें। मेल में localhost वाला लिंक हो तो उसे छोड़ दें — वह परिवार डेस्क नहीं है।",
     setupYouKicker: "आप",
     setupYouTitle: "सुबह का नोट किसे जाए?",
     setupYourName: "आपका नाम",
