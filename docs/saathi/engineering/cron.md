@@ -1,8 +1,17 @@
 # Daily scheduler
 
-`GET`/`POST /api/cron/tick` is the morning timer. It is authenticated with `Authorization: Bearer $CRON_SECRET`. Vercel Cron hits it every 5 minutes (`vercel.json`). Live households in `[call_time, 12:00)` IST get one dial; EXAMPLE is skipped when Bolna is live.
+`GET`/`POST /api/cron/tick` is the morning timer. It is authenticated with `Authorization: Bearer $CRON_SECRET`. On Vercel Hobby, cron may run **once per day** — a `*/5 * * * *` schedule is rejected before a build (`vercel.link/3Fpeeb1`) and production never updates.
 
-Every five minutes the tick:
+`vercel.json` therefore schedules two daily ticks:
+
+| Cron (UTC) | Typical IST | Why |
+| --- | --- | --- |
+| `0 5 * * *` | 10:30–11:29 | Inside `[call_time, 12:00)` for a 10:00 IST morning call |
+| `0 12 * * *` | 17:30–18:29 | Sunday weekly WhatsApp note window |
+
+Hobby will fire each job somewhere in that UTC hour. Live households in `[call_time, 12:00)` IST get one dial; EXAMPLE is skipped when Bolna is live. Missed-call ladder retries that need a 5-minute tick need Pro or an external pinger.
+
+Each tick:
 
 1. Stops on the kill switch.
 2. Skips paused or `consent_status=declined` households.
@@ -23,4 +32,4 @@ Optional JSON, **only when `MOCK_BOLNA=1`**: `{ "now": "2026-10-17T03:00:00.000Z
 
 ## Vercel Cron
 
-`vercel.json` schedules `GET /api/cron/tick` every 5 minutes. Vercel sends `Authorization: Bearer $CRON_SECRET` when that env var is set. Hobby plans only allow a daily cron — use Pro (or an external pinger) for the 5-minute morning window. The tick is a no-op outside `[call_time, 12:00)` IST except Sunday evening weekly notes.
+Vercel sends `Authorization: Bearer $CRON_SECRET` when that env var is set. Do not put a more-than-daily expression in `vercel.json` while the family desk is on Hobby — Git deploys fail instantly and never appear in the Deployments list. The tick is a no-op outside `[call_time, 12:00)` IST except Sunday evening weekly notes.

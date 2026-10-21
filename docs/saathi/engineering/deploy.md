@@ -78,7 +78,9 @@ Auth redirect (later, live only): Site URL = `PUBLIC_BASE_URL`; additional redir
 
 ## Vercel Cron
 
-Family desk `vercel.json` now schedules `GET /api/cron/tick` every 5 minutes. Set `CRON_SECRET` in the Vercel project so Vercel can authorize the job. Live Bolna still needs `CALL_PROVIDER=bolna` / `MOCK_BOLNA=0` and `ALLOWED_PHONE_NUMBERS`. See `docs/saathi/engineering/cron.md`.
+Family desk `vercel.json` schedules `GET /api/cron/tick` twice a day (`0 5 * * *` and `0 12 * * *` UTC). Hobby rejects any cron that would run more than once per day, which shows up on GitHub as **Vercel – x** / **Vercel – x-saathi** `Deployment failed` with `vercel.link/3Fpeeb1` and **no row in Deployments**. Set `CRON_SECRET` in the Vercel project so Vercel can authorize the job. Live Bolna still needs `CALL_PROVIDER=bolna` / `MOCK_BOLNA=0` and `ALLOWED_PHONE_NUMBERS`. See `docs/saathi/engineering/cron.md`.
+
+If GitHub still gets an instant 3Fpeeb1 after a Hobby-legal cron: Vercel → Account Settings → Authentication, reconnect GitHub, then **Deployments → Redeploy** the latest `main` commit on project **x**. Clear any Author filter on the dashboard (Cursor-attributed rows hide later `priyansh-x` pushes). GitHub Actions `ci` on `main` is typecheck + tests; it is not the Vercel build.
 
 ## After Priyansh clicks deploy
 
