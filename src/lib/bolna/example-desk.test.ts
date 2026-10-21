@@ -49,6 +49,7 @@ describe("example desk call now", () => {
   it("treats mock and seed ids as not live", () => {
     assert.equal(isLiveBolnaExecutionId("mock_parent_kamla_2026-10-21_1"), false);
     assert.equal(isLiveBolnaExecutionId("call_2026-10-21"), false);
+    assert.equal(isLiveBolnaExecutionId("exec_cap_test"), false);
     assert.equal(isLiveBolnaExecutionId("8f3c2a1b-9d44-4c11-b2aa-111111111111"), true);
   });
 

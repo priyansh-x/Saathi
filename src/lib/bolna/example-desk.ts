@@ -15,7 +15,7 @@ export function isLiveBolnaExecutionId(id?: string | null) {
   if (!id) return false;
   const value = id.trim();
   if (!value) return false;
-  if (/^(mock_|call_|fail_)/i.test(value)) return false;
+  if (/^(mock_|call_|fail_|exec_)/i.test(value)) return false;
   return true;
 }
 
@@ -117,10 +117,14 @@ async function clearLookDoses(parentId: string) {
 
 async function closeStaleMissedAlerts(parentId: string) {
   const at = nowIstStamp();
+  const day = istDayKey();
   await query(
     `update alerts set resolved_at = $2, acked_at = coalesce(acked_at, $2), acked_by = coalesce(acked_by, 'Saathi')
-      where parent_id = $1 and category = 'MISSED' and resolved_at is null`,
-    [parentId, at],
+      where parent_id = $1 and resolved_at is null and level = 'act'
+        and (call_id is null or call_id not in (
+          select id from calls where parent_id = $1 and started_at like $3
+        ))`,
+    [parentId, at, `${day}%`],
   );
 }
 

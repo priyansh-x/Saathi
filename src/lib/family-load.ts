@@ -38,11 +38,17 @@ export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hy
   }
   const uniqueDoses = dedupeDoses(snap.doses);
   const escalated = snap.attempts.some((a) => a.result === "escalated");
+  const todayCallIds = new Set(
+    [snap.call, ...snap.weekCalls]
+      .filter((call): call is NonNullable<typeof call> => Boolean(call?.id && call.started_at.startsWith(snap.day)))
+      .map((call) => call.id),
+  );
+  const actAlerts = snap.actAlerts.filter((alert) => alert.call_id && todayCallIds.has(alert.call_id));
   return {
     parent: snap.parent,
     contacts: snap.contacts,
     medicines: [],
-    actAlerts: snap.actAlerts,
+    actAlerts,
     allAlerts: [],
     day: snap.day,
     call: snap.call,
