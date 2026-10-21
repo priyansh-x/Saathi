@@ -184,12 +184,17 @@ export const messages = {
     ringPlaced: "Saathi is placing the call. This page, History, and alerts update as soon as it ends.",
     ringNotAllowlisted:
       "Saathi only rings the parent number on this desk, and that number is not on the allowlist. No call was placed.",
+    ringBolnaUnverified:
+      "No call was placed. Bolna's trial account can only ring numbers you verify there. Open Bolna → Profile → Verified Numbers, add this desk's parent number, complete the SMS code, then try Test call again.",
+    ringBolnaAuth: "No call was placed. Bolna rejected the API key. Check BOLNA_API_KEY on the host.",
+    ringBolnaBalance: "No call was placed. The Bolna wallet is empty.",
+    ringBolnaError: "Bolna could not place the call. The number may still need to be verified there.",
     ringAlready: "Saathi already called today.",
     ringPaused: "Calls are paused.",
     ringFail: "Could not place the call.",
     testCall: "Test call",
     testCallHint:
-      "Ring her phone now to try the agent. The transcript, medicines, and any alerts show on History and Today even if this is not the morning call. Still uses the allowlist and kill switch.",
+      "Ring their phone now to try the agent. The transcript, medicines, and any alerts show on History and Today even if this is not the morning call. The number must be on the allowlist. On a Bolna trial it must also be a Verified Number in Bolna.",
     ringExample: "The example desk does not place a live call. Open your family desk.",
     audioConsentOn: "Recording consent is on; no file attached in this example.",
     audioConsentOff: "No audio. She did not consent to recording.",
@@ -456,12 +461,17 @@ export const messages = {
     ringPlaced: "साथी कॉल लगा रहा है। खत्म होते ही यह पेज, इतिहास और अलर्ट अपडेट होंगे।",
     ringNotAllowlisted:
       "साथी इस डेस्क के माता-पिता वाले नंबर पर ही कॉल करता है, और वह नंबर अनुमति सूची में नहीं है। कॉल नहीं लगी।",
+    ringBolnaUnverified:
+      "कॉल नहीं लगी। Bolna के ट्रायल खाते से केवल वहाँ वेरिफ़ाई किए नंबर पर कॉल जाती है। Bolna → Profile → Verified Numbers में इस डेस्क का माता-पिता वाला नंबर जोड़ें, SMS कोड पूरा करें, फिर टेस्ट कॉल दोहराएँ।",
+    ringBolnaAuth: "कॉल नहीं लगी। Bolna ने API कुंजी रोक दी। होस्ट पर BOLNA_API_KEY जाँचें।",
+    ringBolnaBalance: "कॉल नहीं लगी। Bolna वॉलेट खाली है।",
+    ringBolnaError: "Bolna कॉल नहीं लगा सका। नंबर वहाँ वेरिफ़ाई करना बाकी हो सकता है।",
     ringAlready: "साथी ने आज कॉल कर दी है।",
     ringPaused: "कॉल रुकी हुई हैं।",
     ringFail: "कॉल नहीं लग सकी।",
     testCall: "टेस्ट कॉल",
     testCallHint:
-      "अभी उनके फ़ोन पर साथी से कॉल लगवाएँ। बात, दवा और अलर्ट इतिहास और आज पर दिखेंगे — सुबह की कॉल न हो तब भी। अनुमति सूची और किल स्विच वैसे ही लागू हैं।",
+      "अभी उनके फ़ोन पर साथी से कॉल लगवाएँ। बात, दवा और अलर्ट इतिहास और आज पर दिखेंगे — सुबह की कॉल न हो तब भी। नंबर अनुमति सूची में होना चाहिए। Bolna ट्रायल पर वह Verified Number भी होना चाहिए।",
     ringExample: "यह उदाहरण डेस्क है, असली कॉल नहीं लगेगी। अपना परिवार डेस्क खोलें।",
     audioConsentOn: "ऑडियो सहमति है, फ़ाइल नहीं जुड़ी।",
     audioConsentOff: "ऑडियो नहीं — सहमति नहीं है।",

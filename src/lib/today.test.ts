@@ -214,6 +214,7 @@ describe("todayStatus", () => {
   it("maps Call now results to family copy", () => {
     assert.match(ringCopy("placed", "en") || "", /placing the call/);
     assert.match(ringCopy("not_allowlisted", "en") || "", /allowlist/);
+    assert.match(ringCopy("bolna_unverified", "en") || "", /Verified Numbers/);
     assert.equal(ringCopy("example", "en"), "The example desk does not place a live call. Open your family desk.");
     assert.equal(ringCopy(undefined, "en"), null);
   });

@@ -19,5 +19,9 @@ describe("deskCallHref", () => {
       deskCallHref("tok", "en", { ok: false, reason: "paused" }, "settings"),
       "/d/tok/settings?lang=en&call=paused",
     );
+    assert.equal(
+      deskCallHref("tok", "en", { ok: false, reason: "bolna_unverified" }, "settings"),
+      "/d/tok/settings?lang=en&call=bolna_unverified",
+    );
   });
 });

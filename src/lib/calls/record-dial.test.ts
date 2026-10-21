@@ -83,9 +83,13 @@ describe("every dial is recorded", () => {
       assert.equal(isPreparedCall(prepared2), true);
       if (!isPreparedCall(prepared2)) return;
       const fail = await postBolnaCall(prepared2, async () => {
-        return new Response(JSON.stringify({ message: "no" }), { status: 400 });
+        return new Response(
+          JSON.stringify({ message: "Trial accounts can only make calls to verified phone numbers." }),
+          { status: 400 },
+        );
       });
       assert.equal(fail.ok, false);
+      if (!fail.ok) assert.equal(fail.reason, "bolna_unverified");
       const failed = await query<{ n: number }>(
         `select count(*)::int as n from calls where parent_id = 'parent_kamla' and status = 'failed' and started_at like '2026-10-17%'`,
       );

@@ -242,6 +242,10 @@ export function ringCopy(reason: string | undefined, lang: Lang) {
   if (!reason) return null;
   if (reason === "placed") return t.ringPlaced;
   if (reason === "not_allowlisted") return t.ringNotAllowlisted;
+  if (reason === "bolna_unverified") return t.ringBolnaUnverified;
+  if (reason === "bolna_auth") return t.ringBolnaAuth;
+  if (reason === "bolna_balance") return t.ringBolnaBalance;
+  if (reason === "bolna_error") return t.ringBolnaError;
   if (reason === "already_called") return t.ringAlready;
   if (reason === "paused") return t.ringPaused;
   if (reason === "example") return t.ringExample;

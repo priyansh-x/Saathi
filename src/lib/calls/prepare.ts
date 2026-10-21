@@ -1,3 +1,4 @@
+import { bolnaPlaceReason } from "@/lib/calls/bolna-error";
 import { allowedPhones, callProviderName, dailyBudgetMinutes, isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
 import { buildCallContext } from "@/lib/bolna/call-context";
 import { hasPilotConsent } from "@/lib/consent";
@@ -222,7 +223,12 @@ export async function postBolnaCall(
     },
     body: JSON.stringify(prepared.payload),
   });
-  const body = (await res.json().catch(() => ({}))) as { execution_id?: string; id?: string; data?: { execution_id?: string; id?: string } };
+  const body = (await res.json().catch(() => ({}))) as {
+    execution_id?: string;
+    id?: string;
+    message?: string;
+    data?: { execution_id?: string; id?: string };
+  };
   const executionId =
     body.execution_id ||
     body.id ||
@@ -230,6 +236,7 @@ export async function postBolnaCall(
     body.data?.id ||
     `fail_${prepared.parentId}_${istDayKey(prepared.clock)}_${Date.now()}`;
   if (!res.ok) {
+    const reason = bolnaPlaceReason(res.status, body);
     await recordCallPlacement({
       parentId: prepared.parentId,
       clock: prepared.clock,
@@ -237,7 +244,8 @@ export async function postBolnaCall(
       status: "failed",
       parentCallId: prepared.parentCallId,
     });
-    return { ok: false as const, reason: "bolna_error", status: res.status };
+    await rememberBlockedDial(prepared.parentId, prepared.payload.recipient_phone_number, reason);
+    return { ok: false as const, reason, status: res.status };
   }
   await recordCallPlacement({
     parentId: prepared.parentId,
