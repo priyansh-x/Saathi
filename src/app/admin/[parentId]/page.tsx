@@ -49,21 +49,48 @@ export default async function AdminHouseholdPage({
         </div>
         <div className="flex flex-wrap gap-2">
           {parent.paused ? (
-            <ActionForm action="resume" parentId={parent.id} next={next} label="Resume calls" />
+            <ActionForm action="resume" parentId={parent.id} next={next} label="Resume morning calls" />
           ) : (
-            <ActionForm action="pause" parentId={parent.id} next={next} label="Pause" />
+            <ActionForm action="pause" parentId={parent.id} next={next} label="Pause morning calls" />
           )}
           <ActionForm action="ring" parentId={parent.id} next={next} label="Call now" />
-          <ActionForm action="backfill" parentId={parent.id} next={next} label="Scan alerts" />
+          <ActionForm action="hydrate" parentId={parent.id} next={next} label="Pull latest from Bolna" />
+          <ActionForm action="backfill" parentId={parent.id} next={next} label="Scan transcripts for alerts" />
+          <ActionForm action="briefing" parentId={parent.id} next={next} label="Send briefing" />
+          <ActionForm action="push_test" parentId={parent.id} next={next} label="Test push" />
+          {data.alerts.some((row) => !row.resolved_at) ? (
+            <ActionForm action="resolve_open" parentId={parent.id} next={next} label="Clear open alerts" />
+          ) : null}
           {data.deskUrl ? (
             <a href={data.deskUrl} className="btn-secondary" target="_blank" rel="noreferrer">
-              Open desk
+              Open family desk
             </a>
           ) : null}
+          <a href={`tel:${parent.phone}`} className="btn-secondary">
+            Phone {parent.phone}
+          </a>
         </div>
       </div>
       {sp.err ? <p className="mt-3 text-sm text-alert">Action failed: {sp.err}</p> : null}
       {sp.call ? <p className="mt-3 text-sm text-good">Call placed · {sp.call}</p> : null}
+
+      <form action="/api/admin/action" method="POST" className="mt-5 flex flex-wrap items-end gap-2">
+        <input type="hidden" name="action" value="call_time" />
+        <input type="hidden" name="parentId" value={parent.id} />
+        <input type="hidden" name="next" value={next} />
+        <label className="text-sm">
+          <span className="mb-1 block text-[11px] font-semibold tracking-wide text-ink-3 uppercase">Morning call time</span>
+          <input
+            type="time"
+            name="callTime"
+            defaultValue={parent.call_time}
+            className="h-11 rounded-full border border-border bg-card px-4"
+          />
+        </label>
+        <button type="submit" className="btn-secondary">
+          Save time
+        </button>
+      </form>
 
       <section className="mt-8">
         <h2 className="text-sm font-semibold tracking-wide text-ink-3 uppercase">People</h2>
@@ -131,8 +158,10 @@ export default async function AdminHouseholdPage({
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold tracking-wide text-ink-3 uppercase">Calls</h2>
-          <ul className="mt-3 space-y-3">
+        <h2 className="text-sm font-semibold tracking-wide text-ink-3 uppercase">
+          Calls · {data.calls.length} (full transcripts)
+        </h2>
+        <ul className="mt-3 space-y-3">
           {data.calls.length === 0 ? (
             <li className="text-sm text-muted-foreground">No calls stored.</li>
           ) : null}
@@ -142,26 +171,24 @@ export default async function AdminHouseholdPage({
                 {call.status} · {call.started_at}
                 {call.duration_sec != null ? ` · ${call.duration_sec}s` : ""}
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">{call.summary_en || "No summary."}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{call.summary_en || call.summary_hi || "No summary."}</p>
               {call.mood_quote ? <p className="font-devanagari mt-1 text-sm">“{call.mood_quote}”</p> : null}
-              <p className="mt-1 font-mono text-[11px] text-ink-3">
+              <p className="mt-1 break-all font-mono text-[11px] text-ink-3">
                 {call.id}
+                {call.bolna_execution_id ? ` · bolna ${call.bolna_execution_id}` : ""}
                 {call.recording_url ? ` · ${call.recording_url}` : ""}
               </p>
               {call.lines.length > 0 ? (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-sm font-medium">Transcript ({call.lines.length})</summary>
-                  <ol className="mt-2 space-y-1 text-sm">
-                    {call.lines.map((line, i) => (
-                      <li key={i}>
-                        <span className="text-ink-3">{line.speaker}: </span>
-                        <span className="font-devanagari">{line.hi || line.en}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </details>
+                <ol className="mt-3 space-y-1.5 border-t border-border pt-3 text-sm">
+                  {call.lines.map((line, i) => (
+                    <li key={i}>
+                      <span className="text-ink-3">{line.speaker}: </span>
+                      <span className="font-devanagari">{line.hi || line.en}</span>
+                    </li>
+                  ))}
+                </ol>
               ) : (
-                <p className="mt-2 text-sm text-muted-foreground">No transcript stored.</p>
+                <p className="mt-2 text-sm text-muted-foreground">No transcript stored on this call yet.</p>
               )}
             </li>
           ))}

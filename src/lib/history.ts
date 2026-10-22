@@ -1,3 +1,4 @@
+import { parseBolnaTranscript } from "@/lib/bolna/transcript";
 import type { AlertRow, CallRow, DoseLog } from "@/lib/db/types";
 import { MONTH_EN, weekdayShort } from "@/lib/time";
 import type { Lang } from "@/lib/i18n/messages";
@@ -138,13 +139,35 @@ export function moodLabel(mood: Mood, lang: Lang) {
 
 export function callTranscriptLines(raw: unknown): { speaker: string; hi: string; en: string }[] {
   if (!raw) return [];
+  const fromStored = (parsed: unknown): { speaker: string; hi: string; en: string }[] => {
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((line) => {
+        if (!line || typeof line !== "object") return null;
+        const row = line as Record<string, unknown>;
+        const text = String(row.hi || row.en || row.text || row.content || row.message || "").trim();
+        const speaker = String(row.speaker || row.role || "parent");
+        if (!text && !row.hi && !row.en) return null;
+        return {
+          speaker,
+          hi: String(row.hi || text),
+          en: String(row.en || text),
+        };
+      })
+      .filter((row): row is { speaker: string; hi: string; en: string } => Boolean(row));
+  };
   try {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((line): line is { speaker: string; hi: string; en: string } => Boolean(line) && typeof line === "object");
+    const stored = fromStored(parsed);
+    if (stored.length) return stored;
   } catch {
-    return [];
+    /* Bolna newline transcript */
   }
+  return parseBolnaTranscript(raw).map((line) => ({
+    speaker: line.speaker,
+    hi: line.text,
+    en: line.text,
+  }));
 }
 
 export function callBullets(summary: string | null | undefined) {

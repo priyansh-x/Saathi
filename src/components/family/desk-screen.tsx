@@ -27,7 +27,7 @@ export async function DeskScreen({
   days?: 7 | 30;
   confirm?: string;
 }) {
-  const data = await loadFamily(token, { allAlerts: false, hydrateBolna: true });
+  const data = await loadFamily(token, { allAlerts: false, hydrateBolna: false });
   if (!data) return <ExpiredLink lang={lang} />;
   const alert = data.actAlerts[0] ?? null;
   const updatedAt = toIsoString(alert?.created_at || data.call?.ended_at || data.call?.started_at) || null;

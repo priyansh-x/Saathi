@@ -38,4 +38,17 @@ describe("performance", () => {
     assert.doesNotMatch(layout, /PwaRegister/);
     assert.doesNotMatch(layout, /import ["']\.\/globals\.css["']/);
   });
+
+  it("does not block call or alert screens on Bolna network pulls", () => {
+    const call = read("src/app/d/[token]/calls/[id]/page.tsx");
+    assert.doesNotMatch(call, /hydrateBolnaCall/);
+    assert.doesNotMatch(call, /syncDeskFromBolna/);
+    assert.doesNotMatch(call, /backfillAlertsFromTranscripts/);
+    const alert = read("src/app/d/[token]/alerts/[id]/page.tsx");
+    assert.doesNotMatch(alert, /loadFamily/);
+    const desk = read("src/components/family/desk-screen.tsx");
+    assert.match(desk, /hydrateBolna:\s*false/);
+    const history = read("src/components/family/history-panel.tsx");
+    assert.doesNotMatch(history, /syncDeskFromBolna/);
+  });
 });

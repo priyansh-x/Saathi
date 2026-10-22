@@ -35,6 +35,7 @@ describe("admin data", () => {
     for (const call of household.calls) {
       assert.ok(Array.isArray(call.lines));
     }
+    assert.ok(household.calls.some((call) => call.lines.length > 0));
     assert.equal(await loadAdminHousehold("parent_missing"), null);
   });
 });
@@ -49,6 +50,16 @@ describe("admin actions", () => {
     assert.equal(resume.ok, true);
     const after = await query<{ paused: boolean }>(`select paused from parents where id = 'parent_kamla'`);
     assert.equal(after[0]?.paused, false);
+    const time = await runAdminAction({
+      action: "call_time",
+      parentId: "parent_kamla",
+      callTime: "08:15",
+      who: "admin-test",
+    });
+    assert.equal(time.ok, true);
+    const saved = await query<{ call_time: string }>(`select call_time from parents where id = 'parent_kamla'`);
+    assert.equal(saved[0]?.call_time, "08:15");
+    await runAdminAction({ action: "call_time", parentId: "parent_kamla", callTime: "08:30", who: "admin-test" });
   });
 
   it("rejects a missing parent and missing alert", async () => {

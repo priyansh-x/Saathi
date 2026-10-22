@@ -119,7 +119,7 @@ export async function loadAdminHousehold(parentId: string) {
          where m.parent_id = $1 order by m.id`,
         [parentId],
       ),
-      query<CallRow>(`select * from calls where parent_id = $1 order by started_at desc limit 80`, [parentId]),
+      query<CallRow>(`select * from calls where parent_id = $1 order by started_at desc`, [parentId]),
       query<AlertRow>(`select * from alerts where parent_id = $1 order by created_at desc limit 40`, [parentId]),
       query<{ id: string; medicine_id: string; status: string; schedule_date: string; said: string | null; name: string }>(
         `select d.id, d.medicine_id, d.status, d.schedule_date, d.said, m.name

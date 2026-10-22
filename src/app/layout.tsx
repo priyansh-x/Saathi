@@ -74,7 +74,7 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
       <body className="flex h-full min-h-0 flex-col overflow-hidden">
         <AppStyles />
         <PwaBoot />
-        {children}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </body>
     </html>
   );

@@ -4,7 +4,6 @@ import { connection } from "next/server";
 import { LiveRefresh } from "@/components/family/live-refresh";
 import { deskLiveStamp, deskMedsStamp } from "@/lib/desk-live";
 import { titled } from "@/lib/page-title";
-import { backfillAlertsFromTranscripts, callNeedsBolnaHydrate, hydrateBolnaCall, syncDeskFromBolna } from "@/lib/bolna/execution";
 import { callById, dosesOnDay, parentByToken } from "@/lib/db/queries";
 import { readLang } from "@/lib/family-load";
 import { callBullets, callLanguageLabel, callTranscriptLines, qs } from "@/lib/history";
@@ -84,11 +83,7 @@ export default async function CallDetailPage({
     } catch {
       callId = id;
     }
-    let call = await callById(callId);
-    if (!call || call.parent_id !== parent.id) {
-      await syncDeskFromBolna(parent, null, fetch, { importRecent: true });
-      call = await callById(callId);
-    }
+    const call = await callById(callId);
     if (!call || call.parent_id !== parent.id) {
       return (
         <CallShell token={token} stamp={deskLiveStamp({ callId, status: "in_progress", hasWords: false })}>
@@ -98,12 +93,6 @@ export default async function CallDetailPage({
         </CallShell>
       );
     }
-
-    if (callNeedsBolnaHydrate(call)) {
-      const pulled = await hydrateBolnaCall(call);
-      if (pulled) call = (await callById(callId)) ?? call;
-    }
-    await backfillAlertsFromTranscripts(parent.id);
 
     const started = toIsoString(call.started_at);
     const day = started.slice(0, 10);

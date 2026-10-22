@@ -93,55 +93,82 @@ export default async function AdminPage({
         <Stat label="Push devices" value={data.pushN} />
       </section>
 
-      <section className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm">
-        <span className={data.flags.killSwitch ? "font-semibold text-alert" : "text-good"}>
-          Kill switch {data.flags.killSwitch ? "on" : "off"}
-        </span>
-        <span className="text-ink-3">·</span>
-        <span>provider {data.flags.callProvider}</span>
-        <span className="text-ink-3">·</span>
-        <span>Bolna {data.flags.mockBolna ? "mock" : "live"}</span>
-        <span className="text-ink-3">·</span>
-        <span>WhatsApp {data.flags.mockWhatsapp ? "mock" : "live"}</span>
-        <span className="text-ink-3">·</span>
-        <span>Email {data.flags.mockEmail ? "mock" : "live"}</span>
-        <span className="ml-auto flex gap-2">
-          <ActionForm action="kill_on" next="/admin" label="Kill on" danger />
-          <ActionForm action="kill_off" next="/admin" label="Kill off" />
-        </span>
+      <section className="mt-4 rounded-2xl border border-border bg-card px-4 py-4 text-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold tracking-wide text-ink-3 uppercase">Emergency stop</p>
+            <p className={`mt-1 font-semibold ${data.flags.killSwitch ? "text-alert" : "text-good"}`}>
+              {data.flags.killSwitch ? "Outbound is frozen" : "Outbound is allowed"}
+            </p>
+            <p className="mt-1 max-w-xl text-muted-foreground">
+              This is not a household pause. It stops every call, WhatsApp, email, and push for every family until you
+              turn it off. Use it if the wrong numbers are being dialed.
+            </p>
+            <p className="mt-2 text-xs text-ink-3">
+              provider {data.flags.callProvider} · Bolna {data.flags.mockBolna ? "mock" : "live"} · WhatsApp{" "}
+              {data.flags.mockWhatsapp ? "mock" : "live"} · Email {data.flags.mockEmail ? "mock" : "live"}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <ActionForm action="kill_on" next="/admin" label="Stop everything" danger />
+            <ActionForm action="kill_off" next="/admin" label="Allow outbound" />
+          </div>
+        </div>
       </section>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
         <section>
           <h2 className="text-sm font-semibold tracking-wide text-ink-3 uppercase">Households</h2>
-          <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+          <ul className="mt-3 space-y-3">
             {data.households.length === 0 ? (
-              <li className="px-4 py-6 text-sm text-muted-foreground">No households yet.</li>
+              <li className="rounded-2xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+                No households yet.
+              </li>
             ) : null}
-            {data.households.map((row) => (
-              <li key={row.id}>
-                <Link href={`/admin/${row.id}`} className="block px-4 py-3 hover:bg-sunk">
+            {data.households.map((row) => {
+              const next = `/admin/${row.id}`;
+              return (
+                <li key={row.id} className="rounded-2xl border border-border bg-card px-4 py-3">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="font-semibold">
+                    <Link href={next} className="font-semibold hover:underline">
                       {row.full_name}
                       {row.is_example ? <span className="ml-2 text-xs text-amber-ink">EXAMPLE</span> : null}
                       {row.paused ? <span className="ml-2 text-xs text-alert">paused</span> : null}
-                    </p>
+                    </Link>
                     <p className="text-xs text-ink-3">
                       {row.call_count} calls
-                      {row.open_alerts ? ` · ${row.open_alerts} alerts` : ""}
+                      {row.open_alerts ? ` · ${row.open_alerts} open alerts` : ""}
                     </p>
                   </div>
-                  <p className="mt-1 truncate text-sm text-muted-foreground">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {row.city} · {row.phone} · {row.call_time} · {row.consent_status}
                     {row.owner_email ? ` · ${row.owner_email}` : ""}
                   </p>
                   <p className="mt-0.5 text-xs text-ink-3">
                     last {row.last_call_at || "—"} {row.last_call_status ? `· ${row.last_call_status}` : ""}
                   </p>
-                </Link>
-              </li>
-            ))}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link href={next} className="btn-secondary">
+                      Open
+                    </Link>
+                    {row.paused ? (
+                      <ActionForm action="resume" parentId={row.id} next="/admin" label="Resume" />
+                    ) : (
+                      <ActionForm action="pause" parentId={row.id} next="/admin" label="Pause calls" />
+                    )}
+                    <ActionForm action="ring" parentId={row.id} next={next} label="Call now" />
+                    {row.open_alerts ? (
+                      <ActionForm action="resolve_open" parentId={row.id} next="/admin" label="Clear alerts" />
+                    ) : null}
+                    {row.desk_token ? (
+                      <a href={`/d/${row.desk_token}`} className="btn-secondary" target="_blank" rel="noreferrer">
+                        Desk
+                      </a>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </section>
 

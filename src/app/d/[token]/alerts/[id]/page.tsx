@@ -3,9 +3,9 @@ import Link from "next/link";
 import { titled } from "@/lib/page-title";
 import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
-import { alertById, alertEvents, resolveAlert } from "@/lib/db/queries";
+import { alertById, alertEvents, contactsFor, parentByToken, resolveAlert } from "@/lib/db/queries";
 import { alertLife, alertQuoteLine, alertTitle, eventLine, statusPill } from "@/lib/alerts";
-import { loadFamily, readLang } from "@/lib/family-load";
+import { readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
 import { formatFriendlyTime } from "@/lib/time";
 import { redirect } from "next/navigation";
@@ -43,8 +43,8 @@ export default async function AlertDetailPage({
   const backHref = from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/alerts${qs({ lang })}`;
   const backLabel = from === "today" ? t.backToday : t.backAlertsShort;
 
-  const data = await loadFamily(token);
-  if (!data) {
+  const parent = await parentByToken(token);
+  if (!parent) {
     return (
       <Shell>
         <h1 className="app-title mt-8">{t.linkExpired}</h1>
@@ -55,8 +55,11 @@ export default async function AlertDetailPage({
       </Shell>
     );
   }
+  const contacts = await contactsFor(parent.id);
+  const child = contacts.find((row) => row.role === "child") ?? null;
+  const neighbour = contacts.find((row) => row.role === "neighbour") ?? null;
   const alert = await alertById(id);
-  if (!alert) {
+  if (!alert || alert.parent_id !== parent.id) {
     return (
       <Shell>
         <Link href={backHref} className="-ml-2 inline-flex h-11 items-center pr-3 text-[15px] font-medium text-primary">
@@ -67,11 +70,11 @@ export default async function AlertDetailPage({
     );
   }
   const events = await alertEvents(id);
-  const actor = data.child?.first_name || data.child?.full_name || "family";
+  const actor = child?.first_name || child?.full_name || "family";
   const life = alertLife({ ...alert, is_false: events.some((e) => e.kind === "false_alarm") });
   const pill = statusPill({ ...alert, is_false: life === "false" }, lang);
   const quote = alertQuoteLine(alert);
-  const told = [data.child?.full_name, data.neighbour?.full_name].filter(Boolean).join(" · ");
+  const told = [child?.full_name, neighbour?.full_name].filter(Boolean).join(" · ");
 
   async function markGoing() {
     "use server";

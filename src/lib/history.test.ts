@@ -138,6 +138,11 @@ describe("history helpers", () => {
     const lines = [{ speaker: "parent", hi: "theek hoon", en: "theek hoon" }];
     assert.deepEqual(callTranscriptLines(JSON.stringify(lines)), lines);
     assert.deepEqual(callTranscriptLines(lines), lines);
-    assert.deepEqual(callTranscriptLines("{"), []);
+    assert.equal(callTranscriptLines("{").length, 0);
+    assert.equal(
+      callTranscriptLines('[{"speaker":"parent","text":"seene mein dard"}]')[0]?.hi,
+      "seene mein dard",
+    );
+    assert.match(callTranscriptLines("user: seene mein dard\nassistant: theek hai?")[0]?.hi || "", /seene/);
   });
 });
