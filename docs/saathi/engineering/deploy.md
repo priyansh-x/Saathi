@@ -30,7 +30,8 @@ Copy every name from `.env.example`. Staging values that must stay as written:
 | `ALLOWED_EMAILS` | empty | Same rule for email. |
 | `WHATSAPP_TEMPLATES_APPROVED` | `0` | Stay on `hello_world` if anything ever tried to send. |
 | `SAATHI_KILL_SWITCH` | `0` | Desk and mock tools still run. Flip to `1` only to freeze outbound. `/ops` can also latch a DB kill switch (audit row); env `1` still wins. |
-| `OPS_EMAILS` | empty | Who can open `/ops` after sign-in. Empty = 404 for everyone. |
+| `OPS_EMAILS` | empty | Who can open `/ops` after sign-in. Empty = 404 for everyone. Same list can open `/admin` without the password cookie. |
+| `ADMIN_PASSWORD` | empty | Cookie gate for `/admin` (transcripts, phones, actions). Leave empty until you want that page. Never commit the value. |
 | `VOICE_ALERT_CHILD` | `0` | No child voice alert. |
 | `PUBLIC_BASE_URL` | `https://<family-vercel-host>` | Magic links and tool URLs. |
 | `SESSION_SECRET` | `openssl rand -hex 32` | Required on a public host. Vercel sets `NODE_ENV=production` even with mocks on. Do not leave empty — there is no `dev-magic` fallback. |

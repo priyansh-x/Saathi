@@ -30,6 +30,7 @@ export type Contact = {
   locale: string;
   email: string | null;
   is_owner: boolean;
+  last_inbound_at?: string | null;
 };
 
 export type Medicine = {

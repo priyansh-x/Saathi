@@ -65,6 +65,7 @@ Local data is PGlite at `.data/saathi`. Set `DATABASE_URL` for Postgres. Tests a
 - Every call, WhatsApp, email, or push goes through `gateOutbound`.
 - Live targets must be on `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.
 - `SAATHI_KILL_SWITCH=1` (or `/ops`) stops cron, dials, and sends.
+- `/admin` is a password-gated dump of households, calls, transcripts, and actions. Set `ADMIN_PASSWORD` (or sign in with `OPS_EMAILS`). `/ops` stays counts-and-gates only.
 - Defaults: `CALL_PROVIDER=simulated`, `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, `MOCK_EMAIL=1`.
 - Never invent family data. Fake rows are labelled EXAMPLE.
 

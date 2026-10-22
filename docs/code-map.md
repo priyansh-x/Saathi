@@ -26,6 +26,7 @@ Do not add a second component library or a parallel backend.
 | Auth / magic link | `src/lib/auth/` (do not casually rewrite session HMAC) |
 | Onboard | `src/lib/onboard.ts`, `src/app/onboard/` |
 | Ops | `src/app/ops/`, `src/lib/ops/` |
+| Admin dashboard | `src/app/admin/`, `src/lib/admin/`, `src/app/api/admin/` |
 
 ## Invariants
 

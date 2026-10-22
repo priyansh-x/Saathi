@@ -33,6 +33,7 @@ The parent never opens this website.
 | `/d/[token]/calls/[id]` | Call detail (transcript, meds) |
 | `/d/[token]/settings` | Pause, test call, consents, install |
 | `/ops` | Kill switch, Bolna / WhatsApp readiness (`OPS_EMAILS`) |
+| `/admin` | Full household dump + actions (`ADMIN_PASSWORD` cookie, or signed-in `OPS_EMAILS`) |
 | `/demo` | EXAMPLE walkthrough |
 | `/privacy` | Retention and 112 |
 
