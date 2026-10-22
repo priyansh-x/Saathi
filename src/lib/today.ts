@@ -246,8 +246,13 @@ export function ringCopy(reason: string | undefined, lang: Lang) {
   if (reason === "bolna_auth") return t.ringBolnaAuth;
   if (reason === "bolna_balance") return t.ringBolnaBalance;
   if (reason === "bolna_error") return t.ringBolnaError;
+  if (reason === "bolna_hours") return t.ringBolnaHours;
   if (reason === "already_called") return t.ringAlready;
   if (reason === "paused") return t.ringPaused;
   if (reason === "example") return t.ringExample;
+  if (reason === "budget") return t.ringBudget;
+  if (reason === "consent") return t.ringConsent;
+  if (reason === "missing_bolna_key") return t.ringBolnaAuth;
+  if (reason === "kill_switch") return t.ringFail;
   return t.ringFail;
 }

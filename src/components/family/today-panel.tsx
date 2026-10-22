@@ -19,9 +19,6 @@ import {
 } from "lucide-react";
 import { IconMedicine } from "@/components/icons";
 import { redirect } from "next/navigation";
-import { deskCallHref } from "@/lib/bolna/after-test-call";
-import { placeExampleDeskCall } from "@/lib/bolna/example-desk";
-import { placeTestCall } from "@/lib/bolna/place";
 import { resolveAlert, setPaused } from "@/lib/db/queries";
 import type { DoseLog } from "@/lib/db/types";
 import type { FamilyDesk } from "@/lib/family-load";
@@ -124,12 +121,6 @@ export function TodayPanel({
     "use server";
     if (alert) await resolveAlert(alert.id, childName);
     redirect(`/d/${token}?lang=${lang}`);
-  }
-
-  async function ringNow() {
-    "use server";
-    const placed = isExample ? await placeExampleDeskCall(parentId) : await placeTestCall(parentId);
-    redirect(deskCallHref(token, lang, placed, "today"));
   }
 
   const Icon =
@@ -241,14 +232,14 @@ export function TodayPanel({
               <Phone className="size-[18px]" aria-hidden />
               {p(t.callMaa)}
             </a>
-          ) : state === "scheduled" || state === "skipped" || (isExample && (state === "trying" || state === "look")) ? (
-            <form action={ringNow}>
+          ) : state === "calling" ? null : (
+            <form action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=today`} method="POST">
               <button type="submit" className="btn-primary">
                 <Phone className="size-[18px]" aria-hidden />
                 {p(t.ringNow)}
               </button>
             </form>
-          ) : null}
+          )}
 
           <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))]">
             {state === "trying" || state === "scheduled" || state === "skipped" ? null : (

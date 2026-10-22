@@ -216,6 +216,8 @@ describe("todayStatus", () => {
     assert.match(ringCopy("not_allowlisted", "en") || "", /allowlist/);
     assert.match(ringCopy("bolna_unverified", "en") || "", /Verified Numbers/);
     assert.equal(ringCopy("example", "en"), "The example desk does not place a live call. Open your family desk.");
+    assert.match(ringCopy("bolna_hours", "en") || "", /calling hours/);
+    assert.match(ringCopy("budget", "en") || "", /minutes/);
     assert.equal(ringCopy(undefined, "en"), null);
   });
 

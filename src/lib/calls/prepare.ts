@@ -26,6 +26,7 @@ export type PreparedCall = {
     user_data: Awaited<ReturnType<typeof buildCallContext>>;
     agent_data: { language: string };
     max_duration: number;
+    bypass_call_guardrails?: boolean;
   };
 };
 
@@ -36,12 +37,18 @@ export function bolnaAgentLanguage(languages: string | null | undefined) {
   return first || "hi";
 }
 
-export async function minutesUsedToday(clock: Date = new Date()) {
+export async function minutesUsedToday(clock: Date = new Date(), parentId?: string) {
   const { start, end } = istDayBounds(istDayKey(clock));
-  const rows = await query<{ secs: number }>(
-    `select coalesce(sum(duration_sec),0)::int as secs from calls where started_at >= $1 and started_at < $2`,
-    [start, end],
-  );
+  const rows = parentId
+    ? await query<{ secs: number }>(
+        `select coalesce(sum(duration_sec),0)::int as secs from calls
+         where parent_id = $3 and started_at >= $1 and started_at < $2`,
+        [start, end, parentId],
+      )
+    : await query<{ secs: number }>(
+        `select coalesce(sum(duration_sec),0)::int as secs from calls where started_at >= $1 and started_at < $2`,
+        [start, end],
+      );
   return Math.ceil((rows[0]?.secs ?? 0) / 60);
 }
 
@@ -86,6 +93,7 @@ export async function prepareMorningCall(
   if (parent.consent_status === "declined") return { ok: false as const, reason: "declined" };
   if ((parent.consent_later_count ?? 0) >= 2) return { ok: false as const, reason: "consent_later" };
   if (!isMockBolna() && !(await hasPilotConsent(parentId))) {
+    await rememberBlockedDial(parentId, parent.phone, "consent");
     return { ok: false as const, reason: "consent" };
   }
   const onAllowlist = allowedPhones().some((row) => sameIndiaMobile(row, parent.phone));
@@ -98,8 +106,13 @@ export async function prepareMorningCall(
     await rememberBlockedDial(parentId, parent.phone, gate.reason);
     return { ok: false as const, reason: gate.reason };
   }
-  const used = await minutesUsedToday(clock);
-  if (used >= dailyBudgetMinutes()) return { ok: false as const, reason: "budget" };
+  if (!opts?.forceTest) {
+    const used = await minutesUsedToday(clock, parentId);
+    if (used >= dailyBudgetMinutes()) {
+      await rememberBlockedDial(parentId, parent.phone, "budget");
+      return { ok: false as const, reason: "budget" };
+    }
+  }
   if (!opts?.retryOf && !opts?.forceTest && (await dialsToday(parentId, clock)) >= dailyDialCap()) {
     return { ok: false as const, reason: "already_called" };
   }
@@ -123,6 +136,7 @@ export async function prepareMorningCall(
     user_data: userData,
     agent_data: { language: bolnaAgentLanguage(parent.languages) },
     max_duration: maxCallSeconds(),
+    ...(opts?.forceTest ? { bypass_call_guardrails: true } : {}),
   };
   if ("from_phone_number" in payload) {
     throw new Error("Do not set from_phone_number on POST /call");
@@ -214,15 +228,25 @@ export async function postBolnaCall(
   fetchImpl: PlaceFetch = fetch,
 ): Promise<PlaceCallResult> {
   const key = process.env.BOLNA_API_KEY;
-  if (!key) return { ok: false as const, reason: "missing_bolna_key" };
-  const res = await fetchImpl(`${process.env.BOLNA_BASE_URL || "https://api.bolna.ai"}/call`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(prepared.payload),
-  });
+  if (!key) {
+    await rememberBlockedDial(prepared.parentId, prepared.payload.recipient_phone_number, "missing_bolna_key");
+    return { ok: false as const, reason: "missing_bolna_key" };
+  }
+  let res: Response;
+  try {
+    res = await fetchImpl(`${process.env.BOLNA_BASE_URL || "https://api.bolna.ai"}/call`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(prepared.payload),
+      signal: AbortSignal.timeout(20_000),
+    });
+  } catch {
+    await rememberBlockedDial(prepared.parentId, prepared.payload.recipient_phone_number, "bolna_error");
+    return { ok: false as const, reason: "bolna_error" };
+  }
   const body = (await res.json().catch(() => ({}))) as {
     execution_id?: string;
     id?: string;

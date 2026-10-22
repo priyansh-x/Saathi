@@ -125,5 +125,27 @@ describe("every dial is recorded", () => {
     assert.equal("ok" in blocked && blocked.ok, false);
     const forced = await prepareMorningCall("parent_kamla", IN_WINDOW, { forceTest: true });
     assert.equal(isPreparedCall(forced), true);
+    if (isPreparedCall(forced)) {
+      assert.equal(forced.payload.bypass_call_guardrails, true);
+    }
+  });
+
+  it("records a Bolna network failure instead of throwing", async () => {
+    await wipeToday();
+    const prepared = await prepareMorningCall("parent_kamla", IN_WINDOW, { forceTest: true });
+    assert.equal(isPreparedCall(prepared), true);
+    if (!isPreparedCall(prepared)) return;
+    const prevKey = process.env.BOLNA_API_KEY;
+    process.env.BOLNA_API_KEY = "example-test-key-not-live";
+    try {
+      const fail = await postBolnaCall(prepared, async () => {
+        throw new Error("network down");
+      });
+      assert.equal(fail.ok, false);
+      if (!fail.ok) assert.equal(fail.reason, "bolna_error");
+    } finally {
+      if (prevKey) process.env.BOLNA_API_KEY = prevKey;
+      else delete process.env.BOLNA_API_KEY;
+    }
   });
 });

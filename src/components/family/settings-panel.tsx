@@ -9,9 +9,6 @@ import { SettingsForm } from "@/components/family/settings-form";
 import { PageTitle } from "@/components/family/chrome";
 import { AddToHome } from "@/components/pwa/register";
 import { CachedAction, SignOutButton } from "@/components/pwa/clear-cache";
-import { deskCallHref } from "@/lib/bolna/after-test-call";
-import { placeExampleDeskCall } from "@/lib/bolna/example-desk";
-import { placeTestCall } from "@/lib/bolna/place";
 import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { retentionSummaryDays, retentionTranscriptDays } from "@/lib/config";
 import { consentsFor } from "@/lib/consent";
@@ -68,11 +65,6 @@ export async function SettingsPanel({
     redirect(`/d/${token}/settings?lang=${lang}`);
   }
 
-  async function ringNow() {
-    "use server";
-    const placed = data.parent.is_example ? await placeExampleDeskCall(parentId) : await placeTestCall(parentId);
-    redirect(deskCallHref(token, lang, placed, "settings"));
-  }
 
   async function wipe() {
     "use server";
@@ -114,7 +106,7 @@ export async function SettingsPanel({
         <h2 className="font-semibold">{t.testCall}</h2>
         <p className="text-sm text-muted-foreground">{t.testCallHint}</p>
         {ringNote ? <p className="text-sm font-medium">{ringNote}</p> : null}
-        <form action={ringNow}>
+        <form action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=settings`} method="POST">
           <button type="submit" className="btn-primary">
             <Phone className="size-[18px]" aria-hidden />
             {personal(t.ringNow, term, lang)}
