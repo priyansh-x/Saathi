@@ -1,0 +1,12 @@
+{
+  "name": "saathi-latent-spaces",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.185 preview",
+    "check": "npx --yes hyperframes@0.8.185 check",
+    "render": "npx --yes hyperframes@0.8.185 render",
+    "lint": "npx --yes hyperframes@0.8.185 lint",
+    "publish": "npx --yes hyperframes@0.8.185 publish"
+  }
+}

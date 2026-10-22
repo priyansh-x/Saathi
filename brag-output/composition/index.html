@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Saathi</title>
+    <script src="assets/gsap.min.js"></script>
+    <script src="assets/music/audio-data.js"></script>
+    <style>
+      @font-face {
+        font-family: "Instrument Serif";
+        src: url("assets/fonts/is.woff2") format("woff2");
+        font-weight: 400;
+        font-style: italic;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: Inter;
+        src: url("assets/fonts/inter.woff2") format("woff2");
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: Inter;
+        src: url("assets/fonts/inter6.woff2") format("woff2");
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Noto Sans Devanagari";
+        src: url("assets/fonts/noto.woff2") format("woff2");
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #fbf7f2; color: #1f1b16; }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #fbf7f2;
+        font-family: Inter, sans-serif;
+      }
+      .clip { position: absolute; inset: 0; }
+      #glow {
+        position: absolute;
+        left: 50%;
+        top: 38%;
+        width: 1100px;
+        height: 1100px;
+        margin-left: -550px;
+        margin-top: -550px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(176, 83, 42, 0.28), rgba(251, 247, 242, 0) 70%);
+        pointer-events: none;
+        z-index: 0;
+      }
+      .stage {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 56px;
+        padding: 56px 72px;
+        z-index: 1;
+      }
+      .stage-col {
+        flex-direction: column;
+        gap: 28px;
+      }
+      .copy {
+        max-width: 760px;
+        flex: 1;
+        min-width: 0;
+      }
+      .kicker {
+        margin: 0 0 16px;
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #b0532a;
+      }
+      h1 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 68px;
+        line-height: 1.04;
+        letter-spacing: -0.035em;
+      }
+      .serif {
+        margin: 10px 0 0;
+        font-family: "Instrument Serif", Georgia, serif;
+        font-style: italic;
+        font-weight: 400;
+        font-size: 64px;
+        line-height: 1.05;
+        color: #8e3f1d;
+      }
+      .hi {
+        margin: 18px 0 0;
+        font-family: "Noto Sans Devanagari", sans-serif;
+        font-size: 32px;
+        font-weight: 500;
+        color: #1f1b16;
+      }
+      .note {
+        margin: 16px 0 0;
+        font-size: 22px;
+        font-weight: 500;
+        color: #5c534a;
+        max-width: 640px;
+      }
+      .device {
+        position: relative;
+        width: 390px;
+        height: 844px;
+        flex: none;
+        background: #1f1b16;
+        border-radius: 48px;
+        padding: 12px;
+        box-shadow:
+          0 40px 80px -28px rgba(74, 42, 20, 0.45),
+          0 0 0 1px rgba(31, 27, 22, 0.2);
+      }
+      .device.sm {
+        width: 340px;
+        height: 736px;
+        border-radius: 42px;
+        padding: 11px;
+      }
+      .notch {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        width: 118px;
+        height: 22px;
+        margin-left: -59px;
+        background: #1f1b16;
+        border-radius: 12px;
+        z-index: 3;
+      }
+      .screen {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 36px;
+        background: #fffcf8;
+      }
+      .device.sm .screen { border-radius: 32px; }
+      .ken {
+        position: absolute;
+        inset: 0;
+        transform-origin: 50% 12%;
+      }
+      .ken img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .wash {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        opacity: 0.16;
+        filter: saturate(0.85);
+      }
+      .wash img {
+        width: 120%;
+        height: auto;
+        transform-origin: 50% 0;
+      }
+      .mark {
+        width: 92px;
+        height: 92px;
+        border-radius: 24px;
+        background: #b0532a;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Noto Sans Devanagari", sans-serif;
+        font-size: 50px;
+        font-weight: 600;
+        margin-bottom: 18px;
+      }
+      .name { margin: 0; font-size: 80px; font-weight: 600; letter-spacing: -0.045em; }
+      .tag { margin: 12px 0 0; font-size: 30px; color: #5c534a; }
+      .fine { margin: 20px 0 0; font-size: 20px; color: #5c534a; }
+      .enter { opacity: 0; }
+      .pair { display: flex; align-items: flex-end; gap: 28px; }
+      .pair .device:last-child { margin-bottom: 36px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="saathi" data-start="0" data-width="1920" data-height="1080" data-duration="21.28">
+      <div id="glow"></div>
+
+      <section id="scene-hook" class="clip" data-start="0" data-duration="3.82" data-track-index="1">
+        <div class="wash" id="hook-wash">
+          <img src="assets/app/home-en.png" alt="" width="780" height="1688" />
+        </div>
+        <div class="stage stage-col">
+          <p id="hook-kicker" class="kicker enter">No app for her.</p>
+          <h1 id="hook-line" class="enter">A morning call for Maa,</h1>
+          <p id="hook-serif" class="serif enter">on the phone she has.</p>
+        </div>
+      </section>
+
+      <section id="scene-call" class="clip" data-start="3.82" data-duration="3.18" data-track-index="2">
+        <div class="stage">
+          <div id="call-copy" class="copy enter">
+            <p class="kicker">8:00 IST</p>
+            <h1>Saathi rings.</h1>
+            <p class="hi">नमस्ते माँ, दवाई ले ली?</p>
+            <p class="note">She talks. Nothing to install.</p>
+          </div>
+          <div id="call-phone" class="device enter">
+            <span class="notch"></span>
+            <div class="screen">
+              <div class="ken" id="call-ken">
+                <img src="assets/app/demo-call-hi.png" alt="Hindi demo call on the family desk" width="780" height="1688" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-today" class="clip" data-start="7" data-duration="3.9" data-track-index="3">
+        <div class="stage">
+          <div id="today-phone" class="device enter">
+            <span class="notch"></span>
+            <div class="screen">
+              <div class="ken" id="today-ken">
+                <img src="assets/app/today-good-en.png" alt="Today: Maa is doing well" width="780" height="1688" />
+              </div>
+            </div>
+          </div>
+          <div id="today-copy" class="copy enter">
+            <p class="kicker">On the family desk</p>
+            <h1>You already know how the morning went.</h1>
+            <p class="note">Picked up. Medicines. Her words. One screen.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-act" class="clip" data-start="10.9" data-duration="3.3" data-track-index="4">
+        <div class="stage">
+          <div id="act-copy" class="copy enter">
+            <p class="kicker">If something is wrong</p>
+            <h1>Act now — not a buried chat.</h1>
+            <p class="hi">माँ ने सीने में दर्द बताया</p>
+            <p class="note">Open the alert. Call Maa. The neighbour is already on the list.</p>
+          </div>
+          <div id="act-phone" class="device enter">
+            <span class="notch"></span>
+            <div class="screen">
+              <div class="ken" id="act-ken">
+                <img src="assets/app/today-act-hi.png" alt="Today Act now in Hindi" width="780" height="1688" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-desk" class="clip" data-start="14.2" data-duration="3.27" data-track-index="5">
+        <div class="stage">
+          <div id="desk-copy" class="copy enter">
+            <p class="kicker">Alerts · call · history</p>
+            <h1>The same morning, in writing.</h1>
+            <p class="note">WhatsApp still carries the brief. The desk holds the record.</p>
+          </div>
+          <div id="desk-pair" class="pair enter">
+            <div class="device sm">
+              <span class="notch"></span>
+              <div class="screen">
+                <div class="ken" id="alerts-ken">
+                  <img src="assets/app/alerts-en.png" alt="Alerts list" width="780" height="1688" />
+                </div>
+              </div>
+            </div>
+            <div class="device sm">
+              <span class="notch"></span>
+              <div class="screen">
+                <div class="ken" id="transcript-ken">
+                  <img src="assets/app/call-en.png" alt="Call transcript" width="780" height="1688" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene-outro" class="clip" data-start="17.47" data-duration="3.81" data-track-index="6">
+        <div class="stage stage-col">
+          <div id="logo" class="mark enter">स</div>
+          <p id="word" class="name enter">Saathi</p>
+          <p id="tag" class="tag enter">She picks up and talks.</p>
+          <p id="fine" class="fine enter">Not an emergency service · 112</p>
+        </div>
+      </section>
+
+      <audio id="bg-music" data-start="0" data-duration="21.28" data-track-index="10" data-volume="0.32" src="assets/music/bed.mp3"></audio>
+      <audio id="sfx-call" data-start="3.82" data-duration="0.19" data-track-index="11" data-volume="0.5" src="assets/sfx/impactSoft_medium_001.ogg"></audio>
+      <audio id="sfx-today" data-start="7" data-duration="0.1" data-track-index="12" data-volume="0.45" src="assets/sfx/click1.ogg"></audio>
+      <audio id="sfx-act" data-start="10.9" data-duration="0.3" data-track-index="13" data-volume="0.45" src="assets/sfx/switch2.ogg"></audio>
+      <audio id="sfx-desk" data-start="14.2" data-duration="0.1" data-track-index="14" data-volume="0.4" src="assets/sfx/click1.ogg"></audio>
+      <audio id="sfx-logo" data-start="17.47" data-duration="0.19" data-track-index="15" data-volume="0.5" src="assets/sfx/impactSoft_medium_001.ogg"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const rise = { y: 28, opacity: 0 };
+      const land = { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" };
+
+      tl.fromTo("#hook-kicker", rise, land, 0.28);
+      tl.fromTo("#hook-line", rise, { ...land, duration: 0.6 }, 0.62);
+      tl.fromTo("#hook-serif", rise, { ...land, duration: 0.65 }, 1.12);
+      tl.fromTo("#hook-wash img", { y: 0, scale: 1.04 }, { y: -48, scale: 1.1, duration: 3.7, ease: "none" }, 0);
+
+      tl.fromTo("#call-copy", { x: -36, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 3.95);
+      tl.fromTo("#call-phone", { y: 48, opacity: 0, rotate: -3 }, { y: 0, opacity: 1, rotate: 0, duration: 0.65, ease: "power3.out" }, 4.05);
+      tl.fromTo("#call-ken", { scale: 1.08, y: 0 }, { scale: 1, y: -18, duration: 3.0, ease: "power1.out" }, 4.1);
+
+      tl.fromTo("#today-phone", { y: 40, opacity: 0, rotate: 2.5 }, { y: 0, opacity: 1, rotate: 0, duration: 0.6, ease: "power3.out" }, 7.08);
+      tl.fromTo("#today-copy", { x: 28, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 7.22);
+      tl.fromTo("#today-ken", { scale: 1.04, y: 0 }, { scale: 1.14, y: -110, duration: 3.7, ease: "none" }, 7.08);
+
+      tl.fromTo("#act-copy", { x: -28, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 11.0);
+      tl.fromTo("#act-phone", { y: 42, opacity: 0, rotate: 2 }, { y: 0, opacity: 1, rotate: 0, duration: 0.6, ease: "power3.out" }, 11.08);
+      tl.fromTo("#act-ken", { scale: 1.02, y: 0 }, { scale: 1.12, y: -72, duration: 3.1, ease: "none" }, 11.0);
+
+      tl.fromTo("#desk-copy", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 14.32);
+      tl.fromTo("#desk-pair", { y: 36, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 14.4);
+      tl.fromTo("#alerts-ken", { y: 0 }, { y: -90, duration: 3.1, ease: "none" }, 14.4);
+      tl.fromTo("#transcript-ken", { y: 0 }, { y: -70, duration: 3.1, ease: "none" }, 14.55);
+
+      tl.fromTo("#logo", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "power3.out" }, 17.6);
+      tl.fromTo("#word", rise, land, 18.02);
+      tl.fromTo("#tag", rise, { ...land, duration: 0.45 }, 18.5);
+      tl.fromTo("#fine", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 19.05);
+
+      const frames = window.AUDIO_DATA.frames;
+      for (let f = 0; f < frames.length; f++) {
+        const frame = frames[f];
+        tl.call(
+          function (sample) {
+            const rms = sample.rms || 0;
+            const bass = (sample.bands && sample.bands[0]) || 0;
+            gsap.set("#glow", { opacity: 0.35 + rms * 0.9, scale: 1 + bass * 0.12 });
+          },
+          [frame],
+          f / 30,
+        );
+      }
+      window.__timelines["saathi"] = tl;
+    </script>
+  </body>
+</html>

@@ -57,8 +57,9 @@ next-env.d.ts
 # compiled, inlined CSS (npm run prebuild)
 /src/generated
 
-# hyperframes render cache
-/archives/brag/composition/.hyperframes
+# HyperFrames cache (keep composition source)
+/brag-output/composition/.hyperframes
+/brag-output/composition/node_modules
 
 # Android / Capacitor build outputs (keep android/ project files)
 android/.gradle/
