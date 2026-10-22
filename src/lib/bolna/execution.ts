@@ -51,16 +51,34 @@ export async function fetchBolnaExecution(
   }
 }
 
+export function isLiveBolnaExecutionId(id?: string | null) {
+  if (!id) return false;
+  const value = id.trim();
+  if (!value) return false;
+  if (/^(mock_|call_|fail_|exec_)/i.test(value)) return false;
+  return true;
+}
+
 export function callNeedsBolnaHydrate(call: {
+  id?: string | null;
   status: string;
   ended_at?: string | null;
   transcript_json?: string | null;
   duration_sec?: number | null;
+  bolna_execution_id?: string | null;
 }) {
-  if (call.status === "in_progress" || call.status === "failed" || call.status === "missed") return true;
+  const exec = call.bolna_execution_id || call.id;
+  if (exec && !isLiveBolnaExecutionId(exec)) return false;
+  if (call.status === "in_progress") return true;
   if (!call.ended_at) return true;
   if (call.status === "completed" && call.duration_sec == null) return true;
-  if ((call.status === "completed" || call.status === "no_conversation") && !transcriptJsonHasWords(call.transcript_json)) {
+  if (
+    !transcriptJsonHasWords(call.transcript_json) &&
+    (call.status === "completed" ||
+      call.status === "no_conversation" ||
+      call.status === "missed" ||
+      call.status === "failed")
+  ) {
     return true;
   }
   return false;
@@ -80,7 +98,7 @@ export async function hydrateBolnaCall(
 ) {
   if (!bolnaFetchEnabled() || !callNeedsBolnaHydrate(call)) return false;
   const executionId = call.bolna_execution_id || call.id;
-  if (!executionId) return false;
+  if (!executionId || !isLiveBolnaExecutionId(executionId)) return false;
   const running = inflight.get(executionId);
   if (running) return running;
   const work = (async () => {
@@ -146,9 +164,20 @@ export async function importRecentBolnaExecutions(
     return 0;
   }
   let imported = 0;
-  for (const row of executionList(body).slice(0, 12)) {
+  for (const row of executionList(body).slice(0, 8)) {
     const executionId = bolnaExecutionId(row);
-    if (!executionId) continue;
+    if (!executionId || !isLiveBolnaExecutionId(executionId)) continue;
+    const already = await query<{
+      id: string;
+      status: string;
+      ended_at: string | null;
+      transcript_json: string | null;
+      duration_sec: number | null;
+      bolna_execution_id: string | null;
+    }>(`select id, status, ended_at, transcript_json, duration_sec, bolna_execution_id from calls where id = $1 or bolna_execution_id = $1`, [
+      executionId,
+    ]);
+    if (already[0] && !callNeedsBolnaHydrate(already[0])) continue;
     const full = (await fetchBolnaExecution(executionId, fetchImpl)) ?? row;
     const nested = full.data && typeof full.data === "object" ? { ...full, ...full.data } : full;
     const fromContext = parentIdFromPayload(nested);
@@ -184,19 +213,22 @@ export async function syncDeskFromBolna(
   parent: { id: string; phone: string },
   call?: Parameters<typeof hydrateBolnaCall>[0] | null,
   fetchImpl: typeof fetch = fetch,
+  opts?: { importRecent?: boolean },
 ) {
-  if (!bolnaFetchEnabled()) {
-    if (call) await backfillAlertsFromTranscripts(parent.id);
-    return false;
-  }
-  const now = Date.now();
-  const prev = lastImportAt.get(parent.id) ?? 0;
+  const importRecent = opts?.importRecent ?? true;
   let changed = false;
-  if (now - prev >= 1200) {
-    lastImportAt.set(parent.id, now);
-    changed = (await importRecentBolnaExecutions(parent, fetchImpl)) > 0;
+  if (bolnaFetchEnabled()) {
+    const now = Date.now();
+    const prev = lastImportAt.get(parent.id) ?? 0;
+    const shouldImport = importRecent && now - prev >= 15_000;
+    if (shouldImport) {
+      lastImportAt.set(parent.id, now);
+      changed = (await importRecentBolnaExecutions(parent, fetchImpl)) > 0;
+    }
+    if (call && callNeedsBolnaHydrate(call)) {
+      changed = (await hydrateBolnaCall(call, fetchImpl)) || changed;
+    }
   }
-  if (call) changed = (await hydrateBolnaCall(call, fetchImpl)) || changed;
   await backfillAlertsFromTranscripts(parent.id);
   return changed;
 }

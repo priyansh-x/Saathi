@@ -15,7 +15,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
     `select * from calls where parent_id = $1 order by started_at desc limit 1`,
     [parent.id],
   );
-  await syncDeskFromBolna(parent, open);
+  await syncDeskFromBolna(parent, open, fetch, { importRecent: false });
   const [call] = await query<{ id: string; status: string; ended_at: string | null; has_words: boolean }>(
     `select id, status, ended_at,
             (transcript_json is not null and transcript_json <> '' and transcript_json <> '[]') as has_words

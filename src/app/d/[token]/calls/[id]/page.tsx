@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { LiveRefresh } from "@/components/family/live-refresh";
 import { deskLiveStamp, deskMedsStamp } from "@/lib/desk-live";
 import { titled } from "@/lib/page-title";
-import { syncDeskFromBolna } from "@/lib/bolna/execution";
+import { backfillAlertsFromTranscripts, callNeedsBolnaHydrate, hydrateBolnaCall, syncDeskFromBolna } from "@/lib/bolna/execution";
 import { callById, dosesOnDay, parentByToken } from "@/lib/db/queries";
 import { readLang } from "@/lib/family-load";
 import { callBullets, callLanguageLabel, callTranscriptLines, qs } from "@/lib/history";
@@ -86,7 +86,7 @@ export default async function CallDetailPage({
     }
     let call = await callById(callId);
     if (!call || call.parent_id !== parent.id) {
-      await syncDeskFromBolna(parent);
+      await syncDeskFromBolna(parent, null, fetch, { importRecent: true });
       call = await callById(callId);
     }
     if (!call || call.parent_id !== parent.id) {
@@ -99,10 +99,11 @@ export default async function CallDetailPage({
       );
     }
 
-    {
-      const pulled = await syncDeskFromBolna(parent, call);
+    if (callNeedsBolnaHydrate(call)) {
+      const pulled = await hydrateBolnaCall(call);
       if (pulled) call = (await callById(callId)) ?? call;
     }
+    await backfillAlertsFromTranscripts(parent.id);
 
     const started = toIsoString(call.started_at);
     const day = started.slice(0, 10);

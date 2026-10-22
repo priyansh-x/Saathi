@@ -16,7 +16,7 @@ export async function HistoryPanel({
   data: FamilyDesk;
   days: 7 | 30;
 }) {
-  await syncDeskFromBolna(data.parent, data.call);
+  await syncDeskFromBolna(data.parent, data.call, fetch, { importRecent: false });
   const hist = await historyDays(data.parent.id, 80);
   const medicines = await medicinesFor(data.parent.id);
   return (

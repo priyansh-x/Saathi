@@ -1,7 +1,10 @@
+import { isLiveBolnaExecutionId } from "@/lib/bolna/execution";
 import { logMedicine } from "@/lib/bolna/tools";
 import { processBolnaWebhook } from "@/lib/bolna/webhook";
 import { query } from "@/lib/db/client";
 import { istDayKey, nowIstStamp } from "@/lib/time";
+
+export { isLiveBolnaExecutionId };
 
 const GOOD_TRANSCRIPT = [
   "agent: नमस्ते, मैं साथी बोल रही हूँ। कैसी नींद रही?",
@@ -10,14 +13,6 @@ const GOOD_TRANSCRIPT = [
   "user: Haan, Amlodipine le li.",
   "agent: Achha. Kal subah phir baat karte hain.",
 ].join("\n");
-
-export function isLiveBolnaExecutionId(id?: string | null) {
-  if (!id) return false;
-  const value = id.trim();
-  if (!value) return false;
-  if (/^(mock_|call_|fail_|exec_)/i.test(value)) return false;
-  return true;
-}
 
 async function exampleParent(parentId: string) {
   const rows = await query<{ is_example: boolean }>(`select is_example from parents where id = $1`, [parentId]);
