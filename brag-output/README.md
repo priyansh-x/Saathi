@@ -19,4 +19,4 @@ npx hyperframes@0.8.185 check
 
 Render only after you have watched the Studio preview and said to encode.
 
-App stills live in `composition/assets/app/` (cropped from `docs/saathi/product/audit-shots/`). Recapture those shots if the desk UI changes, then crop each PNG to 780×1688 from the top.
+App stills live in `composition/assets/app/` (viewport captures of the family desk, 780×1688). Recapture if the desk UI changes.

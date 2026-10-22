@@ -26,6 +26,8 @@ Open [http://127.0.0.1:43147](http://127.0.0.1:43147). Set up a family, or open 
 
 Marketing site: `cd landing && npm install && npm run dev` → [http://127.0.0.1:43211](http://127.0.0.1:43211).
 
+Latent Spaces film (HyperFrames, real desk screens): `cd brag-output/composition && npx hyperframes@0.8.185 preview`. Render only after you have watched it.
+
 ## How it fits together
 
 ```mermaid
