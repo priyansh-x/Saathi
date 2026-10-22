@@ -204,6 +204,9 @@ describe("todayStatus", () => {
     assert.ok(actHi.chip.trim().length > 0);
     assert.notEqual(lookEn.chip, actEn.chip);
     assert.equal(lookEn.chip, "Needs a look");
+    const trying = heroCopy({ ...base, state: "trying", lang: "en", alert: null });
+    assert.equal(trying.chip, "Trying to reach");
+    assert.notEqual(trying.chip, lookEn.chip);
     const late = heroCopy({ ...base, state: "scheduled", lang: "en", call: null, overdue: true });
     assert.match(late.headline, /has not called yet/i);
     const callingEn = heroCopy({ ...base, state: "calling", lang: "en", call: call("in_progress") });

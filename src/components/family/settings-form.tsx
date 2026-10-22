@@ -70,10 +70,11 @@ export function SettingsForm({
         <h2 className="font-semibold">{t.callSection}</h2>
         <form
           className="space-y-3"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
-            post({ action: "call_time", callTime: String(fd.get("callTime") || "") });
+            await post({ action: "call_time", callTime: String(fd.get("callTime") || "") });
+            await post({ action: "languages", languages: fd.getAll("lang").map(String) });
           }}
         >
           <Label htmlFor="callTime">{t.morningTime}</Label>
@@ -87,29 +88,17 @@ export function SettingsForm({
               <option value={callTime}>{callTime} IST</option>
             )}
           </select>
-          <button type="submit" disabled={busy} className="btn-secondary">
-            {t.saveTime}
-          </button>
-        </form>
-        <form
-          className="space-y-3 border-t border-border pt-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const fd = new FormData(e.currentTarget);
-            post({ action: "languages", languages: fd.getAll("lang").map(String) });
-          }}
-        >
           <p className="text-sm font-medium">{t.languagesLabel}</p>
           <div className="flex flex-wrap gap-2">
             {LANGUAGE_OPTIONS.map((opt) => (
               <label key={opt.code} className="inline-flex h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm">
                 <input type="checkbox" name="lang" value={opt.code} defaultChecked={selected.includes(opt.code)} className="size-4" />
-                {opt.label}
+                {opt.code === "hi" ? (lang === "hi" ? "हिंदी" : "Hindi") : opt.code === "en" ? (lang === "hi" ? "अंग्रेज़ी" : "English") : opt.code === "mr" ? (lang === "hi" ? "मराठी" : "Marathi") : opt.label}
               </label>
             ))}
           </div>
           <button type="submit" disabled={busy} className="btn-secondary">
-            {t.saveLanguages}
+            {t.saveTime}
           </button>
         </form>
         <p className="text-sm text-muted-foreground">{t.settingsHint}</p>
@@ -139,11 +128,11 @@ export function SettingsForm({
                 <Input id={`med-${med.id}`} name="name" defaultValue={med.name} />
                 <Input name="time" type="time" defaultValue={med.time_local || "08:30"} aria-label={t.morningTime} />
                 <select name="meal" defaultValue={med.meal} className={fieldClass} aria-label={med.name}>
-                  <option value="with food">With food</option>
-                  <option value="without food">Without food</option>
-                  <option value="after breakfast">After breakfast</option>
-                  <option value="after lunch">After lunch</option>
-                  <option value="after dinner">After dinner</option>
+                  <option value="with food">{lang === "hi" ? "खाने के साथ" : "With food"}</option>
+                  <option value="without food">{lang === "hi" ? "खाने के बिना" : "Without food"}</option>
+                  <option value="after breakfast">{lang === "hi" ? "नाश्ते के बाद" : "After breakfast"}</option>
+                  <option value="after lunch">{lang === "hi" ? "दोपहर के बाद" : "After lunch"}</option>
+                  <option value="after dinner">{lang === "hi" ? "रात के खाने के बाद" : "After dinner"}</option>
                 </select>
                 <div className="flex items-center justify-between gap-3">
                   <button
@@ -180,8 +169,8 @@ export function SettingsForm({
           <Input name="name" placeholder="Amlodipine" aria-label={t.addTablet} />
           <Input name="time" type="time" defaultValue={callTime} aria-label={t.morningTime} />
           <select name="meal" className={fieldClass}>
-            <option value="with food">With food</option>
-            <option value="without food">Without food</option>
+            <option value="with food">{lang === "hi" ? "खाने के साथ" : "With food"}</option>
+            <option value="without food">{lang === "hi" ? "खाने के बिना" : "Without food"}</option>
           </select>
           <button type="submit" disabled={busy} className="btn-secondary">
             {t.addTablet}

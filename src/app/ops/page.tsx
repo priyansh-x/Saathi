@@ -9,13 +9,25 @@ import { canViewOps } from "@/lib/ops/access";
 import { setOpsKillSwitch } from "@/lib/ops/kill-switch";
 import { postSimulateBolnaWebhook } from "@/lib/ops/bolna-readiness";
 import { loadOpsSnapshot } from "@/lib/ops/snapshot";
+import { messages } from "@/lib/i18n/messages";
 
 export const metadata: Metadata = titled("Ops · Saathi", "ऑप्स · साथी");
 
 export default async function OpsPage() {
   await connection();
   const email = decodeSession((await cookies()).get(SESSION_COOKIE)?.value)?.email ?? null;
-  if (!canViewOps(email)) notFound();
+  if (!canViewOps(email)) {
+    const t = messages.en;
+    return (
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-16">
+        <h1 className="text-2xl font-semibold">{t.opsForbidden}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">{t.opsForbiddenHint}</p>
+        <a href="/" className="btn-secondary mt-8 inline-flex justify-center">
+          Saathi
+        </a>
+      </main>
+    );
+  }
 
   const snap = await loadOpsSnapshot();
   const who = email as string;

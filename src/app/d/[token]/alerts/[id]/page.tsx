@@ -65,7 +65,11 @@ export default async function AlertDetailPage({
         <Link href={backHref} className="-ml-2 inline-flex h-11 items-center pr-3 text-[15px] font-medium text-primary">
           {backLabel}
         </Link>
-        <p className="mt-4">{t.emptyAlerts}</p>
+        <p className="mt-4 text-[19px] font-semibold">{t.emptyAlerts}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{t.emptyAlertsBody}</p>
+        <Link href={backHref} className="btn-primary mt-6 inline-flex justify-center">
+          {backLabel}
+        </Link>
       </Shell>
     );
   }

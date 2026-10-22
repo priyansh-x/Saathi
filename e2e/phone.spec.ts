@@ -74,6 +74,18 @@ test("invite link", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Join this family/i })).toBeVisible();
 });
 
+test("Hindi Today has a chip with words", async ({ page }) => {
+  await page.goto("/d/example-kamla?lang=hi");
+  await expect(page.getByText(/उदाहरण|EXAMPLE/i)).toBeVisible();
+  await expect(page.getByRole("navigation")).toBeVisible();
+});
+
+test("history opens a stored transcript", async ({ page }) => {
+  await page.goto("/d/example-kamla/history");
+  await page.getByRole("link").filter({ hasText: /answered|उठी|Good|ठीक/i }).first().click();
+  await expect(page.getByText(/Summary|सार|conversation|बात/i).first()).toBeVisible({ timeout: 8000 });
+});
+
 test("delete everything on EXAMPLE", async ({ page }) => {
   await page.goto("/d/example-kamla/settings?confirm=delete");
   await page.getByRole("button", { name: /Yes, delete everything/i }).click();

@@ -49,7 +49,7 @@ export function FamilyShell({
         parentName={parentName || undefined}
       />
       {token ? <DeskNotifyPrompt token={token} lang={lang} /> : null}
-      {active !== "today" ? <ActBanner token={token} lang={lang} alerts={safeAlerts} /> : null}
+      {active !== "today" && active !== "alerts" ? <ActBanner token={token} lang={lang} alerts={safeAlerts} /> : null}
       <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>
       <TabBar token={token} lang={lang} active={active} openAlerts={safeAlerts.length} extraQuery={query} />
     </div>

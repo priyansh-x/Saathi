@@ -12,16 +12,17 @@ import {
   historyRowShowsAlert,
   historySummary,
   medsOnDay,
+  monthLabel,
   moodFromCall,
   moodLabel,
   qs,
 } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
-import { MONTH_EN, formatClock, istDayOffset, parseIstParts, weekdayShort } from "@/lib/time";
+import { formatClock, istDayOffset, parseIstParts, weekdayShort } from "@/lib/time";
 
 function dayTitle(day: string, lang: Lang) {
-  const { d, mo } = parseIstParts(`${day}T12:00:00+05:30`);
-  return `${weekdayShort(day, lang)} ${d} ${MONTH_EN[mo - 1]}`;
+  const { d } = parseIstParts(`${day}T12:00:00+05:30`);
+  return `${weekdayShort(day, lang)} ${d} ${monthLabel(day, lang)}`;
 }
 
 export function HistoryView({

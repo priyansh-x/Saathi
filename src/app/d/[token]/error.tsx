@@ -8,6 +8,10 @@ export default function FamilyError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const lang = typeof document !== "undefined" && document.documentElement.lang === "hi" ? "hi" : "en";
+  const lang =
+    (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lang") === "hi") ||
+    (typeof document !== "undefined" && document.documentElement.lang === "hi")
+      ? "hi"
+      : "en";
   return <ErrorState lang={lang} onRetry={reset} />;
 }

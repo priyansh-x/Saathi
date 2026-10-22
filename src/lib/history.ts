@@ -1,6 +1,6 @@
 import { parseBolnaTranscript } from "@/lib/bolna/transcript";
 import type { AlertRow, CallRow, DoseLog } from "@/lib/db/types";
-import { MONTH_EN, weekdayShort } from "@/lib/time";
+import { MONTH_EN, MONTH_HI, weekdayShort } from "@/lib/time";
 import type { Lang } from "@/lib/i18n/messages";
 import { messages } from "@/lib/i18n/messages";
 import { parseIstParts } from "@/lib/time";
@@ -21,9 +21,9 @@ export function mondayIndex(day: string) {
   return (weekday + 6) % 7;
 }
 
-export function monthLabel(day: string) {
+export function monthLabel(day: string, lang: Lang = "en") {
   const { mo } = parseIstParts(`${day}T12:00:00+05:30`);
-  return MONTH_EN[mo - 1];
+  return (lang === "hi" ? MONTH_HI : MONTH_EN)[mo - 1];
 }
 
 export function moodFromCall(call?: CallRow | null): Mood {
@@ -97,7 +97,7 @@ export function cellAria(
 ) {
   const { d } = parseIstParts(`${day}T12:00:00+05:30`);
   const weekday = weekdayShort(day, lang);
-  const month = monthLabel(day);
+  const month = monthLabel(day, lang);
   const callWord =
     !call || call.status === "no_conversation"
       ? messages[lang].cellNoCall

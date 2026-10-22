@@ -271,7 +271,7 @@ export function FamilyFrame({
         extraQuery={extraQuery}
         parentName={parentName || undefined}
       />
-      {active !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
+      {active !== "today" && active !== "alerts" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
       <div className="app-shell-scroll px-4 pt-1 pb-6">{children}</div>
       <TabBar token={token} lang={lang} active={active} openAlerts={alerts.length} extraQuery={extraQuery} />
     </div>

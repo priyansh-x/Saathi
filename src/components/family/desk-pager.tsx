@@ -233,7 +233,7 @@ export function DeskPager({
     <div className="app-shell">
       {liveStamp ? <LiveRefresh token={token} stamp={liveStamp} /> : null}
       <TopBar token={token} lang={lang} example={example} updatedAt={updatedAt} extraQuery={extraQuery} parentName={parentName || addressTerm || undefined} />
-      {tab !== "today" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
+      {tab !== "today" && tab !== "alerts" ? <ActBanner token={token} lang={lang} alerts={alerts} /> : null}
       <div ref={pager} className="desk-pager">
         <div
           className="desk-pager-track"

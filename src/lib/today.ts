@@ -96,7 +96,7 @@ export function doseMark(status: DoseLog["status"], lang: Lang) {
   if (status === "taken") return `${t.taken} ✓`;
   if (status === "not_taken") return `${t.notTaken} –`;
   if (status === "not_sure") return `${t.notSure} ?`;
-  return `${t.notAsked} ·`;
+  return t.notAsked;
 }
 
 export function reachSteps(args: {
@@ -200,7 +200,7 @@ export function heroCopy(args: {
   if (args.state === "trying") {
     const since = answeredClock(args.call) || clock;
     return {
-      chip: t.look,
+      chip: t.chipTrying,
       headline:
         args.lang === "hi"
           ? `माँ से बात नहीं हो पाई: ${since} से ${tries || 1} बार कोशिश`
@@ -211,14 +211,14 @@ export function heroCopy(args: {
   if (args.state === "act") {
     const quote = humanQuote(args.alert);
     const when = args.alert
-      ? formatClock(parseIstParts(args.alert.created_at).hh, parseIstParts(args.alert.created_at).mm)
+      ? formatClock(parseIstParts(args.alert.created_at).hh, parseIstParts(args.alert.created_at).mm, args.lang)
       : "";
     const words = args.alert ? categoryWords(args.alert.category, args.lang) : t.act;
     const headline = quote
       ? args.lang === "hi"
-        ? `माँ ने ${words} बताया · ${when}`
-        : `Maa said she has ${words} · ${when}`
-      : `${words}${when ? ` · ${when}` : ""}`;
+        ? `माँ ने ${words} बताया (${when})`
+        : `Maa said she has ${words} (${when})`
+      : `${words}${when ? ` (${when})` : ""}`;
     let sub: string = t.nobodyReplied;
     if (args.alert?.acked_by) {
       const at = args.alert.acked_at ? formatFriendlyTime(args.alert.acked_at, args.lang) : "";

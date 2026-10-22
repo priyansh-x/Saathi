@@ -3,6 +3,7 @@ const IST = "Asia/Kolkata";
 export const WEEKDAY_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 export const WEEKDAY_HI = ["रवि", "सोम", "मंगल", "बुध", "गुरु", "शुक्र", "शनि"] as const;
 export const MONTH_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+export const MONTH_HI = ["जन", "फर", "मार्च", "अप्रै", "मई", "जून", "जुल", "अग", "सित", "अक्टू", "नव", "दिस"] as const;
 
 export function productName() {
   return process.env.PRODUCT_NAME || "Saathi";
@@ -69,10 +70,15 @@ export function clockFromMinutes(total: number) {
   return { hour: h, minute: m, label: formatClock(h, m) };
 }
 
-export function formatClock(hour: number, minute: number) {
+export function formatClock(hour: number, minute: number, lang: "en" | "hi" = "en") {
   const h12 = hour % 12 || 12;
+  const mm = String(minute).padStart(2, "0");
+  if (lang === "hi") {
+    const part = hour < 4 ? "रात" : hour < 12 ? "सुबह" : hour < 16 ? "दोपहर" : hour < 20 ? "शाम" : "रात";
+    return `${part} ${h12}:${mm}`;
+  }
   const ampm = hour < 12 ? "AM" : "PM";
-  return `${h12}:${String(minute).padStart(2, "0")} ${ampm}`;
+  return `${h12}:${mm}\u00a0${ampm}`;
 }
 
 export function formatIstClock(hhmm = "08:32") {

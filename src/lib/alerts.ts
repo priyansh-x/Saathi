@@ -34,11 +34,11 @@ export function statusPill(alert: AlertRow, lang: Lang) {
   if (life === "false") return { label: t.falseAlarm, tone: "neutral" as const };
   if (life === "ok") {
     const who = alert.acked_by || t.maa;
-    const when = alert.resolved_at ? shortClock(alert.resolved_at) : "";
+    const when = alert.resolved_at ? shortClock(alert.resolved_at, lang) : "";
     return { label: `${t.maaOkPill} · ${who} ${when}`.trim(), tone: "good" as const };
   }
   if (life === "going") {
-    const when = alert.acked_at ? shortClock(alert.acked_at) : "";
+    const when = alert.acked_at ? shortClock(alert.acked_at, lang) : "";
     return { label: `${alert.acked_by} ${t.isGoing} · ${when}`.trim(), tone: "look" as const };
   }
   return { label: t.open, tone: "open" as const };
@@ -70,7 +70,7 @@ export function eventLine(event: AlertEvent, lang: Lang) {
   return `${when} ${event.actor ?? ""} ${event.note ?? ""}`.trim();
 }
 
-function shortClock(iso: string) {
+function shortClock(iso: string, lang: Lang = "en") {
   const { hh, mm } = parseIstParts(iso);
-  return formatClock(hh, mm);
+  return formatClock(hh, mm, lang);
 }

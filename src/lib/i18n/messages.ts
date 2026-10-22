@@ -21,7 +21,7 @@ export const messages = {
     moodCaption: "Saathi's rough read of how Maa sounded. Not a medical assessment.",
     retry: "Retry",
     loadError: "Couldn't load. Your WhatsApp updates still work.",
-    emptyToday: "No morning yet. Saathi will call at the usual time.",
+    emptyToday: "No morning yet. Saathi will call Maa at {time}.",
     emptyAlerts: "No alerts.",
     emptyAlertsBody: "Saathi will write here if a morning goes wrong.",
     emptyHistory: "No days recorded yet.",
@@ -44,7 +44,9 @@ export const messages = {
     chipLater: "Later today",
     chipPaused: "Paused",
     chipSkipped: "Skipped",
+    chipTrying: "Trying to reach",
     chipCalling: "On the line",
+    notAskedLater: "Later slot",
     headlineCalling: "Saathi is talking with Maa",
     callingSub: "This page updates when the call ends. Transcript and alerts will show here.",
     headlineGood: "Maa is doing well today",
@@ -54,7 +56,7 @@ export const messages = {
     noCallYetHint: "The morning timer did not place a call. Tap Ask Saathi to call now.",
     seeYesterday: "See yesterday",
     seeYesterdayHint: "Yesterday's note is below.",
-    firstMorningHint: "You'll get a WhatsApp right after. No call has happened yet.",
+    firstMorningHint: "You'll get a WhatsApp right after. Saathi will call Maa tomorrow at {time}.",
     neighbourWord: "Neighbour",
     setupChecklist: "Before the first call",
     setupTell: "Tell them so the number is not a surprise",
@@ -141,6 +143,8 @@ export const messages = {
     opening: "Opening…",
     linkExpired: "Link expired or unknown",
     linkExpiredHint: "Type LINK in your Saathi WhatsApp chat for a fresh link.",
+    opsForbidden: "This page is for Saathi operators.",
+    opsForbiddenHint: "Sign in with the ops email, or go back to the family desk.",
     callingOn: "Calling is on.",
     pauseLabel: "Pause",
     callSection: "Call",
@@ -152,7 +156,7 @@ export const messages = {
     medsDisclaimer: "Saathi only reminds, never changes doses.",
     familySection: "Family & neighbour",
     optReady: "Ready",
-    optWaiting: "Waiting",
+    optWaiting: "Has not replied on WhatsApp yet — we will not knock until they say yes.",
     waitingNeighbour: "Waiting for neighbour",
     deliveredTo: "Delivered to {name} {time}",
     couldntReach: "Couldn't reach {name}",
@@ -305,7 +309,7 @@ export const messages = {
     moodCaption: "साथी का अंदाज़ा — माँ कैसी लगीं। यह जाँच नहीं है।",
     retry: "फिर कोशिश",
     loadError: "पेज नहीं खुला। व्हाट्सऐप अपडेट चलते रहेंगे।",
-    emptyToday: "सुबह की कॉल अभी नहीं हुई।",
+    emptyToday: "अभी सुबह की कॉल नहीं हुई। साथी माँ को {time} पर कॉल करेगा।",
     emptyAlerts: "कोई अलर्ट नहीं।",
     emptyAlertsBody: "अगर सुबह कुछ गड़बड़ हुई तो साथी यहाँ लिखेगा।",
     emptyHistory: "अभी कोई दिन नहीं।",
@@ -328,7 +332,9 @@ export const messages = {
     chipLater: "बाद में आज",
     chipPaused: "रुकी हुई",
     chipSkipped: "छूटी",
+    chipTrying: "पहुँच की कोशिश",
     chipCalling: "कॉल चल रही है",
+    notAskedLater: "बाद वाली गोली",
     headlineCalling: "साथी माँ से बात कर रहा है",
     callingSub: "कॉल खत्म होते ही यह पेज अपडेट होगा। बात और अलर्ट यहीं दिखेंगे।",
     headlineGood: "माँ आज ठीक हैं",
@@ -338,7 +344,7 @@ export const messages = {
     noCallYetHint: "सुबह का टाइमर कॉल नहीं लगा पाया। साथी से अभी कॉल लगवाएँ।",
     seeYesterday: "कल देखें",
     seeYesterdayHint: "कल की बात नीचे है।",
-    firstMorningHint: "कॉल के बाद व्हाट्सऐप आएगा। अभी कोई कॉल नहीं हुई।",
+    firstMorningHint: "कॉल के बाद व्हाट्सऐप आएगा। साथी माँ को कल {time} पर कॉल करेगा।",
     neighbourWord: "पड़ोसी",
     setupChecklist: "पहली कॉल से पहले",
     setupTell: "नंबर अचानक न लगे, पहले बता दें",
@@ -425,6 +431,8 @@ export const messages = {
     opening: "खुल रहा है…",
     linkExpired: "लिंक पुराना है या गलत है",
     linkExpiredHint: "ताज़ा लिंक के लिए अपने साथी व्हाट्सऐप में LINK लिखें।",
+    opsForbidden: "यह पेज साथी के ऑपरेटरों के लिए है।",
+    opsForbiddenHint: "ऑप्स ईमेल से साइन इन करें, या परिवार डेस्क पर वापस जाएँ।",
     callingOn: "कॉल चालू हैं।",
     pauseLabel: "रोक",
     callSection: "कॉल",
@@ -436,7 +444,7 @@ export const messages = {
     medsDisclaimer: "साथी सिर्फ़ याद दिलाता है, खुराक नहीं बदलता।",
     familySection: "परिवार और पड़ोसी",
     optReady: "तैयार",
-    optWaiting: "इंतज़ार",
+    optWaiting: "व्हाट्सऐप पर अभी जवाब नहीं आया — हाँ कहें तब तक हम नहीं खटखटाएँगे।",
     waitingNeighbour: "पड़ोसी का इंतज़ार",
     deliveredTo: "{name} को {time} पर पहुँचा",
     couldntReach: "{name} तक नहीं पहुँचे",
@@ -579,15 +587,20 @@ export function pickLocale<T>(lang: Lang, en: T, hi: T): T {
 export function localeWord(code: string, lang: Lang) {
   if (code === "hi") return lang === "hi" ? "हिंदी" : "Hindi";
   if (code === "en") return lang === "hi" ? "अंग्रेज़ी" : "English";
+  if (code === "mr") return lang === "hi" ? "मराठी" : "Marathi";
+  if (code === "ta") return lang === "hi" ? "तमिल" : "Tamil";
+  if (code === "kn") return lang === "hi" ? "कन्नड़" : "Kannada";
   return code;
 }
 
-export function greeting(lang: Lang, date = new Date()) {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Asia/Kolkata" }).format(date),
-  );
-  if (lang === "hi") return hour < 12 ? "सुप्रभात" : hour < 17 ? "नमस्ते" : "शुभ संध्या";
-  return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+export function greeting(lang: Lang, hour?: number) {
+  const h =
+    hour ??
+    Number(
+      new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Asia/Kolkata" }).format(new Date()),
+    );
+  if (lang === "hi") return h < 12 ? "सुप्रभात" : h < 17 ? "नमस्ते" : "शुभ संध्या";
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 }
 
 /** Swap the default address term for the one this family chose. */

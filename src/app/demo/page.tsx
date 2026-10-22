@@ -39,6 +39,9 @@ export default async function DemoPage({
     return <RecordPlayer lang={lang} scenes={buildRecordScenes(lang)} audioUrl={audioUrl} />;
   }
   const t = WALK_COPY[lang];
+  const STEPS = ["start", "call", "meds", "brief", "missed", "ladder", "red", "going", "ok"] as const;
+  const stepIndex = Math.max(1, STEPS.indexOf(step as (typeof STEPS)[number]) + 1);
+  const stepTotal = 4;
   const data = await loadFamily(EXAMPLE_TOKEN);
   const parentId = data?.parent.id ?? "parent_kamla";
   const neighbour = data?.neighbour?.first_name || "Sunita";
@@ -113,21 +116,24 @@ export default async function DemoPage({
     <main className="app-shell">
     <div className="app-shell-scroll px-4 py-8 pb-16">
       <BrandMark />
-      <p className="mt-6 flex items-center gap-2 text-sm font-medium">
+      <p className="mt-6 flex items-center gap-2 text-base font-medium">
         <ExamplePill lang={lang} />
         {t.oneMorning}
         <Link href={`/demo?lang=${other}&step=${step}`} className="ml-auto text-primary">
           {lang === "en" ? "हिं" : "EN"}
         </Link>
       </p>
-      <p className="mt-2 text-sm text-muted-foreground">{t.paceHint}</p>
-      <p className="mt-2 text-sm">
+      <p className="mt-3 text-xl leading-snug text-foreground">{t.paceHint}</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        {t.walkProgress.replace("{n}", String(Math.min(stepIndex, stepTotal))).replace("{total}", String(stepTotal))}
+      </p>
+      <p className="mt-3 text-base">
         <Link href={`/demo?lang=${lang}&record=1`} className="underline-offset-2 hover:underline">
           {t.film}
         </Link>
       </p>
-      <form action={reset} className="mt-4">
-        <button type="submit" className="btn-secondary">
+      <form action={reset} className="mt-3">
+        <button type="submit" className="text-sm text-muted-foreground underline-offset-2 hover:underline">
           {t.reset}
         </button>
       </form>
@@ -142,7 +148,7 @@ export default async function DemoPage({
 
       {step === "call" ? (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">{t.callTitle}</h2>
+          <h2 className="text-2xl font-semibold">{t.callTitle}</h2>
           <MorningLines audioUrl={audioUrl} />
           <form action={nextMeds} className="mt-6">
             <button type="submit" className="btn-primary">
@@ -154,8 +160,8 @@ export default async function DemoPage({
 
       {step === "meds" ? (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">{t.medsTitle}</h2>
-          <p className="mt-2">{t.medsBody}</p>
+          <h2 className="text-2xl font-semibold">{t.medsTitle}</h2>
+          <p className="mt-2 text-lg leading-relaxed">{t.medsBody}</p>
           <form action={nextBrief} className="mt-6">
             <button type="submit" className="btn-primary">
               {t.nextBrief}
@@ -166,8 +172,12 @@ export default async function DemoPage({
 
       {step === "brief" ? (
         <section className="mt-8 space-y-3">
-          <h2 className="text-lg font-semibold">{t.briefTitle}</h2>
-          <p className="text-sm text-muted-foreground">{data?.call?.summary_en || "Kamla slept well and took Amlodipine."}</p>
+          <h2 className="text-2xl font-semibold">{t.briefTitle}</h2>
+          <p className="text-lg text-muted-foreground">
+            {lang === "hi"
+              ? data?.call?.summary_hi || data?.call?.summary_en || "नींद ठीक थी, गोली ले ली।"
+              : data?.call?.summary_en || "Kamla slept well and took Amlodipine."}
+          </p>
           <PhonePreview
             title={`${t.child} · EN`}
             body={previews.missed_soft_en.replace("Needs a look", "Good morning").replace("No answer yet.", "Neend theek thi.")}

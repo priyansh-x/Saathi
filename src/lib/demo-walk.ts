@@ -41,6 +41,7 @@ export const WALK_COPY = {
     title: "Demo walkthroughs",
     oneMorning: "One EXAMPLE morning",
     paceHint: "About 90 seconds. Next walks a simulated call — Hindi with English below. Nothing dials.",
+    walkProgress: "Step {n} of {total}",
     nextCall: "Next · the call",
     nextMeds: "Next · medicines",
     nextBrief: "Next · briefing",
@@ -81,8 +82,9 @@ export const WALK_COPY = {
   },
   hi: {
     title: "डेमो वॉकथ्रू",
-    oneMorning: "एक EXAMPLE सुबह",
+    oneMorning: "एक उदाहरण सुबह",
     paceHint: "लगभग 90 सेकंड। आगे एक मॉक कॉल है — हिंदी, नीचे अंग्रेज़ी। असली फ़ोन नहीं बजता।",
+    walkProgress: "कदम {n} / {total}",
     nextCall: "आगे · कॉल",
     nextMeds: "आगे · दवा",
     nextBrief: "आगे · ब्रीफिंग",

@@ -24,7 +24,7 @@ import type { DoseLog } from "@/lib/db/types";
 import type { FamilyDesk } from "@/lib/family-load";
 import { greeting, messages, personal, pickLocale, type Lang } from "@/lib/i18n/messages";
 import { heroCopy, humanQuote, reachSteps, ringCopy, slotLabel, statusTone, type DayState } from "@/lib/today";
-import { minutesNowIst, parseHhMm, weekdayShort } from "@/lib/time";
+import { minutesNowIst, parseHhMm, parseIstParts, weekdayShort } from "@/lib/time";
 import { weeklyDeskCopy } from "@/lib/weekly";
 import { AddToHome } from "@/components/pwa/register";
 
@@ -42,7 +42,7 @@ const HERO_ICON_BG = {
   neutral: "bg-brand-soft text-brand-deep",
 } as const;
 
-function DosePill({ status, lang }: { status: DoseLog["status"]; lang: Lang }) {
+function DosePill({ status, lang, later }: { status: DoseLog["status"]; lang: Lang; later?: boolean }) {
   const t = messages[lang];
   if (status === "taken") {
     return (
@@ -63,7 +63,7 @@ function DosePill({ status, lang }: { status: DoseLog["status"]; lang: Lang }) {
   if (status === "not_sure") {
     return <span className="pill bg-sunk text-muted-foreground">{t.notSure}</span>;
   }
-  return <span className="pill bg-sunk text-ink-3">{t.notAsked}</span>;
+  return <span className="pill bg-sunk text-ink-3">{later ? t.notAskedLater : t.notAsked}</span>;
 }
 
 export function TodayPanel({
@@ -141,7 +141,7 @@ export function TodayPanel({
   return (
     <>
       <p className="px-1 pt-2 text-[15px] text-muted-foreground">
-        {greeting(lang)}
+        {greeting(lang, data.call?.started_at ? parseIstParts(data.call.started_at).hh : Math.floor(parseHhMm(data.parent.call_time) / 60))}
         {data.child?.first_name ? `, ${data.child.first_name}` : ""}
       </p>
 
@@ -290,6 +290,7 @@ export function TodayPanel({
               { text: t.setupSaveNumber },
               { text: data.neighbour ? t.setupNeighbourWait : t.setupNoNeighbour },
               { text: p(t.setupConsentPending) },
+              { text: p(t.firstMorningHint.replace("{time}", data.parent.call_time)) },
             ].map((item, i) => (
               <li key={item.text} className="list-row items-start">
                 <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft text-[13px] font-semibold text-brand-deep">
@@ -328,7 +329,11 @@ export function TodayPanel({
                   <span className="block text-[13px] text-ink-3">{slotLabel(dose.meal, lang)}</span>
                 </span>
                 <span className="shrink-0">
-                  <DosePill status={dose.status} lang={lang} />
+                  <DosePill
+                    status={dose.status}
+                    lang={lang}
+                    later={/afternoon|lunch|dinner|night/i.test(String(dose.meal || ""))}
+                  />
                 </span>
               </li>
             ))}
@@ -382,6 +387,9 @@ export function TodayPanel({
                     {weekdayShort(key, lang)}
                   </span>
                   <span
+                    aria-label={`${weekdayShort(key, lang)} ${
+                      call?.status === "completed" ? t.cellAnswered : call?.status === "missed" ? t.cellMissed : t.cellNoCall
+                    }`}
                     className={`grid size-8 place-items-center rounded-full sm:size-9 ${
                       call?.status === "completed"
                         ? "bg-good text-white"
