@@ -34,10 +34,12 @@ describe("bolna:sync agent JSON", () => {
       assert.equal("webhook_headers" in agent, false);
       const names = toolDefs(agent).map((tool) => tool.name).sort();
       assert.deepEqual(names, [
+        "family_message_played",
         "log_medicine",
         "raise_alert",
         "record_consent",
         "relay_message_to_family",
+        "save_family_reply",
         "save_memory_note",
       ]);
       const params = toolsParams(agent);

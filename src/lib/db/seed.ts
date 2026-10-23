@@ -32,6 +32,7 @@ export async function ensureSeed() {
 }
 
 export async function seed() {
+  await query("delete from family_messages");
   await query("delete from desk_views");
   await query("delete from alert_events");
   await query("delete from alerts");
@@ -186,6 +187,7 @@ async function stampExampleRev() {
 }
 
 async function wipeExampleHistory() {
+  await query(`delete from family_messages where parent_id = 'parent_kamla'`);
   await query(`delete from desk_views where parent_id = 'parent_kamla'`);
   await query(`delete from alert_events where alert_id in (select id from alerts where parent_id = 'parent_kamla')`);
   await query(`delete from alerts where parent_id = 'parent_kamla'`);

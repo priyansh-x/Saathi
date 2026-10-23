@@ -193,6 +193,72 @@ Backend: the next call's `{{last_call_summary}}` = last call's summary + open me
 
 ---
 
+## 4b. `save_family_reply`
+```json
+{
+  "name": "save_family_reply",
+  "description": "Save the parent's spoken reply to the family message for the desk. Call once after they answer. Do not promise when the child will see it.",
+  "pre_call_message": "",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "family_message_id": {"type": "string"},
+      "reply": {"type": "string", "description": "Parent's reply, original language, verbatim"},
+      "call_sid": {"type": "string"},
+      "parent_id": {"type": "string"}
+    },
+    "required": ["family_message_id", "reply", "call_sid", "parent_id"]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/family-reply",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {"Content-Type": "application/json"},
+    "param": {
+      "family_message_id": "%(family_message_id)s",
+      "reply": "%(reply)s",
+      "call_sid": "%(call_sid)s",
+      "parent_id": "%(parent_id)s",
+      "to_number": "%(to_number)s"
+    }
+  }
+}
+```
+
+## 4c. `family_message_played`
+```json
+{
+  "name": "family_message_played",
+  "description": "Mark that the family message line was spoken on this connected call. Call once after you read the message verbatim.",
+  "pre_call_message": "",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "family_message_id": {"type": "string"},
+      "call_sid": {"type": "string"},
+      "parent_id": {"type": "string"}
+    },
+    "required": ["family_message_id", "call_sid", "parent_id"]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/family-message-played",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {"Content-Type": "application/json"},
+    "param": {
+      "family_message_id": "%(family_message_id)s",
+      "call_sid": "%(call_sid)s",
+      "parent_id": "%(parent_id)s",
+      "to_number": "%(to_number)s"
+    }
+  }
+}
+```
+
+---
+
 ## 5. Post-call extraction spec (replaces the old `end_call_summary` tool)
 
 Bolna has **no end-of-call tool**. The call summary is built **after** the call, from Bolna **extractions** (`POST /dispositions/`) run over the call record's `transcript`. The transcript is newline-separated `assistant:` / `user:` lines and is only filled once `status` is `completed` (engineering/bolna_api_notes.md §8).

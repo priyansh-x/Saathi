@@ -3,6 +3,7 @@ import { ensureExampleTodayDesk } from "@/lib/bolna/example-desk";
 import { backfillAlertsFromTranscripts, callNeedsBolnaHydrate, hydrateBolnaCall, syncDeskFromBolna } from "@/lib/bolna/execution";
 import { defaultLadder } from "@/lib/config";
 import { deskSnapshotByToken } from "@/lib/db/queries";
+import { latestFamilyReply, pendingFamilyMessage } from "@/lib/family-messages";
 import type { Lang } from "@/lib/i18n/messages";
 import type { AlertRow, CallRow } from "@/lib/db/types";
 import { minutesNowIst, parseHhMm } from "@/lib/time";
@@ -88,6 +89,8 @@ export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hy
     }),
     child: snap.contacts.find((c) => c.role === "child") ?? null,
     neighbour: snap.contacts.find((c) => c.role === "neighbour") ?? null,
+    familyMessage: await pendingFamilyMessage(snap.parent.id),
+    familyReply: await latestFamilyReply(snap.parent.id),
     neighbourReady: snap.neighbourReady,
     weekly: { monday: snap.day, built: null as null, sent: null as null },
     delivery: null as { name: string; clock: string; line: string } | null,

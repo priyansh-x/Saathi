@@ -91,5 +91,9 @@ export const MIGRATION_SOURCES: { id: string; sql: string }[] = [
   {
     "id": "023_desk_views",
     "sql": "create table if not exists desk_views (\n  id text primary key,\n  parent_id text not null references parents(id),\n  member_id text,\n  at timestamptz not null\n);\n\ncreate index if not exists desk_views_parent_at on desk_views (parent_id, at desc);\n"
+  },
+  {
+    "id": "024_family_messages",
+    "sql": "create table if not exists family_messages (\n  id text primary key,\n  parent_id text not null references parents(id),\n  from_member_id text,\n  from_name text not null,\n  text text not null,\n  created_at text not null,\n  delivered_call_id text,\n  delivered_at text,\n  reply_to_family text,\n  replied_at text,\n  is_example boolean not null default false\n);\n\ncreate index if not exists family_messages_parent_pending\n  on family_messages (parent_id, created_at)\n  where delivered_at is null;\n"
   }
 ];

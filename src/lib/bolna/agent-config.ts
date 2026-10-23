@@ -15,6 +15,8 @@ const TOOL_PATHS: Record<string, string> = {
   relay_message_to_family: "/api/tools/relay_message_to_family",
   save_memory_note: "/api/tools/save_memory_note",
   record_consent: "/api/tools/record_consent",
+  save_family_reply: "/api/tools/save_family_reply",
+  family_message_played: "/api/tools/family_message_played",
 };
 
 export type JsonSchemaProperty = {

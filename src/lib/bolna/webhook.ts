@@ -1,5 +1,6 @@
 import { query } from "@/lib/db/client";
 import { flagFromTranscript } from "@/lib/bolna/flag-from-transcript";
+import { applyFamilyMessageFromWebhook } from "@/lib/family-messages";
 import { hasRaiseAlert, logMedicine, raiseAlert } from "@/lib/bolna/tools";
 import { coerceBolnaTranscript, transcriptHasParent, transcriptJson, transcriptJsonHasWords } from "@/lib/bolna/transcript";
 import { advanceLadder } from "@/lib/ladder";
@@ -14,6 +15,7 @@ export type BolnaExtracted = {
   summary_en?: string;
   summary_hi?: string;
   needs_human_check?: boolean;
+  reply_to_family?: string;
   [key: string]: unknown;
 };
 
@@ -195,6 +197,15 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     if (missingWords || missingMeds || missingAlert) {
       fillingWords = true;
     } else if (hasCompletedData) {
+      await applyFamilyMessageFromWebhook({
+        parentId: already[0].parent_id,
+        callId: already[0].id,
+        durationSec: Number(already[0].duration_sec ?? conversationSeconds(payload)),
+        status: already[0].status === "completed" ? "completed" : incoming,
+        transcript: transcriptText ?? payload.transcript ?? already[0].transcript_json,
+        extractedReply: typeof payload.extracted_data?.reply_to_family === "string" ? payload.extracted_data.reply_to_family : null,
+        toolPlayedId: familyPlayedId(payload),
+      });
       return { ok: true as const, call_id: already[0].id, replay: true };
     } else {
       const reopenable = ["missed", "in_progress", "failed"].includes(already[0].status);
@@ -338,9 +349,30 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     });
   }
 
+  await applyFamilyMessageFromWebhook({
+    parentId,
+    callId,
+    durationSec: duration,
+    status: noConvo ? "no_conversation" : "completed",
+    transcript: transcriptText ?? payload.transcript,
+    extractedReply: typeof payload.extracted_data?.reply_to_family === "string" ? payload.extracted_data.reply_to_family : null,
+    toolPlayedId: familyPlayedId(payload),
+  });
+
   await persistCallCost(callId, payload);
   await query(`update webhook_events set processed = true where id = $1`, [eventId]);
   return { ok: true as const, call_id: callId, replay: false };
+}
+
+function familyPlayedId(payload: BolnaWebhook) {
+  const logs = payload.tool_call_logs ?? [];
+  for (const row of logs) {
+    const rec = row as { name?: string; family_message_id?: string; arguments?: { family_message_id?: string } };
+    if (rec.name === "family_message_played") {
+      return rec.family_message_id || rec.arguments?.family_message_id || "";
+    }
+  }
+  return null;
 }
 
 export function bolnaTotalCost(payload: BolnaWebhook) {
