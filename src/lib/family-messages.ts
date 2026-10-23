@@ -130,18 +130,33 @@ export async function markFamilyMessagePlayed(args: { family_message_id: string;
   return { ok: true as const, id: row.id, replay: false as const };
 }
 
+function transcriptTurns(transcript: unknown): unknown {
+  if (typeof transcript === "string") {
+    const trimmed = transcript.trim();
+    if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+      try {
+        return JSON.parse(trimmed) as unknown;
+      } catch {
+        return transcript;
+      }
+    }
+  }
+  return transcript;
+}
+
 function assistantSaidMessage(transcript: unknown, message: string) {
   const needle = normalizeSpoken(message);
   if (!needle) return false;
-  const raw = coerceBolnaTranscript(transcript) ?? "";
+  const parsed = transcriptTurns(transcript);
+  const raw = coerceBolnaTranscript(parsed) ?? (typeof transcript === "string" ? transcript : "");
   const lines = raw.split("\n");
   for (const line of lines) {
     const turn = line.match(/^\s*(assistant|saathi|agent)\s*:\s*(.*)$/i);
     const spoken = turn ? turn[2] : "";
     if (spoken && normalizeSpoken(spoken).includes(needle)) return true;
   }
-  if (Array.isArray(transcript)) {
-    for (const entry of transcript) {
+  if (Array.isArray(parsed)) {
+    for (const entry of parsed) {
       if (!entry || typeof entry !== "object") continue;
       const row = entry as Record<string, unknown>;
       const speaker = String(row.speaker ?? row.role ?? "");
