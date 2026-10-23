@@ -87,5 +87,9 @@ export const MIGRATION_SOURCES: { id: string; sql: string }[] = [
   {
     "id": "022_push_keys",
     "sql": "alter table push_subscriptions add column if not exists keys_json text;\n"
+  },
+  {
+    "id": "023_desk_views",
+    "sql": "create table if not exists desk_views (\n  id text primary key,\n  parent_id text not null references parents(id),\n  member_id text,\n  at timestamptz not null\n);\n\ncreate index if not exists desk_views_parent_at on desk_views (parent_id, at desc);\n"
   }
 ];

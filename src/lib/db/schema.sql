@@ -245,3 +245,10 @@ create table if not exists error_events (
   context text not null,
   at text not null
 );
+
+create table if not exists desk_views (
+  id text primary key,
+  parent_id text not null references parents(id),
+  member_id text,
+  at timestamptz not null
+);

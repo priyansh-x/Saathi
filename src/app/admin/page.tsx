@@ -4,6 +4,8 @@ import { titled } from "@/lib/page-title";
 import { adminPassword } from "@/lib/admin/auth";
 import { loadAdminOverview } from "@/lib/admin/data";
 import { getAdminGate } from "@/lib/admin/gate";
+import { loadPilotMetrics } from "@/lib/admin/pilot";
+import type { PilotHouseholdMetrics } from "@/lib/admin/pilot-metrics";
 import { ActionForm } from "@/components/admin/action-form";
 
 export const metadata: Metadata = {
@@ -18,6 +20,49 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <p className="text-[11px] font-semibold tracking-wide text-ink-3 uppercase">{label}</p>
       <p className="mt-1 text-xl font-semibold tabular">{value}</p>
     </div>
+  );
+}
+
+function pct(n: number) {
+  return `${Math.round(n * 1000) / 10}%`;
+}
+
+function PilotTable({ rows }: { rows: PilotHouseholdMetrics[] }) {
+  return (
+    <table className="mt-4 min-w-[720px] w-full text-left text-sm">
+      <thead>
+        <tr className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+          <th className="py-2 pr-3">Household</th>
+          <th className="py-2 pr-3">Days</th>
+          <th className="py-2 pr-3">Dials</th>
+          <th className="py-2 pr-3">Answered</th>
+          <th className="py-2 pr-3">Rate</th>
+          <th className="py-2 pr-3">Median s</th>
+          <th className="py-2 pr-3">Ans. days</th>
+          <th className="py-2 pr-3">Streak</th>
+          <th className="py-2 pr-3">Views/day</th>
+          <th className="py-2 pr-3">Alerts</th>
+          <th className="py-2">False</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.parentId} className={row.parentId === "totals" ? "font-semibold" : ""}>
+            <td className="py-2 pr-3">{row.name}</td>
+            <td className="py-2 pr-3 tabular">{row.daysEnrolled}</td>
+            <td className="py-2 pr-3 tabular">{row.dials}</td>
+            <td className="py-2 pr-3 tabular">{row.answered}</td>
+            <td className="py-2 pr-3 tabular">{pct(row.answerRate)}</td>
+            <td className="py-2 pr-3 tabular">{row.medianCallSeconds ?? "—"}</td>
+            <td className="py-2 pr-3 tabular">{row.answeredDays}</td>
+            <td className="py-2 pr-3 tabular">{row.answeredStreak}</td>
+            <td className="py-2 pr-3 tabular">{row.deskViewsPerDay.toFixed(2)}</td>
+            <td className="py-2 pr-3 tabular">{row.alertsRaised}</td>
+            <td className="py-2 tabular">{row.alertsResolvedFalse}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -60,6 +105,7 @@ export default async function AdminPage({
   }
 
   const data = await loadAdminOverview();
+  const pilot = await loadPilotMetrics();
   const todayN = data.todayCalls.reduce((sum, row) => sum + row.n, 0);
 
   return (
@@ -114,6 +160,24 @@ export default async function AdminPage({
             <ActionForm action="kill_off" next="/admin" label="Allow outbound" />
           </div>
         </div>
+      </section>
+
+      <section className="mt-8 overflow-x-auto rounded-2xl border border-border bg-card px-4 py-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold tracking-wide text-ink-3 uppercase">Pilot</h2>
+          <a href="/api/admin/pilot.csv" className="text-sm font-medium underline">
+            Download CSV
+          </a>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Non-example households only. EXAMPLE rows are excluded. Answered means a completed call with conversation
+          duration above zero.
+        </p>
+        {pilot.rows.length === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">No live households yet.</p>
+        ) : (
+          <PilotTable rows={[...pilot.rows, pilot.totals]} />
+        )}
       </section>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">

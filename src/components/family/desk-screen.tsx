@@ -4,6 +4,7 @@ import { ExpiredLink, PaneBusy } from "@/components/family/chrome";
 import { DeskPager } from "@/components/family/desk-pager";
 import { HistoryPanel } from "@/components/family/history-panel";
 import { SettingsPanel } from "@/components/family/settings-panel";
+import { DeskViewBeacon } from "@/components/family/desk-view-beacon";
 import { TodayPanel } from "@/components/family/today-panel";
 import type { DeskTab } from "@/lib/desk-tabs";
 import { clientSafe } from "@/lib/client-safe";
@@ -33,6 +34,8 @@ export async function DeskScreen({
   const updatedAt = toIsoString(alert?.created_at || data.call?.ended_at || data.call?.started_at) || null;
 
   return (
+    <>
+      <DeskViewBeacon token={token} />
     <DeskPager
       token={token}
       lang={lang}
@@ -68,5 +71,6 @@ export async function DeskScreen({
         </Suspense>
       }
     />
+    </>
   );
 }
