@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FAMILY_MESSAGE_MAX } from "@/lib/family-messages";
+import { FAMILY_MESSAGE_MAX } from "@/lib/family-message-limits";
 import { messages, type Lang } from "@/lib/i18n/messages";
 
 export function FamilyMessageForm({

@@ -1,9 +1,10 @@
 import { killSwitchOn } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { coerceBolnaTranscript } from "@/lib/bolna/transcript";
+import { FAMILY_MESSAGE_MAX } from "@/lib/family-message-limits";
 import { nowIstStamp } from "@/lib/time";
 
-export const FAMILY_MESSAGE_MAX = 200;
+export { FAMILY_MESSAGE_MAX };
 
 export const FAMILY_MESSAGE_HI =
   "Aaj {name} ne aapke liye ek sandesh bheja hai: '{family_message}'. Kya aap unke liye kuch kehna chahenge?";
