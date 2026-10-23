@@ -5,7 +5,7 @@ import { jsonOrLog } from "@/lib/http";
 import { markWhatsappWebhookVerified } from "@/lib/ops/whatsapp-readiness";
 import { applyWhatsappStatuses, parseWhatsappStatuses, recordWhatsappWebhook } from "@/lib/whatsapp/delivery";
 import { parseWhatsappWebhookJson, processInboundMessages } from "@/lib/whatsapp/inbound";
-import { verifyWhatsappSignature } from "@/lib/whatsapp/signature";
+import { authorizeWhatsappPost } from "@/lib/whatsapp/signature";
 
 export async function GET(req: NextRequest) {
   await connection();
@@ -27,12 +27,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: Request) {
   await connection();
   const raw = await req.text();
-  if (!isMockWhatsapp()) {
-    const secret = process.env.WHATSAPP_APP_SECRET || "";
-    const header = req.headers.get("x-hub-signature-256");
-    if (!verifyWhatsappSignature(raw, header, secret)) {
-      return new Response("forbidden", { status: 403 });
-    }
+  const auth = authorizeWhatsappPost({
+    mock: isMockWhatsapp(),
+    secret: process.env.WHATSAPP_APP_SECRET || "",
+    header: req.headers.get("x-hub-signature-256"),
+    raw,
+  });
+  if (!auth.ok) {
+    return new Response(auth.reason, { status: 401 });
   }
   const parsed = parseWhatsappWebhookJson(raw);
   if (!parsed.ok) {

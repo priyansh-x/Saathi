@@ -31,6 +31,8 @@ export type Contact = {
   email: string | null;
   is_owner: boolean;
   last_inbound_at?: string | null;
+  whatsapp_opt_in?: boolean;
+  whatsapp_opted_out_at?: string | null;
 };
 
 export type Medicine = {

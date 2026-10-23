@@ -46,7 +46,10 @@ function medLine(doses: { name?: string; status: string }[]) {
     .join("; ");
 }
 
-export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "id" | "mood_quote" | "status">) {
+export async function sendDailyBriefing(
+  parentId: string,
+  call: Pick<CallRow, "id" | "mood_quote" | "status"> & { mood?: CallRow["mood"] },
+) {
   const { parent, children } = await household(parentId);
   if (!parent || children.length === 0) return { ok: false as const, reason: "missing_child" };
   const day = istDayKey();
@@ -74,12 +77,15 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
   const url = await magicUrl(parentId);
   const token = url.split("/d/")[1] || EXAMPLE_TOKEN;
   const missed = doses.find((d) => d.status === "not_taken");
+  const time = formatIstTime(parent.call_time);
   const intended =
     call.status === "missed" || call.status === "no_conversation" || call.status === "failed" || status === "trying"
       ? "missed_call_soft"
       : missed
         ? "daily_briefing_missed_med"
-        : "daily_briefing_good";
+        : call.mood === "low"
+          ? "daily_briefing_low_mood"
+          : "daily_briefing_good";
   const who = parent.address_term?.trim() || parent.first_name;
   const tries = await query<{ n: number }>(`select count(*)::int as n from call_attempts where call_id = $1`, [call.id]);
   const cfg = await ladderConfig(parentId);
@@ -96,8 +102,10 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
             parent.phone,
           ]
         : intended === "daily_briefing_missed_med"
-          ? [who, missed?.name ?? "tablet", missed?.meal || parent.call_time]
-          : [who, parent.call_time, medLine(doses), call.mood_quote || "—"];
+          ? [child.first_name, who, time, missed?.name ?? "tablet"]
+          : intended === "daily_briefing_low_mood"
+            ? [child.first_name, who, time, call.mood_quote || "—"]
+            : [child.first_name, who, time, medLine(doses), call.mood_quote || "—"];
     results.push(
       await sendFamilyMessage({
         parentId,
@@ -106,7 +114,7 @@ export async function sendDailyBriefing(parentId: string, call: Pick<CallRow, "i
         intended,
         vars,
         buttonUrlVar: token,
-        idempotencyKey: `brief_${call.id}_${child.phone.replace(/\s/g, "")}`,
+        idempotencyKey: `briefing:${call.id}`,
       }),
     );
   }
@@ -136,6 +144,8 @@ export async function notifyAlert(
     [alert.id],
   );
   const tryCount = String(Math.max(1, tries[0]?.n || 1));
+  const desk = await magicUrl(parentId);
+  const level = alert.level || "look";
   let neighbourMessaged = false;
   if (neighbour && (await neighbourOptedIn(parentId))) {
     const childName = kids[0]?.first_name ?? "family";
@@ -159,17 +169,10 @@ export async function notifyAlert(
     const intended = (
       neighbourMessaged ? childTemplate : `${childTemplate}_solo`
     ) as Exclude<TemplateName, "hello_world">;
-    const neighbourVar = neighbour?.first_name ?? "";
     const vars =
-      intended === "safety_alert_unreachable"
-        ? [who, tryCount, time, neighbourVar, parent.phone]
-        : intended === "safety_alert_unreachable_solo"
-          ? [who, tryCount, time, parent.phone]
-          : intended === "safety_alert_emergency"
-            ? [who, time, alert.quote, neighbourVar, parent.phone]
-            : intended === "safety_alert_emergency_solo"
-              ? [who, time, alert.quote, parent.phone]
-              : [who, time, alert.quote, "uneasy"];
+      intended === "safety_alert_unreachable" || intended === "safety_alert_unreachable_solo"
+        ? [child.first_name, who, tryCount, desk]
+        : [child.first_name, who, alert.quote, time, desk];
     results.push(
       await sendFamilyMessage({
         parentId,
@@ -177,7 +180,7 @@ export async function notifyAlert(
         locale,
         intended,
         vars,
-        idempotencyKey: `alert_${alert.id}_${child.phone.replace(/\s/g, "")}`,
+        idempotencyKey: `alert:${alert.id}:${level}`,
       }),
     );
   }

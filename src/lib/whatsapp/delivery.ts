@@ -10,6 +10,7 @@ export type WaStatus = {
   status?: string;
   timestamp?: string;
   recipient_id?: string;
+  errors?: { code?: number; title?: string }[];
 };
 
 const ALERT_TEMPLATES = [
@@ -28,7 +29,17 @@ export function parseWhatsappStatuses(raw: string): WaStatus[] {
     const body = JSON.parse(raw || "{}") as {
       entry?: { changes?: { value?: { statuses?: WaStatus[] } }[] }[];
     };
-    return body.entry?.flatMap((e) => e.changes?.flatMap((c) => c.value?.statuses ?? []) ?? []) ?? [];
+    return (
+      body.entry?.flatMap(
+        (e) =>
+          e.changes?.flatMap((c) =>
+            (c.value?.statuses ?? []).map((row) => ({
+              ...row,
+              errors: row.errors,
+            })),
+          ) ?? [],
+      ) ?? []
+    );
   } catch {
     return [];
   }
@@ -54,8 +65,8 @@ export function deliveryMayAdvance(prev: string | null | undefined, next: string
   if (to === undefined) return false;
   const from = DELIVERY_RANK[prev || ""];
   if (from === undefined) return true;
-  if (next === "failed") return from < DELIVERY_RANK.delivered;
-  return to >= from;
+  if (next === "failed") return from > 0 && from < DELIVERY_RANK.delivered;
+  return to > from;
 }
 
 function phoneKey(phone: string) {
@@ -92,19 +103,39 @@ export async function applyWhatsappStatuses(statuses: WaStatus[], at = nowIstSta
     const status = normalizeDeliveryStatus(row.status);
     const wamid = row.id;
     if (!status || !wamid) continue;
-    const current = await query<{ id: string; delivery_status: string | null }>(
-      `select id, delivery_status from outbound_messages where provider_message_id = $1`,
+    const current = await query<{
+      id: string;
+      delivery_status: string | null;
+      template: string;
+      parent_id: string;
+      body: string;
+      to_phone: string;
+    }>(
+      `select id, delivery_status, template, parent_id, body, to_phone from outbound_messages where provider_message_id = $1`,
       [wamid],
     );
     if (!current[0] || !deliveryMayAdvance(current[0].delivery_status, status)) continue;
+    const errorCode = row.errors?.[0]?.code;
+    const statusLabel = status === "failed" && errorCode != null ? `failed:${errorCode}` : status;
     const updated = await query<{ id: string }>(
       `update outbound_messages
-       set delivery_status = $2, delivery_at = $3
+       set delivery_status = $2, delivery_at = $3, status = $4
        where provider_message_id = $1
        returning id`,
-      [wamid, status, statusAt(row, at)],
+      [wamid, status, statusAt(row, at), statusLabel],
     );
     if (updated[0]) applied.push(updated[0].id);
+    if (status === "failed" && ALERT_TEMPLATES.includes(current[0].template)) {
+      const { sendPushThenEmail } = await import("@/lib/whatsapp/send");
+      await sendPushThenEmail({
+        parentId: current[0].parent_id,
+        toHint: current[0].to_phone,
+        template: current[0].template as Exclude<TemplateName, "hello_world">,
+        body: current[0].body,
+        idempotencyKey: `fail:${current[0].id}`,
+        reason: statusLabel,
+      });
+    }
   }
   return applied;
 }
@@ -237,23 +268,28 @@ async function alertVars(args: {
   const stamp = args.at.includes("T") ? args.at : "";
   const time = stamp.slice(11, 16) || "08:33";
   const quote = args.quote?.trim() || "—";
-  const phone = parent[0]?.phone || "";
   const tries = args.callId
     ? await query<{ n: number }>(`select count(*)::int as n from call_attempts where call_id = $1`, [args.callId])
     : [{ n: 1 }];
   const tryCount = String(Math.max(1, tries[0]?.n || 1));
-  const locale = args.locale ?? "en";
-  const responderSent = neighbour[0] && args.alertId
-    ? await countResponderSends(args.parentId, neighbour[0].phone, args.alertId)
-    : [{ n: 0 }];
-  const messaged = Boolean(neighbour[0]) && (await neighbourOptedIn(args.parentId)) && (responderSent[0]?.n ?? 0) > 0;
-  const neighbourVar = messaged ? neighbour[0]!.first_name : "";
-  if (args.template === "safety_alert_unreachable") return [who, tryCount, time, neighbourVar, phone];
-  if (args.template === "safety_alert_unreachable_solo") return [who, tryCount, time, phone];
-  if (args.template === "safety_alert_emergency") return [who, time, quote, neighbourVar, phone];
-  if (args.template === "safety_alert_emergency_solo") return [who, time, quote, phone];
-  if (args.template === "safety_alert_urgent" || args.template === "safety_alert_urgent_solo") {
-    return [who, time, quote, "uneasy"];
+  void neighbour;
+  void args.locale;
+  const desk = `${args.parentId}`;
+  const child = await query<{ first_name: string }>(
+    `select first_name from contacts where parent_id = $1 and role = 'child' order by is_owner desc limit 1`,
+    [args.parentId],
+  );
+  const childName = child[0]?.first_name || "family";
+  if (args.template === "safety_alert_unreachable" || args.template === "safety_alert_unreachable_solo") {
+    return [childName, who, tryCount, desk];
+  }
+  if (
+    args.template === "safety_alert_emergency" ||
+    args.template === "safety_alert_emergency_solo" ||
+    args.template === "safety_alert_urgent" ||
+    args.template === "safety_alert_urgent_solo"
+  ) {
+    return [childName, who, quote, time, desk];
   }
   return [who];
 }

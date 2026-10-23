@@ -95,5 +95,9 @@ export const MIGRATION_SOURCES: { id: string; sql: string }[] = [
   {
     "id": "024_family_messages",
     "sql": "create table if not exists family_messages (\n  id text primary key,\n  parent_id text not null references parents(id),\n  from_member_id text,\n  from_name text not null,\n  text text not null,\n  created_at text not null,\n  delivered_call_id text,\n  delivered_at text,\n  reply_to_family text,\n  replied_at text,\n  is_example boolean not null default false\n);\n\ncreate index if not exists family_messages_parent_pending\n  on family_messages (parent_id, created_at)\n  where delivered_at is null;\n"
+  },
+  {
+    "id": "025_whatsapp_opt_in",
+    "sql": "alter table contacts add column if not exists whatsapp_opt_in boolean not null default false;\nalter table contacts add column if not exists whatsapp_opted_out_at text;\n"
   }
 ];

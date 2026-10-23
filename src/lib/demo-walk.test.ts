@@ -9,9 +9,9 @@ describe("demo walkthrough previews", () => {
 
   it("renders EXAMPLE family and neighbour copy from the live templates", () => {
     const previews = exampleWhatsappPreviews();
-    assert.match(previews.safety_en, /needs help now/);
+    assert.match(previews.safety_en, /Saathi alert for Rohit/);
     assert.match(previews.safety_en, /Kamla/);
-    assert.match(previews.safety_hi, /ज़रूरी/);
+    assert.match(previews.safety_hi, /साथी अलर्ट/);
     assert.match(previews.responder_hi, /देख सकते हैं/);
     assert.match(previews.ack_en, /Rohit is on it/);
     assert.match(previews.missed_soft_en, /Couldn't reach/);

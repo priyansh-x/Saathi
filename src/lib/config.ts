@@ -31,7 +31,7 @@ export function templatesApproved() {
   return process.env.WHATSAPP_TEMPLATES_APPROVED === "1";
 }
 
-/** Comma-separated Meta template names. `WHATSAPP_TEMPLATES_APPROVED=1` means all. */
+/** Comma-separated `name` or `name:lang`. Empty default. `WHATSAPP_TEMPLATES_APPROVED=1` means all non-DRAFT. */
 export function approvedWhatsappTemplates() {
   if (templatesApproved()) return null;
   return (process.env.WHATSAPP_APPROVED_TEMPLATES || "")
@@ -44,13 +44,25 @@ function draftWhatsappTemplates() {
   return [...new Set(whatsappTemplatePack().filter((t) => t.status === "DRAFT").map((t) => t.name))];
 }
 
-export function isWhatsappTemplateApproved(name: string) {
+function approvedListMatches(list: string[], name: string, language?: "en" | "hi") {
+  const base = name.replace(/_en$|_hi$/, "");
+  return list.some((item) => {
+    const [entryName, entryLang] = item.split(":");
+    if (entryName !== base && entryName !== name) return false;
+    if (!entryLang) return true;
+    if (!language) return true;
+    return entryLang === language;
+  });
+}
+
+export function isWhatsappTemplateApproved(name: string, language?: "en" | "hi") {
+  const list = approvedWhatsappTemplates();
+  if (list && list.length && approvedListMatches(list, name, language)) return true;
   const base = name.replace(/_en$|_hi$/, "");
   const drafts = draftWhatsappTemplates();
   if (drafts.includes(base) || drafts.includes(name)) return false;
-  const list = approvedWhatsappTemplates();
   if (list === null) return true;
-  return list.includes(name) || list.includes(base);
+  return false;
 }
 
 export function publicBaseUrl() {

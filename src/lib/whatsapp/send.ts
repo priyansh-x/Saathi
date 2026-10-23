@@ -3,13 +3,14 @@ import { query } from "@/lib/db/client";
 import { deliverEmail, isMockEmail, selectEmailTransport } from "@/lib/email/transport";
 import { gateOutbound } from "@/lib/outbound";
 import { nowIst } from "@/lib/bolna/tools";
+import { evaluateWhatsappGate, metaRecipientDigits, whatsappGraphUrl } from "@/lib/whatsapp/gate";
 import { recordMockWhatsapp } from "@/lib/whatsapp/mock-log";
 import { packTemplate, renderTemplate, type TemplateName } from "@/lib/whatsapp/templates";
 
 export type SendResult = {
   ok: boolean;
   id: string;
-  channel: "whatsapp" | "email";
+  channel: "whatsapp" | "email" | "push";
   template: string;
   status: string;
   reason?: string;
@@ -171,6 +172,7 @@ export function metaTemplateLanguage(intended: string, locale: "en" | "hi") {
 
 export type WhatsappGraphPayload = {
   messaging_product: "whatsapp";
+  recipient_type: "individual";
   to: string;
   type: "text" | "template";
   text?: { body: string };
@@ -190,10 +192,12 @@ export function buildWhatsappPayload(args: {
   windowOpen?: boolean;
   buttonUrlVar?: string;
 }): WhatsappGraphPayload {
+  const to = metaRecipientDigits(args.to);
   if (args.freeText && args.windowOpen) {
     return {
       messaging_product: "whatsapp",
-      to: args.to,
+      recipient_type: "individual",
+      to,
       type: "text",
       text: { body: args.freeText },
     };
@@ -223,7 +227,8 @@ export function buildWhatsappPayload(args: {
   }
   return {
     messaging_product: "whatsapp",
-    to: args.to,
+    recipient_type: "individual",
+    to,
     type: "template",
     template: {
       name,
@@ -253,7 +258,7 @@ async function postMeta(payload: ReturnType<typeof buildWhatsappPayload>) {
   const token = process.env.WHATSAPP_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   if (!token || !phoneId) return { ok: false as const, error: "missing_meta_creds" };
-  const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
+  const res = await fetch(whatsappGraphUrl(phoneId), {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -267,6 +272,53 @@ async function postMeta(payload: ReturnType<typeof buildWhatsappPayload>) {
     wamid = undefined;
   }
   return { ok: true as const, wamid };
+}
+
+export async function contactWhatsappState(phone: string, mock = isMockWhatsapp()) {
+  const digits = phone.replace(/\D/g, "").slice(-10);
+  if (!digits) return { optedIn: false, optedOut: false, storedOptIn: false };
+  const rows = await query<{ whatsapp_opt_in: boolean | null; whatsapp_opted_out_at: string | null }>(
+    `select whatsapp_opt_in, whatsapp_opted_out_at from contacts
+     where regexp_replace(phone, '[^0-9]', '', 'g') like $1
+     limit 1`,
+    [`%${digits}`],
+  );
+  const row = rows[0];
+  const storedOptIn = Boolean(row?.whatsapp_opt_in);
+  const optedOut = Boolean(row?.whatsapp_opted_out_at);
+  // Live sends require the stored opt-in. Mocks skip Meta, so they proceed unless STOP/band opted out.
+  const optedIn = optedOut ? false : mock ? true : storedOptIn;
+  return { optedIn, optedOut, storedOptIn };
+}
+
+export async function sendPushThenEmail(args: {
+  parentId: string;
+  toHint: string;
+  template: TemplateName;
+  body: string;
+  idempotencyKey: string;
+  reason: string;
+}): Promise<SendResult> {
+  const { sendPushToFamily } = await import("@/lib/push");
+  const pushed = await sendPushToFamily(
+    args.parentId,
+    `${PRODUCT_NAME}: ${args.template.replace(/_/g, " ")}`,
+    args.body,
+    `fb_${args.idempotencyKey}`,
+  );
+  const okPush = pushed.results.some((row) => row.ok);
+  if (okPush) {
+    const first = pushed.results.find((row) => row.ok) ?? pushed.results[0];
+    return {
+      ok: true,
+      id: first?.id ?? "",
+      channel: "push",
+      template: args.template,
+      status: first?.status ?? "mock",
+      reason: args.reason,
+    };
+  }
+  return sendEmailFallback(args);
 }
 
 export async function sendFamilyMessage(args: {
@@ -285,7 +337,9 @@ export async function sendFamilyMessage(args: {
   const language = metaTemplateLanguage(args.intended, args.locale);
   const windowOpen = sessionWindowOpen(await lastInboundForPhone(args.toPhone));
   const useFreeText = Boolean(args.freeText && windowOpen);
-  const approved = isWhatsappTemplateApproved(args.intended) || useFreeText;
+  const mock = isMockWhatsapp();
+  const approved =
+    useFreeText || isWhatsappTemplateApproved(args.intended, language) || mock;
   const template: TemplateName = args.intended;
   const body = useFreeText ? args.freeText! : renderTemplate(template, args.vars, language);
   const id = outboundMessageId(template, args.idempotencyKey);
@@ -294,8 +348,21 @@ export async function sendFamilyMessage(args: {
     return { ok: true, id, channel: "whatsapp", template, status: "duplicate" };
   }
 
+  const { optedIn, optedOut } = await contactWhatsappState(args.toPhone, mock);
   const gate = gateOutbound("whatsapp", args.toPhone);
-  if (!gate.ok) {
+  const decision = evaluateWhatsappGate({
+    killSwitch: false,
+    optedIn,
+    optedOut,
+    gateOk: gate.ok,
+    gateReason: gate.ok ? undefined : gate.reason,
+    approved,
+    mock,
+  });
+  if (!decision.ok) {
+    if (decision.blocked === "kill_switch") {
+      return { ok: false, id: "", channel: "whatsapp", template, status: "kill_switch" };
+    }
     await logOutbound({
       id,
       parentId: args.parentId,
@@ -303,33 +370,22 @@ export async function sendFamilyMessage(args: {
       template,
       to: args.toPhone,
       body,
-      status: `blocked_${gate.reason}`,
+      status: `blocked_${decision.blocked}`,
     });
-    return sendEmailFallback({
+    return sendPushThenEmail({
       parentId: args.parentId,
       toHint: args.toPhone,
       template: args.intended,
       body,
       idempotencyKey: args.idempotencyKey,
-      reason: gate.reason,
+      reason: decision.blocked,
     });
   }
 
-  if (!isMockWhatsapp() && !approved) {
-    console.info("whatsapp_unapproved_template", { template: metaTemplateName(args.intended), language });
-    return sendEmailFallback({
-      parentId: args.parentId,
-      toHint: gate.to,
-      template: args.intended,
-      body,
-      idempotencyKey: args.idempotencyKey,
-      reason: "unapproved_template",
-    });
-  }
-
+  const destPhone = gate.ok ? gate.to : args.toPhone;
   if (isMockWhatsapp()) {
     const graph = buildWhatsappPayload({
-      to: gate.to,
+      to: destPhone,
       template,
       language,
       vars: args.vars,
@@ -349,7 +405,7 @@ export async function sendFamilyMessage(args: {
       parentId: args.parentId,
       channel: "whatsapp",
       template,
-      to: gate.to,
+      to: destPhone,
       body,
       status: useFreeText ? "mock_session" : "mock",
       providerMessageId: `wamid.mock.${id}`,
@@ -360,7 +416,7 @@ export async function sendFamilyMessage(args: {
   }
 
   const payload = buildWhatsappPayload({
-    to: gate.to,
+    to: destPhone,
     template,
     language,
     vars: args.vars,
@@ -375,13 +431,13 @@ export async function sendFamilyMessage(args: {
       parentId: args.parentId,
       channel: "whatsapp",
       template,
-      to: gate.to,
+      to: destPhone,
       body,
       status: `failed_${posted.error}`,
     });
-    return sendEmailFallback({
+    return sendPushThenEmail({
       parentId: args.parentId,
-      toHint: gate.to,
+      toHint: destPhone,
       template: args.intended,
       body,
       idempotencyKey: args.idempotencyKey,
@@ -394,7 +450,7 @@ export async function sendFamilyMessage(args: {
     parentId: args.parentId,
     channel: "whatsapp",
     template,
-    to: gate.to,
+    to: destPhone,
     body,
     status: "sent",
     providerMessageId: posted.wamid ?? null,
