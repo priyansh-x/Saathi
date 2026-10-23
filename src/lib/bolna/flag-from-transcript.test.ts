@@ -26,4 +26,16 @@ describe("flagFromTranscript", () => {
     const flag = flagFromTranscript("assistant: Agar seene mein dard ho to bataiye.\nuser: Theek hoon.");
     assert.equal(flag, null);
   });
+
+  it("flags OTP, digital arrest, police video call, and KYC link as SCAM_CONCERN", () => {
+    assert.equal(flagFromTranscript("user: They asked for my OTP.")?.category, "SCAM_CONCERN");
+    assert.equal(flagFromTranscript("user: Police said digital arrest on video.")?.category, "SCAM_CONCERN");
+    assert.equal(flagFromTranscript("user: It was a police video call.")?.category, "SCAM_CONCERN");
+    assert.equal(flagFromTranscript("user: They sent a KYC update link.")?.category, "SCAM_CONCERN");
+  });
+
+  it("does not flag a scam denial", () => {
+    assert.equal(flagFromTranscript("user: Nahi, koi OTP nahi diya."), null);
+    assert.equal(flagFromTranscript("user: No KYC link, I am fine."), null);
+  });
 });

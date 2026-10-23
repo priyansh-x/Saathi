@@ -80,6 +80,8 @@ export function categoryWords(category: string, lang: Lang) {
   if (category === "MISSED") return t.catMissed;
   if (category === "MISSED_MED") return t.catMissedMed;
   if (category === "FALSE") return t.catFalse;
+  if (category === "SCAM_CONCERN" || /scam/i.test(category)) return `⚠ ${t.catScam}`;
+  if (category === "REFILL" || category.startsWith("REFILL:")) return `💊 ${t.catRefill}`;
   return category.replace(/_/g, " ");
 }
 

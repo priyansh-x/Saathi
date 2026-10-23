@@ -315,7 +315,7 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
       : spokenFlag
         ? { category: spokenFlag.category, quote: spokenFlag.quote, confidence: spokenFlag.confidence }
         : null;
-  if (flag?.category === "EMERGENCY" || flag?.category === "URGENT") {
+  if (flag?.category === "EMERGENCY" || flag?.category === "URGENT" || flag?.category === "SCAM_CONCERN") {
     const midCall = await hasRaiseAlert(callId, flag.category);
     if (!midCall) {
       await raiseAlert({

@@ -193,6 +193,37 @@ Backend: the next call's `{{last_call_summary}}` = last call's summary + open me
 
 ---
 
+## 4d. `request_refill`
+```json
+{
+  "name": "request_refill",
+  "description": "The parent said a medicine is running low. Creates a needs-a-look desk item and notifies the family. Call once per medicine per call. medicine_name is the name they used.",
+  "pre_call_message": "",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "medicine_name": {"type": "string"},
+      "call_sid": {"type": "string"},
+      "parent_id": {"type": "string"}
+    },
+    "required": ["medicine_name", "call_sid", "parent_id"]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/request-refill",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {"Content-Type": "application/json"},
+    "param": {
+      "medicine_name": "%(medicine_name)s",
+      "call_sid": "%(call_sid)s",
+      "parent_id": "%(parent_id)s",
+      "to_number": "%(to_number)s"
+    }
+  }
+}
+```
+
 ## 4b. `save_family_reply`
 ```json
 {
