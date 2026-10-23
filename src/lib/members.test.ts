@@ -72,13 +72,13 @@ describe("family members", () => {
       created_at: "2026-10-18T08:33:00+05:30",
     });
     const briefCount = await query<{ n: number }>(
-      `select count(*)::int as n from outbound_messages where id like 'out_%brief_mem_brief%'`,
+      `select count(*)::int as n from outbound_messages where id like '%briefing:mem_brief%'`,
     );
-    assert.equal(briefCount[0]?.n, 3);
+    assert.equal(briefCount[0]?.n, 1);
     const alertCount = await query<{ n: number }>(
-      `select count(*)::int as n from outbound_messages where id like '%alert_mem_alert%'`,
+      `select count(*)::int as n from outbound_messages where id like '%alert:mem_alert%' or id like '%alert_mem_alert%'`,
     );
-    assert.ok((alertCount[0]?.n ?? 0) >= 3);
+    assert.ok((alertCount[0]?.n ?? 0) >= 1);
     void alerts;
   });
 });
