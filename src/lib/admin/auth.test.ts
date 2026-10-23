@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { setEnv } from "@/lib/test/env";
 import {
   adminEnabled,
   canOpenAdmin,
@@ -47,6 +48,34 @@ describe("admin auth", () => {
     } finally {
       process.env.ADMIN_PASSWORD = prevPass;
       process.env.OPS_EMAILS = prevOps;
+    }
+  });
+
+  it("stays off in production when SESSION_SECRET is empty", () => {
+    const prev = {
+      node: process.env.NODE_ENV,
+      session: process.env.SESSION_SECRET,
+      magic: process.env.MAGIC_LINK_SECRET,
+      pass: process.env.ADMIN_PASSWORD,
+      ops: process.env.OPS_EMAILS,
+    };
+    try {
+      setEnv("NODE_ENV", "production");
+      delete process.env.SESSION_SECRET;
+      delete process.env.MAGIC_LINK_SECRET;
+      process.env.ADMIN_PASSWORD = "desk-pass";
+      process.env.OPS_EMAILS = "ops@example.com";
+      assert.equal(adminEnabled(), false);
+    } finally {
+      setEnv("NODE_ENV", prev.node);
+      if (prev.session === undefined) delete process.env.SESSION_SECRET;
+      else process.env.SESSION_SECRET = prev.session;
+      if (prev.magic === undefined) delete process.env.MAGIC_LINK_SECRET;
+      else process.env.MAGIC_LINK_SECRET = prev.magic;
+      if (prev.pass === undefined) delete process.env.ADMIN_PASSWORD;
+      else process.env.ADMIN_PASSWORD = prev.pass;
+      if (prev.ops === undefined) delete process.env.OPS_EMAILS;
+      else process.env.OPS_EMAILS = prev.ops;
     }
   });
 

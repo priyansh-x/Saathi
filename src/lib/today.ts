@@ -254,5 +254,8 @@ export function ringCopy(reason: string | undefined, lang: Lang) {
   if (reason === "consent") return t.ringConsent;
   if (reason === "missing_bolna_key") return t.ringBolnaAuth;
   if (reason === "kill_switch") return t.ringFail;
+  if (reason === "ring_rate_limit") return t.ringWait.replace("{n}", "10");
+  const wait = /^wait_(\d+)$/.exec(reason);
+  if (wait) return t.ringWait.replace("{n}", wait[1]);
   return t.ringFail;
 }

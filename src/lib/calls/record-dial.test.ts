@@ -126,7 +126,19 @@ describe("every dial is recorded", () => {
     const forced = await prepareMorningCall("parent_kamla", IN_WINDOW, { forceTest: true });
     assert.equal(isPreparedCall(forced), true);
     if (isPreparedCall(forced)) {
-      assert.equal(forced.payload.bypass_call_guardrails, true);
+      assert.equal("bypass_call_guardrails" in forced.payload, false);
+    }
+    const prevBypass = process.env.ALLOW_BOLNA_GUARDRAIL_BYPASS;
+    process.env.ALLOW_BOLNA_GUARDRAIL_BYPASS = "1";
+    try {
+      const bypassed = await prepareMorningCall("parent_kamla", IN_WINDOW, { forceTest: true });
+      assert.equal(isPreparedCall(bypassed), true);
+      if (isPreparedCall(bypassed)) {
+        assert.equal(bypassed.payload.bypass_call_guardrails, true);
+      }
+    } finally {
+      if (prevBypass === undefined) delete process.env.ALLOW_BOLNA_GUARDRAIL_BYPASS;
+      else process.env.ALLOW_BOLNA_GUARDRAIL_BYPASS = prevBypass;
     }
   });
 

@@ -105,12 +105,12 @@ describe("email sign-in", () => {
       }
       const body = JSON.parse(String(init?.body || "{}")) as { raw?: string };
       const mime = Buffer.from((body.raw || "").replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
-      assert.match(mime, /To: adit@gmail.com/);
+      assert.match(mime, /To: ananya@example.com/);
       assert.match(mime, /Your Saathi code is \d{6}/);
       return new Response(JSON.stringify({ id: "msg_otp" }), { status: 200 });
     }) as typeof fetch;
     try {
-      const allowed = await startEmailSignIn("adit@gmail.com");
+      const allowed = await startEmailSignIn("ananya@example.com");
       assert.equal(allowed.ok, true);
       if (allowed.ok) assert.equal(allowed.mode, "email");
       assert.equal(urls.length, 2);

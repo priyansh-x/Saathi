@@ -26,6 +26,19 @@ describe("demo mode", () => {
     assert.match(lines[0]?.hi || "", /नमस्ते|कमला/);
   });
 
+  it("turns off the walk when either mock is off", () => {
+    const prevB = process.env.MOCK_BOLNA;
+    const prevW = process.env.MOCK_WHATSAPP;
+    try {
+      process.env.MOCK_WHATSAPP = "0";
+      process.env.MOCK_BOLNA = "1";
+      assert.equal(demoModeAllowed(), false);
+    } finally {
+      process.env.MOCK_BOLNA = prevB;
+      process.env.MOCK_WHATSAPP = prevW;
+    }
+  });
+
   it("reset wipes only EXAMPLE rows", async () => {
     await query(`insert into parents (id, full_name, first_name, city, timezone, phone, languages, call_time, paused, recording_consent, is_example)
       values ('parent_live','Live','Live','Delhi','Asia/Kolkata','000','en','08:00',false,false,false)`);

@@ -76,7 +76,8 @@ async function deliverWebPush(sub: { endpoint: string; keys_json: string | null 
   if (!keys.p256dh || !keys.auth) return "no_keys";
   const pair = await vapidPair();
   webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:priyansh.joshi07@gmail.com",
+    process.env.VAPID_SUBJECT ||
+      (process.env.SUPPORT_EMAIL ? `mailto:${process.env.SUPPORT_EMAIL.trim()}` : "mailto:support@example.com"),
     pair.publicKey,
     pair.privateKey,
   );

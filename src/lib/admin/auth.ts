@@ -10,11 +10,15 @@ export function adminPassword() {
 }
 
 export function adminEnabled() {
+  if (process.env.NODE_ENV === "production") {
+    const secret = (process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET || "").trim();
+    if (!secret) return false;
+  }
   return Boolean(adminPassword()) || opsEmails().length > 0;
 }
 
 function hmac(payload: string) {
-  return createHmac("sha256", sessionSecret() || "dev-admin").update(payload).digest("base64url");
+  return createHmac("sha256", sessionSecret()).update(payload).digest("base64url");
 }
 
 export function encodeAdminCookie(now = Date.now()) {

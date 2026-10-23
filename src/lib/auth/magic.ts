@@ -41,7 +41,7 @@ export function canIssueSignIn(email: string) {
 const NOT_CONFIGURED = "Email sign-in is not configured.";
 const INVITE_ONLY = "Pilot is invite-only for now";
 
-/** Localhost mock cookie, or a 6-digit code from priyansh.joshi07@gmail.com. */
+/** Localhost mock cookie, or a 6-digit code from EMAIL_FROM. */
 export async function startEmailSignIn(rawEmail: string) {
   const email = normalizeEmail(rawEmail);
   if (!validEmail(email)) return { ok: false as const, error: "Add a working email address." };

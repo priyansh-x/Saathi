@@ -14,7 +14,7 @@ describe("supabase email OTP", () => {
       return new Response("{}", { status: 200 });
     }) as typeof fetch;
     try {
-      const sent = await sendSupabaseEmailOtp("adit@gmail.com");
+      const sent = await sendSupabaseEmailOtp("child@example.com");
       assert.equal(sent.ok, true);
       assert.equal(urls[0], "https://example.supabase.co/auth/v1/otp");
     } finally {
@@ -36,7 +36,7 @@ describe("supabase email OTP", () => {
         status: 429,
       })) as typeof fetch;
     try {
-      const sent = await sendSupabaseEmailOtp("adit@gmail.com");
+      const sent = await sendSupabaseEmailOtp("child@example.com");
       assert.equal(sent.ok, false);
       if (!sent.ok) assert.match(sent.error, /Wait about an hour/);
     } finally {
@@ -55,7 +55,7 @@ describe("supabase email OTP", () => {
     const original = globalThis.fetch;
     globalThis.fetch = (async () => new Response("{}", { status: 200 })) as typeof fetch;
     try {
-      assert.equal(await verifySupabaseEmailOtp("adit@gmail.com", "123456"), true);
+      assert.equal(await verifySupabaseEmailOtp("child@example.com", "123456"), true);
     } finally {
       globalThis.fetch = original;
       if (prev.url) process.env.SUPABASE_URL = prev.url;
@@ -91,13 +91,13 @@ describe("supabase magic links", () => {
     const original = globalThis.fetch;
     globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
       bodies.push(JSON.parse(String(init?.body || "{}")));
-      return new Response(JSON.stringify({ user: { email: "adit@gmail.com" } }), { status: 200 });
+      return new Response(JSON.stringify({ user: { email: "child@example.com" } }), { status: 200 });
     }) as typeof fetch;
     try {
       const consumed = await consumeSupabaseAuthLink(
         "https://example.supabase.co/auth/v1/verify?token=abc123token&type=magiclink&redirect_to=http://localhost:3000",
       );
-      assert.deepEqual(consumed, { email: "adit@gmail.com" });
+      assert.deepEqual(consumed, { email: "child@example.com" });
       assert.deepEqual(bodies[0], { type: "magiclink", token_hash: "abc123token" });
     } finally {
       globalThis.fetch = original;

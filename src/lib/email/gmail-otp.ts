@@ -1,9 +1,8 @@
+import { emailFrom } from "@/lib/config";
 import { sendSmtp, type EmailMessage, type EmailSendResult } from "./transport";
 
-export const GMAIL_OTP_USER = "priyansh.joshi07@gmail.com";
-
 export function signInOtpFrom() {
-  return (process.env.EMAIL_FROM || `Saathi <${GMAIL_OTP_USER}>`).trim();
+  return emailFrom();
 }
 
 export function gmailApiConfigured() {
@@ -97,7 +96,7 @@ export async function deliverSignInOtp(to: string, code: string): Promise<EmailS
   return sendSmtp(message, {
     host: (process.env.SMTP_HOST || "smtp.gmail.com").trim(),
     port: Number.isFinite(port) && port > 0 ? port : 465,
-    user: (process.env.SMTP_USER || GMAIL_OTP_USER).trim(),
+    user: (process.env.SMTP_USER || "").trim(),
     pass: gmailAppPassword(),
     from: signInOtpFrom(),
   });

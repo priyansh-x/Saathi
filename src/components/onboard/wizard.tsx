@@ -64,7 +64,7 @@ function fill(template: string, vars: Record<string, string>) {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => vars[key] ?? "");
 }
 
-export function OnboardWizard({ lang }: { lang: Lang }) {
+export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?: string }) {
   const router = useRouter();
   const t = messages[lang];
   const other = lang === "hi" ? "en" : "hi";
@@ -213,7 +213,9 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
           </div>
           <p className="eyebrow">{t.setupSignKicker}</p>
           <h1 className="app-title mt-2">{t.setupSignTitle}</h1>
-          <p className="mt-3 text-muted-foreground">{t.setupSignBody}</p>
+          <p className="mt-3 text-muted-foreground">
+            {fromEmail ? t.setupSignBodyFrom.replace("{email}", fromEmail) : t.setupSignBody}
+          </p>
           <Field label={t.setupEmail} htmlFor="email">
             <Input
               id="email"
@@ -225,7 +227,9 @@ export function OnboardWizard({ lang }: { lang: Lang }) {
           </Field>
           {sent ? (
             <div className="mt-4 space-y-3">
-              <p className="text-sm">{t.setupCheckInbox}</p>
+              <p className="text-sm">
+                {fromEmail ? t.setupCheckInboxFrom.replace("{email}", fromEmail) : t.setupCheckInbox}
+              </p>
               <Field label={lang === "hi" ? "ईमेल वाला कोड" : "Code from the email"} htmlFor="code">
                 <Input
                   id="code"

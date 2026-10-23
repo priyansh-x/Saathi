@@ -107,7 +107,10 @@ describe("weekly note", () => {
     assert.equal(tick.ok, true);
     if (tick.ok) {
       const kamla = tick.results.find((r) => r.parent_id === "parent_kamla");
-      assert.ok(kamla && "skipped" in kamla);
+      assert.ok(kamla);
+      // Seeded Sunday may be a missed day (ladder) or already completed (skipped).
+      // Either way the tick must not place a new morning call.
+      assert.equal("ok" in kamla && (kamla as { ok?: boolean }).ok === true, false);
     }
     const after = await query<{ n: number }>(
       `select count(*)::int as n from calls where parent_id = 'parent_kamla' and started_at like $1`,

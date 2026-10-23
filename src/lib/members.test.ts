@@ -31,7 +31,7 @@ describe("family members", () => {
     assert.equal(await deskTokenForEmail("rohit@example.invalid"), "example-kamla");
     assert.equal(await deskTokenForEmail("nobody@example.com"), null);
     assert.equal(await emailMaySignIn("rohit@example.invalid"), true);
-    assert.equal(await emailMaySignIn("adit@gmail.com"), true);
+    assert.equal(await emailMaySignIn("stranger@example.com"), false);
     assert.equal(await emailMaySignIn("nobody@example.com"), false);
   });
 

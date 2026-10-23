@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ResumeDesk } from "@/components/family/resume-desk";
 import { OnboardWizard } from "@/components/onboard/wizard";
+import { emailFromAddress } from "@/lib/config";
 import { titled } from "@/lib/page-title";
 
 export async function generateMetadata({
@@ -15,7 +16,7 @@ export default async function OnboardPage({ searchParams }: { searchParams: Prom
   const lang = (await searchParams).lang === "hi" ? "hi" : "en";
   return (
     <ResumeDesk lang={lang}>
-      <OnboardWizard lang={lang} />
+      <OnboardWizard lang={lang} fromEmail={emailFromAddress()} />
     </ResumeDesk>
   );
 }

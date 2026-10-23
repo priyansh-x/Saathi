@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { DemoLiveFallback } from "@/components/demo/live-fallback";
 import { MorningLines } from "@/components/demo/morning-lines";
 import { PhonePreview } from "@/components/demo/phone-preview";
 import { RecordPlayer } from "@/components/demo/record-player";
@@ -30,9 +31,11 @@ export default async function DemoPage({
 }: {
   searchParams: Promise<{ lang?: string; step?: string; record?: string }>;
 }) {
-  if (!demoModeAllowed()) notFound();
   const q = await searchParams;
   const lang = readLang(q.lang);
+  if (!demoModeAllowed()) {
+    return <DemoLiveFallback lang={lang} />;
+  }
   const step = q.step || "start";
   const audioUrl = demoAudioUrl();
   if (q.record === "1") {

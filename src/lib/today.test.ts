@@ -221,6 +221,8 @@ describe("todayStatus", () => {
     assert.equal(ringCopy("example", "en"), "The example desk does not place a live call. Open your family desk.");
     assert.match(ringCopy("bolna_hours", "en") || "", /calling hours/);
     assert.match(ringCopy("budget", "en") || "", /minutes/);
+    assert.equal(ringCopy("wait_7", "en"), "Try again in 7 min.");
+    assert.match(ringCopy("wait_7", "hi") || "", /7/);
     assert.equal(ringCopy(undefined, "en"), null);
   });
 

@@ -37,6 +37,7 @@ yarn-error.log*
 # env files
 .env
 .env.local
+.env.production
 .env.*.local
 family-desk.vercel.env
 

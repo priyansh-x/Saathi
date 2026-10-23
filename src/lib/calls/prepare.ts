@@ -1,5 +1,13 @@
 import { bolnaPlaceReason } from "@/lib/calls/bolna-error";
-import { allowedPhones, callProviderName, dailyBudgetMinutes, isMockBolna, killSwitchOn, maxCallSeconds } from "@/lib/config";
+import {
+  allowBolnaGuardrailBypass,
+  allowedPhones,
+  callProviderName,
+  dailyBudgetMinutes,
+  isMockBolna,
+  killSwitchOn,
+  maxCallSeconds,
+} from "@/lib/config";
 import { buildCallContext } from "@/lib/bolna/call-context";
 import { hasPilotConsent } from "@/lib/consent";
 import { query } from "@/lib/db/client";
@@ -13,7 +21,7 @@ export type PlaceCallOk = {
   mock?: boolean;
   user_data?: Awaited<ReturnType<typeof buildCallContext>>;
 };
-export type PlaceCallErr = { ok: false; reason: string; status?: number };
+export type PlaceCallErr = { ok: false; reason: string; status?: number; retryInMin?: number };
 export type PlaceCallResult = PlaceCallOk | PlaceCallErr;
 
 export type PreparedCall = {
@@ -106,12 +114,14 @@ export async function prepareMorningCall(
     await rememberBlockedDial(parentId, parent.phone, gate.reason);
     return { ok: false as const, reason: gate.reason };
   }
-  if (!opts?.forceTest) {
-    const used = await minutesUsedToday(clock, parentId);
-    if (used >= dailyBudgetMinutes()) {
-      await rememberBlockedDial(parentId, parent.phone, "budget");
-      return { ok: false as const, reason: "budget" };
-    }
+  const used = await minutesUsedToday(clock, parentId);
+  if (used >= dailyBudgetMinutes()) {
+    await rememberBlockedDial(parentId, parent.phone, "budget", clock);
+    return { ok: false as const, reason: "budget" };
+  }
+  if (opts?.forceTest) {
+    const limited = await testRingLimit(parentId, parent.phone, clock);
+    if (!limited.ok) return limited;
   }
   if (!opts?.retryOf && !opts?.forceTest && (await dialsToday(parentId, clock)) >= dailyDialCap()) {
     return { ok: false as const, reason: "already_called" };
@@ -136,7 +146,7 @@ export async function prepareMorningCall(
     user_data: userData,
     agent_data: { language: bolnaAgentLanguage(parent.languages) },
     max_duration: maxCallSeconds(),
-    ...(opts?.forceTest ? { bypass_call_guardrails: true } : {}),
+    ...(opts?.forceTest && allowBolnaGuardrailBypass() ? { bypass_call_guardrails: true } : {}),
   };
   if ("from_phone_number" in payload) {
     throw new Error("Do not set from_phone_number on POST /call");
@@ -148,8 +158,76 @@ export function isPreparedCall(value: PlaceCallResult | PreparedCall): value is 
   return "payload" in value && "parentId" in value;
 }
 
-async function rememberBlockedDial(parentId: string, phone: string, reason: string) {
-  const id = `out_call_${reason}_${parentId}_${Date.now()}`.slice(0, 80);
+export const TEST_RING_DAILY_CAP = 3;
+export const TEST_RING_COOLDOWN_MIN = 10;
+
+export async function testRingsPlacedToday(parentId: string, clock: Date = new Date()) {
+  const { start, end } = istDayBounds(istDayKey(clock));
+  const rows = await query<{ n: number }>(
+    `select count(*)::int as n from outbound_messages
+     where parent_id = $1 and template = 'ring_now' and status = 'placed'
+       and at >= $2 and at < $3`,
+    [parentId, start, end],
+  );
+  return rows[0]?.n ?? 0;
+}
+
+export async function lastTestRingAt(parentId: string, clock: Date = new Date()) {
+  const { start, end } = istDayBounds(istDayKey(clock));
+  const rows = await query<{ at: string }>(
+    `select at from outbound_messages
+     where parent_id = $1 and template = 'ring_now' and status = 'placed'
+       and at >= $2 and at < $3
+     order by at desc limit 1`,
+    [parentId, start, end],
+  );
+  return rows[0]?.at ?? null;
+}
+
+function minutesUntilIstMidnight(clock: Date) {
+  const { end } = istDayBounds(istDayKey(clock));
+  return Math.max(1, Math.ceil((Date.parse(end) - clock.getTime()) / 60_000));
+}
+
+export async function testRingLimit(
+  parentId: string,
+  phone: string,
+  clock: Date = new Date(),
+): Promise<PlaceCallResult | { ok: true }> {
+  const placed = await testRingsPlacedToday(parentId, clock);
+  if (placed >= TEST_RING_DAILY_CAP) {
+    const retryInMin = minutesUntilIstMidnight(clock);
+    await rememberBlockedDial(parentId, phone, "ring_rate_limit", clock);
+    return { ok: false as const, reason: "ring_rate_limit", retryInMin };
+  }
+  const last = await lastTestRingAt(parentId, clock);
+  if (last) {
+    const elapsed = (clock.getTime() - Date.parse(last)) / 60_000;
+    if (elapsed < TEST_RING_COOLDOWN_MIN) {
+      const retryInMin = Math.max(1, Math.ceil(TEST_RING_COOLDOWN_MIN - elapsed));
+      await rememberBlockedDial(parentId, phone, "ring_rate_limit", clock);
+      return { ok: false as const, reason: "ring_rate_limit", retryInMin };
+    }
+  }
+  return { ok: true as const };
+}
+
+export async function logTestRing(parentId: string, phone: string, clock: Date = new Date()) {
+  const id = `out_ring_now_${parentId}_${clock.getTime()}`.slice(0, 80);
+  try {
+    await query(
+      `insert into outbound_messages (
+        id, parent_id, channel, template, to_phone, body, at, status, is_example
+      ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [id, parentId, "call", "ring_now", phone, "test ring", nowIstStamp(clock), "placed", false],
+    );
+  } catch {
+    /* never fail a ring on the audit row */
+  }
+}
+
+export async function rememberBlockedDial(parentId: string, phone: string, reason: string, clock: Date = new Date()) {
+  const id = `out_call_${reason}_${parentId}_${clock.getTime()}`.slice(0, 80);
   try {
     await query(
       `insert into outbound_messages (
@@ -162,7 +240,7 @@ async function rememberBlockedDial(parentId: string, phone: string, reason: stri
         "place_call",
         phone,
         `blocked ${reason}`,
-        nowIstStamp(),
+        nowIstStamp(clock),
         `blocked_${reason}`,
         false,
       ],
