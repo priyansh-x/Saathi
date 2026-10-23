@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const body = await readJson<{
     call_sid: string;
     parent_id: string;
-    category: "EMERGENCY" | "URGENT" | "ATTENTION";
+    category: "EMERGENCY" | "URGENT" | "ATTENTION" | "SCAM_CONCERN" | "REFILL";
     quote: string;
     late?: boolean;
   }>(req);
