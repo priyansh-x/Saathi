@@ -7,12 +7,12 @@ export function exampleWhatsappPreviews() {
   return {
     safety_en: renderTemplate(
       "safety_alert_emergency",
-      ["Kamla", "08:33", "Seene mein dard ho raha hai.", "Sunita ji", "+910000000000"],
+      ["Rohit", "Kamla", "Seene mein dard ho raha hai.", "08:33", `${publicBaseUrl()}/d/${EXAMPLE_TOKEN}`],
       "en",
     ),
     safety_hi: renderTemplate(
       "safety_alert_emergency",
-      ["कमला", "08:33", "सीने में दर्द हो रहा है।", "सुनीता जी", "+910000000000"],
+      ["रोहित", "कमला", "सीने में दर्द हो रहा है।", "08:33", `${publicBaseUrl()}/d/${EXAMPLE_TOKEN}`],
       "hi",
     ),
     responder_hi: renderTemplate(

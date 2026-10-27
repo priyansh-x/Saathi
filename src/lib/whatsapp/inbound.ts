@@ -1,6 +1,7 @@
 import { query } from "@/lib/db/client";
 import { parseNeighbourIntent, recordNeighbourReply } from "@/lib/neighbour";
 import { ackAlert, parseAckIntent, parseAlertId } from "@/lib/whatsapp/ack";
+import { isWhatsappOptOutText } from "@/lib/whatsapp/gate";
 import { nowIstStamp } from "@/lib/time";
 
 export type WaMessage = {
@@ -59,6 +60,16 @@ export async function processInboundMessages(messages: WaMessage[]) {
          where regexp_replace(phone, '[^0-9]', '', 'g') like $1`,
         [`%${digits}`, nowIstStamp()],
       );
+    }
+    if (digits && isWhatsappOptOutText(text)) {
+      await query(
+        `update contacts
+            set whatsapp_opt_in = false, whatsapp_opted_out_at = $2
+          where regexp_replace(phone, '[^0-9]', '', 'g') like $1`,
+        [`%${digits}`, nowIstStamp()],
+      );
+      results.push({ ok: true, opted_out: true });
+      continue;
     }
     const neighbourIntent = parseNeighbourIntent(text, payload);
     if (neighbourIntent) {

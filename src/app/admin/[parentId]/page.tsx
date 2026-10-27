@@ -5,6 +5,8 @@ import { titled } from "@/lib/page-title";
 import { loadAdminHousehold } from "@/lib/admin/data";
 import { getAdminGate } from "@/lib/admin/gate";
 import { ActionForm } from "@/components/admin/action-form";
+import { WhatsappPreviewPanel } from "@/components/admin/whatsapp-preview";
+import { buildAdminWhatsappPreview } from "@/lib/admin/whatsapp-preview";
 
 export const metadata: Metadata = {
   ...titled("Household · Admin", "परिवार · एडमिन"),
@@ -27,6 +29,14 @@ export default async function AdminHouseholdPage({
   if (!data) notFound();
   const next = `/admin/${parentId}`;
   const { parent } = data;
+  const child = data.contacts.find((row) => row.role === "child") ?? null;
+  const waPreview = buildAdminWhatsappPreview({
+    parent,
+    child,
+    latestCall: data.calls[0] ?? null,
+    latestAlert: data.alerts[0] ?? null,
+    deskUrl: data.deskUrl || "",
+  });
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 pb-16">
@@ -222,6 +232,14 @@ export default async function AdminHouseholdPage({
             )}
           </ul>
         </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold tracking-wide text-ink-3 uppercase">WhatsApp dry-run</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Exact template, language, rendered body, and the Graph JSON (token redacted, phone last 4). Never posts.
+        </p>
+        <WhatsappPreviewPanel preview={waPreview} />
       </section>
 
       <section className="mt-8">

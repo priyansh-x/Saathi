@@ -1,5 +1,6 @@
 import { isMockWhatsapp, isWhatsappTemplateApproved } from "@/lib/config";
 import { gateOutbound, normalizePhone } from "@/lib/outbound";
+import { whatsappGraphUrl } from "@/lib/whatsapp/gate";
 import { buildWhatsappPayload, metaTemplateLanguage, type WhatsappGraphPayload } from "@/lib/whatsapp/send";
 import { packTemplate, type TemplateName } from "@/lib/whatsapp/templates";
 
@@ -52,7 +53,7 @@ export function plannedTestSend(phone: string, templateArg: string) {
       })
     : null;
   return {
-    url: "https://graph.facebook.com/v21.0/{phone-number-id}/messages",
+    url: whatsappGraphUrl("{phone-number-id}"),
     template,
     language,
     vars,

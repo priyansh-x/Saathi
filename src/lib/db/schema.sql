@@ -46,7 +46,9 @@ create table if not exists contacts (
   is_example boolean not null default false,
   email text,
   is_owner boolean not null default false,
-  last_inbound_at text
+  last_inbound_at text,
+  whatsapp_opt_in boolean not null default false,
+  whatsapp_opted_out_at text
 );
 
 create table if not exists medicines (

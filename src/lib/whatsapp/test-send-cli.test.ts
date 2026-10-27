@@ -25,7 +25,7 @@ describe("whatsapp:test-send CLI", () => {
     assert.equal(plan.payload?.type, "template");
     assert.equal(plan.payload?.template?.name, "daily_briefing_good");
     assert.equal(plan.url.includes("{phone-number-id}"), true);
-    assert.match(JSON.stringify(plan), /Maa|example-kamla/);
+    assert.match(JSON.stringify(plan), /Rohit|Kamla/);
   });
 
   it("only allows a live send with --yes, MOCK_WHATSAPP=0, allowlist, and an approved template", async () => {

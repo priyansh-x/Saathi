@@ -56,8 +56,8 @@ describe("runtime WhatsApp sends match the pack", () => {
       callId,
       true,
     ]);
-    const med = await query<{ id: string; meal: string }>(
-      `select id, meal from medicines where parent_id = 'parent_kamla' limit 1`,
+    const med = await query<{ id: string; meal: string; name: string }>(
+      `select id, meal, name from medicines where parent_id = 'parent_kamla' limit 1`,
     );
     if (med[0]) {
       await query(`insert into dose_logs values ($1,$2,$3,$4,$5,$6,$7,$8)`, [
@@ -74,8 +74,8 @@ describe("runtime WhatsApp sends match the pack", () => {
     await sendDailyBriefing("parent_kamla", { id: callId, mood_quote: "Theek thi.", status: "completed" });
     const missedMed = mockLoggedWhatsapp.filter((row) => row.name === "daily_briefing_missed_med");
     for (const row of missedMed) {
-      assert.notEqual(row.vars[2], "Theek thi.");
-      if (med[0]?.meal) assert.equal(row.vars[2], med[0].meal);
+      assert.notEqual(row.vars[3], "Theek thi.");
+      if (med[0]) assert.equal(row.vars[3], med[0].name);
     }
 
     await advanceLadder({
@@ -140,8 +140,8 @@ describe("runtime WhatsApp sends match the pack", () => {
     assert.equal(paired.length, 0);
     assert.equal(responder.length, 0);
     assert.ok(solo[0]);
-    assert.equal(solo[0]!.vars.length, 4);
-    assert.equal(solo[0]!.vars[3], "+910000000000");
+    assert.equal(solo[0]!.vars.length, 5);
+    assert.match(solo[0]!.vars[4] ?? "", /\/d\//);
     assertAgainstPack(solo[0]!);
     await query(`update consents set granted = true where kind = 'neighbour_whatsapp'`);
   });

@@ -103,6 +103,9 @@ export async function insertExampleHousehold() {
     "rohit@example.invalid",
   ]);
   await query(`update contacts set is_owner = true where id = 'contact_rohit'`);
+  await query(
+    `update contacts set whatsapp_opt_in = true where id in ('contact_rohit', 'contact_sunita')`,
+  );
   await query(`insert into contacts values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [
     "contact_sunita",
     "parent_kamla",
