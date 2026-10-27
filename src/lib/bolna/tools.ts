@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { query } from "@/lib/db/client";
+import { markFamilyMessagePlayed, saveFamilyReply } from "@/lib/family-messages";
 import { istDayKey, istStamp, nowIstStamp } from "@/lib/time";
 
 function sha(text: string) {
@@ -242,6 +243,46 @@ export async function saveMemoryNote(input: {
     ]);
   }
   return { ok: true as const, note_id: noteId, replay: !remembered.fresh };
+}
+
+export async function saveFamilyReplyTool(input: {
+  call_sid: string;
+  parent_id: string;
+  family_message_id: string;
+  reply: string;
+}) {
+  const remembered = await rememberTool({
+    callSid: input.call_sid,
+    parentId: input.parent_id,
+    tool: "save_family_reply",
+    naturalKey: `${input.call_sid}:${input.family_message_id}`,
+    payload: input,
+  });
+  const saved = await saveFamilyReply({
+    family_message_id: input.family_message_id,
+    reply: input.reply,
+    call_id: input.call_sid,
+  });
+  return { ...saved, replay: !remembered.fresh || ("replay" in saved && saved.replay) };
+}
+
+export async function familyMessagePlayedTool(input: {
+  call_sid: string;
+  parent_id: string;
+  family_message_id: string;
+}) {
+  const remembered = await rememberTool({
+    callSid: input.call_sid,
+    parentId: input.parent_id,
+    tool: "family_message_played",
+    naturalKey: `${input.call_sid}:${input.family_message_id}`,
+    payload: input,
+  });
+  const marked = await markFamilyMessagePlayed({
+    family_message_id: input.family_message_id,
+    call_id: input.call_sid,
+  });
+  return { ...marked, replay: !remembered.fresh || ("replay" in marked && marked.replay) };
 }
 
 export async function hasRaiseAlert(callSid: string, category: string) {

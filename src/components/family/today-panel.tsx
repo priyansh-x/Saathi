@@ -27,6 +27,8 @@ import { heroCopy, humanQuote, reachSteps, ringCopy, slotLabel, statusTone, type
 import { minutesNowIst, parseHhMm, parseIstParts, weekdayShort } from "@/lib/time";
 import { weeklyDeskCopy } from "@/lib/weekly";
 import { AddToHome } from "@/components/pwa/register";
+import { FamilyMessageForm } from "@/components/family/family-message-form";
+import { saveFamilyMessage } from "@/lib/family-messages";
 
 const HERO_TONE = {
   good: "bg-good-soft text-good",
@@ -120,6 +122,18 @@ export function TodayPanel({
   async function markOk() {
     "use server";
     if (alert) await resolveAlert(alert.id, childName);
+    redirect(`/d/${token}?lang=${lang}`);
+  }
+
+  async function saveNextCallMessage(formData: FormData) {
+    "use server";
+    await saveFamilyMessage({
+      parentId,
+      fromMemberId: data.child?.id ?? null,
+      fromName: childName,
+      text: String(formData.get("text") || ""),
+      isExample,
+    });
     redirect(`/d/${token}?lang=${lang}`);
   }
 
@@ -353,6 +367,17 @@ export function TodayPanel({
           </figure>
         </section>
       ) : null}
+
+      <section className="rise mt-6" style={{ "--d": "210ms" } as CSSProperties}>
+        {data.familyReply?.reply_to_family ? (
+          <p className="mb-3 text-[15px] leading-6">
+            {t.familyParentReplied
+              .replace("{parent}", data.parent.first_name || t.maa)
+              .replace("{text}", data.familyReply.reply_to_family)}
+          </p>
+        ) : null}
+        <FamilyMessageForm lang={lang} action={saveNextCallMessage} initial={data.familyMessage?.text || ""} />
+      </section>
 
       {data.weekly.built ? (
         <section className="rise mt-6" style={{ "--d": "220ms" } as CSSProperties}>

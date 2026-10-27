@@ -187,6 +187,10 @@ export const messages = {
     demoLiveTitle: "The demo uses the EXAMPLE household",
     demoLiveBody: "Walks that place a simulated call stay off when mocks are off. The EXAMPLE desk is still here to read.",
     demoLiveOpen: "Open the EXAMPLE desk",
+    familyNextCall: "Message for the next call",
+    familyNextHint: "Saathi will read this out on the next morning call. One pending message at a time.",
+    familySend: "Save for the next call",
+    familyParentReplied: "{parent} replied: {text}",
     ringNow: "Ask Saathi to call now",
     ringPlaced: "Saathi is placing the call. This page, History, and alerts update as soon as it ends.",
     ringNotAllowlisted:
@@ -479,6 +483,10 @@ export const messages = {
     demoLiveTitle: "डेमो EXAMPLE घर पर चलता है",
     demoLiveBody: "मॉक बंद होने पर सिम्युलेटेड कॉल वाला वॉक नहीं चलता। EXAMPLE डेस्क पढ़ने के लिए खुला है।",
     demoLiveOpen: "EXAMPLE डेस्क खोलें",
+    familyNextCall: "अगली कॉल के लिए संदेश",
+    familyNextHint: "साथी अगली सुबह की कॉल पर यह शब्द-दर-शब्द पढ़ेगा। एक समय पर एक अधूरा संदेश।",
+    familySend: "अगली कॉल के लिए सहेजें",
+    familyParentReplied: "{parent} ने कहा: {text}",
     ringNow: "साथी से अभी कॉल लगवाएँ",
     ringPlaced: "साथी कॉल लगा रहा है। खत्म होते ही यह पेज, इतिहास और अलर्ट अपडेट होंगे।",
     ringNotAllowlisted:

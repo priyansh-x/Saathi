@@ -15,6 +15,8 @@ last_call_summary: "Knee pain for 2 days, walking less. Granddaughter Pihu has a
 ```
 Notation: **P** = parent / person on the line, **S** = Saathi. Agent lines are the *expected style*; exact wording may vary. Tool calls are what must happen (args abbreviated). Lines are in Roman script for readability; the agent itself should output Devanagari + Latin per the prompt.
 
+**Memory callback:** If `call_memory` mentions a symptom, pain, appointment or plan, the first question after the greeting follows up in one short warm line (e.g. "Kal aapne ghutne ke dard ki baat ki thi, aaj kaisa hai?"). Never mention recordings, notes or databases. If `call_memory` is empty, skip it.
+
 **Global pass criteria for every test:** ≤2 short sentences per turn, one question per turn, respectful "aap", no diagnosis or medicine advice, no invented memories, every medicine logged exactly once (unless the test says otherwise). There is **no** end-of-call tool: each test lists the **expected post-call extraction** values (tools_schema.md §5) to check against `extracted_data` once the call record is `completed`. Run them with Bolna's Test dispositions on the saved transcript.
 
 ---

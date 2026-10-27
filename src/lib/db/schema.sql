@@ -252,3 +252,17 @@ create table if not exists desk_views (
   member_id text,
   at timestamptz not null
 );
+
+create table if not exists family_messages (
+  id text primary key,
+  parent_id text not null references parents(id),
+  from_member_id text,
+  from_name text not null,
+  text text not null,
+  created_at text not null,
+  delivered_call_id text,
+  delivered_at text,
+  reply_to_family text,
+  replied_at text,
+  is_example boolean not null default false
+);
