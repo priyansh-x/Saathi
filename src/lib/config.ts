@@ -222,9 +222,7 @@ export function maxCallSeconds() {
   return Number(process.env.MAX_CALL_SECONDS || 180);
 }
 
-/** Pilot mobiles always on the list. Env can add more; it cannot drop these. */
-const PILOT_ALLOWED_PHONES = ["+918840540908", "+919008453129", "+919845467710"];
-
+/** Env only. Empty env = nobody is allowlisted. */
 export function allowedPhones() {
   const fromEnv = (process.env.ALLOWED_PHONE_NUMBERS || "")
     .split(",")
@@ -232,7 +230,7 @@ export function allowedPhones() {
     .filter(Boolean);
   const seen = new Set<string>();
   const phones: string[] = [];
-  for (const row of [...fromEnv, ...PILOT_ALLOWED_PHONES]) {
+  for (const row of fromEnv) {
     if (seen.has(row)) continue;
     seen.add(row);
     phones.push(row);
@@ -248,9 +246,7 @@ export function retentionSummaryDays() {
   return Number(process.env.RETENTION_SUMMARY_DAYS || 90);
 }
 
-/** Pilot inboxes always on the list. Env can add more; it cannot drop these. */
-const PILOT_ALLOWED_EMAILS = ["adit@gmail.com", "priyansh.joshi07@gmail.com"];
-
+/** Env only. Empty env = nobody is allowlisted. */
 export function allowedEmails() {
   const fromEnv = (process.env.ALLOWED_EMAILS || "")
     .split(",")
@@ -258,10 +254,30 @@ export function allowedEmails() {
     .filter(Boolean);
   const seen = new Set<string>();
   const emails: string[] = [];
-  for (const row of [...fromEnv, ...PILOT_ALLOWED_EMAILS]) {
+  for (const row of fromEnv) {
     if (seen.has(row)) continue;
     seen.add(row);
     emails.push(row);
   }
   return emails;
+}
+
+export function emailFrom() {
+  return (process.env.EMAIL_FROM || "").trim();
+}
+
+export function supportEmail() {
+  return (process.env.SUPPORT_EMAIL || "").trim();
+}
+
+/** Address inside `Name <addr>` or the raw EMAIL_FROM value. Empty when unset. */
+export function emailFromAddress() {
+  const raw = emailFrom();
+  if (!raw) return "";
+  const angled = raw.match(/<([^>]+)>/);
+  return (angled?.[1] || raw).trim();
+}
+
+export function allowBolnaGuardrailBypass() {
+  return process.env.ALLOW_BOLNA_GUARDRAIL_BYPASS === "1";
 }

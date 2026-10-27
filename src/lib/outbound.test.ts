@@ -5,20 +5,20 @@ import { gateOutbound } from "./outbound";
 describe("allowlist", () => {
   it("allows an exact allowlisted phone", () => {
     process.env.ALLOWED_PHONE_NUMBERS = "+910000000000";
-    process.env.MOCK_BOLNA = "0";
+    process.env.MOCK_BOLNA = "1";
     process.env.SAATHI_KILL_SWITCH = "0";
     const decision = gateOutbound("call", "+910000000000");
     assert.equal(decision.ok, true);
   });
 
-  it("allows the pilot India mobiles even without plus-91 formatting", () => {
-    process.env.ALLOWED_PHONE_NUMBERS = "";
-    process.env.MOCK_BOLNA = "0";
+  it("allowlists only env numbers, matching India mobiles without plus-91", () => {
+    process.env.ALLOWED_PHONE_NUMBERS = "+919999999999,+919888888888";
+    process.env.MOCK_BOLNA = "1";
     process.env.SAATHI_KILL_SWITCH = "0";
-    assert.equal(gateOutbound("call", "+918840540908").ok, true);
-    assert.equal(gateOutbound("call", "9008453129").ok, true);
-    assert.equal(gateOutbound("call", "+919845467710").ok, true);
-    assert.equal(gateOutbound("call", "+919999999999").ok, false);
+    assert.equal(gateOutbound("call", "+919999999999").ok, true);
+    assert.equal(gateOutbound("call", "9888888888").ok, true);
+    process.env.ALLOWED_EMAILS = "";
+    assert.equal(gateOutbound("email", "child@example.com").ok, false);
   });
 
   it("mocks web push when WhatsApp mocks are on", () => {

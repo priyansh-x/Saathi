@@ -313,14 +313,14 @@ describe("Bolna status mapping", () => {
     assert.match(alerts[0]?.quote || "", /chest pain/i);
   });
 
-  it("attaches a finished call to the live 9845467710 household, not EXAMPLE", async () => {
+  it("attaches a finished call to the live household, not EXAMPLE", async () => {
     await query(`insert into parents values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, [
-      "parent_9845467710",
+      "parent_pilot_live",
       "Live parent",
       "Live",
       "Bengaluru",
       "Asia/Kolkata",
-      "+919845467710",
+      "+919999999999",
       "hi,en",
       "10:00",
       false,
@@ -333,7 +333,7 @@ describe("Bolna status mapping", () => {
         conversation_duration: 132,
         transcript: "assistant: Namaste\nuser: Theek hai. Goli le li.",
         extracted_data: { summary_en: "Took the tablet.", mood_quote: "Theek hai." },
-        telephony_data: { to_number: "9845467710", hangup_reason: "completed" },
+        telephony_data: { to_number: "9999999999", hangup_reason: "completed" },
         context_details: { recipient_data: { parent_id: "parent_kamla" } },
       }),
       sid,
@@ -342,21 +342,21 @@ describe("Bolna status mapping", () => {
       `select parent_id, status, transcript_json from calls where id = $1 or bolna_execution_id = $1`,
       [sid],
     );
-    assert.equal(row[0]?.parent_id, "parent_9845467710");
+    assert.equal(row[0]?.parent_id, "parent_pilot_live");
     assert.equal(row[0]?.status, "completed");
     assert.match(row[0]?.transcript_json || "", /Theek hai|Goli le li/i);
   });
 
   it("fills a missed live dial once Bolna returns the completed transcript", async () => {
-    const existing = await query<{ id: string }>(`select id from parents where id = 'parent_9845467710'`);
+    const existing = await query<{ id: string }>(`select id from parents where id = 'parent_pilot_live'`);
     if (!existing[0]) {
       await query(`insert into parents values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, [
-        "parent_9845467710",
+        "parent_pilot_live",
         "Live parent",
         "Live",
         "Bengaluru",
         "Asia/Kolkata",
-        "+919845467710",
+        "+919999999999",
         "hi,en",
         "10:00",
         false,
@@ -367,7 +367,7 @@ describe("Bolna status mapping", () => {
     const sid = `st_live_miss_${Date.now()}`;
     await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
       sid,
-      "parent_9845467710",
+      "parent_pilot_live",
       "2026-10-21T10:00:00+05:30",
       "2026-10-21T10:01:00+05:30",
       0,
@@ -389,7 +389,7 @@ describe("Bolna status mapping", () => {
       const pulled = await hydrateBolnaCall(
         {
           id: sid,
-          parent_id: "parent_9845467710",
+          parent_id: "parent_pilot_live",
           status: "missed",
           ended_at: "2026-10-21T10:01:00+05:30",
           transcript_json: null,
@@ -401,7 +401,7 @@ describe("Bolna status mapping", () => {
               status: "completed",
               conversation_duration: 88,
               transcript: "assistant: Namaste\nuser: Neend theek thi.",
-              telephony_data: { to_number: "+919845467710" },
+              telephony_data: { to_number: "+919999999999" },
               context_details: { recipient_data: { parent_id: "parent_kamla" } },
             }),
             { status: 200 },
@@ -412,7 +412,7 @@ describe("Bolna status mapping", () => {
         `select status, parent_id, transcript_json from calls where id = $1`,
         [sid],
       );
-      assert.equal(call[0]?.parent_id, "parent_9845467710");
+      assert.equal(call[0]?.parent_id, "parent_pilot_live");
       assert.equal(call[0]?.status, "completed");
       assert.match(call[0]?.transcript_json || "", /Neend theek thi/i);
     } finally {

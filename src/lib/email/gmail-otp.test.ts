@@ -33,11 +33,13 @@ describe("Gmail sign-in OTP", () => {
     }
   });
 
-  it("mails from priyansh.joshi07@gmail.com by default", () => {
+  it("mails from EMAIL_FROM when set, and is empty without it", () => {
     const prev = { EMAIL_FROM: process.env.EMAIL_FROM };
     delete process.env.EMAIL_FROM;
     try {
-      assert.match(signInOtpFrom(), /priyansh\.joshi07@gmail\.com/);
+      assert.equal(signInOtpFrom(), "");
+      process.env.EMAIL_FROM = "Saathi <saathi@example.com>";
+      assert.equal(signInOtpFrom(), "Saathi <saathi@example.com>");
       assert.match(signInOtpText("123456"), /123456/);
     } finally {
       restore(prev);
@@ -50,10 +52,12 @@ describe("Gmail sign-in OTP", () => {
       GMAIL_CLIENT_ID: process.env.GMAIL_CLIENT_ID,
       GMAIL_CLIENT_SECRET: process.env.GMAIL_CLIENT_SECRET,
       SMTP_PASS: process.env.SMTP_PASS,
+      EMAIL_FROM: process.env.EMAIL_FROM,
     };
     process.env.GMAIL_REFRESH_TOKEN = "refresh-test";
     process.env.GMAIL_CLIENT_ID = "client-test";
     process.env.GMAIL_CLIENT_SECRET = "secret-test";
+    process.env.EMAIL_FROM = "Saathi <saathi@example.com>";
     delete process.env.SMTP_PASS;
     const urls: string[] = [];
     const original = globalThis.fetch;
@@ -65,15 +69,15 @@ describe("Gmail sign-in OTP", () => {
       }
       const body = JSON.parse(String(init?.body || "{}")) as { raw?: string };
       const mime = Buffer.from((body.raw || "").replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
-      assert.match(mime, /To: adit@gmail.com/);
+      assert.match(mime, /To: child@example.com/);
       assert.match(mime, /Your Saathi code is 654321/);
-      assert.match(mime, /priyansh\.joshi07@gmail\.com/);
+      assert.match(mime, /saathi@example.com/);
       return new Response(JSON.stringify({ id: "msg_1" }), { status: 200 });
     }) as typeof fetch;
     try {
       assert.equal(gmailApiConfigured(), true);
       assert.equal(signInOtpConfigured(), true);
-      const sent = await deliverSignInOtp("adit@gmail.com", "654321");
+      const sent = await deliverSignInOtp("child@example.com", "654321");
       assert.equal(sent.ok, true);
       if (sent.ok) assert.equal(sent.providerId, "msg_1");
       assert.equal(urls[0], "https://oauth2.googleapis.com/token");

@@ -3,6 +3,7 @@ import { callProviderName } from "@/lib/config";
 import {
   insertSimulatedCall,
   isPreparedCall,
+  logTestRing,
   postBolnaCall,
   prepareMorningCall,
 } from "@/lib/calls/prepare";
@@ -33,8 +34,13 @@ export async function placeMorningCall(parentId: string, clock: Date = new Date(
 export async function placeTestCall(parentId: string, clock: Date = new Date()) {
   const prepared = await prepareMorningCall(parentId, clock, { forceTest: true });
   if (!isPreparedCall(prepared)) return prepared;
-  if (callProviderName() === "bolna") return postBolnaCall(prepared);
+  if (callProviderName() === "bolna") {
+    const placed = await postBolnaCall(prepared);
+    if (placed.ok) await logTestRing(prepared.parentId, prepared.payload.recipient_phone_number, clock);
+    return placed;
+  }
   const placed = await insertSimulatedCall(prepared);
+  await logTestRing(prepared.parentId, prepared.payload.recipient_phone_number, clock);
   await finishSimulatedDeskCall(prepared.parentId, placed.execution_id);
   return placed;
 }

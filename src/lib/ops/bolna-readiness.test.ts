@@ -89,7 +89,7 @@ describe("Bolna readiness", () => {
     try {
       const checks = bolnaEnvChecks();
       assert.equal(checks.find((c) => c.id === "public_base")?.ok, false);
-      assert.equal(checks.find((c) => c.id === "allowlist")?.ok, true);
+      assert.equal(checks.find((c) => c.id === "allowlist")?.ok, false);
       assert.equal(checks.find((c) => c.id === "allowlist")?.detail.includes("+91"), false);
       assert.equal(checks.find((c) => c.id === "tool_token")?.ok, false);
       assert.equal(checks.find((c) => c.id === "tool_token")?.label, "BOLNA_TOOL_TOKEN");

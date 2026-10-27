@@ -86,7 +86,7 @@ describe("SMTP 465", () => {
   });
 
   it("authenticates on 465 and uses the address inside EMAIL_FROM", async () => {
-    assert.equal(smtpEnvelopeFrom("Saathi <priyansh.joshi07@gmail.com>"), "priyansh.joshi07@gmail.com");
+    assert.equal(smtpEnvelopeFrom("Saathi <saathi@example.com>"), "saathi@example.com");
     const origTls = tls.connect;
     const sock = new FakeSmtpSocket();
     tls.connect = (() => {
@@ -95,13 +95,13 @@ describe("SMTP 465", () => {
     }) as typeof tls.connect;
     try {
       const result = await sendSmtp(
-        { to: "adit@gmail.com", subject: "Saathi sign-in code", text: "code" },
+        { to: "child@example.com", subject: "Saathi sign-in code", text: "code" },
         {
-          host: "smtp.gmail.com",
+          host: "smtp.example.com",
           port: 465,
-          user: "priyansh.joshi07@gmail.com",
+          user: "saathi@example.com",
           pass: "abcdefghijklmnop",
-          from: "Saathi <priyansh.joshi07@gmail.com>",
+          from: "Saathi <saathi@example.com>",
         },
       );
       assert.equal(result.ok, true, JSON.stringify(result));
@@ -111,7 +111,7 @@ describe("SMTP 465", () => {
         sock.chunks.join(" | "),
       );
       assert.equal(
-        sock.chunks.some((chunk) => chunk.includes("MAIL FROM:<priyansh.joshi07@gmail.com>")),
+        sock.chunks.some((chunk) => chunk.includes("MAIL FROM:<saathi@example.com>")),
         true,
         sock.chunks.join(" | "),
       );
