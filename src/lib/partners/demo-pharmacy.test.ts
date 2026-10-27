@@ -165,9 +165,9 @@ describe("errand_followup", () => {
   it("puts the ask after the memory callback in the agent prompt", () => {
     const md = readFileSync(path.join(process.cwd(), "docs/saathi/voice/system_prompt_bolna.md"), "utf8");
     const prompt = extractSystemPrompt(md);
-    const memory = prompt.indexOf("Memory callback");
-    const follow = prompt.indexOf(ERRAND_FOLLOWUP_HI);
-    const family = prompt.indexOf("Family message");
+    const memory = prompt.indexOf("**1b. Memory callback");
+    const follow = prompt.indexOf("**1b2. Medicine delivery follow-up");
+    const family = prompt.indexOf("**1c. Family message");
     assert.ok(memory >= 0 && follow > memory && family > follow);
     assert.match(prompt, /Has your medicine arrived\?/);
     assert.match(prompt, /\{\{errand_followup\}\}/);
