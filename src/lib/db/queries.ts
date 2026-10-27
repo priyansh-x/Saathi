@@ -237,7 +237,7 @@ export async function openActAlerts(parentId: string) {
 export async function alertsFor(parentId: string) {
   return query<AlertRow>(
     `select a.*, exists(
-        select 1 from alert_events e where e.alert_id = a.id and e.kind = 'false_alarm'
+        select 1 from alert_events e where e.alert_id = a.id and e.kind in ('false_alarm', 'resolved_false')
       ) as is_false
      from alerts a
      where a.parent_id = $1
@@ -291,19 +291,20 @@ export { todayStatus } from "@/lib/today";
 export async function resolveAlert(
   id: string,
   actor = "family",
-  kind: "resolved" | "false_alarm" = "resolved",
+  kind: "resolved" | "false_alarm" | "resolved_false" = "resolved",
 ) {
   const existing = await alertById(id);
   if (!existing || existing.resolved_at) return;
   const at = nowIstStamp();
+  const eventKind = kind === "resolved_false" ? "resolved_false" : kind;
   await query(`update alerts set resolved_at = $2 where id = $1 and resolved_at is null`, [id, at]);
   await query(`insert into alert_events values ($1,$2,$3,$4,$5,$6,$7)`, [
-    `ae_res_${id}_${at}_${kind}`,
+    `ae_res_${id}_${at}_${eventKind}`,
     id,
     at,
-    kind,
+    eventKind,
     actor,
-    kind === "false_alarm" ? "False alarm" : "Maa is OK",
+    eventKind === "false_alarm" || eventKind === "resolved_false" ? "False alarm" : "Maa is OK",
     true,
   ]);
 }
