@@ -17,6 +17,7 @@ const TOOL_PATHS: Record<string, string> = {
   record_consent: "/api/tools/record_consent",
   save_family_reply: "/api/tools/save_family_reply",
   family_message_played: "/api/tools/family_message_played",
+  request_refill: "/api/tools/request_refill",
 };
 
 export type JsonSchemaProperty = {

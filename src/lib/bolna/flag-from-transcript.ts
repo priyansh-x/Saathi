@@ -19,6 +19,19 @@ const POSITIVE = [
 
 const DENIED = /(nahi|nahin|nahīn|नहीं|no|not).{0,24}(dard|pain|seene|chest|सीने|sine)|(dard|pain|seene|chest|सीने|sine).{0,24}(nahi|nahin|nahīn|नहीं|no)/i;
 
+const SCAM = [
+  /\botp\b/i,
+  /digital arrest/i,
+  /डिजिटल अरेस्ट/,
+  /police video call/i,
+  /cbi.{0,20}video/i,
+  /kyc (update )?link/i,
+  /kyc.{0,16}link/i,
+];
+
+const SCAM_DENIED =
+  /(nahi|nahin|nahīn|नहीं|no|not).{0,24}(otp|kyc|digital arrest|police video)|(otp|kyc|digital arrest|police video).{0,24}(nahi|nahin|nahīn|नहीं|no)/i;
+
 /** Speech-to-text often writes सीने as "sir senior" / "sine". */
 export function foldChestSpeech(text: string) {
   return text
@@ -44,6 +57,18 @@ export function flagFromTranscript(raw?: unknown) {
     }
     return {
       category: "EMERGENCY" as const,
+      quote: text.slice(0, 180),
+      confidence: "transcript",
+    };
+  }
+  for (const turn of parseBolnaTranscript(raw)) {
+    if (turn.speaker !== "parent") continue;
+    const text = turn.text.trim();
+    if (!text) continue;
+    if (SCAM_DENIED.test(text)) continue;
+    if (!SCAM.some((rule) => rule.test(text))) continue;
+    return {
+      category: "SCAM_CONCERN" as const,
       quote: text.slice(0, 180),
       confidence: "transcript",
     };

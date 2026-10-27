@@ -39,6 +39,7 @@ describe("bolna:sync agent JSON", () => {
         "raise_alert",
         "record_consent",
         "relay_message_to_family",
+        "request_refill",
         "save_family_reply",
         "save_memory_note",
       ]);

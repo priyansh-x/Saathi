@@ -101,7 +101,7 @@ export function alertLevel(category: string) {
 export async function raiseAlert(input: {
   call_sid: string;
   parent_id: string;
-  category: "EMERGENCY" | "URGENT" | "ATTENTION" | "MISSED";
+  category: "EMERGENCY" | "URGENT" | "ATTENTION" | "MISSED" | "SCAM_CONCERN" | "REFILL" | `REFILL:${string}`;
   quote: string;
   late?: boolean;
   source?: string;
@@ -243,6 +243,34 @@ export async function saveMemoryNote(input: {
     ]);
   }
   return { ok: true as const, note_id: noteId, replay: !remembered.fresh };
+}
+
+export async function requestRefill(input: { call_sid: string; parent_id: string; medicine_name: string }) {
+  const medicine = input.medicine_name.replace(/\s+/g, " ").trim();
+  if (!medicine) return { ok: false as const, error: "empty" };
+  const parent = await query<{ first_name: string; address_term: string | null }>(
+    `select first_name, address_term from parents where id = $1`,
+    [input.parent_id],
+  );
+  const who = parent[0]?.address_term?.trim() || parent[0]?.first_name || "Maa";
+  const quote = `${who} says ${medicine} is running low.`;
+  const category = `REFILL:${medicine}` as const;
+  const key = `${input.call_sid}:${medicine.toLowerCase()}`;
+  const remembered = await rememberTool({
+    callSid: input.call_sid,
+    parentId: input.parent_id,
+    tool: "request_refill",
+    naturalKey: key,
+    payload: input,
+  });
+  const raised = await raiseAlert({
+    call_sid: input.call_sid,
+    parent_id: input.parent_id,
+    category,
+    quote,
+    source: "request_refill",
+  });
+  return { ok: true as const, alert_id: raised.alert_id, quote, replay: !remembered.fresh || raised.replay };
 }
 
 export async function saveFamilyReplyTool(input: {
