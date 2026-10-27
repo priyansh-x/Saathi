@@ -38,12 +38,12 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
     ...pair(
       "daily_briefing_good",
       {
-        body: 'Saathi update for {{1}}: spoke with {{2}} at {{3}}, all good. Medicines: {{4}}. "{{5}}"',
+        body: 'Saathi update for {{1}}: spoke with {{2}} at {{3}}. Medicines: {{4}}. {{2}} said: "{{5}}". No concerns today. Reply STOP to opt out.',
         buttons: [],
         examples: ["Rohit", "Kamla", "8:04 AM IST", "took both tablets (BP, sugar)", "Ghutne ka dard aaj kam hai."],
       },
       {
-        body: '{{1}} के लिए साथी अपडेट: {{3}} बजे {{2}} से बात हुई, सब ठीक है। दवाइयाँ: {{4}}। "{{5}}"',
+        body: 'नमस्ते {{1}}, Saathi अपडेट: {{3}} बजे {{2}} से बात हुई। दवाइयाँ: {{4}}। {{2}} ने कहा: "{{5}}"। आज कोई चिंता की बात नहीं। रुकने के लिए STOP लिखें।',
         buttons: [],
         examples: ["रोहित", "कमला", "8:04", "दोनों गोलियाँ (BP, शुगर) ले लीं", "घुटने का दर्द आज कम है"],
       },
@@ -52,12 +52,12 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
     ...pair(
       "daily_briefing_missed_med",
       {
-        body: "Saathi update for {{1}}: spoke with {{2}} at {{3}}. Not taken yet: {{4}}. You may want to check in.",
+        body: "Saathi update for {{1}}: spoke with {{2}} at {{3}}. Not taken yet: {{4}}. You may want to check in. Reply STOP to opt out.",
         buttons: [],
         examples: ["Rohit", "Kamla", "8:04 AM IST", "Sugar tablet (morning)"],
       },
       {
-        body: "{{1}} के लिए साथी अपडेट: {{3}} बजे {{2}} से बात हुई। अभी तक नहीं ली: {{4}}। आप एक बार हाल पूछ लें।",
+        body: "नमस्ते {{1}}, Saathi अपडेट: {{3}} बजे {{2}} से बात हुई। अभी तक नहीं ली: {{4}}। आप एक बार हाल पूछ लें। रुकने के लिए STOP लिखें।",
         buttons: [],
         examples: ["रोहित", "कमला", "8:04", "शुगर की गोली (सुबह)"],
       },
@@ -66,12 +66,12 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
     ...pair(
       "daily_briefing_low_mood",
       {
-        body: 'Saathi update for {{1}}: spoke with {{2}} at {{3}}. {{2}} sounded low today: "{{4}}". A call from you may help.',
+        body: 'Saathi update for {{1}}: spoke with {{2}} at {{3}}. {{2}} sounded a little low today and said: "{{4}}". A call from you may help. Reply STOP to opt out.',
         buttons: [],
         examples: ["Rohit", "Kamla", "8:04 AM IST", "Aaj mann nahi lag raha."],
       },
       {
-        body: '{{1}} के लिए साथी अपडेट: {{3}} बजे {{2}} से बात हुई। आज {{2}} थोड़े उदास लगे: "{{4}}"। आपका एक फ़ोन मदद कर सकता है।',
+        body: 'नमस्ते {{1}}, Saathi अपडेट: {{3}} बजे {{2}} से बात हुई। आज {{2}} थोड़े उदास लगे और कहा: "{{4}}"। आपका एक फ़ोन मदद कर सकता है। रुकने के लिए STOP लिखें।',
         buttons: [],
         examples: ["रोहित", "कमला", "8:04", "आज मन नहीं लग रहा।"],
       },
@@ -101,12 +101,12 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
     ...pair(
       "safety_alert_unreachable",
       {
-        body: "Saathi alert for {{1}}: we could not reach {{2}} after {{3}} tries this morning. Please check on them. Desk: {{4}}",
+        body: "Saathi alert for {{1}}: we could not reach {{2}} after {{3}} tries this morning. Please check on them. Desk: {{4}}. Saathi will try again tomorrow.",
         buttons: [],
         examples: ["Rohit", "Kamla", "3", "https://saathi.example/d/example-kamla"],
       },
       {
-        body: "{{1}} के लिए साथी अलर्ट: आज सुबह {{3}} कोशिशों के बाद भी {{2}} से बात नहीं हो पाई। कृपया उनका हाल लें। डेस्क: {{4}}",
+        body: "Saathi अलर्ट ({{1}} के लिए): आज सुबह {{3}} कोशिशों के बाद भी {{2}} से बात नहीं हो पाई। कृपया उनकी ख़बर लें। डेस्क: {{4}}। Saathi कल फिर कॉल करेगा।",
         buttons: [],
         examples: ["रोहित", "कमला", "3", "https://saathi.example/d/example-kamla"],
       },
@@ -115,12 +115,12 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
     ...pair(
       "safety_alert_unreachable_solo",
       {
-        body: "Saathi alert for {{1}}: we could not reach {{2}} after {{3}} tries this morning. Please check on them. Desk: {{4}}",
+        body: "Saathi alert for {{1}}: we could not reach {{2}} after {{3}} tries this morning. Please check on them. Desk: {{4}}. Saathi will try again tomorrow.",
         buttons: [],
         examples: ["Rohit", "Kamla", "3", "https://saathi.example/d/example-kamla"],
       },
       {
-        body: "{{1}} के लिए साथी अलर्ट: आज सुबह {{3}} कोशिशों के बाद भी {{2}} से बात नहीं हो पाई। कृपया उनका हाल लें। डेस्क: {{4}}",
+        body: "Saathi अलर्ट ({{1}} के लिए): आज सुबह {{3}} कोशिशों के बाद भी {{2}} से बात नहीं हो पाई। कृपया उनकी ख़बर लें। डेस्क: {{4}}। Saathi कल फिर कॉल करेगा।",
         buttons: [],
         examples: ["रोहित", "कमला", "3", "https://saathi.example/d/example-kamla"],
       },
@@ -129,7 +129,7 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
     ...pair(
       "safety_alert_emergency",
       {
-        body: 'Saathi alert for {{1}}: on today\'s call {{2}} said "{{3}}" at {{4}}. Please call {{2}} now. If you cannot reach them, call 112. Open the desk: {{5}}',
+        body: 'Saathi alert for {{1}}: on today\'s call at {{4}}, {{2}} said "{{3}}". Please call {{2}} now. If you cannot reach them, call 112. Desk: {{5}}. Saathi is a companion call, not a medical service.',
         buttons: [],
         examples: [
           "Rohit",
@@ -140,7 +140,7 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
         ],
       },
       {
-        body: '{{1}} के लिए साथी अलर्ट: आज की कॉल पर {{4}} बजे {{2}} ने कहा "{{3}}"। कृपया अभी {{2}} को फ़ोन करें। बात न हो पाए तो 112 पर कॉल करें। डेस्क खोलें: {{5}}',
+        body: 'Saathi अलर्ट ({{1}} के लिए): आज की कॉल में {{4}} बजे {{2}} ने कहा "{{3}}"। कृपया अभी {{2}} को फ़ोन करें। बात न हो पाए तो 112 पर कॉल करें। डेस्क: {{5}}। Saathi एक साथी कॉल है, मेडिकल सेवा नहीं।',
         buttons: [],
         examples: ["रोहित", "कमला", "बाथरूम में गिर गई, उठ नहीं पा रही।", "8:09", "https://saathi.example/d/example-kamla"],
       },
@@ -149,7 +149,7 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
     ...pair(
       "safety_alert_emergency_solo",
       {
-        body: 'Saathi alert for {{1}}: on today\'s call {{2}} said "{{3}}" at {{4}}. Please call {{2}} now. If you cannot reach them, call 112. Open the desk: {{5}}',
+        body: 'Saathi alert for {{1}}: on today\'s call at {{4}}, {{2}} said "{{3}}". Please call {{2}} now. If you cannot reach them, call 112. Desk: {{5}}. Saathi is a companion call, not a medical service.',
         buttons: [],
         examples: [
           "Rohit",
@@ -160,7 +160,7 @@ export function whatsappTemplatePack(): WhatsappTemplate[] {
         ],
       },
       {
-        body: '{{1}} के लिए साथी अलर्ट: आज की कॉल पर {{4}} बजे {{2}} ने कहा "{{3}}"। कृपया अभी {{2}} को फ़ोन करें। बात न हो पाए तो 112 पर कॉल करें। डेस्क खोलें: {{5}}',
+        body: 'Saathi अलर्ट ({{1}} के लिए): आज की कॉल में {{4}} बजे {{2}} ने कहा "{{3}}"। कृपया अभी {{2}} को फ़ोन करें। बात न हो पाए तो 112 पर कॉल करें। डेस्क: {{5}}। Saathi एक साथी कॉल है, मेडिकल सेवा नहीं।',
         buttons: [],
         examples: ["रोहित", "कमला", "बाथरूम में गिर गई, उठ नहीं पा रही।", "8:09", "https://saathi.example/d/example-kamla"],
       },

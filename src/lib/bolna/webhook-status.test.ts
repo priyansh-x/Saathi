@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { closeDb, query } from "../db/client";
 import { seed } from "../db/seed";
+import { istDayKey, istStamp } from "../time";
 import { backfillAlertsFromTranscripts, hydrateBolnaCall } from "./execution";
 import {
   isFailedBolnaStatus,
@@ -288,11 +289,12 @@ describe("Bolna status mapping", () => {
 
   it("raises a chest-pain alert from a stored transcript that never got a webhook flag", async () => {
     const sid = `st_backfill_${Date.now()}`;
+    const day = istDayKey();
     await query(`insert into calls values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
       sid,
       "parent_kamla",
-      "2026-10-20T17:08:00+05:30",
-      "2026-10-20T17:12:00+05:30",
+      istStamp(day, 17, 8),
+      istStamp(day, 17, 12),
       240,
       "completed",
       "Settings test call.",

@@ -1,9 +1,9 @@
 # daily_briefing_low_mood (hi)
 Category: UTILITY
-Status: DRAFT — not approved; app falls back to web push/email
+Status: DRAFT - not approved; app falls back to web push/email
 
 Body:
-{{1}} के लिए साथी अपडेट: {{3}} बजे {{2}} से बात हुई। आज {{2}} थोड़े उदास लगे: "{{4}}"। आपका एक फ़ोन मदद कर सकता है।
+नमस्ते {{1}}, Saathi अपडेट: {{3}} बजे {{2}} से बात हुई। आज {{2}} थोड़े उदास लगे और कहा: "{{4}}"। आपका एक फ़ोन मदद कर सकता है। रुकने के लिए STOP लिखें।
 
 Placeholders (sample for Meta review):
 - {{1}} = रोहित
