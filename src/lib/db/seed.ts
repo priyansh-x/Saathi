@@ -32,6 +32,7 @@ export async function ensureSeed() {
 }
 
 export async function seed() {
+  await query("delete from errands");
   await query("delete from family_messages");
   await query("delete from desk_views");
   await query("delete from alert_events");

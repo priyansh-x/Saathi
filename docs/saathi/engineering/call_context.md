@@ -25,6 +25,7 @@ Saathi fills Bolna `user_data` from the parent record at call time. The Voice pr
 | `timezone` | `Asia/Kolkata` |
 | `agent_gender` | `female` |
 | `parent_id` | round-trips on tools |
+| `errand_followup` | spoken line when a demo refill is delivered and the parent has not been asked yet; else empty |
 
 Bolna also injects system variables (`call_sid`, `to_number`, `current_date`, …). Do not put secrets in `user_data`.
 

@@ -248,8 +248,8 @@ export async function saveMemoryNote(input: {
 export async function requestRefill(input: { call_sid: string; parent_id: string; medicine_name: string }) {
   const medicine = input.medicine_name.replace(/\s+/g, " ").trim();
   if (!medicine) return { ok: false as const, error: "empty" };
-  const parent = await query<{ first_name: string; address_term: string | null }>(
-    `select first_name, address_term from parents where id = $1`,
+  const parent = await query<{ first_name: string; address_term: string | null; is_example: boolean }>(
+    `select first_name, address_term, is_example from parents where id = $1`,
     [input.parent_id],
   );
   const who = parent[0]?.address_term?.trim() || parent[0]?.first_name || "Maa";
@@ -270,7 +270,21 @@ export async function requestRefill(input: { call_sid: string; parent_id: string
     quote,
     source: "request_refill",
   });
-  return { ok: true as const, alert_id: raised.alert_id, quote, replay: !remembered.fresh || raised.replay };
+  const { createRefillHandoff } = await import("@/lib/partners/errands");
+  const handoff = await createRefillHandoff({
+    parentId: input.parent_id,
+    callId: input.call_sid,
+    medicineName: medicine,
+    isExample: parent[0]?.is_example === true,
+  });
+  return {
+    ok: true as const,
+    alert_id: raised.alert_id,
+    quote,
+    replay: !remembered.fresh || raised.replay,
+    errand_id: handoff.ok ? handoff.errand.id : null,
+    handoff_blocked: !handoff.ok,
+  };
 }
 
 export async function saveFamilyReplyTool(input: {

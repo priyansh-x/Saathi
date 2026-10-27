@@ -3,6 +3,7 @@ import { syncDeskFromBolna } from "@/lib/bolna/execution";
 import { query } from "@/lib/db/client";
 import { parentByToken } from "@/lib/db/queries";
 import { deskLiveStamp, deskMedsStamp } from "@/lib/desk-live";
+import { errandStamp, mockInFlight, syncMockErrandsForParent } from "@/lib/partners/errands";
 import { istDayKey } from "@/lib/time";
 import type { CallRow } from "@/lib/db/types";
 
@@ -38,6 +39,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
       order by m.id, coalesce(cl.started_at, '') desc, d.id desc`,
     [parent.id, istDayKey()],
   );
+  const errands = await syncMockErrandsForParent(parent.id);
   const stamp = deskLiveStamp({
     callId: call?.id,
     status: call?.status,
@@ -45,10 +47,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
     alertId: alert?.id,
     hasWords: Boolean(call?.has_words),
     meds: deskMedsStamp(doses),
+    errands: errandStamp(errands),
   });
   return Response.json({
     ok: true,
     stamp,
-    busy: call?.status === "in_progress",
+    busy: call?.status === "in_progress" || mockInFlight(errands),
   });
 }
