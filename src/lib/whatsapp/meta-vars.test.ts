@@ -12,6 +12,7 @@ import {
   safetyAlertUnreachableVars,
   templateCallTime,
 } from "@/lib/whatsapp/meta-vars";
+import { whatsappVarsAreSafe } from "@/lib/whatsapp/quote-param";
 
 process.env.MOCK_WHATSAPP = "1";
 process.env.MOCK_BOLNA = "1";
@@ -201,14 +202,19 @@ describe("Meta Utility components", () => {
 
   it("never sends empty params: fallbacks, stripped quotes, 200-char cap", () => {
     assert.equal(templateCallTime("", "en"), "today");
-    assert.equal(quoteParam("line\none\t tab"), "line one tab");
-    assert.equal(quoteParam("x".repeat(250)).length, 200);
+    assert.equal(quoteParam("line\none\t tab", "en"), "line one tab");
+    assert.equal(quoteParam("x".repeat(250), "en").length, 200);
+    assert.equal(quoteParam("", "hi"), "आज कोई बात दर्ज नहीं हुई");
     const vars = dailyBriefingGoodVars(
       { childName: "  ", parentName: "", callTime: "", medicines: "\n", quote: "\t\n" },
       "en",
     );
-    assert.deepEqual(vars, ["family", "your parent", "today", "today's medicines", "no quote"]);
+    assert.deepEqual(vars, ["family", "your parent", "today", "today's medicines", "no words recorded today"]);
+    assert.equal(whatsappVarsAreSafe(vars), true);
     assert.equal(vars.every((v) => v.length > 0), true);
     assertPayload("daily_briefing_good", "en", vars);
+    const hiEmpty = dailyBriefingLowMoodVars({}, "hi");
+    assert.equal(hiEmpty.at(-1), "आज कोई बात दर्ज नहीं हुई");
+    assert.equal(whatsappVarsAreSafe(hiEmpty), true);
   });
 });

@@ -1,4 +1,7 @@
 import { clockFromMinutes, parseHhMm } from "@/lib/time";
+import { emptyQuoteFallback, familyTemplateLanguage, quoteParam as fillQuote } from "@/lib/whatsapp/quote-param";
+
+export { emptyQuoteFallback, familyTemplateLanguage };
 
 export const META_UTILITY_TEMPLATES = [
   "daily_briefing_good",
@@ -10,13 +13,6 @@ export const META_UTILITY_TEMPLATES = [
 
 export type MetaUtilityTemplate = (typeof META_UTILITY_TEMPLATES)[number];
 
-/** "hi" when the family's first language is Hindi, otherwise "en". */
-export function familyTemplateLanguage(languages?: string | null): "en" | "hi" {
-  const first = (languages || "").split(",")[0]?.trim().toLowerCase() || "";
-  if (first === "hi" || first === "hin" || first === "hindi") return "hi";
-  return "en";
-}
-
 export function nonEmptyParam(raw: string | null | undefined, fallback: string) {
   const cleaned = String(raw ?? "")
     .replace(/[\r\n\t]+/g, " ")
@@ -25,8 +21,8 @@ export function nonEmptyParam(raw: string | null | undefined, fallback: string) 
   return cleaned || fallback;
 }
 
-export function quoteParam(raw: string | null | undefined, fallback = "no quote") {
-  return nonEmptyParam(raw, fallback).slice(0, 200);
+export function quoteParam(raw: string | null | undefined, language: "en" | "hi" = "en") {
+  return fillQuote(raw, language);
 }
 
 /** English "8:05 AM". Hindi body takes "8:05". Empty becomes "today". */
@@ -66,7 +62,7 @@ export function dailyBriefingGoodVars(
     nonEmptyParam(input.parentName, "your parent"),
     templateCallTime(input.callTime, language),
     nonEmptyParam(input.medicines, "today's medicines"),
-    quoteParam(input.quote),
+    quoteParam(input.quote, language),
   ];
 }
 
@@ -100,7 +96,7 @@ export function dailyBriefingLowMoodVars(
     nonEmptyParam(input.childName, "family"),
     nonEmptyParam(input.parentName, "your parent"),
     templateCallTime(input.callTime, language),
-    quoteParam(input.quote),
+    quoteParam(input.quote, language),
   ];
 }
 
@@ -117,7 +113,7 @@ export function safetyAlertEmergencyVars(
   return [
     nonEmptyParam(input.childName, "family"),
     nonEmptyParam(input.parentName, "your parent"),
-    quoteParam(input.quote),
+    quoteParam(input.quote, language),
     templateCallTime(input.callTime, language),
     nonEmptyParam(input.deskUrl, "https://saathi.example/d/example-kamla"),
   ];
