@@ -54,6 +54,21 @@ export function themeIsDark(theme: DeskTheme, darkQuery = false) {
   return theme === "dark" || (theme === "system" && darkQuery);
 }
 
+/** Done stays enabled in every theme, including dark, and always closes the sheet. */
+export function profileDoneControl(theme: DeskTheme) {
+  const known = theme === "light" || theme === "dark" || theme === "system";
+  return { disabled: !known, closes: true as const };
+}
+
+/**
+ * Mount the display sheet on document.body.
+ * The desk header uses backdrop-filter, which traps a fixed child in that
+ * header's stacking context, under the tab bar.
+ */
+export function profileSheetHost<T>(doc: { body: T } | null | undefined): T | null {
+  return doc?.body ?? null;
+}
+
 export function applyDeskUi(prefs: DeskUi = readDeskUi()) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;

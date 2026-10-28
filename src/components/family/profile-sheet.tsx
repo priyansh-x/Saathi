@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { enableDeskPush, deskPushState } from "@/components/pwa/desk-push";
-import { applyDeskUi, DESK_UI_DEFAULTS, readDeskUi, writeDeskUi, type DeskUi } from "@/lib/desk-ui";
+import {
+  applyDeskUi,
+  DESK_UI_DEFAULTS,
+  profileDoneControl,
+  profileSheetHost,
+  readDeskUi,
+  writeDeskUi,
+  type DeskUi,
+} from "@/lib/desk-ui";
 import { qs } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
 
@@ -45,6 +54,7 @@ export function ProfileSheet({
 }) {
   const t = messages[lang];
   const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState<DeskUi>(DESK_UI_DEFAULTS);
   const [push, setPush] = useState<"default" | "granted" | "denied" | "unsupported">("default");
@@ -58,6 +68,7 @@ export function ProfileSheet({
 
   useEffect(() => {
     if (!open) return;
+    dialogRef.current?.focus();
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
     }
@@ -79,24 +90,22 @@ export function ProfileSheet({
 
   const settingsHref = token ? `/d/${token}/settings${qs({ lang })}` : null;
   const walkHref = `/demo${qs({ lang })}`;
+  const done = profileDoneControl(prefs.theme);
 
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="shrink-0 rounded-full ring-2 ring-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        aria-label={t.profileOpen}
-      >
-        {children}
-      </button>
-      {open ? (
+  function closeSheet() {
+    if (done.closes) setOpen(false);
+  }
+
+  const sheet = open ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="presentation">
-          <button type="button" className="absolute inset-0 bg-black/40" aria-label={t.cancel} onClick={() => setOpen(false)} />
+          <button type="button" className="absolute inset-0 bg-black/40" aria-label={t.cancel} onClick={closeSheet} />
           <div
+            ref={dialogRef}
             role="dialog"
+            aria-modal="true"
             aria-labelledby={titleId}
-            className="relative z-10 mb-0 flex max-h-[min(92dvh,720px)] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[28px] bg-card shadow-[var(--shadow-float)] sm:mb-8 sm:rounded-[28px]"
+            tabIndex={-1}
+            className="relative z-10 mb-0 flex max-h-[min(92dvh,720px)] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[28px] bg-card shadow-[var(--shadow-float)] outline-none sm:mb-8 sm:rounded-[28px]"
           >
             <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-3">
               <p id={titleId} className="text-[19px] font-semibold">
@@ -180,24 +189,37 @@ export function ProfileSheet({
                 <li>{t.profileGuide4}</li>
               </ol>
               <div className="mt-4 space-y-2">
-                <Link href={walkHref} className="btn-secondary" onClick={() => setOpen(false)}>
+                <Link href={walkHref} className="btn-secondary" onClick={closeSheet}>
                   {t.profileWalk}
                 </Link>
                 {settingsHref ? (
-                  <Link href={settingsHref} className="btn-secondary" onClick={() => setOpen(false)}>
+                  <Link href={settingsHref} className="btn-secondary" onClick={closeSheet}>
                     {t.profileSettingsLink}
                   </Link>
                 ) : null}
               </div>
             </div>
-            <div className="border-t border-border px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <button type="button" className="btn-primary w-full" onClick={() => setOpen(false)}>
+            <div className="shrink-0 border-t border-border px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <button type="button" className="btn-primary w-full" disabled={done.disabled} onClick={closeSheet}>
                 {t.doneProfile}
               </button>
             </div>
           </div>
         </div>
-      ) : null}
+  ) : null;
+  const host = profileSheetHost(typeof document === "undefined" ? null : document);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="shrink-0 rounded-full ring-2 ring-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        aria-label={t.profileOpen}
+      >
+        {children}
+      </button>
+      {sheet && host ? createPortal(sheet, host) : sheet}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { DESK_UI_BOOT, parseDeskUi, themeIsDark } from "@/lib/desk-ui";
+import { DESK_UI_BOOT, parseDeskUi, profileDoneControl, profileSheetHost, themeIsDark } from "@/lib/desk-ui";
 
 describe("desk display prefs", () => {
   it("fills safe defaults and rejects unknown values", () => {
@@ -21,6 +21,22 @@ describe("desk display prefs", () => {
     assert.equal(themeIsDark("dark", false), true);
     assert.equal(themeIsDark("system", true), true);
     assert.equal(themeIsDark("system", false), false);
+  });
+
+  it("keeps Done enabled in dark mode and closes the sheet", () => {
+    for (const theme of ["light", "dark", "system"] as const) {
+      const control = profileDoneControl(theme);
+      assert.equal(control.disabled, false, theme);
+      assert.equal(control.closes, true, theme);
+    }
+  });
+
+  it("mounts the display sheet on document.body, outside the header", () => {
+    const body = { nodeName: "BODY" };
+    const header = { nodeName: "HEADER" };
+    assert.equal(profileSheetHost({ body }), body);
+    assert.notEqual(profileSheetHost({ body }), header);
+    assert.equal(profileSheetHost(null), null);
   });
 
   it("boot script never mentions a live pharmacy or an em dash", () => {
