@@ -105,6 +105,54 @@
     --card: #f7fafb;
     --brand-soft: #dce8ea;
   }
+  html[data-type-size="large"] {
+    font-size: 18px;
+  }
+  html[data-motion="reduce"] *,
+  html[data-motion="reduce"] *::before,
+  html[data-motion="reduce"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  html.dark {
+    --paper: #1a1816;
+    --paper-elevated: #24211e;
+    --paper-sunk: #141210;
+    --ink: #f4efe8;
+    --ink-2: #c9bdb0;
+    --ink-3: #c9bdb0;
+    --border: #3d372f;
+    --background: #1a1816;
+    --foreground: #f4efe8;
+    --card: #24211e;
+    --card-foreground: #f4efe8;
+    --muted: #141210;
+    --muted-foreground: #c9bdb0;
+    --input: #141210;
+    --accent: #3d2418;
+    --accent-foreground: #f4efe8;
+    --secondary: #3d2418;
+    --secondary-foreground: #f4efe8;
+    --brand-soft: #3d2418;
+    --brand-text: #f0c2a8;
+    --good-soft: #1c3326;
+    --amber-soft: #3a2c14;
+    --alert-soft: #3a1f1b;
+    --sage-soft: #243028;
+    --sunk: #141210;
+    --shadow-card: 0 1px 0 rgba(255, 252, 247, 0.04), 0 12px 28px -18px rgba(0, 0, 0, 0.65);
+    --shadow-float: 0 1px 0 rgba(255, 252, 247, 0.05), 0 18px 40px -16px rgba(0, 0, 0, 0.72);
+  }
+  html.dark[data-look="calm"] {
+    --background: #16191b;
+    --card: #1e2326;
+    --brand-soft: #243033;
+  }
+  html.dark .action-tile {
+    background: rgba(36, 33, 30, 0.88);
+  }
   .app-shell {
     display: flex;
     width: 100%;

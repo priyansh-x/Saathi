@@ -5,7 +5,9 @@ import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
 import { AppStyles } from "@/components/app-styles";
+import { DeskUiSync } from "@/components/family/desk-ui-sync";
 import { PwaBoot } from "@/components/pwa/boot";
+import { DESK_UI_BOOT } from "@/lib/desk-ui";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -72,8 +74,10 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
       className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full overflow-hidden ${hi ? "font-devanagari" : ""}`}
     >
       <body className="flex h-full min-h-0 flex-col overflow-hidden">
+        <script dangerouslySetInnerHTML={{ __html: DESK_UI_BOOT }} />
         <AppStyles />
         <PwaBoot />
+        <DeskUiSync />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </body>
     </html>
