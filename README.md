@@ -68,7 +68,8 @@ Local data is PGlite at `.data/saathi`. Set `DATABASE_URL` for Postgres. Tests a
 - Live targets must be on `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.
 - `SAATHI_KILL_SWITCH=1` (or `/ops`) stops cron, dials, and sends.
 - `/admin` is a password-gated dump of households, calls, transcripts, and actions. Set `ADMIN_PASSWORD` (or sign in with `OPS_EMAILS`). `/ops` stays counts-and-gates only.
-- Defaults: `CALL_PROVIDER=simulated`, `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, `MOCK_EMAIL=1`.
+- Defaults: `CALL_PROVIDER=simulated`, `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, `MOCK_EMAIL=1`, `PARTNER_MODE=mock`.
+- The kill switch also blocks creating a demo pharmacy handoff and Place order. `/partner/mock/[id]` is a fake shop named Saathi Pharmacy (demo). No real pharmacy, payment, or prescription.
 - Never invent family data. Fake rows are labelled EXAMPLE.
 
 Env names: [`.env.example`](./.env.example). Deploy and first live call: [`docs/saathi/engineering/deploy.md`](./docs/saathi/engineering/deploy.md). How to extend this codebase: [`docs/code-map.md`](./docs/code-map.md).

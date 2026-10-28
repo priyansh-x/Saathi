@@ -9,7 +9,14 @@ import { formatIstTime, istDayKey, istStamp, nowIstStamp, parseHhMm } from "@/li
 import { sendPushToFamily } from "@/lib/push";
 import { sendFamilyMessage } from "@/lib/whatsapp/send";
 import { ladderConfig, nextRetryLabel } from "@/lib/ladder";
-import { familyTemplateLanguage, quoteParam } from "@/lib/whatsapp/quote-param";
+import {
+  dailyBriefingGoodVars,
+  dailyBriefingLowMoodVars,
+  dailyBriefingMissedMedVars,
+  familyTemplateLanguage,
+  safetyAlertEmergencyVars,
+  safetyAlertUnreachableVars,
+} from "@/lib/whatsapp/meta-vars";
 import { type TemplateName } from "@/lib/whatsapp/templates";
 
 async function magicUrl(parentId: string) {
@@ -37,7 +44,7 @@ function localeOf(contact: Contact | null): "en" | "hi" {
 }
 
 function medLine(doses: { name?: string; status: string }[]) {
-  if (doses.length === 0) return "today's medicines";
+  if (doses.length === 0) return "";
   return doses
     .map((d) => {
       const mark =
@@ -45,6 +52,14 @@ function medLine(doses: { name?: string; status: string }[]) {
       return `${d.name ?? "tablet"} ${mark}`;
     })
     .join("; ");
+}
+
+function missedDoseLine(doses: { name?: string; status: string }[]) {
+  return doses
+    .filter((d) => d.status === "not_taken")
+    .map((d) => d.name?.trim())
+    .filter(Boolean)
+    .join(", ");
 }
 
 export async function sendDailyBriefing(
@@ -78,7 +93,6 @@ export async function sendDailyBriefing(
   const url = await magicUrl(parentId);
   const token = url.split("/d/")[1] || EXAMPLE_TOKEN;
   const missed = doses.find((d) => d.status === "not_taken");
-  const time = formatIstTime(parent.call_time);
   const intended =
     call.status === "missed" || call.status === "no_conversation" || call.status === "failed" || status === "trying"
       ? "missed_call_soft"
@@ -88,13 +102,13 @@ export async function sendDailyBriefing(
           ? "daily_briefing_low_mood"
           : "daily_briefing_good";
   const who = parent.address_term?.trim() || parent.first_name;
+  const parentName = parent.first_name;
   const familyLang = familyTemplateLanguage(parent.languages);
-  const quote = quoteParam(call.mood_quote, familyLang);
   const tries = await query<{ n: number }>(`select count(*)::int as n from call_attempts where call_id = $1`, [call.id]);
   const cfg = await ladderConfig(parentId);
   const results = [];
   for (const child of children) {
-    const locale = localeOf(child);
+    const locale = intended === "missed_call_soft" ? localeOf(child) : familyLang;
     const vars =
       intended === "missed_call_soft"
         ? [
@@ -105,10 +119,35 @@ export async function sendDailyBriefing(
             parent.phone,
           ]
         : intended === "daily_briefing_missed_med"
-          ? [child.first_name, who, time, missed?.name ?? "tablet"]
+          ? dailyBriefingMissedMedVars(
+              {
+                childName: child.first_name,
+                parentName,
+                callTime: parent.call_time,
+                missedDoses: missedDoseLine(doses),
+              },
+              familyLang,
+            )
           : intended === "daily_briefing_low_mood"
-            ? [child.first_name, who, time, quote]
-            : [child.first_name, who, time, medLine(doses), quote];
+            ? dailyBriefingLowMoodVars(
+                {
+                  childName: child.first_name,
+                  parentName,
+                  callTime: parent.call_time,
+                  quote: call.mood_quote,
+                },
+                familyLang,
+              )
+            : dailyBriefingGoodVars(
+                {
+                  childName: child.first_name,
+                  parentName,
+                  callTime: parent.call_time,
+                  medicines: medLine(doses),
+                  quote: call.mood_quote,
+                },
+                familyLang,
+              );
     results.push(
       await sendFamilyMessage({
         parentId,
@@ -130,10 +169,9 @@ export async function notifyAlert(
 ) {
   const { parent, neighbour } = await household(parentId);
   if (!parent) return { ok: false as const };
-  const time = alert.created_at.includes("T") ? alert.created_at.slice(11, 16) : "08:33";
   const who = parent.address_term?.trim() || parent.first_name;
+  const parentName = parent.first_name;
   const familyLang = familyTemplateLanguage(parent.languages);
-  const quote = quoteParam(alert.quote, familyLang);
   const childTemplate =
     alert.category === "MISSED" || alert.level === "look"
       ? "safety_alert_unreachable"
@@ -157,7 +195,7 @@ export async function notifyAlert(
     const nvars =
       neighbourTemplate === "responder_alert_unreachable"
         ? [neighbour.first_name, who, parent.city, childName]
-        : [neighbour.first_name, who, parent.city, quote, childName];
+        : [neighbour.first_name, who, parent.city, alert.quote, childName];
     const sent = await sendFamilyMessage({
       parentId,
       toPhone: neighbour.phone,
@@ -170,14 +208,32 @@ export async function notifyAlert(
     results.push(sent);
   }
   for (const child of kids) {
-    const locale = localeOf(child);
+    const submitted =
+      childTemplate === "safety_alert_emergency" || childTemplate === "safety_alert_unreachable";
+    const locale = submitted ? familyLang : localeOf(child);
     const intended = (
-      neighbourMessaged ? childTemplate : `${childTemplate}_solo`
+      submitted || neighbourMessaged ? childTemplate : `${childTemplate}_solo`
     ) as Exclude<TemplateName, "hello_world">;
     const vars =
       intended === "safety_alert_unreachable" || intended === "safety_alert_unreachable_solo"
-        ? [child.first_name, who, tryCount, desk]
-        : [child.first_name, who, quote, time, desk];
+        ? safetyAlertUnreachableVars({
+            childName: child.first_name,
+            parentName,
+            tryCount,
+            deskUrl: desk,
+          })
+        : intended === "safety_alert_emergency" || intended === "safety_alert_emergency_solo"
+          ? safetyAlertEmergencyVars(
+              {
+                childName: child.first_name,
+                parentName,
+                quote: alert.quote,
+                callTime: parent.call_time || alert.created_at,
+                deskUrl: desk,
+              },
+              familyLang,
+            )
+          : [child.first_name, who, alert.quote, parent.call_time || "today", desk];
     results.push(
       await sendFamilyMessage({
         parentId,

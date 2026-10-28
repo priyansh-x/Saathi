@@ -111,7 +111,7 @@ describe("payload shape and 24h window", () => {
 });
 
 describe("language pick and idempotency keys", () => {
-  it("uses the child's desk locale and briefing:{call_id} / alert:{id}:{level}", async () => {
+  it("uses the family's language and briefing:{call_id} / alert:{id}:{level}", async () => {
     await seed();
     await query(`update contacts set locale = 'hi', whatsapp_opt_in = true where id = 'contact_rohit'`);
     const callId = `brief_key_${Date.now()}`;

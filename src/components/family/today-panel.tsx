@@ -23,10 +23,12 @@ import { resolveAlert, setPaused } from "@/lib/db/queries";
 import type { DoseLog } from "@/lib/db/types";
 import type { FamilyDesk } from "@/lib/family-load";
 import { greeting, messages, personal, pickLocale, type Lang } from "@/lib/i18n/messages";
+import { ERRAND_DESK_COPY } from "@/lib/partners/copy";
 import { heroCopy, humanQuote, reachSteps, ringCopy, slotLabel, statusTone, type DayState } from "@/lib/today";
 import { minutesNowIst, parseHhMm, parseIstParts, weekdayShort } from "@/lib/time";
 import { weeklyDeskCopy } from "@/lib/weekly";
 import { AddToHome } from "@/components/pwa/register";
+import { ErrandCard } from "@/components/family/errand-card";
 import { FamilyMessageForm } from "@/components/family/family-message-form";
 import { saveFamilyMessage } from "@/lib/family-messages";
 
@@ -350,6 +352,17 @@ export function TodayPanel({
                   />
                 </span>
               </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {data.errands.length > 0 ? (
+        <section className="rise mt-6" style={{ "--d": "180ms" } as CSSProperties}>
+          <p className="section-label">{ERRAND_DESK_COPY[lang].heading}</p>
+          <ul>
+            {data.errands.map((errand) => (
+              <ErrandCard key={errand.id} token={token} lang={lang} errand={errand} />
             ))}
           </ul>
         </section>

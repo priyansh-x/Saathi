@@ -7,12 +7,12 @@ export function exampleWhatsappPreviews() {
   return {
     safety_en: renderTemplate(
       "safety_alert_emergency",
-      ["Rohit", "Kamla", "Seene mein dard ho raha hai.", "08:33", `${publicBaseUrl()}/d/${EXAMPLE_TOKEN}`],
+      ["Rohit", "Kamla", "Seene mein dard ho raha hai.", "8:33 AM", `${publicBaseUrl()}/d/${EXAMPLE_TOKEN}`],
       "en",
     ),
     safety_hi: renderTemplate(
       "safety_alert_emergency",
-      ["रोहित", "कमला", "सीने में दर्द हो रहा है।", "08:33", `${publicBaseUrl()}/d/${EXAMPLE_TOKEN}`],
+      ["रोहित", "कमला", "सीने में दर्द हो रहा है।", "8:33", `${publicBaseUrl()}/d/${EXAMPLE_TOKEN}`],
       "hi",
     ),
     responder_hi: renderTemplate(
@@ -45,6 +45,9 @@ export const WALK_COPY = {
     nextCall: "Next · the call",
     nextMeds: "Next · medicines",
     nextBrief: "Next · briefing",
+    nextMorning: "Next · next morning",
+    nextMorningTitle: "Next morning (EXAMPLE)",
+    nextMorningBody: "After a demo delivery, Saathi asks once: आपकी दवाई पहुँच गई? Has your medicine arrived?",
     callTitle: "The call (EXAMPLE)",
     medsTitle: "Medicines (EXAMPLE)",
     medsBody: "Amlodipine — taken. Metformin — afternoon, not asked yet.",
@@ -88,6 +91,9 @@ export const WALK_COPY = {
     nextCall: "आगे · कॉल",
     nextMeds: "आगे · दवा",
     nextBrief: "आगे · ब्रीफिंग",
+    nextMorning: "आगे · अगली सुबह",
+    nextMorningTitle: "अगली सुबह (EXAMPLE)",
+    nextMorningBody: "डेमो डिलीवरी के बाद साथी एक बार पूछता है: आपकी दवाई पहुँच गई? Has your medicine arrived?",
     callTitle: "कॉल (EXAMPLE)",
     medsTitle: "दवा (EXAMPLE)",
     medsBody: "एम्लोडिपिन — ले ली। मेटफॉर्मिन — दोपहर, अभी नहीं पूछा।",

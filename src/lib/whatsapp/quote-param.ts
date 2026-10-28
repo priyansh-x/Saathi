@@ -9,7 +9,7 @@ export function emptyQuoteFallback(language: "en" | "hi") {
   return language === "hi" ? "आज कोई बात दर्ज नहीं हुई" : "no words recorded today";
 }
 
-export function quoteParam(raw: string | null | undefined, language: "en" | "hi") {
+export function quoteParam(raw: string | null | undefined, language: "en" | "hi" = "en") {
   const cleaned = String(raw ?? "")
     .replace(/[\r\n\t]+/g, " ")
     .replace(/\s+/g, " ")

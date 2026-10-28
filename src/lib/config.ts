@@ -99,6 +99,16 @@ export function killSwitchOn() {
   return process.env.SAATHI_KILL_SWITCH === "1" || opsKillSwitchLatched();
 }
 
+/** Demo pharmacy only. Default mock. Never set PARTNER_MODE=link. */
+export function partnerMode(): "mock" | "off" {
+  const named = (process.env.PARTNER_MODE ?? "mock").trim().toLowerCase();
+  return named === "mock" || named === "" ? "mock" : "off";
+}
+
+export function isPartnerMock() {
+  return partnerMode() === "mock";
+}
+
 export function voiceAlertChild() {
   return process.env.VOICE_ALERT_CHILD === "1";
 }
