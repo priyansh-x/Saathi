@@ -34,15 +34,22 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
-.env
-.env.local
-.env.production
-.env.*.local
+# env files (keep only the committed example)
+.env*
+!.env.example
 family-desk.vercel.env
 
 # vercel
 .vercel
+
+# logs, recordings, transcripts
+*.log
+logs/
+recordings/
+transcripts/
+
+# safety audit (maps where secrets were; do not commit)
+public_readiness_report.md
 
 # typescript
 *.tsbuildinfo

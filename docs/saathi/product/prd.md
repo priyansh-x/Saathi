@@ -1,10 +1,9 @@
 # Product Requirements Document
 
-**Working title:** Daily voice check-in for Indian parents who live without their children in the house  
+**Product:** Saathi  
 **Status:** Draft for build  
 **Date:** 16 October 2026  
-**Context:** Bolna Symphony Buildathon (15 Oct – 20 Nov 2026) + Y Combinator RFS *AI for the Aging Population* (Max Kolysh)  
-**Name:** Deferred. Copy in this document uses “the product” or “the agent.”
+**One line:** A morning phone companion for aging parents in India, plus a WhatsApp briefing and family desk for the child.
 
 ---
 
@@ -18,15 +17,13 @@ The parent never installs an app. The child is the buyer.
 
 ## 2. Why this, why now
 
-### 2.1 The hackathon constraint
+### 2.1 Why voice on the phone they already own
 
-Bolna’s Buildathon rule is simple: **any idea, as long as voice is part of it**. Bolna’s stack is outbound / inbound phone agents, Indian-language speech, 140/160-series numbers, Truecaller verification, retries, and WhatsApp workflows. Sponsors include Plivo, Exotel, Sarvam, Cartesia, Deepgram.
+The parent should not install an app. Bolna’s stack is outbound / inbound phone agents, Indian-language speech, retries, and WhatsApp workflows. A product that **lives on a PSTN call** matches how families already reach elders.
 
-A product that **lives on a PSTN call** is a better Bolna demo than a web chatbot with a microphone.
+### 2.2 Why this class of product
 
-### 2.2 The YC RFS constraint
-
-YC’s aging RFS states: by 2030 one in five Americans will be over 65; caregiver jobs will go unfilled; **almost no technology is actually built for older people**; Alexa and Google Home already frustrate seniors. The opportunity named in the RFS is exactly this class of product: **voice that can hold a real conversation**, monitoring that keeps older adults independent, and software that helps family caregivers coordinate care and emergencies.
+Caregiver jobs will go unfilled; little technology is actually built for older people; smart speakers already frustrate seniors. The opportunity is **voice that can hold a real conversation**, monitoring that keeps older adults independent, and software that helps family caregivers coordinate care and emergencies.
 
 The Indian version of that sentence is sharper. The caregiver is usually an adult child in another city or country. The parent’s interface is a ringing phone, not a smart speaker.
 
@@ -143,11 +140,11 @@ Current substitutes fail:
 4. The conversation feels like a **respectful younger person**, not a clinic IVR or a cartoon companion.
 5. Voice is the product, not a feature bolted onto a dashboard.
 
-### 5.2 Hackathon / Buildathon goals
+### 5.2 v0 goals
 
 - Ship a walkable slice: setup → live or simulated call → family briefing → missed / emergency path.
 - Run on Bolna (outbound agent + Indian languages). Cartesia / Sarvam / Deepgram as speech stack if the build uses them.
-- Pitch in one sentence a YC partner understands: *voice for ageing, India-first, phone-native, family-paid.*
+- Pitch in one sentence: *voice for ageing, India-first, phone-native, family-paid.*
 
 ### 5.3 Non-goals (v1)
 
@@ -253,7 +250,7 @@ Silence is an outcome. The system must not treat an unanswered call as a success
 5. Medicines as plain language (“Amlodipine 5mg after breakfast”).
 6. Neighbour name + phone.
 7. Confirm: **the parent has agreed to receive this call.**
-8. Optional: trigger a test call now (hackathon must have this).
+8. Optional: trigger a test call now.
 9. Land on a quiet family desk: next call time, last outcome empty.
 
 ### 9.2 Happy morning
@@ -304,9 +301,9 @@ Child or parent can pause. Parent saying “don’t call me” is a stop, not a 
 | ID | Requirement |
 | --- | --- |
 | F1 | Child can create one household (one parent, one child, one neighbour) from the web app. |
-| F2 | Persistence at least sufficient for a demo (local store or single JSON/SQLite is acceptable for the hackathon). |
+| F2 | Persistence at least sufficient for a demo (local store or single JSON/SQLite is acceptable for v0). |
 | F3 | Outbound call can be triggered (“Call now”) without waiting for 08:30. |
-| F4 | Voice conversation in **Hindi first**; English subtitles on the demo UI so judges can follow. |
+| F4 | Voice conversation in **Hindi first**; English subtitles on the demo UI so a reviewer can follow. |
 | F5 | Conversation covers greeting, sleep, **named** medicine, body/safety, social day, close. |
 | F6 | Agent extracts structured flags: meds taken / skipped, pain, lonely, well, fall. |
 | F7 | Post-call briefing with outcome OK / Watch / Emergency / Missed. |
@@ -488,7 +485,7 @@ Do not start Slice 4 before Slice 2 is walkable. Judges can forgive a mocked PST
 ## 17. Open questions
 
 1. Working name (deferred).
-2. Is the first language Hindi for all demos, or do we record one Tamil path because Symphony is in Bengaluru?
+2. Is the first language Hindi for all demos, or do we record one Tamil path for South Indian families?
 3. Do we need a real WhatsApp Business sender, or is an in-app message enough for 31 Oct?
 4. Who on the team can legally place test calls to Indian numbers from this environment?
 5. Minimum viable consent language in Hindi for the parent.
@@ -514,8 +511,8 @@ Do not start Slice 4 before Slice 2 is walkable. Judges can forgive a mocked PST
 8. Ahlin, frequent calling as transnational care (Kerala nurses; phone / WhatsApp).
 9. Emoha, Portea, Samarth, Nila — public plan and press pages (2024–2026).
 10. Bolna docs: voice agents, outbound `POST /call`, batch, WhatsApp workflows, 140/160-series, Truecaller, web calls.
-11. YC RFS, *AI for the Aging Population*, Max Kolysh.
-12. Bolna Symphony / Abhyas Buildathon public pages (Oct–Nov 2026).
+11. Public research on AI for the aging population.
+12. Bolna public docs (voice agents, outbound call APIs).
 
 ---
 

@@ -5,22 +5,22 @@ Mockups: `wireframes.html` → `wireframes_*.png` (fictional EXAMPLE data).
 
 ## 1. Does the MVP even need a dashboard?
 
-**Recommendation: WhatsApp is the product; the web view is a thin, optional "details" page opened from WhatsApp. Build 2 screens for the demo, the rest only if time allows.**
+**Recommendation: WhatsApp is the product; the web view is a thin, optional "details" page opened from WhatsApp. Build Today and History first.**
 
 | | WhatsApp only | WhatsApp + magic-link web view (recommended) | Full dashboard app with login |
 |---|---|---|---|
 | Child effort | Lowest | Low (one tap from a message, no password) | High (account, password, app) |
 | What it can show | 2 lines, buttons, text answers | Trends, calendar, audio, settings, alert history | Same as middle |
 | Build cost (Oct 17–31) | Lowest | ~2–3 days for Today + Calendar + Call detail (estimate, assumption) | Too much |
-| Demo value for judges | "It sends a message" | Visible proof of the loop: streaks, mood, alert ack trail | Same as middle |
+| Demo value | "It sends a message" | Visible proof of the loop: streaks, mood, alert ack trail | Same as middle |
 | Risk | Settings edits by chat are error-prone; no history view | Magic-link security; one more surface to keep in sync | Adoption friction |
 
-Why not WhatsApp-only: (1) editing medicine lists and contacts via chat is error-prone; (2) the "is this getting better or worse?" question needs a 7/30-day view; (3) call audio and an alert's ack trail don't fit in chat; (4) judges and the pitch benefit from one visual. Why not a full app: the child already lives in WhatsApp [A], and a login wall kills the "one tap from the briefing" flow.
+Why not WhatsApp-only: (1) editing medicine lists and contacts via chat is error-prone; (2) the "is this getting better or worse?" question needs a 7/30-day view; (3) call audio and an alert's ack trail don't fit in chat; (4) families benefit from one visual. Why not a full app: the child already lives in WhatsApp [A], and a login wall kills the "one tap from the briefing" flow.
 
 **MVP cut (proposed):**
 - **Must (demo):** S1 Today · S2 Calendar (7/30) · S4 Call detail with summary (+ audio if consented) · S5 Alert detail with ack trail.
 - **Should:** S3 Mood trend (inside S2) · S6 Settings (read-only display + "change via WhatsApp" links).
-- **Could (post-buildathon):** editable settings in-web, siblings management, export/share with doctor.
+- **Could (later):** editable settings in-web, siblings management, export/share with doctor.
 
 ## 2. Access: magic link, no password
 - Every briefing/alert has a URL button `https://<domain>/d/<token>`. Child can also type "link" in chat.

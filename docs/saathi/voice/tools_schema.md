@@ -13,7 +13,7 @@ Mid-call tools: `log_medicine`, `raise_alert`, `relay_message_to_family`, `save_
 1. **Fast and silent.** Elders are put off by dead air. Endpoints should return in under ~300 ms and do slow work (WhatsApp sends, auto-dial) asynchronously. Leave `pre_call_message` empty for `log_medicine` and `save_memory_note`. For `raise_alert`, the agent speaks its own emergency line, so `pre_call_message` stays empty too.
 2. **Idempotent.** Key every write on `call_sid` + a natural key (e.g. `medicine_id`). The LLM may retry.
 3. **Never block safety on a tool failure.** If `raise_alert` errors, the agent has already told the parent to call 112. The post-call extraction (§5) re-checks the transcript for red flags, and the backend compares it with `tool_call_logs` to catch alerts the tool never received (belt and braces).
-4. **Auth.** One Bearer token per environment in `api_token`. Rotate it after the hackathon. Don't commit it.
+4. **Auth.** One Bearer token per environment in `api_token`. Rotate it regularly. Don't commit it.
 5. Base URL placeholder: `https://api.saathi.example/v1` (replace).
 
 ---

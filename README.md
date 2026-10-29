@@ -1,18 +1,47 @@
 # Saathi
 
-A morning phone call for a parent in India, on the phone they already own. The adult child gets a short briefing and a family desk. Companionship and reminders — never diagnosis. In an emergency, call 112.
+<img src="public/brand/icon-192.png" alt="Saathi mark" width="72" height="72" />
 
-Mocks stay on by default. Nothing dials or messages a real person until you put a number on the allowlist and turn live flags on yourself.
+A morning phone companion for aging parents in India. Saathi calls the parent on the phone they already own, checks medicines, mood and red flags, and sends the adult child a short WhatsApp briefing plus a family desk.
 
-## Quick start
+**Live app (example household):** [https://x-navy-tau.vercel.app](https://x-navy-tau.vercel.app) · desk: [`/d/example-kamla`](https://x-navy-tau.vercel.app/d/example-kamla)
+
+<img src="public/brand/screens/after-home-en.png" alt="Family desk Today view for the Kamla example household" width="390" />
+
+Companionship and reminders. Never diagnosis. In an emergency, call 112.
+
+## How it works
+
+**Parent.** A scheduled morning call in their language. Saathi asks about sleep, each medicine, how they feel, and a few safety checks. They never open a website.
+
+**Child.** A short WhatsApp briefing after the call, and a family desk (Today, History, Alerts, Settings) at `/d/[token]`. Settings can place an extra same-day test ring. Fake rows are labelled EXAMPLE.
+
+**Neighbour.** Optional. They only get an escalation alert if they opted in, and only when the missed-call ladder asks someone to go over. First ack wins.
+
+## Privacy and consent
+
+- Written child consent at onboarding. Parent voice consent is spoken on the call.
+- Transcripts and quotes are retained for a limited time, then deleted. Alerts can remain without her words.
+- Every call, WhatsApp, email, or push goes through `gateOutbound`. Live targets must be on `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.
+- `SAATHI_KILL_SWITCH=1` (or `/ops`) stops cron, dials, and sends.
+- See [docs/safety.md](./docs/safety.md).
+
+## Stack
+
+Next.js (App Router) and TypeScript at the repo root. PGlite locally, Postgres when `DATABASE_URL` is set. Tailwind and a small UI kit. Bolna for the voice agent (mocked by default). Meta Cloud API for WhatsApp (mocked by default). Capacitor Android shell in `android/`. Marketing site in `landing/`.
+
+## Quick start (mock mode)
 
 ```bash
 npm install
 cp .env.example .env.local
 npm run dev
+npm test
 ```
 
 Open [http://127.0.0.1:43147](http://127.0.0.1:43147). Set up a family, or open the labelled EXAMPLE desk at [`/d/example-kamla`](http://127.0.0.1:43147/d/example-kamla). Add `?lang=hi` for हिं.
+
+Mocks stay on by default. Nothing dials or messages a real person until you put a number on the allowlist and turn live flags on yourself.
 
 | Command | What it does |
 | --- | --- |
@@ -21,55 +50,34 @@ Open [http://127.0.0.1:43147](http://127.0.0.1:43147). Set up a family, or open 
 | `npm test` | Unit tests (PGlite, mocks on) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run e2e` | Playwright at 360×740 (needs Chromium once) |
+| `npm run e2e` | Playwright at 360x740 (needs Chromium once) |
 | `npm run db:migrate` | Apply SQL migrations (Postgres when `DATABASE_URL` is set) |
 
-Marketing site: `cd landing && npm install && npm run dev` → [http://127.0.0.1:43211](http://127.0.0.1:43211).
+Marketing site: `cd landing && npm install && npm run dev` -> [http://127.0.0.1:43211](http://127.0.0.1:43211).
 
-Latent Spaces film (HyperFrames, real desk screens): `cd brag-output/composition && npx hyperframes@0.8.185 preview`. Render only after you have watched it.
-
-## How it fits together
-
-```mermaid
-flowchart TD
-  Tick[Daily tick] --> Call[Bolna morning call]
-  Call --> Tools[Mid-call tools]
-  Tools --> Hook[Bolna webhook]
-  Hook --> Summary[Call summary]
-  Summary --> WA[WhatsApp briefing and alerts]
-  Summary --> Desk[Family desk]
-  Call --> Ladder[Missed-call ladder]
-  Ladder --> WA
-  WA --> Desk
-```
-
-The parent never opens a website. If nobody answers, the same-day ladder retries, then asks the child and — if they opted in — a neighbour. First ack wins.
-
-Settings **Test call** is an extra same-day ring: transcript, medicines, and alerts land on History and Today as soon as the call finishes.
-
-## Repo map
+## Layout
 
 | Path | Role |
 | --- | --- |
 | `src/app` | Next.js App Router (desk, onboard, APIs) |
 | `src/components` | Family desk UI |
-| `src/lib` | Domain logic — see [docs/code-map.md](./docs/code-map.md) |
+| `src/lib` | Domain logic. See [docs/code-map.md](./docs/code-map.md) |
 | `scripts/` | Bolna, WhatsApp, brand, Android CLIs |
 | `landing/` | Marketing site (own `package.json`) |
 | `android/` | Capacitor shell |
 | `fixtures/bolna` | Webhook fixtures |
-| `docs/` | Specs and runbooks — [index](./docs/README.md) |
+| `docs/` | Architecture, safety, product and voice specs. [Index](./docs/README.md) |
 
-Local data is PGlite at `.data/saathi`. Set `DATABASE_URL` for Postgres. Tests always use PGlite.
+Local data is PGlite at `.data/saathi`. Tests always use PGlite.
 
-## Safety
+## Status
 
-- Every call, WhatsApp, email, or push goes through `gateOutbound`.
-- Live targets must be on `ALLOWED_PHONE_NUMBERS` / `ALLOWED_EMAILS`.
-- `SAATHI_KILL_SWITCH=1` (or `/ops`) stops cron, dials, and sends.
-- `/admin` is a password-gated dump of households, calls, transcripts, and actions. Set `ADMIN_PASSWORD` (or sign in with `OPS_EMAILS`). `/ops` stays counts-and-gates only.
-- Defaults: `CALL_PROVIDER=simulated`, `MOCK_BOLNA=1`, `MOCK_WHATSAPP=1`, `MOCK_EMAIL=1`, `PARTNER_MODE=mock`.
-- The kill switch also blocks creating a demo pharmacy handoff and Place order. `/partner/mock/[id]` is a fake shop named Saathi Pharmacy (demo). No real pharmacy, payment, or prescription.
-- Never invent family data. Fake rows are labelled EXAMPLE.
+**Live on the hosted desk (example data only):** family desk, onboarding form, demo walkthrough, mock morning call, mock WhatsApp preview, missed-call ladder in simulation, kill switch UI.
 
-Env names: [`.env.example`](./.env.example). Deploy and first live call: [`docs/saathi/engineering/deploy.md`](./docs/saathi/engineering/deploy.md). How to extend this codebase: [`docs/code-map.md`](./docs/code-map.md).
+**Mocked unless you change env yourself:** Bolna dials (`MOCK_BOLNA=1`, `CALL_PROVIDER=simulated`), WhatsApp Graph sends (`MOCK_WHATSAPP=1`), email (`MOCK_EMAIL=1`). The demo pharmacy is a labelled fake shop (`PARTNER_MODE=mock`). Saathi does not call a real pharmacy, payment, or prescription API.
+
+WhatsApp template copy is DRAFT until Meta approves it. Unapproved names fall back to email in code.
+
+Env names: [`.env.example`](./.env.example). Deploy notes: [`docs/saathi/engineering/deploy.md`](./docs/saathi/engineering/deploy.md). Extending the codebase: [`docs/code-map.md`](./docs/code-map.md).
+
+Started at the Bolna x YC Voice AI Buildathon, Oct 2026.

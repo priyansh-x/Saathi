@@ -7,7 +7,7 @@ export function privacyCopy(lang: "en" | "hi") {
   const summary = retentionSummaryDays();
   if (lang === "hi") {
     return {
-      draft: "मसौदा — प्रियंश की समीक्षा बाकी",
+      draft: "मसौदा. कानूनी सलाह नहीं",
       title: "गोपनीयता",
       lead: "साथी साथ और याद दिलाने का काम है, इलाज या आपात सेवा नहीं। आपात में 112 मिलाएँ।",
       sections: [
@@ -25,19 +25,19 @@ export function privacyCopy(lang: "en" | "hi") {
         },
         {
           heading: "कैसे मिटाएँ",
-          body: "सेटिंग में परिवार का मालिक «माँ का सारा डेटा मिटाएँ» दबा सकता है। सहमति का रिकॉर्ड आप JSON में डाउनलोड कर सकते हैं — कॉल से कुछ नहीं।",
+          body: "सेटिंग में परिवार का मालिक «माँ का सारा डेटा मिटाएँ» दबा सकता है। सहमति का रिकॉर्ड आप JSON में डाउनलोड कर सकते हैं. कॉल से कुछ नहीं।",
         },
       ],
     };
   }
   return {
-    draft: "DRAFT — for Priyansh to review",
+    draft: "DRAFT. Not legal advice.",
     title: "Privacy",
     lead: "Saathi reminds and listens. It does not diagnose, and it is not an emergency service. In an emergency call 112.",
     sections: [
       {
         heading: "What we record",
-        body: "A short morning summary, whether medicines were taken, and — if she said yes — a line in her words. We keep a full transcript only after her spoken haan.",
+        body: "A short morning summary, whether medicines were taken, and, if she said yes, a line in her words. We keep a full transcript only after her spoken haan.",
       },
       {
         heading: "Who sees it",
@@ -49,7 +49,7 @@ export function privacyCopy(lang: "en" | "hi") {
       },
       {
         heading: "How to delete",
-        body: "The family owner can delete everything from Settings. You can also download the consent record (who agreed, when, the text version) — nothing from the calls.",
+        body: "The family owner can delete everything from Settings. You can also download the consent record (who agreed, when, the text version). Nothing from the calls.",
       },
     ],
   };

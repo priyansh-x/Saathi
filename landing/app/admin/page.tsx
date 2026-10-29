@@ -16,7 +16,7 @@ export default async function LandingAdminPage() {
       <p className="text-xs font-semibold tracking-wide uppercase opacity-60">Internal</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">Admin is on the family desk</h1>
       <p className="mt-3 text-sm leading-6 opacity-80">
-        Households, transcripts, alerts, and actions live on the family app — this marketing site has no family
+        Households, transcripts, alerts, and actions live on the family app. This marketing site has no family
         database. Open <code>/admin</code> on the desk host. Password is <code>ADMIN_PASSWORD</code>; ops emails can
         skip it after sign-in.
       </p>

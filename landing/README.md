@@ -29,11 +29,11 @@ alter table waitlist enable row level security;
 
 ## ⚑ CONFIRM before launch (Priyansh)
 
-1. **FAQ cost** — draft: “Nothing during the pilot.” Do not treat as published pricing.
-2. **FAQ who can hear calls** — draft: family sees a short summary; audio only if Maa agrees; neighbour never sees calls, medicines or mood.
-3. **Languages live in the pilot** — Hindi, Hinglish, English shown as selectable; Tamil/Bengali chips say “soon”.
-4. **Built with** — “Built with Bolna voice agents” only. Do not add Sarvam, Plivo or others until they are in the build.
-5. **Landline** — not shown on Setup. Confirm before adding that chip.
+1. **FAQ cost.** Draft: “Nothing during the pilot.” Do not treat as published pricing.
+2. **FAQ who can hear calls.** Draft: family sees a short summary; audio only if Maa agrees; neighbour never sees calls, medicines or mood.
+3. **Languages live in the pilot.** Hindi, Hinglish, English shown as selectable; Tamil/Bengali chips say “soon”.
+4. **Built with.** “Built with Bolna voice agents” only. Do not add Sarvam, Plivo or others until they are in the build.
+5. **Landline.** Not shown on Setup. Confirm before adding that chip.
 
 The 36% “child who has migrated” stat was dropped (source not confirmed). WHO / UNFPA links are in the footer sources list.
 

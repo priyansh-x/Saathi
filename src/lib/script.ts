@@ -24,7 +24,7 @@ export function buildBeats(household: Household): Beat[] {
   return [
     {
       id: "hello",
-      hi: `नमस्ते ${parent} जी, मैं सुबह की साथिन बोल रही हूँ — ${child} ने कहा था बात कर लूँ। सो के उठे?`,
+      hi: `नमस्ते ${parent} जी, मैं सुबह की साथी बोल रही हूँ. ${child} ने कहा था बात कर लूँ। सो के उठे?`,
       en: `Namaste ${parent} ji. This is the morning check-in. ${child} asked me to call. Did you sleep well?`,
       choices: [
         {
@@ -63,7 +63,7 @@ export function buildBeats(household: Household): Beat[] {
     {
       id: "body",
       hi: "आज शरीर कैसा है? चक्कर, सीने में दर्द, या कुछ और?",
-      en: "How does the body feel — dizziness, chest pain, or anything else?",
+      en: "How does the body feel: dizziness, chest pain, or anything else?",
       choices: [
         {
           id: "fine",
@@ -87,8 +87,8 @@ export function buildBeats(household: Household): Beat[] {
     },
     {
       id: "day",
-      hi: `${child} पूछ रही थी — आज घर में कोई आएगा?`,
-      en: `${child} asked — is anyone coming home today?`,
+      hi: `${child} पूछ रही थी. आज घर में कोई आएगा?`,
+      en: `${child} asked: is anyone coming home today?`,
       choices: [
         {
           id: "visitor",
@@ -119,7 +119,7 @@ export function closingLine(household: Household, flags: CallFlag[]) {
   if (flags.includes("meds_skipped")) {
     return {
       hi: `गोली ले लीजिए, मैं दोपहर को एक बार और पूछ लूँगी। ${child} को बता देती हूँ। राम राम।`,
-      en: `Please take the tablet — I’ll check again this afternoon. I’ll tell ${child}. Ram ram.`,
+      en: `Please take the tablet. I’ll check again this afternoon. I’ll tell ${child}. Ram ram.`,
     };
   }
   return {
@@ -161,7 +161,7 @@ export function summarise(
     hi.push("सुबह की गोली ले ली");
   }
   if (flags.includes("meds_skipped")) {
-    en.push("had forgotten the tablet — said she will take it now");
+    en.push("had forgotten the tablet, said she will take it now");
     hi.push("गोली भूल गईं, अभी लेने को कहा");
   }
   if (flags.includes("pain")) {

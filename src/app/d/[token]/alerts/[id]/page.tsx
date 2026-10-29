@@ -112,7 +112,7 @@ export default async function AlertDetailPage({
       <section className="card mt-5 px-4 py-3">
         <p className="text-sm text-muted-foreground">{t.whoWeTold}</p>
         <p className="mt-1">
-          {told || "—"} · {t.channelWhatsapp}
+          {told || "-"} · {t.channelWhatsapp}
         </p>
       </section>
 
