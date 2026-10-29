@@ -69,6 +69,7 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
   return (
     <html
       lang={hi ? "hi" : "en"}
+      suppressHydrationWarning
       className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full overflow-hidden ${hi ? "font-devanagari" : ""}`}
     >
       <body className="flex h-full min-h-0 flex-col overflow-hidden">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { enableDeskPush, deskPushState } from "@/components/pwa/desk-push";
 import { applyDeskUi, readDeskUi, writeDeskUi, type DeskUi } from "@/lib/desk-ui";
 import { messages, type Lang } from "@/lib/i18n/messages";
@@ -21,10 +22,12 @@ export function ProfileSheet({
   const t = messages[lang];
   const titleId = useId();
   const [open, setOpen] = useState(false);
-  const [prefs, setPrefs] = useState<DeskUi>({ density: "comfortable", look: "warm" });
+  const [mounted, setMounted] = useState(false);
+  const [prefs, setPrefs] = useState<DeskUi>({ density: "comfortable", look: "warm", appearance: "light" });
   const [push, setPush] = useState<"default" | "granted" | "denied" | "unsupported">("default");
 
   useEffect(() => {
+    setMounted(true);
     const next = readDeskUi();
     setPrefs(next);
     applyDeskUi(next);
@@ -53,13 +56,14 @@ export function ProfileSheet({
       >
         {children}
       </button>
-      {open ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="presentation">
+      {open && mounted
+        ? createPortal(
+            <div className="fixed inset-0 z-[80] flex items-end justify-center pb-20 sm:items-center sm:pb-0" role="presentation">
           <button type="button" className="absolute inset-0 bg-black/40" aria-label={t.cancel} onClick={() => setOpen(false)} />
           <div
             role="dialog"
             aria-labelledby={titleId}
-            className="relative z-10 mb-0 w-full max-w-[480px] rounded-t-[28px] bg-card px-5 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-[var(--shadow-float)] sm:mb-8 sm:rounded-[28px]"
+            className="relative z-10 mb-0 w-full max-w-[480px] max-h-[min(88dvh,40rem)] overflow-y-auto rounded-t-[28px] bg-card px-5 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-[var(--shadow-float)] sm:mb-8 sm:rounded-[28px]"
           >
             <p id={titleId} className="text-[19px] font-semibold">
               {parentName}
@@ -82,6 +86,24 @@ export function ProfileSheet({
                 onClick={() => patch({ density: "compact" })}
               >
                 {t.displayCompact}
+              </button>
+            </div>
+
+            <p className="mt-4 text-xs font-semibold tracking-wide text-ink-3 uppercase">{t.profileAppearance}</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                className={`h-11 rounded-full border text-sm ${prefs.appearance === "light" ? "border-brand bg-brand-soft font-semibold" : "border-border"}`}
+                onClick={() => patch({ appearance: "light" })}
+              >
+                {t.appearanceLight}
+              </button>
+              <button
+                type="button"
+                className={`h-11 rounded-full border text-sm ${prefs.appearance === "dark" ? "border-brand bg-brand-soft font-semibold" : "border-border"}`}
+                onClick={() => patch({ appearance: "dark" })}
+              >
+                {t.appearanceDark}
               </button>
             </div>
 
@@ -121,8 +143,10 @@ export function ProfileSheet({
               {t.doneProfile}
             </button>
           </div>
-        </div>
-      ) : null}
+        </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

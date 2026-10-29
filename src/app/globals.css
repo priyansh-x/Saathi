@@ -49,6 +49,7 @@
 }
 
 :root {
+  color-scheme: light;
   --background: var(--paper);
   --foreground: var(--ink);
   --card: var(--paper-elevated);
@@ -73,6 +74,31 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --shadow-card: 0 1px 0 rgba(29, 27, 24, 0.03), 0 12px 28px -20px rgba(29, 27, 24, 0.28);
   --shadow-float: 0 1px 0 rgba(29, 27, 24, 0.05), 0 18px 40px -18px rgba(29, 27, 24, 0.35);
+}
+
+html.dark {
+  color-scheme: dark;
+  --paper: #1d1b18;
+  --paper-elevated: #2a2622;
+  --paper-sunk: #241c16;
+  --ink: #f4efe6;
+  --ink-2: #c4bdb2;
+  --ink-3: #c4bdb2;
+  --border: #3a342e;
+  --brand-soft: #3d2418;
+  --brand-text: #e8b49a;
+  --good-soft: #1c3326;
+  --look-soft: #3a2e18;
+  --act-soft: #3a221e;
+  --sage-soft: #243028;
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.35), 0 12px 28px -16px rgba(0, 0, 0, 0.55);
+  --shadow-float: 0 1px 0 rgba(0, 0, 0, 0.4), 0 18px 40px -14px rgba(0, 0, 0, 0.6);
+}
+
+html.dark[data-look="calm"] {
+  --background: #1c2124;
+  --card: #252b2e;
+  --brand-soft: #2a3336;
 }
 
 @layer base {
