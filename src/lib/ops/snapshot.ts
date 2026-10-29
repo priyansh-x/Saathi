@@ -47,7 +47,7 @@ export async function loadOpsSnapshot(now = new Date()) {
     gate: row.status,
     at: row.at,
     to: maskPhone(row.to_phone),
-    delivery: row.delivery_status || "—",
+    delivery: row.delivery_status || "-",
   }));
 
   const openAlerts = await query<OpsAlert>(

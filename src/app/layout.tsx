@@ -35,7 +35,7 @@ const devanagari = Noto_Sans_Devanagari({
 
 export const metadata: Metadata = {
   title: "Saathi",
-  description: "A morning phone call for Indian parents. Companionship and reminders — never diagnosis.",
+  description: "A morning phone call for Indian parents. Companionship and reminders, never diagnosis.",
   robots: { index: false, follow: false },
   appleWebApp: { capable: true, title: "Saathi", statusBarStyle: "default" },
   manifest: "/manifest.webmanifest",

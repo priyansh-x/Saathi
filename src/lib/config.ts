@@ -1,7 +1,7 @@
 import { opsKillSwitchLatched } from "@/lib/ops/flags";
 import { whatsappTemplatePack } from "@/lib/whatsapp/template-pack";
 
-/** Product defaults. Change via env — do not hard-code elsewhere. */
+/** Product defaults. Change via env; do not hard-code elsewhere. */
 export const PRODUCT_NAME = process.env.PRODUCT_NAME || "Saathi";
 export const BRIEFING_CHANNEL = process.env.BRIEFING_CHANNEL || "whatsapp";
 export const LANGUAGES = (process.env.LANGUAGES || "hi,en").split(",");

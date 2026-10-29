@@ -2,7 +2,7 @@
   "name": "saathi",
   "version": "0.1.0",
   "private": true,
-  "description": "Morning phone companion for a parent in India, plus a family desk.",
+  "description": "Daily phone companion for aging parents in India: morning call, WhatsApp briefing, and a family desk.",
   "engines": {
     "node": ">=20"
   },

@@ -3,9 +3,9 @@ export const domainPlaceholder = "<domain>";
 
 export const content = {
   meta: {
-    title: "Saathi — A morning phone call for your parents",
+    title: "Saathi: a morning phone call for your parents",
     description:
-      "Saathi calls Maa every morning on the phone she already has. You get two lines on WhatsApp. Companionship and reminders — never a doctor.",
+      "Saathi calls Maa every morning on the phone she already has. You get two lines on WhatsApp. Companionship and reminders, never a doctor.",
   },
   nav: {
     logo: "Saathi",
