@@ -61,8 +61,10 @@ export function ProfileSheet({
 
   useEffect(() => {
     const next = readDeskUi();
-    setPrefs(next);
     applyDeskUi(next);
+    // Prefs and push permission live on this device; they are unknown during SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate from localStorage after mount
+    setPrefs(next);
     void deskPushState().then(setPush);
   }, []);
 

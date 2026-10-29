@@ -17,14 +17,6 @@ const eslintConfig = defineConfig([
     "brag-output/**",
     "android/**",
   ]),
-  {
-    rules: {
-      // Next 16 compiler plugin: treat as warnings until those screens are rewritten.
-      "react-hooks/set-state-in-effect": "warn",
-      "react-hooks/error-boundaries": "warn",
-      "react-hooks/refs": "warn",
-    },
-  },
 ]);
 
 export default eslintConfig;

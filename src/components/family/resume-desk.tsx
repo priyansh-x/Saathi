@@ -18,6 +18,8 @@ export function ResumeDesk({ lang, children }: { lang: Lang; children?: ReactNod
     }
     const token = loadDeskToken();
     if (token) {
+      // Last desk token is in this browser; cannot decide during SSR.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resume stored desk after mount
       setGoing(true);
       router.replace(`/d/${token}?lang=${lang}`);
       return;

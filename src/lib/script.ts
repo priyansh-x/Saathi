@@ -24,7 +24,7 @@ export function buildBeats(household: Household): Beat[] {
   return [
     {
       id: "hello",
-      hi: `नमस्ते ${parent} जी, मैं सुबह की साथी बोल रही हूँ. ${child} ने कहा था बात कर लूँ। सो के उठे?`,
+      hi: `नमस्ते ${parent} जी, मैं सुबह की साथिन बोल रही हूँ। ${child} ने कहा था बात कर लूँ। सो के उठे?`,
       en: `Namaste ${parent} ji. This is the morning check-in. ${child} asked me to call. Did you sleep well?`,
       choices: [
         {
@@ -87,7 +87,7 @@ export function buildBeats(household: Household): Beat[] {
     },
     {
       id: "day",
-      hi: `${child} पूछ रही थी. आज घर में कोई आएगा?`,
+      hi: `${child} पूछ रही थी। आज घर में कोई आएगा?`,
       en: `${child} asked: is anyone coming home today?`,
       choices: [
         {

@@ -61,6 +61,12 @@ export function DeskPager({
   const [drag, setDrag] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [width, setWidth] = useState(320);
+  const [syncedActive, setSyncedActive] = useState(active);
+  if (active !== syncedActive) {
+    setSyncedActive(active);
+    setIndex(Math.max(0, DESK_TABS.indexOf(active)));
+    setDrag(0);
+  }
   const pager = useRef<HTMLDivElement>(null);
   const start = useRef<{
     x: number;
@@ -73,14 +79,16 @@ export function DeskPager({
   const dragRef = useRef(0);
   const extraRef = useRef(extraQuery);
   const suppressClick = useRef(false);
-  extraRef.current = extraQuery;
-  indexRef.current = index;
-  dragRef.current = drag;
 
   useEffect(() => {
-    setIndex(Math.max(0, DESK_TABS.indexOf(active)));
-    setDrag(0);
-  }, [active]);
+    extraRef.current = extraQuery;
+  }, [extraQuery]);
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
+  useEffect(() => {
+    dragRef.current = drag;
+  }, [drag]);
 
   useEffect(() => {
     applyDeskUi();
@@ -89,9 +97,7 @@ export function DeskPager({
   useEffect(() => {
     const el = pager.current;
     if (!el) return;
-    const measure = () => setWidth(el.clientWidth || 320);
-    measure();
-    const ro = new ResizeObserver(measure);
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth || 320));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
