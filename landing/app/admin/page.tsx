@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
 
 export const metadata: Metadata = {
   title: "Admin · Saathi",
   robots: { index: false, follow: false },
 };
 
-export default async function LandingAdminPage() {
-  await connection();
+export default function LandingAdminPage() {
   const desk = (process.env.FAMILY_DESK_URL || process.env.NEXT_PUBLIC_FAMILY_DESK_URL || "").replace(/\/$/, "");
   const href = desk ? `${desk}/admin` : "";
 
