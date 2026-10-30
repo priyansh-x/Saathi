@@ -14,7 +14,20 @@ export function SiteEffects() {
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    const bands = document.querySelectorAll("[data-band='dark']");
+    const io = new IntersectionObserver(
+      (entries) => {
+        const over = entries.some((e) => e.intersectionRatio > 0.2 && e.boundingClientRect.top < 80);
+        document.documentElement.dataset.navDark = over ? "true" : "false";
+      },
+      { rootMargin: "-64px 0px -80% 0px", threshold: [0, 0.2, 1] },
+    );
+    bands.forEach((b) => io.observe(b));
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      io.disconnect();
+    };
   }, []);
   return null;
 }
@@ -48,15 +61,15 @@ export function MiniMark({ className = "size-4" }: { className?: string }) {
 export function Nav({ deskUrl }: { deskUrl: string }) {
   const t = content.nav;
   return (
-    <header className="site-nav sticky top-0 z-40 h-16 border-b border-transparent bg-bg">
+    <header className="site-nav sticky top-0 z-40 h-16 border-b border-transparent transition-[background,border-color] duration-[180ms]">
       <div className="container-site flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 font-medium">
           <LogoTile />
           <span>{t.logo}</span>
         </Link>
-        <nav className="hidden items-center gap-7 text-[15px] md:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-7 text-[14px] md:flex" aria-label="Primary">
           {t.links.map((l) => (
-            <a key={l.href} href={l.href} className="text-ink-2 hover:text-ink">
+            <a key={l.href} href={l.href} className="opacity-75 transition-opacity hover:opacity-100">
               {l.label}
             </a>
           ))}
@@ -72,47 +85,51 @@ export function Nav({ deskUrl }: { deskUrl: string }) {
 export function Footer() {
   const t = content.footer;
   return (
-    <footer className="border-t border-border bg-bg">
-      <div className="container-site grid gap-10 py-16 md:grid-cols-12">
-        <div className="md:col-span-6">
+    <footer className="border-t border-white/5 bg-dark text-dark-ink" data-band="dark">
+      <div className="container-site grid gap-12 pb-10 pt-16 md:grid-cols-12">
+        <div className="md:col-span-5">
           <Link href="/" className="flex items-center gap-2 font-medium">
             <LogoTile />
             <span>{content.nav.logo}</span>
           </Link>
-          <p className="mt-5 max-w-sm text-[22px] leading-snug text-ink-2">{t.sign}</p>
+          <p className="mt-6 max-w-sm text-[18px] leading-relaxed text-dark-muted">
+            {t.signA} {t.signB}
+          </p>
         </div>
-        <nav className="text-[15px] md:col-span-3" aria-label="Product">
-          <ul className="space-y-2.5 text-ink-2">
+        <nav className="text-[14px] md:col-span-3 md:col-start-8" aria-label={t.productTitle}>
+          <p className="font-medium">{t.productTitle}</p>
+          <ul className="mt-4 space-y-2.5 text-dark-muted">
             {content.nav.links.map((l) => (
               <li key={l.href}>
-                <a href={l.href} className="hover:text-ink">
+                <a href={l.href} className="hover:text-dark-ink">
                   {l.label}
                 </a>
               </li>
             ))}
           </ul>
         </nav>
-        <nav className="text-[15px] md:col-span-3" aria-label="Company">
-          <ul className="space-y-2.5 text-ink-2">
+        <nav className="text-[14px] md:col-span-2" aria-label={t.companyTitle}>
+          <p className="font-medium">{t.companyTitle}</p>
+          <ul className="mt-4 space-y-2.5 text-dark-muted">
             <li>
-              <Link href="/privacy" className="hover:text-ink">
+              <Link href="/privacy" className="hover:text-dark-ink">
                 {t.privacy}
               </Link>
             </li>
             <li>
-              <Link href="/terms" className="hover:text-ink">
+              <Link href="/terms" className="hover:text-dark-ink">
                 {t.terms}
               </Link>
             </li>
             <li>
-              <a href={t.githubHref} className="hover:text-ink">
+              <a href={t.githubHref} className="hover:text-dark-ink">
                 {t.github}
               </a>
             </li>
           </ul>
         </nav>
       </div>
-      <div className="container-site flex flex-col gap-3 border-t border-border py-6 text-[13px] text-ink-2 md:flex-row md:items-start md:justify-between">
+      <div className="container-site relative flex flex-col gap-3 border-t border-white/10 py-6 text-[13px] text-dark-muted md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
           <p>{t.copy}</p>
           <p>{t.credit}</p>
@@ -120,5 +137,14 @@ export function Footer() {
         <p className="max-w-xl md:text-right">{t.disclaimer}</p>
       </div>
     </footer>
+  );
+}
+
+export function Eyebrow({ label }: { label: string }) {
+  return (
+    <p className="eyebrow">
+      <span className="rule" />
+      <span>{label}</span>
+    </p>
   );
 }

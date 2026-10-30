@@ -1,5 +1,6 @@
 "use client";
 
+import { MicOff, Pause, PhoneOff, Play, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MiniMark } from "@/components/chrome";
 import { DeviceFrame, ExampleTag, Waveform, WhatsAppBriefing } from "@/components/kit";
@@ -13,15 +14,17 @@ export function Listen() {
   const [lang, setLang] = useState<LangId>("hi");
   const [turn, setTurn] = useState(0);
   const [chars, setChars] = useState(0);
+  const [playing, setPlaying] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, 0.3);
+  const inView = useInView(ref, 0.25);
   const reduced = usePrefersReducedMotion();
   const lines = t.transcripts[lang];
+  const done = reduced || turn >= lines.length;
   const current = lines[Math.min(turn, lines.length - 1)];
-  const shown = reduced ? lines : lines.slice(0, turn);
+  const shown = done ? lines : lines.slice(0, turn);
 
   useEffect(() => {
-    if (reduced || !inView || turn >= lines.length) return;
+    if (reduced || !playing || !inView || turn >= lines.length) return;
     const target = lines[turn]?.text.length ?? 0;
     if (chars < target) {
       const id = window.setTimeout(() => setChars((n) => n + 1), 1000 / CPS);
@@ -30,25 +33,37 @@ export function Listen() {
     const id = window.setTimeout(() => {
       setTurn((n) => n + 1);
       setChars(0);
-    }, 1100);
+    }, 900);
     return () => window.clearTimeout(id);
-  }, [inView, reduced, turn, chars, lines]);
+  }, [inView, reduced, playing, turn, chars, lines]);
 
   function pick(id: LangId) {
     setLang(id);
     setTurn(reduced ? content.listen.transcripts[id].length : 0);
     setChars(0);
+    setPlaying(!reduced);
+  }
+
+  function jump(start: number) {
+    setTurn(start);
+    setChars(0);
+    setPlaying(true);
   }
 
   return (
-    <section id="listen" className="section pt-4 md:pt-8">
+    <section id="listen" className="section pt-12 md:pt-16">
       <div className="container-site">
-        <div data-reveal>
-          <h2 className="h2">{t.h2}</h2>
-          <p className="sub mt-4">{t.sub}</p>
+        <div className="text-center" data-reveal>
+          <p className="eyebrow justify-center">{t.eyebrow}</p>
+          <h2 className="h2 mx-auto mt-4">{t.h2}</h2>
+          <p className="sub mx-auto mt-4">{t.sub}</p>
         </div>
 
-        <div ref={ref} className="mt-10 rounded-[24px] border border-border bg-bg-sunk px-4 py-8 md:mt-14 md:px-10 md:py-12" data-reveal>
+        <div
+          ref={ref}
+          className="relative mt-12 overflow-hidden rounded-[32px] border border-border bg-bg-sunk px-4 pb-10 pt-8 md:mt-16 md:px-10 md:pb-14 md:pt-10"
+          data-reveal
+        >
           <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
             <div className="seg max-w-full overflow-x-auto" role="group" aria-label="Call language">
               {t.languages.map((l) => {
@@ -71,33 +86,86 @@ export function Listen() {
             <ExampleTag>{t.tag}</ExampleTag>
           </div>
 
-          <div className="mt-10 grid items-center justify-items-center gap-8 lg:grid-cols-[1fr_auto_1fr]">
-            <DeviceFrame dark time="8:04" className="max-w-[260px]">
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            {t.scenes.map((scene) => (
+              <button
+                key={scene.id}
+                type="button"
+                className="rounded-full border border-border bg-bg-elevated px-3 py-1.5 text-[13px] font-medium hover:border-ink/25"
+                onClick={() => jump(scene.start)}
+              >
+                {scene.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="btn !min-h-10 !px-4 text-[14px]"
+              onClick={() => {
+                if (turn >= lines.length) {
+                  setTurn(0);
+                  setChars(0);
+                  setPlaying(true);
+                } else {
+                  setPlaying((p) => !p);
+                }
+              }}
+            >
+              {turn >= lines.length ? (
+                t.replay
+              ) : playing ? (
+                <>
+                  <Pause className="size-3.5" strokeWidth={2} aria-hidden /> {t.pause}
+                </>
+              ) : (
+                <>
+                  <Play className="size-3.5 fill-current" strokeWidth={1.5} aria-hidden /> {t.play}
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="mt-10 grid items-center justify-items-center gap-8 overflow-hidden lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
+            <DeviceFrame dark time="8:04" className="max-w-[260px] lg:max-w-[280px]">
               <div className="flex h-full min-h-0 flex-col px-4 pb-5 text-dark-ink" aria-label="Example: morning call transcript">
                 <div className="mt-4 text-center">
-                  <span className="mx-auto grid size-12 place-items-center">
-                    <MiniMark className="size-12" />
+                  <span className="mx-auto grid size-14 place-items-center">
+                    <MiniMark className="size-14" />
                   </span>
                   <p className="mt-2 text-[15px] font-medium">{t.caller}</p>
                   <p className="font-mono text-[12px] text-dark-muted">{t.callClock}</p>
-                  <Waveform bars={16} className="mx-auto mt-2 justify-center text-accent" />
+                  <Waveform bars={16} className={`mx-auto mt-2 justify-center text-accent ${playing ? "" : "[&_span]:![animation:none]"}`} />
                 </div>
                 <ol className="mt-4 flex flex-1 flex-col justify-end gap-2.5 overflow-hidden text-[13px] leading-snug">
                   {shown.slice(-4).map((line, idx) => (
                     <Bubble key={`${lang}-${idx}-${line.text}`} who={line.who} text={line.text} />
                   ))}
-                  {!reduced && turn < lines.length && current ? (
+                  {!reduced && !done && playing && current ? (
                     <Bubble who={current.who} text={current.text.slice(0, chars)} typing />
                   ) : null}
                 </ol>
+                <div className="mt-4 flex justify-center gap-5" aria-hidden>
+                  <span className="grid size-10 place-items-center rounded-full bg-white/10">
+                    <MicOff className="size-4" strokeWidth={1.75} />
+                  </span>
+                  <span className="grid size-10 place-items-center rounded-full bg-act">
+                    <PhoneOff className="size-4" strokeWidth={1.75} />
+                  </span>
+                  <span className="grid size-10 place-items-center rounded-full bg-white/10">
+                    <Volume2 className="size-4" strokeWidth={1.75} />
+                  </span>
+                </div>
               </div>
             </DeviceFrame>
 
-            <p className="text-center text-[14px] text-ink-2">{t.toYou}</p>
+            <div className="flex flex-row items-center gap-3 text-[13px] text-ink-2 md:flex-col">
+              <span className="h-px w-10 bg-border md:h-16 md:w-px" />
+              <span className="rounded-full border border-border bg-bg-elevated px-3 py-1.5">{t.toYou}</span>
+              <span className="h-px w-10 bg-border md:h-16 md:w-px" />
+            </div>
 
-            <DeviceFrame time="8:06" className="max-w-[260px]">
+            <DeviceFrame time="8:06" className="max-w-[260px] lg:max-w-[280px]">
               <aside className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Example: WhatsApp briefing">
-                <WhatsAppBriefing />
+                <WhatsAppBriefing landed={done || reduced} />
               </aside>
             </DeviceFrame>
           </div>

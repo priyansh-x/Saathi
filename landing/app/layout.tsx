@@ -19,7 +19,7 @@ const instrument = Instrument_Serif({
   variable: "--font-instrument",
   subsets: ["latin"],
   weight: "400",
-  style: "normal",
+  style: ["normal", "italic"],
 });
 
 const deva = Noto_Sans_Devanagari({
