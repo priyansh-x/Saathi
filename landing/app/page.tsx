@@ -1,14 +1,13 @@
 import { Answer } from "@/components/answer";
 import { Footer, Nav, SiteEffects, SkipLink } from "@/components/chrome";
-import { Desk } from "@/components/desk";
 import { Hero } from "@/components/hero";
 import { Listen } from "@/components/listen";
 import { People } from "@/components/people";
 import { Faq, Finale } from "@/components/rest";
 import { Safety } from "@/components/safety";
 import { Setup } from "@/components/setup";
-import { Bet, Privacy } from "@/components/thesis";
-import { Why } from "@/components/why";
+import { Privacy, ThesisBand } from "@/components/thesis";
+import { Tour } from "@/components/tour";
 import { exampleDeskUrl, familyDeskUrl } from "@/lib/desk";
 
 export default function Home() {
@@ -22,13 +21,12 @@ export default function Home() {
       <main id="main">
         <Hero deskUrl={desk} />
         <Listen />
-        <Answer />
+        <Tour exampleUrl={example} />
         <People />
+        <Answer />
         <Safety />
-        <Desk exampleUrl={example} />
         <Setup />
-        <Why />
-        <Bet />
+        <ThesisBand />
         <Privacy />
         <Faq />
         <Finale />

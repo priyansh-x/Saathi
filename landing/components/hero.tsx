@@ -1,50 +1,52 @@
+"use client";
+
 import Image from "next/image";
+import { DeviceFrame } from "@/components/kit";
+import { CallScreen, PlayButton, useMorningCall } from "@/components/call-demo";
 import { content } from "@/lib/content";
 import heroImg from "@/public/images/hero-maa-balcony.jpg";
 
 export function Hero({ deskUrl }: { deskUrl: string }) {
   const t = content.hero;
-  const line = t.voiceLines[0];
+  const { audioRef, playing, done, toggle, cue, index, line } = useMorningCall("hi");
+  const shown = done ? [...cue.lines] : playing ? cue.lines.slice(0, index) : [cue.lines[0]];
+  const activeLine = playing ? line : null;
 
   return (
-    <section className="pb-16 pt-10 md:pb-24 md:pt-16">
-      <div className="container-site grid items-start gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+    <section className="pb-12 pt-8 md:pb-16 md:pt-12">
+      <audio ref={audioRef} preload="auto" />
+      <div className="container-site grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14">
         <div>
-          <h1 className="h1 rise">{t.h1a} {t.h1b}</h1>
-          <p className="sub rise mt-6">{t.sub}</p>
-          <div className="rise mt-8 flex flex-col gap-3 sm:flex-row">
-            <a href={deskUrl} className="btn">
+          <p className="eyebrow">
+            <span className="rule" />
+            <span>{t.kicker}</span>
+          </p>
+          <h1 className="h1 mt-4">{t.h1a} {t.h1b}</h1>
+          <p className="sub mt-5">{t.sub}</p>
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <PlayButton playing={playing} done={done} onClick={toggle} />
+            <a href={deskUrl} className="btn-ghost">
               {t.cta}
             </a>
-            <a href="#listen" className="btn-ghost">
-              {t.secondary}
-            </a>
           </div>
-          <p className="rise mt-8 max-w-xl text-[14px] leading-relaxed text-ink-2">
-            {t.trust.join(" · ")}
-          </p>
+          <p className="mt-6 max-w-xl text-[14px] leading-relaxed text-ink-2">{t.trust.join(" · ")}</p>
         </div>
 
-        <div className="rise">
-          <div className="art relative aspect-[4/3.1]">
+        <div className="relative mx-auto w-full max-w-[480px]">
+          <div className="art relative aspect-[5/6] md:aspect-[3/4]">
             <Image
               src={heroImg}
               alt={t.imageAlt}
               fill
               priority
               placeholder="blur"
-              sizes="(min-width: 1024px) 560px, 100vw"
-              className="object-cover object-[70%_center]"
+              sizes="(min-width: 1024px) 480px, 90vw"
+              className="object-cover object-[72%_center]"
             />
-            <div className="absolute bottom-3 left-3 right-3 max-w-[280px] rounded-[12px] border border-border bg-bg-elevated p-3.5">
-              <p className="text-[13px] font-medium">{t.callStatus}</p>
-              <p className="font-mono text-[12px] text-ink-3">
-                {t.callTitle} · {t.callClock}
-              </p>
-              <p className={`mt-3 text-[15px] leading-snug ${line.hi ? "font-deva" : ""}`}>{line.text}</p>
-              <p className="mt-1 text-[11px] text-ink-3">
-                {t.example} · {line.lang}
-              </p>
+            <div className="absolute bottom-5 right-4 w-[44%] max-w-[210px] sm:right-5">
+              <DeviceFrame dark time="8:04">
+                <CallScreen lang="hi" playing={playing} done={done} line={activeLine} shown={shown} />
+              </DeviceFrame>
             </div>
           </div>
         </div>

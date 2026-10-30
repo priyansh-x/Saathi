@@ -12,24 +12,30 @@ export function DeviceFrame({
   className = "",
   time = "8:07",
   dark = false,
+  overlay = false,
 }: {
   children: React.ReactNode;
   className?: string;
   time?: string;
   dark?: boolean;
+  overlay?: boolean;
 }) {
   return (
     <div className={`device ${dark ? "device-dark" : ""} ${className}`}>
       <div className="device-screen">
-        <div className="device-status" aria-hidden>
-          <span>{time}</span>
-          <span className="device-island" />
-          <span className="flex items-center gap-1">
-            <span className="signal" />
-            <span className="battery" />
-          </span>
-        </div>
-        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+        {overlay ? (
+          <span className="device-island z-10" aria-hidden />
+        ) : (
+          <div className="device-status" aria-hidden>
+            <span>{time}</span>
+            <span className="device-island" />
+            <span className="flex items-center gap-1">
+              <span className="signal" />
+              <span className="battery" />
+            </span>
+          </div>
+        )}
+        <div className="relative min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export function Setup() {
         </div>
 
         <div className="mt-12 grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:items-stretch">
-          <div className="art relative min-h-[360px] lg:min-h-[520px]" data-reveal>
+          <div className="art relative min-h-[280px] lg:min-h-[420px]" data-reveal>
             <Image
               src={setupImg}
               alt={t.imageAlt}

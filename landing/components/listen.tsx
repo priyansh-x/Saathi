@@ -1,176 +1,78 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { MiniMark } from "@/components/chrome";
+import { useState } from "react";
 import { DeviceFrame, ExampleTag, WhatsAppBriefing } from "@/components/kit";
-import { content, type LangId } from "@/lib/content";
-import { useInView, usePrefersReducedMotion } from "@/lib/use-reveal";
-
-const CPS = 34;
+import { CallScreen, PlayButton, useMorningCall } from "@/components/call-demo";
+import { type CallLang } from "@/lib/call-audio";
+import { content } from "@/lib/content";
 
 export function Listen() {
   const t = content.listen;
-  const [lang, setLang] = useState<LangId>("hi");
-  const [turn, setTurn] = useState(0);
-  const [chars, setChars] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, 0.25);
-  const reduced = usePrefersReducedMotion();
-  const lines = t.transcripts[lang];
-  const done = reduced || turn >= lines.length;
-  const current = lines[Math.min(turn, lines.length - 1)];
-  const shown = done ? lines : lines.slice(0, turn);
-
-  useEffect(() => {
-    if (reduced || !playing || !inView || turn >= lines.length) return;
-    const target = lines[turn]?.text.length ?? 0;
-    if (chars < target) {
-      const id = window.setTimeout(() => setChars((n) => n + 1), 1000 / CPS);
-      return () => window.clearTimeout(id);
-    }
-    const id = window.setTimeout(() => {
-      setTurn((n) => n + 1);
-      setChars(0);
-    }, 900);
-    return () => window.clearTimeout(id);
-  }, [inView, reduced, playing, turn, chars, lines]);
-
-  function pick(id: LangId) {
-    setLang(id);
-    setTurn(reduced ? content.listen.transcripts[id].length : 0);
-    setChars(0);
-    setPlaying(!reduced);
-  }
-
-  function jump(start: number) {
-    setTurn(start);
-    setChars(0);
-    setPlaying(true);
-  }
+  const [lang, setLang] = useState<CallLang>("hi");
+  const { audioRef, playing, done, toggle, seekLine, cue, index, line, reduced } = useMorningCall(lang);
+  const shown = done ? [...cue.lines] : playing ? cue.lines.slice(0, index) : [cue.lines[0]];
+  const activeLine = playing ? line : null;
 
   return (
-    <section id="listen" className="section pt-8 md:pt-12">
+    <section id="listen" className="section pt-4 md:pt-6">
+      <audio ref={audioRef} preload="auto" />
       <div className="container-site">
-        <div data-reveal>
-          <p className="eyebrow">
-            <span className="rule" />
-            <span>{t.eyebrow}</span>
-          </p>
-          <h2 className="h2 mt-4">{t.h2}</h2>
-          <p className="sub mt-4">{t.sub}</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="eyebrow">
+              <span className="rule" />
+              <span>{t.eyebrow}</span>
+            </p>
+            <h2 className="h2 mt-3">{t.h2}</h2>
+            <p className="sub mt-3">{t.sub}</p>
+          </div>
+          <ExampleTag>{t.tag}</ExampleTag>
         </div>
 
-        <div ref={ref} className="mt-10 border-t border-border pt-8 md:mt-14 md:pt-10" data-reveal>
-          <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-            <div className="seg max-w-full overflow-x-auto" role="group" aria-label="Call language">
-              {t.languages.map((l) => {
-                const id = l.live ? (l.id as LangId) : null;
-                return (
-                  <button
-                    key={l.id}
-                    type="button"
-                    disabled={!id}
-                    aria-pressed={id === lang}
-                    onClick={() => id && pick(id)}
-                    className="disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    {l.label}
-                    {!l.live ? <span className="text-[11px]">{t.soon}</span> : null}
-                  </button>
-                );
-              })}
-            </div>
-            <ExampleTag>{t.tag}</ExampleTag>
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="seg max-w-full overflow-x-auto" role="group" aria-label="Call language">
+            {t.languages.map((l) => {
+              const id = l.live ? (l.id as CallLang) : null;
+              return (
+                <button
+                  key={l.id}
+                  type="button"
+                  disabled={!id}
+                  aria-pressed={id === lang}
+                  onClick={() => id && setLang(id)}
+                  className="disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {l.label}
+                  {!l.live ? <span className="text-[11px]">{t.soon}</span> : null}
+                </button>
+              );
+            })}
           </div>
-
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            {t.scenes.map((scene) => (
-              <button
-                key={scene.id}
-                type="button"
-                className="rounded-[8px] border border-border bg-bg-elevated px-3 py-1.5 text-[13px] hover:border-ink/25"
-                onClick={() => jump(scene.start)}
-              >
-                {scene.label}
-              </button>
-            ))}
+          {t.scenes.map((scene) => (
             <button
+              key={scene.id}
               type="button"
-              className="btn !min-h-9 !px-3.5 text-[13px]"
-              onClick={() => {
-                if (turn >= lines.length) {
-                  setTurn(0);
-                  setChars(0);
-                  setPlaying(true);
-                } else {
-                  setPlaying((p) => !p);
-                }
-              }}
+              className="rounded-[8px] border border-border bg-bg-elevated px-3 py-1.5 text-[13px] hover:border-ink/25"
+              onClick={() => seekLine(scene.start)}
             >
-              {turn >= lines.length ? (
-                t.replay
-              ) : playing ? (
-                <>
-                  <Pause className="size-3.5" strokeWidth={2} aria-hidden /> {t.pause}
-                </>
-              ) : (
-                <>
-                  <Play className="size-3.5 fill-current" strokeWidth={1.5} aria-hidden /> {t.play}
-                </>
-              )}
+              {scene.label}
             </button>
-          </div>
+          ))}
+          <PlayButton playing={playing} done={done} onClick={toggle} className="btn !min-h-9 !px-3.5 text-[13px]" />
+        </div>
 
-          <div className="mt-10 grid items-center justify-items-center gap-8 overflow-hidden lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
-            <DeviceFrame dark time="8:04" className="max-w-[260px] lg:max-w-[280px]">
-              <div className="flex h-full min-h-0 flex-col px-4 pb-5 text-dark-ink" aria-label="Example: morning call transcript">
-                <div className="mt-3 text-center">
-                  <span className="mx-auto grid size-12 place-items-center">
-                    <MiniMark className="size-12" />
-                  </span>
-                  <p className="mt-2 text-[15px] font-medium">{t.caller}</p>
-                  <p className="font-mono text-[12px] text-dark-muted">{t.callClock}</p>
-                </div>
-                <ol className="mt-4 flex flex-1 flex-col justify-end gap-2.5 overflow-hidden text-[13px] leading-snug">
-                  {shown.slice(-4).map((line, idx) => (
-                    <Bubble key={`${lang}-${idx}-${line.text}`} who={line.who} text={line.text} />
-                  ))}
-                  {!reduced && !done && playing && current ? (
-                    <Bubble who={current.who} text={current.text.slice(0, chars)} typing />
-                  ) : null}
-                </ol>
-              </div>
-            </DeviceFrame>
-
-            <p className="text-[13px] text-ink-3">{t.toYou}</p>
-
-            <DeviceFrame time="8:06" className="max-w-[260px] lg:max-w-[280px]">
-              <aside className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Example: WhatsApp briefing">
-                <WhatsAppBriefing landed={done || reduced} />
-              </aside>
-            </DeviceFrame>
-          </div>
+        <div className="mt-10 grid items-center justify-items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
+          <DeviceFrame dark time="8:04" className="max-w-[250px] lg:max-w-[268px]">
+            <CallScreen lang={lang} playing={playing} done={done} line={activeLine} shown={shown} />
+          </DeviceFrame>
+          <p className="text-[13px] text-ink-3">{t.toYou}</p>
+          <DeviceFrame time="8:06" className="max-w-[250px] lg:max-w-[268px]">
+            <aside className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Example: WhatsApp briefing">
+              <WhatsAppBriefing landed={done || reduced} />
+            </aside>
+          </DeviceFrame>
         </div>
       </div>
     </section>
-  );
-}
-
-function Bubble({ who, text, typing = false }: { who: "saathi" | "maa"; text: string; typing?: boolean }) {
-  const maa = who === "maa";
-  return (
-    <li className={`screen-fade flex ${maa ? "justify-end" : "justify-start"}`}>
-      <p
-        lang="hi"
-        className={`max-w-[85%] rounded-[12px] px-3 py-2 ${
-          maa ? "rounded-br-[4px] bg-accent text-white" : "rounded-bl-[4px] bg-white/10 text-dark-ink"
-        }`}
-      >
-        {text}
-        {typing ? <span className="caret" aria-hidden /> : null}
-      </p>
-    </li>
   );
 }
