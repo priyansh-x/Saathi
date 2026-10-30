@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useId, useState, type FormEvent } from "react";
 import { content } from "@/lib/content";
 import { Eyebrow } from "./chrome";
@@ -21,9 +21,9 @@ export function Faq() {
           <div className="md:col-span-7">
             {t.items.map((item, i) => (
               <details key={item.q} className="faq group border-b border-border" open={i === 0}>
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[18px] font-medium [&::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[17px] font-medium [&::-webkit-details-marker]:hidden">
                   {item.q}
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border transition-[transform,background] duration-300 group-open:rotate-45 group-open:bg-accent-soft group-open:text-accent">
+                  <span className="grid size-8 shrink-0 place-items-center text-ink-3 transition-transform duration-200 group-open:rotate-45">
                     <Plus className="size-4" strokeWidth={1.75} aria-hidden />
                   </span>
                 </summary>
@@ -69,32 +69,25 @@ export function Finale() {
 
   return (
     <section id="join" className="dark-band section-finale bg-dark text-dark-ink" data-band="dark">
-      <div className="container-site pt-16 text-center md:pt-20">
-        <p className="eyebrow justify-center" data-reveal>
-          {t.eyebrow}
+      <div className="container-site max-w-3xl">
+        <p className="eyebrow" data-reveal>
+          <span className="rule" />
+          <span>{t.eyebrow}</span>
         </p>
-        <h2 className="h2 mx-auto mt-5 max-w-4xl" data-reveal>
-          {t.h2a} {t.h2b}
+        <h2 className="h2 mt-5 max-w-none" data-reveal>
+          {t.h2a}
         </h2>
-        <p className="mx-auto mt-5 max-w-xl text-[17px] text-dark-muted" data-reveal>
+        <p className="mt-5 max-w-xl text-[17px] text-dark-muted" data-reveal>
           {t.sub}
         </p>
 
-        <div
-          className="mx-auto mt-10 max-w-2xl rounded-[20px] border border-white/10 bg-white/[0.04] p-3 text-left md:p-4"
-          data-reveal
-        >
+        <div className="mt-10 text-left" data-reveal>
           {state === "done" ? (
-            <div className="flex items-center gap-4 p-4" role="status">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-good text-white">
-                <Check className="size-5" strokeWidth={2.5} aria-hidden />
-              </span>
-              <div>
-                <p className="text-[17px] font-medium">{t.thanks}</p>
-                <button type="button" onClick={open} className="mt-1 text-[14px] text-[#e9a27e] underline-offset-2 hover:underline">
-                  {t.more}
-                </button>
-              </div>
+            <div role="status">
+              <p className="text-[17px] font-medium">{t.thanks}</p>
+              <button type="button" onClick={open} className="mt-2 text-[14px] text-dark-muted underline underline-offset-2 hover:text-dark-ink">
+                {t.more}
+              </button>
             </div>
           ) : (
             <form onSubmit={onSubmit} className="relative grid gap-3" aria-label={t.cta}>
@@ -122,12 +115,11 @@ export function Finale() {
                     <option key={l}>{l}</option>
                   ))}
                 </select>
-                <button type="submit" className="btn h-[52px]" disabled={state === "pending"}>
+                <button type="submit" className="btn h-12" disabled={state === "pending"}>
                   {state === "pending" ? "Joining…" : t.cta}
-                  <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
                 </button>
               </div>
-              <div className="flex flex-col gap-2 px-1 pb-1 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <label htmlFor={ids.consent} className="flex items-center gap-2.5 text-[14px] text-dark-muted">
                   <input id={ids.consent} type="checkbox" name="consent" required className="size-4 accent-[var(--accent)]" />
                   {t.consent}
@@ -141,7 +133,7 @@ export function Finale() {
                 <input id={ids.hp} name="company" tabIndex={-1} autoComplete="off" />
               </div>
               {state === "error" ? (
-                <p className="px-1 text-[14px] text-[#f0a598]" role="alert">
+                <p className="text-[14px] text-[#f0a598]" role="alert">
                   {t.error}
                 </p>
               ) : null}
@@ -149,14 +141,9 @@ export function Finale() {
           )}
         </div>
 
-        <ul className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[14px] text-dark-muted" data-reveal>
-          {t.perks.map((p) => (
-            <li key={p} className="flex items-center gap-2">
-              <Check className="size-4 text-[#9bc5a6]" strokeWidth={2} aria-hidden />
-              {p}
-            </li>
-          ))}
-        </ul>
+        <p className="mt-8 text-[14px] text-dark-muted" data-reveal>
+          {t.perks.join(" · ")}
+        </p>
       </div>
     </section>
   );

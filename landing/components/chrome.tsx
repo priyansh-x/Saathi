@@ -74,7 +74,7 @@ export function Nav({ deskUrl }: { deskUrl: string }) {
             </a>
           ))}
         </nav>
-        <a href={deskUrl} className="btn !min-h-10 !px-4 text-[14px]">
+        <a href={deskUrl} className="btn !min-h-9 !rounded-[8px] !px-3.5 text-[14px]">
           {t.cta}
         </a>
       </div>

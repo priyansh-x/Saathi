@@ -42,13 +42,13 @@ export function People() {
               >
                 <div className="relative aspect-[5/4] bg-bg-sunk">
                   <Image src={c.img} alt="" fill sizes="(min-width: 768px) 380px, 82vw" className="object-cover" />
-                  <span className="absolute left-3 top-3 rounded-full bg-bg-elevated px-2.5 py-1 text-[12px] font-medium">
+                  <span className="absolute left-3 top-3 rounded-[6px] bg-bg-elevated px-2 py-1 text-[12px]">
                     {c.lang} · {c.time}
                   </span>
                 </div>
                 <div className="p-5">
                   <p className="text-[13px] text-ink-3">Saathi to {c.name}</p>
-                  <p className="font-deva mt-2 rounded-[14px] rounded-tl-[4px] bg-bg-sunk px-3.5 py-2.5 text-[17px]" lang="hi">
+                  <p className="font-deva mt-2 text-[17px] leading-snug" lang="hi">
                     {c.line}
                   </p>
                 </div>

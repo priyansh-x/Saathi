@@ -1,9 +1,9 @@
 "use client";
 
-import { MicOff, Pause, PhoneOff, Play, Volume2 } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MiniMark } from "@/components/chrome";
-import { DeviceFrame, ExampleTag, Waveform, WhatsAppBriefing } from "@/components/kit";
+import { DeviceFrame, ExampleTag, WhatsAppBriefing } from "@/components/kit";
 import { content, type LangId } from "@/lib/content";
 import { useInView, usePrefersReducedMotion } from "@/lib/use-reveal";
 
@@ -51,19 +51,18 @@ export function Listen() {
   }
 
   return (
-    <section id="listen" className="section pt-12 md:pt-16">
+    <section id="listen" className="section pt-8 md:pt-12">
       <div className="container-site">
-        <div className="text-center" data-reveal>
-          <p className="eyebrow justify-center">{t.eyebrow}</p>
-          <h2 className="h2 mx-auto mt-4">{t.h2}</h2>
-          <p className="sub mx-auto mt-4">{t.sub}</p>
+        <div data-reveal>
+          <p className="eyebrow">
+            <span className="rule" />
+            <span>{t.eyebrow}</span>
+          </p>
+          <h2 className="h2 mt-4">{t.h2}</h2>
+          <p className="sub mt-4">{t.sub}</p>
         </div>
 
-        <div
-          ref={ref}
-          className="relative mt-12 overflow-hidden rounded-[32px] border border-border bg-bg-sunk px-4 pb-10 pt-8 md:mt-16 md:px-10 md:pb-14 md:pt-10"
-          data-reveal
-        >
+        <div ref={ref} className="mt-10 border-t border-border pt-8 md:mt-14 md:pt-10" data-reveal>
           <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
             <div className="seg max-w-full overflow-x-auto" role="group" aria-label="Call language">
               {t.languages.map((l) => {
@@ -86,12 +85,12 @@ export function Listen() {
             <ExampleTag>{t.tag}</ExampleTag>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2">
             {t.scenes.map((scene) => (
               <button
                 key={scene.id}
                 type="button"
-                className="rounded-full border border-border bg-bg-elevated px-3 py-1.5 text-[13px] font-medium hover:border-ink/25"
+                className="rounded-[8px] border border-border bg-bg-elevated px-3 py-1.5 text-[13px] hover:border-ink/25"
                 onClick={() => jump(scene.start)}
               >
                 {scene.label}
@@ -99,7 +98,7 @@ export function Listen() {
             ))}
             <button
               type="button"
-              className="btn !min-h-10 !px-4 text-[14px]"
+              className="btn !min-h-9 !px-3.5 text-[13px]"
               onClick={() => {
                 if (turn >= lines.length) {
                   setTurn(0);
@@ -124,16 +123,15 @@ export function Listen() {
             </button>
           </div>
 
-          <div className="mt-10 grid items-center justify-items-center gap-8 overflow-hidden lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
+          <div className="mt-10 grid items-center justify-items-center gap-8 overflow-hidden lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
             <DeviceFrame dark time="8:04" className="max-w-[260px] lg:max-w-[280px]">
               <div className="flex h-full min-h-0 flex-col px-4 pb-5 text-dark-ink" aria-label="Example: morning call transcript">
-                <div className="mt-4 text-center">
-                  <span className="mx-auto grid size-14 place-items-center">
-                    <MiniMark className="size-14" />
+                <div className="mt-3 text-center">
+                  <span className="mx-auto grid size-12 place-items-center">
+                    <MiniMark className="size-12" />
                   </span>
                   <p className="mt-2 text-[15px] font-medium">{t.caller}</p>
                   <p className="font-mono text-[12px] text-dark-muted">{t.callClock}</p>
-                  <Waveform bars={16} className={`mx-auto mt-2 justify-center text-accent ${playing ? "" : "[&_span]:![animation:none]"}`} />
                 </div>
                 <ol className="mt-4 flex flex-1 flex-col justify-end gap-2.5 overflow-hidden text-[13px] leading-snug">
                   {shown.slice(-4).map((line, idx) => (
@@ -143,25 +141,10 @@ export function Listen() {
                     <Bubble who={current.who} text={current.text.slice(0, chars)} typing />
                   ) : null}
                 </ol>
-                <div className="mt-4 flex justify-center gap-5" aria-hidden>
-                  <span className="grid size-10 place-items-center rounded-full bg-white/10">
-                    <MicOff className="size-4" strokeWidth={1.75} />
-                  </span>
-                  <span className="grid size-10 place-items-center rounded-full bg-act">
-                    <PhoneOff className="size-4" strokeWidth={1.75} />
-                  </span>
-                  <span className="grid size-10 place-items-center rounded-full bg-white/10">
-                    <Volume2 className="size-4" strokeWidth={1.75} />
-                  </span>
-                </div>
               </div>
             </DeviceFrame>
 
-            <div className="flex flex-row items-center gap-3 text-[13px] text-ink-2 md:flex-col">
-              <span className="h-px w-10 bg-border md:h-16 md:w-px" />
-              <span className="rounded-full border border-border bg-bg-elevated px-3 py-1.5">{t.toYou}</span>
-              <span className="h-px w-10 bg-border md:h-16 md:w-px" />
-            </div>
+            <p className="text-[13px] text-ink-3">{t.toYou}</p>
 
             <DeviceFrame time="8:06" className="max-w-[260px] lg:max-w-[280px]">
               <aside className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Example: WhatsApp briefing">
@@ -181,12 +164,12 @@ function Bubble({ who, text, typing = false }: { who: "saathi" | "maa"; text: st
     <li className={`screen-fade flex ${maa ? "justify-end" : "justify-start"}`}>
       <p
         lang="hi"
-        className={`max-w-[85%] rounded-[14px] px-3 py-2 ${
+        className={`max-w-[85%] rounded-[12px] px-3 py-2 ${
           maa ? "rounded-br-[4px] bg-accent text-white" : "rounded-bl-[4px] bg-white/10 text-dark-ink"
         }`}
       >
         {text}
-        {typing ? <span className="caret !bg-current" aria-hidden /> : null}
+        {typing ? <span className="caret" aria-hidden /> : null}
       </p>
     </li>
   );

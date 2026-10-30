@@ -13,7 +13,7 @@ export function Desk({ exampleUrl }: { exampleUrl: string }) {
 
   return (
     <section id="desk" className="section bg-bg-elevated">
-      <div className="container-site grid items-center gap-12 lg:grid-cols-2">
+      <div className="container-site grid items-start gap-12 lg:grid-cols-2">
         <div>
           <Eyebrow label={t.eyebrow} />
           <h2 className="h2 mt-6" data-reveal>

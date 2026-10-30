@@ -39,9 +39,9 @@ export const content = {
     example: "Example",
   },
   listen: {
-    eyebrow: "Voice is the product",
+    eyebrow: "A morning call",
     h2: "Listen to a morning call.",
-    sub: "Press play. The call types out, then the WhatsApp briefing lands.",
+    sub: "Press play. The transcript types out, then the WhatsApp briefing lands.",
     tag: "Example call",
     caller: "Saathi to Maa",
     play: "Play the call",
@@ -86,7 +86,7 @@ export const content = {
     soon: "soon",
     callClock: "02:14",
     example: "Example",
-    toYou: "Then this lands",
+    toYou: "Then on WhatsApp",
     waiting: "Waiting for the call to finish",
   },
   people: {
@@ -366,9 +366,9 @@ export const content = {
     ],
   },
   finale: {
-    eyebrow: "Start here",
-    h2a: "Give Maa a morning call",
-    h2b: "she looks forward to.",
+    eyebrow: "Waitlist",
+    h2a: "A morning call for your parent.",
+    h2b: "",
     sub: "Most of India's elders will not download an app, but they always pick up the phone. Leave a way to reach you.",
     contact: "Email or WhatsApp number",
     lang: "Parent's language",
