@@ -7,6 +7,7 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 const geistMono = Geist_Mono({
@@ -18,7 +19,7 @@ const instrument = Instrument_Serif({
   variable: "--font-instrument",
   subsets: ["latin"],
   weight: "400",
-  style: ["normal", "italic"],
+  style: "normal",
 });
 
 const deva = Noto_Sans_Devanagari({

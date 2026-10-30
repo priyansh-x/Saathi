@@ -154,7 +154,7 @@ export function JoinButton({ className = "", children }: { className?: string; c
   const { open } = useWaitlist();
   return (
     <button type="button" onClick={open} className={className || "btn"}>
-      {children ?? content.nav.cta}
+      {children ?? content.waitlist.submit}
     </button>
   );
 }

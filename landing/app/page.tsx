@@ -1,28 +1,32 @@
-import { Answer } from "@/components/answer";
 import { Footer, Nav, SiteEffects, SkipLink } from "@/components/chrome";
+import { Desk } from "@/components/desk";
 import { Hero } from "@/components/hero";
 import { Listen } from "@/components/listen";
-import { Problem } from "@/components/problem";
-import { Faq, Finale, HerWay } from "@/components/rest";
-import { Setup } from "@/components/setup";
-import { Why } from "@/components/why";
+import { People } from "@/components/people";
+import { Faq, Finale } from "@/components/rest";
+import { Safety } from "@/components/safety";
+import { Bet, Privacy, WhyNow } from "@/components/thesis";
+import { exampleDeskUrl, familyDeskUrl } from "@/lib/desk";
 
 export default function Home() {
+  const desk = familyDeskUrl();
+  const example = exampleDeskUrl();
   return (
     <>
       <SkipLink />
       <SiteEffects />
-      <Nav />
+      <Nav deskUrl={desk} />
       <main id="main">
-        <Hero />
+        <Hero deskUrl={desk} />
         <Listen />
-        <Problem />
-        <Answer />
-        <Why />
-        <Setup />
-        <HerWay />
+        <People />
+        <Safety />
+        <Desk exampleUrl={example} />
+        <WhyNow />
+        <Bet />
+        <Privacy />
         <Faq />
-        <Finale />
+        <Finale deskUrl={desk} />
       </main>
       <Footer />
     </>
