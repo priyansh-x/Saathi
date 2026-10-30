@@ -30,7 +30,6 @@
   --color-dark-muted: var(--dark-muted);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
   --font-deva: var(--font-deva), var(--font-inter), sans-serif;
   --ease-out-soft: var(--ease);
   --shadow-mock: var(--shadow-mock);
@@ -52,9 +51,9 @@
   --dark-ink: #f4efe6;
   --dark-muted: #c4bdb2;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-fast: 200ms;
-  --dur-enter: 500ms;
-  --dur-reveal: 800ms;
+  --dur-fast: 180ms;
+  --dur-enter: 280ms;
+  --dur-reveal: 600ms;
   --shadow-mock: 0 1px 0 rgba(31, 27, 22, 0.04), 0 24px 48px -28px rgba(74, 42, 20, 0.22);
 }
 
@@ -70,9 +69,15 @@ html[data-scrolled="true"] .site-nav {
   border-bottom-color: var(--border);
 }
 
+html[data-nav-dark="true"] .site-nav {
+  background: var(--dark);
+  border-bottom-color: rgba(246, 239, 230, 0.08);
+  color: var(--dark-ink);
+}
+
 body {
   font-family: var(--font-sans);
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.55;
   background: var(--bg);
   color: var(--ink);
@@ -84,47 +89,60 @@ body {
   color: var(--accent-deep);
 }
 
-.font-serif {
-  font-family: var(--font-serif);
-}
-
 .font-deva {
   font-family: var(--font-deva);
   line-height: 1.6;
 }
 
 .h1 {
-  font-family: var(--font-serif), ui-serif, Georgia, serif;
-  font-weight: 400;
-  font-style: normal;
-  font-size: clamp(2.15rem, 5.4vw, 3.75rem);
+  font-weight: 600;
+  font-size: clamp(2.15rem, 4.6vw, 3.5rem);
   line-height: 1.12;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.028em;
   text-wrap: balance;
 }
 
 .h2 {
   font-weight: 600;
-  font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
   line-height: 1.15;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.025em;
   max-width: 22ch;
   text-wrap: balance;
 }
 
 .sub {
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.6;
   color: var(--ink-2);
-  max-width: 46ch;
+  max-width: 44ch;
 }
 
-.kicker {
+@media (min-width: 768px) {
+  .sub {
+    font-size: 18px;
+  }
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   color: var(--accent);
+}
+
+.eyebrow .rule {
+  width: 22px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.45;
+}
+
+.dark-band .eyebrow {
+  color: var(--dark-muted);
 }
 
 .container-site {
@@ -146,7 +164,7 @@ body {
 
 @media (min-width: 768px) {
   .section {
-    padding-block: 112px;
+    padding-block: 104px;
   }
 }
 
@@ -155,10 +173,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 52px;
-  padding: 0 22px;
-  border-radius: 999px;
-  font-size: 16px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 500;
   background: var(--accent);
   color: #fff;
@@ -178,14 +196,15 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 52px;
-  padding: 0 22px;
-  border-radius: 999px;
-  font-size: 16px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 500;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
   color: var(--ink);
+  transition: border-color var(--dur-fast) var(--ease);
 }
 
 .btn-ghost:hover {
@@ -205,36 +224,59 @@ summary:focus-visible {
 
 .example-tag {
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 .mock-card {
-  border-radius: 20px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
 }
 
+.art {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--bg-sunk);
+}
+
+.art img {
+  display: block;
+}
+
 .input {
-  height: 52px;
+  height: 48px;
   width: 100%;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
-  padding: 0 16px;
+  padding: 0 14px;
   font-size: 16px;
   color: var(--ink);
+  transition: border-color var(--dur-fast) var(--ease);
 }
 
 .input:hover {
   border-color: color-mix(in oklab, var(--ink) 22%, transparent);
 }
 
+.dark-band .input {
+  background: var(--dark-2);
+  border-color: rgba(246, 239, 230, 0.14);
+  color: var(--dark-ink);
+}
+
+.dark-band .input::placeholder {
+  color: var(--dark-muted);
+}
+
+.dark-band .input option {
+  color: var(--ink);
+}
+
 html.js [data-reveal] {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(10px);
 }
 
 html.js [data-reveal][data-in] {
@@ -254,7 +296,7 @@ html.js [data-reveal][data-in] {
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -262,23 +304,14 @@ html.js [data-reveal][data-in] {
   }
 }
 
-.wave-bars span {
-  display: block;
-  width: 3px;
-  border-radius: 99px;
-  background: currentColor;
-  animation: wave 1.1s ease-in-out infinite;
-  animation-delay: calc(var(--i) * -0.13s);
-  transform-origin: center;
-}
-
-@keyframes wave {
-  0%,
-  100% {
-    transform: scaleY(0.35);
+@keyframes fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
-  50% {
-    transform: scaleY(1);
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -299,33 +332,18 @@ html.js [data-reveal][data-in] {
   }
 }
 
-@keyframes fade-slide {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.crossfade-in {
-  animation: fade-slide var(--dur-enter) var(--ease) both;
-}
-
 .caret {
   display: inline-block;
   width: 2px;
   height: 1em;
   margin-left: 2px;
-  background: var(--accent);
+  background: currentColor;
   animation: caret 1.05s step-end infinite;
   vertical-align: text-bottom;
 }
 
 .screen-fade {
-  animation: fade-slide 500ms var(--ease) both;
+  animation: fade-slide 400ms var(--ease) both;
 }
 
 dialog {
@@ -347,10 +365,10 @@ dialog::backdrop {
   max-width: 320px;
   aspect-ratio: 9 / 19;
   overflow: hidden;
-  border-radius: 36px;
+  border-radius: 40px;
   padding: 10px;
   background: #1c1612;
-  box-shadow: var(--shadow-mock);
+  box-shadow: 0 24px 48px -28px rgba(31, 27, 22, 0.45);
 }
 
 .device-screen {
@@ -361,7 +379,7 @@ dialog::backdrop {
   min-height: 0;
   overflow: hidden;
   isolation: isolate;
-  border-radius: 28px;
+  border-radius: 32px;
   background: var(--bg);
 }
 
@@ -400,16 +418,7 @@ dialog::backdrop {
 .signal {
   width: 14px;
   height: 9px;
-  background: linear-gradient(
-    90deg,
-    currentColor 0 18%,
-    transparent 18% 27%,
-    currentColor 27% 45%,
-    transparent 45% 54%,
-    currentColor 54% 72%,
-    transparent 72% 81%,
-    currentColor 81%
-  );
+  background: linear-gradient(90deg, currentColor 0 18%, transparent 18% 27%, currentColor 27% 45%, transparent 45% 54%, currentColor 54% 72%, transparent 72% 81%, currentColor 81%);
   clip-path: polygon(0 100%, 100% 0, 100% 100%);
   opacity: 0.85;
 }
@@ -429,12 +438,23 @@ dialog::backdrop {
   background-color: var(--wa-bg);
 }
 
+.section-finale {
+  position: relative;
+  padding-block: 88px;
+}
+
+@media (min-width: 768px) {
+  .section-finale {
+    padding-block: 120px;
+  }
+}
+
 .seg {
   display: inline-flex;
   scrollbar-width: none;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
 }
@@ -445,11 +465,14 @@ dialog::backdrop {
   white-space: nowrap;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
-  padding: 0 14px;
-  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
   font-size: 14px;
   color: var(--ink-2);
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
 }
 
 .seg button[aria-pressed="true"] {
@@ -463,8 +486,6 @@ dialog::backdrop {
   }
   .rise,
   .caret,
-  .crossfade-in,
-  .wave-bars span,
   .screen-fade {
     animation: none !important;
   }
