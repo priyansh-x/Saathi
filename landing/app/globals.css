@@ -159,13 +159,22 @@ body {
 }
 
 .section {
-  padding-block: 72px;
+  padding-block: 56px;
 }
 
 @media (min-width: 768px) {
   .section {
-    padding-block: 104px;
+    padding-block: 80px;
   }
+}
+
+.tour-sticky {
+  position: sticky;
+  top: 4rem;
+  display: flex;
+  min-height: calc(100vh - 4rem);
+  align-items: center;
+  padding-block: 32px;
 }
 
 .btn {
@@ -363,7 +372,7 @@ dialog::backdrop {
   position: relative;
   width: 100%;
   max-width: 320px;
-  aspect-ratio: 9 / 19;
+  aspect-ratio: 9 / 19.5;
   overflow: hidden;
   border-radius: 40px;
   padding: 10px;
@@ -492,5 +501,9 @@ dialog::backdrop {
   html.js [data-reveal] {
     opacity: 1;
     transform: none;
+  }
+  .tour-sticky {
+    position: static;
+    min-height: 0;
   }
 }

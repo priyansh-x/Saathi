@@ -10,15 +10,16 @@ export const content = {
     logo: "Saathi",
     glyph: "स",
     links: [
-      { href: "#listen", label: "Hear it" },
-      { href: "#how", label: "How it works" },
-      { href: "#desk", label: "Family desk" },
-      { href: "#faq", label: "FAQ" },
+      { href: "/#listen", label: "Hear it" },
+      { href: "/#desk", label: "Family desk" },
+      { href: "/thesis", label: "Thesis" },
+      { href: "/#faq", label: "FAQ" },
     ],
     cta: "Open the desk",
     skip: "Skip to content",
   },
   hero: {
+    kicker: "A morning call. No app for them.",
     h1a: "Your parents won't download an app.",
     h1b: "They'll always pick up the phone.",
     sub: "Saathi is a warm morning call to an aging parent, on the phone they already own, in their language. You get two lines on WhatsApp.",
@@ -40,11 +41,13 @@ export const content = {
   },
   listen: {
     eyebrow: "A morning call",
-    h2: "Listen to a morning call.",
-    sub: "Press play. The transcript types out, then the WhatsApp briefing lands.",
+    h2: "Hear the morning call.",
+    sub: "Press play to hear it. The transcript follows the voice, then two lines land on WhatsApp.",
+    live: "On call",
+    ready: "Paused",
     tag: "Example call",
     caller: "Saathi to Maa",
-    play: "Play the call",
+    play: "Play the morning call",
     pause: "Pause",
     replay: "Play again",
     scenes: [
@@ -222,9 +225,29 @@ export const content = {
     eyebrow: "The family desk",
     h2a: "Today, History,",
     h2b: "Alerts and Settings.",
-    sub: "Call summaries and transcripts. Web and Android. Tap a tab to peek at the example household.",
+    sub: "Call summaries and transcripts. Web and Android. Scroll: the desk moves with you.",
     exampleCta: "Open the example household",
     exampleNote: "Labelled Example. Test data only.",
+    tour: [
+      {
+        id: "today",
+        label: "Today",
+        title: "Today is two lines, then the rest if you need it.",
+        body: "The family desk opens on what the morning call found. A good day stays quiet. An Act now break sits at the top.",
+      },
+      {
+        id: "alerts",
+        label: "Alerts",
+        title: "When something is wrong, it does not hide.",
+        body: "Missed calls, missed medicine, a fall, chest pain. The child hears first. A neighbour only if they opted in.",
+      },
+      {
+        id: "history",
+        label: "History",
+        title: "The week, in her words.",
+        body: "Not a score. Calls, medicines, and the line she actually said, kept for a limited time.",
+      },
+    ],
     shots: [
       {
         id: "today",
@@ -314,6 +337,38 @@ export const content = {
     body: "Today Saathi is one small daily habit: a morning companion call. Our bet is that the same voice becomes a personal agent that gets real things done for them, entirely over a phone call. Asking for a refill. Booking a visit. Calling the family. The parent still never installs anything.",
     close: "Companionship, never diagnosis.",
   },
+  thesisPage: {
+    title: "Saathi: the thesis",
+    description: "Why voice is the interface for aging parents in India, and why a morning call is the wedge.",
+    kicker: "Essay",
+    back: "Back to Saathi",
+    sourcesTitle: "Sources",
+    paragraphs: [
+      "India is getting old fast. It has about 156.7 million people aged 60 and above (WHO SEARO, 2024), expected to reach about 193 million by 2030 (UNFPA, 2025). More and more of their children live in another city or another country. Love doesn't scale across that distance. What fills the gap is worry: Did she take her BP tablet? Why is her phone off? She says she's fine, but is she?",
+      "Every other part of life got an app. Elders didn't come along. Most use basic phones (71% per HelpAge India, 2025), many can't or won't install anything, and the apps built \"for seniors\" end up unopened. But one thing hasn't changed: when the phone rings, they pick up. A ringing phone is still the most trusted, most familiar interface an Indian parent has.",
+      "So voice is the interface.",
+      "Saathi starts with one small daily habit. Every morning it calls the parent on the phone they already own, in their own language, and has a warm two-minute conversation. It checks that they're up and slept well, asks about each medicine by name, listens to how they're feeling, and watches for red flags like chest pain or a fall. The parent never downloads anything, creates an account or learns anything new. They just answer the phone.",
+      "The child gets the part they actually need: a calm, two-line WhatsApp update after the call. On a good day that's all they see. If a medicine was missed or the parent sounds low, the update says so. If something is wrong, like a red flag on the call or a parent who doesn't pick up after several tries, Saathi alerts the child straight away and, if needed, a neighbour who has agreed to help. The family always hears first, not last.",
+      "Saathi is companionship, never diagnosis. It doesn't play doctor and it isn't an emergency service. It's a dependable voice that shows up every morning and makes sure the people who care get the right signal at the right time.",
+      "Why this is the wedge: a daily call is small enough to trust and useful enough to keep. Every call builds familiarity, routine and memory: which medicines, which aches, what Maa mentioned yesterday. That trust is the asset.",
+      "Our bet: once a parent trusts that voice, it grows into a personal agent that gets real things done for them, entirely over a phone call. Refilling a prescription, remembering a doctor's appointment, passing a message to a grandchild, handling the small tasks that today need a smartphone or a child nearby. The phone they already own becomes the only interface they'll ever need.",
+      "Saathi starts as a morning call. It aims to become the companion every aging parent in India can rely on, in their language, on their phone.",
+    ],
+    sources: [
+      { label: "WHO South-East Asia, Ageing, 2024", href: "https://www.who.int/southeastasia/health-topics/ageing" },
+      { label: "UNFPA, Ageing, 2025", href: "https://www.unfpa.org/ageing" },
+      {
+        label: "HelpAge India, Understanding Intergenerational Dynamics & Perceptions on Ageing, 2025",
+        href: "https://www.helpageindia.org/wp-content/uploads/2025/06/The-India-Intergenerational-Bonds-INBO-HelpAge-India-Report-2025.pdf",
+      },
+    ],
+  },
+  thesisBand: {
+    kicker: "The thesis",
+    title: "Voice is the interface.",
+    body: "India is getting old fast. Elders will not download an app. They will pick up the phone.",
+    cta: "Read the thesis",
+  },
   privacy: {
     h2: "Privacy and consent",
     items: [
@@ -390,6 +445,7 @@ export const content = {
     credit: "Started at the Bolna x YC Voice AI Buildathon, Oct 2026.",
     productTitle: "Product",
     companyTitle: "Company",
+    thesis: "Thesis",
     disclaimer:
       "Saathi reminds and listens. It never diagnoses, and it is not an emergency service. In an emergency, call 112.",
   },

@@ -27,7 +27,7 @@ export function People() {
         </div>
       </section>
 
-      <section className="section pt-0">
+      <section className="pb-14 md:pb-20">
         <div className="container-site">
           <h2 className="h2" data-reveal>
             {way.h3a} {way.h3b}

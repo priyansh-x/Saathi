@@ -102,7 +102,7 @@ export function Answer() {
 function Features() {
   const t = content.answer;
   return (
-    <div className="mt-20 grid gap-10 md:mt-24 md:grid-cols-2 md:items-center">
+    <div className="mt-14 grid gap-10 md:mt-16 md:grid-cols-2 md:items-center">
       <div data-reveal>
         <h3 className="text-[20px] font-semibold tracking-tight">{t.featuresTitle}</h3>
         <ul className="mt-6 space-y-5">

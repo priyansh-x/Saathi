@@ -1,21 +1,21 @@
+import Link from "next/link";
 import { content } from "@/lib/content";
 
-export function Bet() {
-  const t = content.bet;
+export function ThesisBand() {
+  const t = content.thesisBand;
   return (
-    <section id="bet" className="section bg-bg-elevated">
+    <section id="thesis" className="section">
       <div className="container-site max-w-3xl">
-        <p className="eyebrow" data-reveal>
-          {t.kicker}
+        <p className="eyebrow">
+          <span className="rule" />
+          <span>{t.kicker}</span>
         </p>
-        <h2 className="h2 mt-4 max-w-none" data-reveal>
-          {t.h2a} {t.h2b}
-        </h2>
-        <p className="mt-6 text-[18px] leading-relaxed text-ink-2" data-reveal>
-          {t.body}
-        </p>
-        <p className="mt-6 text-[18px] font-medium" data-reveal>
-          {t.close}
+        <h2 className="h2 mt-4 max-w-none">{t.title}</h2>
+        <p className="mt-4 max-w-xl text-[18px] leading-relaxed text-ink-2">{t.body}</p>
+        <p className="mt-6">
+          <Link href="/thesis" className="font-medium text-accent underline-offset-4 hover:underline">
+            {t.cta}
+          </Link>
         </p>
       </div>
     </section>

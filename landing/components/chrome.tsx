@@ -69,9 +69,9 @@ export function Nav({ deskUrl }: { deskUrl: string }) {
         </Link>
         <nav className="hidden items-center gap-7 text-[14px] md:flex" aria-label="Primary">
           {t.links.map((l) => (
-            <a key={l.href} href={l.href} className="opacity-75 transition-opacity hover:opacity-100">
+            <Link key={l.href} href={l.href} className="opacity-75 transition-opacity hover:opacity-100">
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <a href={deskUrl} className="btn !min-h-9 !rounded-[8px] !px-3.5 text-[14px]">
@@ -101,9 +101,9 @@ export function Footer() {
           <ul className="mt-4 space-y-2.5 text-dark-muted">
             {content.nav.links.map((l) => (
               <li key={l.href}>
-                <a href={l.href} className="hover:text-dark-ink">
+                <Link href={l.href} className="hover:text-dark-ink">
                   {l.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -111,6 +111,11 @@ export function Footer() {
         <nav className="text-[14px] md:col-span-2" aria-label={t.companyTitle}>
           <p className="font-medium">{t.companyTitle}</p>
           <ul className="mt-4 space-y-2.5 text-dark-muted">
+            <li>
+              <Link href="/thesis" className="hover:text-dark-ink">
+                {t.thesis}
+              </Link>
+            </li>
             <li>
               <Link href="/privacy" className="hover:text-dark-ink">
                 {t.privacy}
