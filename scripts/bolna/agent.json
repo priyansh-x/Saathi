@@ -57,7 +57,7 @@
               {
                 "name": "log_medicine",
                 "description": "Log whether the parent took ONE scheduled medicine dose today. Call exactly once per dose in today's medicine list, right after the parent answers. status: 'taken' = clear yes; 'not_taken' = clear no / forgot / ran out / stopped; 'unsure' = can't remember, contradictory, or dose not yet due. Put the parent's own words in parent_quote.",
-                "pre_call_message": "",
+                "pre_call_message": "जी, एक सेकंड।",
                 "parameters": {
                   "type": "object",
                   "properties": {
@@ -109,7 +109,7 @@
               {
                 "name": "raise_alert",
                 "description": "Raise a safety alert to the family. Call IMMEDIATELY when you hear an EMERGENCY or URGENT red flag (see prompt), before or while speaking the instruction. severity EMERGENCY: chest_pain, breathlessness, fall_injury, stroke_signs, unresponsive, suicidal_talk. severity URGENT: fall_no_injury, confusion, missed_medicine, fever, not_eating, low_mood (hopeless, no intent), scam_risk. quote must be the exact words of the parent or the person reporting. When unsure of tier, choose the higher one. Max one alert per category per call unless severity increases.",
-                "pre_call_message": "",
+                "pre_call_message": "जी, एक सेकंड।",
                 "parameters": {
                   "type": "object",
                   "properties": {
@@ -173,7 +173,7 @@
               {
                 "name": "relay_message_to_family",
                 "description": "Pass a request or message from the parent to their family, e.g. 'tell my son to call me', 'tell Rohit there's pension work', 'ask bahu to bring medicine', or a medical question the parent wants checked with the doctor. Confirm with the parent first, by repeating the message back, then call this.",
-                "pre_call_message": "",
+                "pre_call_message": "जी, एक सेकंड।",
                 "parameters": {
                   "type": "object",
                   "properties": {
@@ -225,7 +225,7 @@
               {
                 "name": "save_memory_note",
                 "description": "Save one short fact worth remembering for future calls: family events, health mentions (non-urgent), routine, preferences (language, address term, call time), interests. Not for trivial chatter. Never mention to the parent that you are saving.",
-                "pre_call_message": "",
+                "pre_call_message": "जी, एक सेकंड।",
                 "parameters": {
                   "type": "object",
                   "properties": {
@@ -344,7 +344,7 @@
               {
                 "name": "record_consent",
                 "description": "Record whether the parent said yes, no, or later to daily morning calls. Flat params only. answer is yes, no, or later. later is hesitation, baad mein, or no clear answer. On any call, answer=no if they say stop or बंद करो.",
-                "pre_call_message": "",
+                "pre_call_message": "जी, एक सेकंड।",
                 "parameters": {
                   "type": "object",
                   "properties": {

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  TOOL_PRE_CALL_MESSAGE,
   TOOL_TOKEN_PLACEHOLDER,
   assertFlatToolParams,
   buildBolnaAgent,
@@ -44,9 +45,21 @@ describe("bolna:sync agent JSON", () => {
         "save_memory_note",
       ]);
       const params = toolsParams(agent);
+      const spoken = new Set([
+        "log_medicine",
+        "raise_alert",
+        "relay_message_to_family",
+        "save_memory_note",
+        "record_consent",
+      ]);
       for (const tool of toolDefs(agent)) {
         const value = params[tool.name];
         assert.ok(value);
+        assert.equal(
+          tool.pre_call_message,
+          spoken.has(tool.name) ? TOOL_PRE_CALL_MESSAGE : "",
+        );
+        assert.equal(tool.pre_call_message.includes("Just give me a moment"), false);
         assert.equal(value.api_token, TOOL_TOKEN_PLACEHOLDER);
         assert.equal(value.url.startsWith("https://example.saathi.test/api/tools/"), true);
         assertFlatToolParams({
