@@ -6,6 +6,7 @@ import neighbourImg from "../../../public/images/neighbour-knock.jpg";
 import { redirect } from "next/navigation";
 import { InviteForm } from "@/components/family/invite-form";
 import { SettingsForm } from "@/components/family/settings-form";
+import { TestCallForm } from "@/components/family/test-call-form";
 import { PageTitle } from "@/components/family/chrome";
 import { AddToHome } from "@/components/pwa/register";
 import { CachedAction, SignOutButton } from "@/components/pwa/clear-cache";
@@ -106,12 +107,10 @@ export async function SettingsPanel({
         <h2 className="font-semibold">{t.testCall}</h2>
         <p className="text-sm text-muted-foreground">{t.testCallHint}</p>
         {ringNote ? <p className="text-sm font-medium">{ringNote}</p> : null}
-        <form action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=settings`} method="POST">
-          <button type="submit" className="btn-primary">
-            <Phone className="size-[18px]" aria-hidden />
-            {personal(t.ringNow, term, lang)}
-          </button>
-        </form>
+        <TestCallForm action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=settings`}>
+          <Phone className="size-[18px]" aria-hidden />
+          {personal(t.ringNow, term, lang)}
+        </TestCallForm>
       </section>
 
       <div className="mt-6">
