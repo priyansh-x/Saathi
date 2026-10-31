@@ -13,15 +13,17 @@ export function DeviceFrame({
   time = "8:07",
   dark = false,
   overlay = false,
+  style,
 }: {
   children: React.ReactNode;
   className?: string;
   time?: string;
   dark?: boolean;
   overlay?: boolean;
+  style?: React.CSSProperties;
 }) {
   return (
-    <div className={`device ${dark ? "device-dark" : ""} ${className}`}>
+    <div className={`device ${dark ? "device-dark" : ""} ${className}`} style={style}>
       <div className="device-screen">
         {overlay ? (
           <span className="device-island z-10" aria-hidden />

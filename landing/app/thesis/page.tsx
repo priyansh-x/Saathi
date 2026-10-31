@@ -18,12 +18,12 @@ export default function Thesis() {
       <SiteEffects />
       <Nav deskUrl={desk} />
       <main id="main" className="pb-20 pt-32 md:pb-28 md:pt-40">
-        <article className="container-site max-w-2xl">
+        <article className="container-site [--container-max:42rem]">
           <p className="eyebrow">
             <span className="dot" />
             <span>{t.kicker}</span>
           </p>
-          <h1 className="h1 mt-6 text-[clamp(2.6rem,6vw,4.2rem)]">{t.title}</h1>
+          <h1 className="h1 mt-6" style={{ fontSize: "clamp(2.6rem, 6vw, 4.2rem)" }}>{t.title}</h1>
           <div className="mt-10 space-y-6 text-[17px] leading-[1.7] text-ink-2 md:text-[18px]">
             {t.paragraphs.map((p) => (
               <p key={p.slice(0, 48)} className={p === "So voice is the interface." ? "font-medium text-ink" : undefined}>

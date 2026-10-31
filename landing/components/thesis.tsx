@@ -10,7 +10,7 @@ export function ThesisBand() {
   const t = content.thesisBand;
   return (
     <section id="thesis" className="section relative overflow-hidden bg-accent-soft/50">
-      <div className="container-site max-w-4xl text-center">
+      <div className="container-site text-center [--container-max:56rem]">
         <p className="eyebrow mx-auto">
           <span className="dot" />
           <span>{t.kicker}</span>
@@ -22,7 +22,7 @@ export function ThesisBand() {
             <span className="text-accent">”</span>
           </p>
         </blockquote>
-        <p className="sub mx-auto mt-8 max-w-[52ch]" data-reveal>
+        <p className="sub mx-auto mt-8" style={{ maxWidth: "52ch" }} data-reveal>
           {t.body}
         </p>
         <p className="mt-8" data-reveal>

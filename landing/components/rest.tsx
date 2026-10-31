@@ -107,12 +107,12 @@ export function Finale() {
         }}
         aria-hidden
       />
-      <div className="container-site relative max-w-3xl py-28 text-center md:py-40">
+      <div className="container-site relative py-28 text-center [--container-max:48rem] md:py-40">
         <p className="eyebrow mx-auto" data-reveal>
           <span className="dot" />
           <span>{t.eyebrow}</span>
         </p>
-        <h2 className="h2 mx-auto mt-7 max-w-[16ch] text-[clamp(2.6rem,6vw,4.8rem)]" data-reveal>
+        <h2 className="h2 mx-auto mt-7" style={{ maxWidth: "16ch", fontSize: "clamp(2.6rem, 6vw, 4.8rem)" }} data-reveal>
           {t.h2a} <em>{t.h2b}</em>
         </h2>
         <p className="sub mx-auto mt-6" data-reveal>

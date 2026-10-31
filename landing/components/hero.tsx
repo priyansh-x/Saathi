@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Check, Pause, Phone, Play, Volume2 } from "lucide-react";
+import { ArrowUpRight, Pause, Phone, Play } from "lucide-react";
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { DeviceFrame } from "@/components/kit";
@@ -12,7 +12,7 @@ import heroImg from "@/public/images/hero-maa-balcony.jpg";
 export function Hero({ deskUrl }: { deskUrl: string }) {
   const t = content.hero;
   const call = useMorningCall("hi");
-  const { audioRef, playing, started, done, toggle, time } = call;
+  const { audioRef, playing, done, toggle, time } = call;
 
   return (
     <section className="grain relative overflow-hidden pb-16 pt-28 md:pb-24 md:pt-36">
@@ -22,13 +22,8 @@ export function Hero({ deskUrl }: { deskUrl: string }) {
         style={{ background: "radial-gradient(circle, #f6d7a8 0%, rgba(246,215,168,0) 65%)" }}
         aria-hidden
       />
-      <div
-        className="pointer-events-none absolute -left-48 top-1/3 -z-10 size-[560px] rounded-full opacity-50 blur-3xl"
-        style={{ background: "radial-gradient(circle, #f3d9c9 0%, rgba(243,217,201,0) 65%)" }}
-        aria-hidden
-      />
 
-      <div className="container-site grid items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-16">
+      <div className="container-site grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20">
         <div>
           <p className="eyebrow rise">
             <span className="relative flex size-2">
@@ -43,35 +38,25 @@ export function Hero({ deskUrl }: { deskUrl: string }) {
           <p className="sub rise mt-7" style={{ "--d": "160ms" } as CSSProperties}>
             {t.sub}
           </p>
-          <div className="rise mt-9 flex flex-col gap-3 sm:flex-row" style={{ "--d": "240ms" } as CSSProperties}>
+          <div
+            className="rise mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-7"
+            style={{ "--d": "240ms" } as CSSProperties}
+          >
             <PlayButton
               playing={playing}
               done={done}
               onClick={toggle}
               labels={{ play: t.cta, pause: t.ctaPlaying, replay: t.ctaDone }}
             />
-            <a href={deskUrl} className="btn-ghost">
+            <a href={deskUrl} className="link-arrow text-[15px]">
               {t.secondary}
               <ArrowUpRight className="size-4" strokeWidth={2} aria-hidden />
             </a>
           </div>
-          <ul
-            className="rise mt-9 flex flex-col gap-2.5 text-[14px] text-ink-2 sm:flex-row sm:flex-wrap sm:gap-x-6"
-            style={{ "--d": "320ms" } as CSSProperties}
-          >
-            {t.trust.map((x) => (
-              <li key={x} className="flex items-center gap-2">
-                <span className="grid size-5 place-items-center rounded-full bg-good-soft text-good">
-                  <Check className="size-3" strokeWidth={3} aria-hidden />
-                </span>
-                {x}
-              </li>
-            ))}
-          </ul>
         </div>
 
-        <div className="rise relative mx-auto w-full max-w-[560px]" style={{ "--d": "200ms" } as CSSProperties}>
-          <div className="art relative aspect-[4/5] shadow-[var(--shadow-lift)] sm:aspect-[5/6]">
+        <div className="rise relative mx-auto w-full max-w-[540px]" style={{ "--d": "200ms" } as CSSProperties}>
+          <div className="art relative aspect-[4/5] shadow-[var(--shadow-lift)]">
             <Image
               src={heroImg}
               alt={t.imageAlt}
@@ -79,50 +64,35 @@ export function Hero({ deskUrl }: { deskUrl: string }) {
               loading="eager"
               fetchPriority="high"
               placeholder="blur"
-              sizes="(min-width: 1024px) 560px, 92vw"
-              className="object-cover object-[78%_center]"
+              sizes="(min-width: 1024px) 540px, 92vw"
+              className="object-cover object-[72%_center]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" aria-hidden />
-
-            <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-bg-elevated/90 py-1.5 pl-2 pr-3 text-[12.5px] font-medium shadow-sm backdrop-blur sm:left-5 sm:top-5">
-              <span className={`grid size-5 place-items-center rounded-full ${started ? "bg-good text-white" : "bg-accent text-white"}`}>
-                <Phone className="size-3" strokeWidth={2.5} aria-hidden />
-              </span>
-              {started ? t.chip : t.incoming}
-            </div>
-
-
-            <div className="absolute bottom-4 right-4 w-[50%] max-w-[232px] sm:bottom-5 sm:right-5 sm:w-[44%]">
-              <DeviceFrame dark time="8:04">
-                <HeroCallScreen call={call} time={time} />
-              </DeviceFrame>
-            </div>
-
+            <span className="absolute right-4 top-4 rounded-full bg-black/30 px-2.5 py-1 text-[11px] text-white backdrop-blur">
+              {t.example}
+            </span>
             {done ? (
               <div
-                className="pop-in absolute left-4 right-4 top-16 rounded-[18px] bg-bg-elevated/95 p-3.5 shadow-[var(--shadow-lift)] backdrop-blur sm:left-5 sm:right-auto sm:top-20 sm:w-[56%]"
+                className="pop-in absolute bottom-4 right-4 w-[48%] rounded-[18px] bg-bg-elevated/95 p-3.5 shadow-[var(--shadow-lift)] backdrop-blur"
                 role="status"
               >
-                <div className="flex items-center gap-2 text-[11.5px] text-ink-3">
+                <div className="flex items-center gap-2 text-[11px] text-ink-3">
                   <span className="grid size-4 place-items-center rounded-[4px] bg-[#25d366]">
                     <Phone className="size-2.5 text-white" strokeWidth={3} aria-hidden />
                   </span>
-                  <span className="flex-1">{t.toastApp}</span>
-                  <span>{t.example}</span>
+                  {t.toastApp}
                 </div>
-                <p className="mt-1.5 text-[13.5px] font-semibold">{t.toastFrom}</p>
-                <p className="mt-0.5 text-[13.5px] leading-snug text-ink-2">{t.toast}</p>
+                <p className="mt-1.5 text-[13px] font-semibold">{t.toastFrom}</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-ink-2">{t.toast}</p>
               </div>
             ) : null}
           </div>
-          {!started ? (
-            <p className="mt-4 flex items-center justify-center gap-2 text-[13px] text-ink-3 lg:justify-end">
-              <Volume2 className="size-4" strokeWidth={1.75} aria-hidden />
-              {t.sound} · {t.example}
-            </p>
-          ) : (
-            <p className="mt-4 text-center text-[13px] text-ink-3 lg:text-right">{t.example}</p>
-          )}
+
+          {/* The phone sits on the left of the frame, over the city, and leans out past the edge on wide screens. */}
+          <div className="absolute bottom-[6%] left-4 w-[44%] max-w-[230px] lg:left-0 lg:w-[42%] lg:-translate-x-[30%]">
+            <DeviceFrame dark time="8:04">
+              <HeroCallScreen call={call} time={time} />
+            </DeviceFrame>
+          </div>
         </div>
       </div>
 

@@ -196,11 +196,11 @@ function NeighbourStage() {
 export function HerWay() {
   const way = content.herWay;
   return (
-    <section className="section pt-0 md:pt-0">
+    <section className="section [--section-pt:0px]">
       <div className="container-site">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <SectionHead eyebrow={way.eyebrow} a={way.h3a} b={way.h3b} />
-          <p className="sub max-w-[36ch] md:text-right" data-reveal>
+          <p className="sub md:text-right" style={{ maxWidth: "36ch" }} data-reveal>
             {way.sub}
           </p>
         </div>
