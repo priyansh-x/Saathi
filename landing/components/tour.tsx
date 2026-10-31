@@ -133,7 +133,7 @@ export function Tour({ exampleUrl }: { exampleUrl: string }) {
                 style={{ background: "radial-gradient(closest-side, var(--accent-soft), transparent)" }}
                 aria-hidden
               />
-              <DeviceFrame time="8:34" className="relative mx-auto">
+              <DeviceFrame time="8:34" className="relative mx-auto" style={{ aspectRatio: "300 / 540" }}>
                 <div className="relative h-full overflow-hidden bg-[#fbf7f2]">
                   {t.shots.map((s, i) => (
                     <Image
@@ -151,6 +151,10 @@ export function Tour({ exampleUrl }: { exampleUrl: string }) {
                       preload={i === 0}
                     />
                   ))}
+                  <span
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#fbf7f2] via-[#fbf7f2]/80 to-transparent"
+                    aria-hidden
+                  />
                 </div>
               </DeviceFrame>
               <p className="relative mt-4 text-center text-[12px] text-ink-3">
