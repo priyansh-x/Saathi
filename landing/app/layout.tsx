@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Noto_Sans_Devanagari } from "next/font/google";
+import { Geist_Mono, Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
 import { WaitlistProvider } from "@/components/waitlist";
 import { content } from "@/lib/content";
 import "./globals.css";
@@ -8,6 +8,13 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+});
+
+const serif = Instrument_Serif({
+  variable: "--font-instrument",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
 });
 
 const geistMono = Geist_Mono({
@@ -43,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} ${deva.variable} h-full antialiased`}
+      className={`${inter.variable} ${serif.variable} ${geistMono.variable} ${deva.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg text-ink">
         <WaitlistProvider>{children}</WaitlistProvider>
