@@ -9,6 +9,22 @@ export const TOOLS_SCHEMA_PATH = "docs/saathi/voice/tools_schema.md";
 
 export const TOOL_TOKEN_PLACEHOLDER = "Bearer ${BOLNA_TOOL_TOKEN}";
 
+/** Spoken while a mid-call tool request runs. Must match the live Bolna agent. */
+export const TOOL_PRE_CALL_MESSAGE = "जी, एक सेकंड।";
+
+const SPOKEN_PRE_CALL_TOOLS = new Set([
+  "log_medicine",
+  "raise_alert",
+  "relay_message_to_family",
+  "save_memory_note",
+  "record_consent",
+]);
+
+function preCallMessageFor(name: string, fromSchema?: string) {
+  if (SPOKEN_PRE_CALL_TOOLS.has(name)) return TOOL_PRE_CALL_MESSAGE;
+  return fromSchema ?? "";
+}
+
 const TOOL_PATHS: Record<string, string> = {
   log_medicine: "/api/tools/log_medicine",
   raise_alert: "/api/tools/raise_alert",
@@ -166,7 +182,7 @@ function rewriteTool(tool: CustomTaskTool, base: string): CustomTaskTool {
   const next: CustomTaskTool = {
     name: tool.name,
     description: tool.description,
-    pre_call_message: tool.pre_call_message ?? "",
+    pre_call_message: preCallMessageFor(tool.name, tool.pre_call_message),
     parameters: tool.parameters,
     key: "custom_task",
     value: {
@@ -187,7 +203,7 @@ function recordConsentTool(base: string): CustomTaskTool {
       name: "record_consent",
       description:
         "Record whether the parent said yes, no, or later to daily morning calls. Flat params only. answer is yes, no, or later. later is hesitation, baad mein, or no clear answer. On any call, answer=no if they say stop or बंद करो.",
-      pre_call_message: "",
+      pre_call_message: TOOL_PRE_CALL_MESSAGE,
       parameters: {
         type: "object",
         properties: {
@@ -229,7 +245,7 @@ function toApiTools(tools: CustomTaskTool[]) {
     defs.push({
       name: tool.name,
       description: tool.description,
-      pre_call_message: tool.pre_call_message ?? "",
+      pre_call_message: preCallMessageFor(tool.name, tool.pre_call_message),
       parameters: tool.parameters,
     });
     params[tool.name] = {
