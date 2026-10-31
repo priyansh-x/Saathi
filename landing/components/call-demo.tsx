@@ -1,8 +1,7 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { MiniMark } from "@/components/chrome";
+import { Pause, Play, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { callAudio, lineAt, occupyAudio, type CallLang } from "@/lib/call-audio";
 import { content } from "@/lib/content";
 import { usePrefersReducedMotion } from "@/lib/use-reveal";
@@ -11,6 +10,7 @@ export function useMorningCall(lang: CallLang) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [started, setStarted] = useState(false);
   const reduced = usePrefersReducedMotion();
   const cue = callAudio[lang];
   const { index, line } = lineAt(lang, time);
@@ -24,36 +24,49 @@ export function useMorningCall(lang: CallLang) {
     el.currentTime = 0;
     setTime(0);
     setPlaying(false);
+    setStarted(false);
   }, [cue.src]);
 
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
-    const onTime = () => setTime(el.currentTime);
+    let frame = 0;
+    const tick = () => {
+      setTime(el.currentTime);
+      if (!el.paused) frame = requestAnimationFrame(tick);
+    };
     const onPlay = () => {
       occupyAudio(el);
       setPlaying(true);
+      setStarted(true);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(tick);
     };
-    const onPause = () => setPlaying(false);
+    const onPause = () => {
+      setPlaying(false);
+      setTime(el.currentTime);
+    };
     const onEnded = () => {
       setPlaying(false);
       setTime(cue.duration);
     };
-    el.addEventListener("timeupdate", onTime);
+    const onSeek = () => setTime(el.currentTime);
     el.addEventListener("play", onPlay);
     el.addEventListener("pause", onPause);
     el.addEventListener("ended", onEnded);
+    el.addEventListener("seeked", onSeek);
     return () => {
-      el.removeEventListener("timeupdate", onTime);
+      cancelAnimationFrame(frame);
       el.removeEventListener("play", onPlay);
       el.removeEventListener("pause", onPause);
       el.removeEventListener("ended", onEnded);
+      el.removeEventListener("seeked", onSeek);
     };
   }, [cue.duration]);
 
   function toggle() {
     const el = audioRef.current;
-    if (!el || reduced) return;
+    if (!el) return;
     if (playing) {
       el.pause();
       return;
@@ -63,64 +76,55 @@ export function useMorningCall(lang: CallLang) {
     void el.play();
   }
 
-  function seekLine(i: number) {
+  function seek(t: number) {
     const el = audioRef.current;
     if (!el) return;
-    el.currentTime = cue.lines[i]?.start ?? 0;
+    el.currentTime = Math.max(0, Math.min(cue.duration - 0.1, t));
+    setTime(el.currentTime);
     occupyAudio(el);
     void el.play();
   }
 
-  return { audioRef, time, playing, done, index, line, cue, reduced, toggle, seekLine };
+  function seekLine(i: number) {
+    seek(cue.lines[i]?.start ?? 0);
+  }
+
+  return { audioRef, time, playing, started, done, index, line, cue, reduced, toggle, seek, seekLine };
 }
 
-export function CallScreen({
-  lang,
-  playing,
-  done,
-  line,
-  shown,
+export function clock(seconds: number) {
+  const s = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+/** Deterministic bar heights so server and client render the same waveform. */
+export function waveHeights(count: number, seed = 7) {
+  return Array.from({ length: count }, (_, i) => {
+    const v = Math.abs(Math.sin(i * 0.9 + seed) * 0.6 + Math.sin(i * 0.31 + seed * 2) * 0.4);
+    return 0.22 + v * 0.78;
+  });
+}
+
+export function LiveWave({
+  live,
+  bars = 5,
+  className = "",
 }: {
-  lang: CallLang;
-  playing: boolean;
-  done: boolean;
-  line: { who: "saathi" | "maa"; text: string } | null;
-  shown: readonly { who: "saathi" | "maa"; text: string }[];
+  live: boolean;
+  bars?: number;
+  className?: string;
 }) {
-  const t = content.listen;
+  const heights = waveHeights(bars, 3);
   return (
-    <div className="flex h-full min-h-0 flex-col px-4 pb-5 text-dark-ink" aria-label="Example: morning call">
-      <div className="mt-3 text-center">
-        <span className="mx-auto grid size-11 place-items-center">
-          <MiniMark className="size-11" />
-        </span>
-        <p className="mt-2 text-[15px] font-medium">{t.caller}</p>
-        <p className="font-mono text-[12px] text-dark-muted">{playing ? t.live : done ? t.callClock : t.ready}</p>
-      </div>
-      <ol className="mt-4 flex flex-1 flex-col justify-end gap-2 overflow-hidden text-[13px] leading-snug">
-        {shown.slice(-4).map((row, idx) => (
-          <Bubble key={`${lang}-${idx}-${row.text}`} who={row.who} text={row.text} />
-        ))}
-        {playing && line ? <Bubble who={line.who} text={line.text} active /> : null}
-      </ol>
-    </div>
-  );
-}
-
-function Bubble({ who, text, active = false }: { who: "saathi" | "maa"; text: string; active?: boolean }) {
-  const maa = who === "maa";
-  return (
-    <li className={`flex ${maa ? "justify-end" : "justify-start"} ${active ? "screen-fade" : ""}`}>
-      <p
-        lang="hi"
-        className={`max-w-[85%] rounded-[12px] px-3 py-2 ${
-          maa ? "rounded-br-[4px] bg-accent text-white" : "rounded-bl-[4px] bg-white/10 text-dark-ink"
-        }`}
-      >
-        {text}
-        {active ? <span className="caret" aria-hidden /> : null}
-      </p>
-    </li>
+    <span className={`inline-flex h-4 items-center gap-[3px] ${live ? "wave-live" : ""} ${className}`} aria-hidden>
+      {heights.map((h, i) => (
+        <span
+          key={i}
+          className="wave-bar w-[3px] rounded-full bg-current"
+          style={{ height: `${Math.round(h * 100)}%`, "--bd": `${(i * 0.13) % 0.9}s` } as CSSProperties}
+        />
+      ))}
+    </span>
   );
 }
 
@@ -129,24 +133,28 @@ export function PlayButton({
   done,
   onClick,
   className = "btn",
+  labels,
 }: {
   playing: boolean;
   done: boolean;
   onClick: () => void;
   className?: string;
+  labels?: { play: string; pause: string; replay: string };
 }) {
-  const t = content.listen;
+  const t = labels ?? content.listen;
   return (
     <button type="button" className={className} onClick={onClick}>
       {done ? (
-        t.replay
+        <>
+          <RotateCcw className="size-4" strokeWidth={2} aria-hidden /> {t.replay}
+        </>
       ) : playing ? (
         <>
-          <Pause className="size-3.5" strokeWidth={2} aria-hidden /> {t.pause}
+          <Pause className="size-4 fill-current" strokeWidth={1.5} aria-hidden /> {t.pause}
         </>
       ) : (
         <>
-          <Play className="size-3.5 fill-current" strokeWidth={1.5} aria-hidden /> {t.play}
+          <Play className="size-4 fill-current" strokeWidth={1.5} aria-hidden /> {t.play}
         </>
       )}
     </button>
