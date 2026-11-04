@@ -7,13 +7,18 @@ describe("desk display prefs", () => {
     assert.deepEqual(parseDeskUi(null), {
       density: "comfortable",
       look: "warm",
-      theme: "system",
+      theme: "light",
       typeSize: "regular",
       motion: "full",
     });
     assert.equal(parseDeskUi({ density: "compact", look: "calm", theme: "dark", typeSize: "large", motion: "reduce" }).theme, "dark");
-    assert.equal(parseDeskUi({ theme: "neon", typeSize: "huge" }).theme, "system");
+    assert.equal(parseDeskUi({ theme: "neon", typeSize: "huge" }).theme, "light");
+    assert.equal(parseDeskUi({ theme: "system" }).theme, "system");
     assert.equal(parseDeskUi({ theme: "neon", typeSize: "huge" }).typeSize, "regular");
+  });
+
+  it("boots light unless dark or match-phone was chosen", () => {
+    assert.match(DESK_UI_BOOT, /p\.theme==="dark"\|\|p\.theme==="system"\?p\.theme:"light"/);
   });
 
   it("treats system as dark only when the phone is dark", () => {

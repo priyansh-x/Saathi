@@ -17,7 +17,8 @@ export const DESK_UI_KEY = "saathi-desk-ui";
 export const DESK_UI_DEFAULTS: DeskUi = {
   density: "comfortable",
   look: "warm",
-  theme: "system",
+  // Light paper by default. Dark, or following the phone, is an explicit choice.
+  theme: "light",
   typeSize: "regular",
   motion: "full",
 };
@@ -29,7 +30,7 @@ export function parseDeskUi(raw: unknown): DeskUi {
   return {
     density: parsed.density === "compact" ? "compact" : "comfortable",
     look: parsed.look === "calm" ? "calm" : "warm",
-    theme: parsed.theme === "dark" || parsed.theme === "light" ? parsed.theme : "system",
+    theme: parsed.theme === "dark" || parsed.theme === "system" ? parsed.theme : "light",
     typeSize: parsed.typeSize === "large" ? "large" : "regular",
     motion: parsed.motion === "reduce" ? "reduce" : "full",
   };
@@ -89,4 +90,4 @@ export function applyDeskUi(prefs: DeskUi = readDeskUi()) {
 }
 
 /** Runs before paint so the first frame matches saved display prefs. */
-export const DESK_UI_BOOT = `(function(){try{var p={};try{p=JSON.parse(localStorage.getItem("${DESK_UI_KEY}")||"{}")||{};}catch(e){}var d=document.documentElement;d.dataset.density=p.density==="compact"?"compact":"comfortable";d.dataset.look=p.look==="calm"?"calm":"warm";d.dataset.typeSize=p.typeSize==="large"?"large":"regular";d.dataset.motion=p.motion==="reduce"?"reduce":"full";var theme=p.theme==="dark"||p.theme==="light"?p.theme:"system";d.dataset.theme=theme;var dark=theme==="dark"||(theme==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);d.classList.toggle("dark",dark);var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].removeAttribute("media");m[i].setAttribute("content",dark?"#1A1816":"#F7F5F0");}}catch(e){}})();`;
+export const DESK_UI_BOOT = `(function(){try{var p={};try{p=JSON.parse(localStorage.getItem("${DESK_UI_KEY}")||"{}")||{};}catch(e){}var d=document.documentElement;d.dataset.density=p.density==="compact"?"compact":"comfortable";d.dataset.look=p.look==="calm"?"calm":"warm";d.dataset.typeSize=p.typeSize==="large"?"large":"regular";d.dataset.motion=p.motion==="reduce"?"reduce":"full";var theme=p.theme==="dark"||p.theme==="system"?p.theme:"light";d.dataset.theme=theme;var dark=theme==="dark"||(theme==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);d.classList.toggle("dark",dark);var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].removeAttribute("media");m[i].setAttribute("content",dark?"#1A1816":"#F7F5F0");}}catch(e){}})();`;
