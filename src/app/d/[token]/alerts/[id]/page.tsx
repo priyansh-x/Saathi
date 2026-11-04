@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { DetailShell, ExpiredLink } from "@/components/family/chrome";
 import { titled } from "@/lib/page-title";
 import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
@@ -12,6 +12,13 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+const PILL_TONE = {
+  neutral: "bg-sunk text-muted-foreground",
+  good: "bg-good-soft text-good",
+  look: "bg-amber-soft text-amber-ink",
+  open: "bg-alert-soft text-alert",
+} as const;
+
 export async function generateMetadata({
   searchParams,
 }: {
@@ -20,13 +27,6 @@ export async function generateMetadata({
   return titled("Alert · Saathi", "अलर्ट · साथी", (await searchParams).lang);
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="app-shell">
-      <div className="app-shell-scroll px-4 pt-3 pb-8">{children}</div>
-    </main>
-  );
-}
 
 export default async function AlertDetailPage({
   params,
@@ -45,15 +45,7 @@ export default async function AlertDetailPage({
 
   const parent = await parentByToken(token);
   if (!parent) {
-    return (
-      <Shell>
-        <h1 className="app-title mt-8">{t.linkExpired}</h1>
-        <p className="mt-3 text-[16px] text-muted-foreground">{t.linkExpiredHint}</p>
-        <Link href="/" className="btn-secondary mt-8">
-          Saathi
-        </Link>
-      </Shell>
-    );
+    return <ExpiredLink lang={lang} />;
   }
   const contacts = await contactsFor(parent.id);
   const child = contacts.find((row) => row.role === "child") ?? null;
@@ -61,16 +53,10 @@ export default async function AlertDetailPage({
   const alert = await alertById(id);
   if (!alert || alert.parent_id !== parent.id) {
     return (
-      <Shell>
-        <Link href={backHref} className="-ml-2 inline-flex h-11 items-center pr-3 text-[15px] font-medium text-primary">
-          {backLabel}
-        </Link>
+      <DetailShell back={{ href: backHref, label: backLabel }}>
         <p className="mt-4 text-[19px] font-semibold">{t.emptyAlerts}</p>
         <p className="mt-2 text-sm text-muted-foreground">{t.emptyAlertsBody}</p>
-        <Link href={backHref} className="btn-primary mt-6 inline-flex justify-center">
-          {backLabel}
-        </Link>
-      </Shell>
+      </DetailShell>
     );
   }
   const events = await alertEvents(id);
@@ -99,30 +85,32 @@ export default async function AlertDetailPage({
   }
 
   return (
-    <Shell>
-      <Link href={backHref} className="-ml-2 inline-flex h-11 items-center pr-3 text-[15px] font-medium text-primary">
-        {backLabel}
-      </Link>
+    <DetailShell back={{ href: backHref, label: backLabel }}>
+      <span className={`pill mt-2 ${PILL_TONE[pill.tone]}`}>{pill.label}</span>
+      <h1 className="mt-3 text-[26px] leading-tight font-semibold tracking-tight first-letter:uppercase">
+        {alertTitle(alert, lang)}
+      </h1>
+      <p className="mt-1 tabular text-sm text-muted-foreground">{formatFriendlyTime(alert.created_at, lang)}</p>
+      {quote ? (
+        <blockquote className="card font-devanagari mt-5 px-4 py-3 text-lg leading-[1.6]">“{quote}”</blockquote>
+      ) : null}
 
-      <p className="mt-4 text-sm text-muted-foreground">{pill.label}</p>
-      <h1 className="mt-1 text-2xl font-semibold">{alertTitle(alert, lang)}</h1>
-      {quote ? <p className="font-devanagari mt-2 text-lg leading-[1.6]">“{quote}”</p> : null}
-      <p className="mt-1 text-sm text-muted-foreground">{formatFriendlyTime(alert.created_at, lang)}</p>
-
-      <section className="card mt-5 px-4 py-3">
+      <section className="card mt-4 px-4 py-3">
         <p className="text-sm text-muted-foreground">{t.whoWeTold}</p>
         <p className="mt-1">
           {told || "-"} · {t.channelWhatsapp}
         </p>
       </section>
 
-      <ol className="mt-5 space-y-2">
-        {events.map((event) => (
-          <li key={event.id} className="rounded-2xl border border-border px-4 py-3 text-sm">
-            {eventLine(event, lang)}
-          </li>
-        ))}
-      </ol>
+      {events.length > 0 ? (
+        <ol className="list-group mt-4">
+          {events.map((event) => (
+            <li key={event.id} className="list-row text-[15px] leading-snug">
+              {eventLine(event, lang)}
+            </li>
+          ))}
+        </ol>
+      ) : null}
 
       {life === "open" ? (
         <form action={markGoing} className="mt-6">
@@ -146,6 +134,6 @@ export default async function AlertDetailPage({
           </form>
         </div>
       ) : null}
-    </Shell>
+    </DetailShell>
   );
 }

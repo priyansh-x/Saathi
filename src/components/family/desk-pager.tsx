@@ -15,6 +15,11 @@ function hrefFor(token: string, tab: DeskTab, lang: Lang, extraQuery?: Record<st
   return `/d/${token}/${tab}${q}`;
 }
 
+const TAB_TITLES: Record<Lang, Record<DeskTab, string>> = {
+  en: { today: "Today · Saathi", history: "History · Saathi", alerts: "Alerts · Saathi", settings: "Settings · Saathi" },
+  hi: { today: "आज · साथी", history: "इतिहास · साथी", alerts: "अलर्ट · साथी", settings: "सेटिंग · साथी" },
+};
+
 function fromField(target: EventTarget | null) {
   const el = target as HTMLElement | null;
   return Boolean(el?.closest("input, textarea, select"));
@@ -60,7 +65,8 @@ export function DeskPager({
   const [index, setIndex] = useState(startIndex);
   const [drag, setDrag] = useState(0);
   const [dragging, setDragging] = useState(false);
-  const [width, setWidth] = useState(320);
+  // Animate only when a swipe settles. Tabs are peers: a tap switches instantly.
+  const [animate, setAnimate] = useState(false);
   const [syncedActive, setSyncedActive] = useState(active);
   if (active !== syncedActive) {
     setSyncedActive(active);
@@ -94,22 +100,22 @@ export function DeskPager({
     applyDeskUi();
   }, []);
 
-  useEffect(() => {
-    const el = pager.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setWidth(el.clientWidth || 320));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   const go = useCallback(
-    (next: number) => {
+    (next: number, swiped = false) => {
       const clamped = Math.max(0, Math.min(DESK_TABS.length - 1, next));
+      setAnimate(swiped);
+      if (!swiped && clamped === indexRef.current) {
+        // Re-tapping the active tab returns that pane to the top.
+        const page = pager.current?.querySelectorAll<HTMLElement>(".desk-page")[clamped];
+        page?.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
       setIndex(clamped);
       setDrag(0);
       dragRef.current = 0;
       const tab = DESK_TABS[clamped]!;
-      window.history.replaceState(null, "", hrefFor(token, tab, lang, extraRef.current));
+      window.history.replaceState(window.history.state, "", hrefFor(token, tab, lang, extraRef.current));
+      document.title = TAB_TITLES[lang][tab];
     },
     [lang, token],
   );
@@ -168,8 +174,9 @@ export function DeskPager({
       suppressClick.current = true;
       const width = widthOf();
       const dx = dragRef.current;
-      if (dx < -width * 0.18) go(indexRef.current + 1);
-      else if (dx > width * 0.18) go(indexRef.current - 1);
+      setAnimate(true);
+      if (dx < -width * 0.18) go(indexRef.current + 1, true);
+      else if (dx > width * 0.18) go(indexRef.current - 1, true);
       else {
         setDrag(0);
         dragRef.current = 0;
@@ -226,7 +233,8 @@ export function DeskPager({
     };
   }, [go]);
 
-  const x = -index * width + drag;
+  // Percent of the 400%-wide track, so the server render and first paint already sit on the right pane.
+  const x = `calc(${-index * 25}% + ${drag}px)`;
   const tab = DESK_TABS[index]!;
   const panes = [
     { key: "today", node: today },
@@ -244,12 +252,18 @@ export function DeskPager({
         <div
           className="desk-pager-track"
           style={{
-            transform: `translate3d(${x}px,0,0)`,
-            transition: dragging ? "none" : "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)",
+            transform: `translate3d(${x},0,0)`,
+            transition: dragging || !animate ? "none" : "transform 280ms cubic-bezier(0.23, 1, 0.32, 1)",
           }}
         >
-          {panes.map((pane) => (
-            <section key={pane.key} className="desk-page">
+          {panes.map((pane, i) => (
+            <section
+              key={pane.key}
+              className="desk-page"
+              aria-label={TAB_TITLES[lang][pane.key].split(" · ")[0]}
+              // Off-screen panes stay out of the tab order and the screen reader.
+              inert={!dragging && i !== index}
+            >
               {pane.node}
             </section>
           ))}

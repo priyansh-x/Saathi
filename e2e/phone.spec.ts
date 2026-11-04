@@ -50,7 +50,12 @@ test("red-flag alert to resolved", async ({ page, request }) => {
   const res = await request.post("/api/demo/bolna", { data: { scenario: "chest" } });
   expect(res.ok()).toBeTruthy();
   await page.goto("/d/example-kamla/alerts");
-  await page.getByRole("link").filter({ hasText: /chest|pain|Act|Open/i }).first().click();
+  await page
+    .getByRole("region", { name: "Alerts" })
+    .getByRole("link")
+    .filter({ hasText: /chest|pain|Act|Open/i })
+    .first()
+    .click();
   await page.getByRole("button", { name: "I'm on it" }).click();
   await page.getByRole("button", { name: "She's OK" }).click();
   await expect(page.getByRole("button", { name: "She's OK" })).toHaveCount(0);
@@ -60,7 +65,7 @@ test("editing settings", async ({ page }) => {
   await page.goto("/d/example-kamla/settings");
   await page.locator("#callTime").selectOption("09:00");
   await page.getByRole("button", { name: "Save time" }).click();
-  await expect(page.getByText("Changes apply from the next call.")).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
 });
 
 test("invite link", async ({ page }) => {
@@ -82,7 +87,12 @@ test("Hindi Today has a chip with words", async ({ page }) => {
 
 test("history opens a stored transcript", async ({ page }) => {
   await page.goto("/d/example-kamla/history");
-  await page.getByRole("link").filter({ hasText: /answered|उठी|Good|ठीक/i }).first().click();
+  await page
+    .getByRole("region", { name: "History" })
+    .getByRole("link")
+    .filter({ hasText: /answered|उठी|Good|ठीक/i })
+    .first()
+    .click();
   await expect(page.getByText(/Summary|सार|conversation|बात/i).first()).toBeVisible({ timeout: 8000 });
 });
 

@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
 import { AppStyles } from "@/components/app-styles";
 import { DeskUiSync } from "@/components/family/desk-ui-sync";
+import { LangSync } from "@/components/lang-sync";
 import { PwaBoot } from "@/components/pwa/boot";
 import { DESK_UI_BOOT } from "@/lib/desk-ui";
 
@@ -64,12 +65,17 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#F7F5F0",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
+    { media: "(prefers-color-scheme: dark)", color: "#1A1816" },
+  ],
 };
 
 function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean }) {
   return (
     <html
+      // The boot script sets theme / density data attributes before React hydrates.
+      suppressHydrationWarning
       lang={hi ? "hi" : "en"}
       className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full overflow-hidden ${hi ? "font-devanagari" : ""}`}
     >
@@ -78,6 +84,9 @@ function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean
         <AppStyles />
         <PwaBoot />
         <DeskUiSync />
+        <Suspense fallback={null}>
+          <LangSync />
+        </Suspense>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </body>
     </html>
