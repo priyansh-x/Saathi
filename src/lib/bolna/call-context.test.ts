@@ -8,6 +8,8 @@ import {
   buildCallContext,
   extractPromptPlaceholders,
   loadSystemPromptPlaceholders,
+  medicineNameWithDose,
+  medicinesDueTodayText,
 } from "./call-context";
 import { closeDb } from "../db/client";
 import { seed } from "../db/seed";
@@ -57,5 +59,39 @@ describe("buildCallContext", () => {
     assert.match(ctx.consent_line_en, /Sunita/);
     assert.equal(ctx.call_memory, ctx.last_call_summary);
     assert.equal(Object.values(ctx).every((v) => typeof v === "string"), true);
+  });
+});
+
+describe("medicineNameWithDose", () => {
+  it("omits empty brackets when dose is blank", () => {
+    assert.equal(medicineNameWithDose("Telma 40", ""), "Telma 40");
+    assert.equal(medicineNameWithDose("Telma 40", "   "), "Telma 40");
+    assert.equal(medicineNameWithDose("Telma 40", "BP ki goli"), "Telma 40 (BP ki goli)");
+    assert.match(
+      medicinesDueTodayText([
+        {
+          id: "med_telma",
+          name: "Telma 40",
+          dose: "",
+          appearance: "",
+          meal: "subah",
+          time_local: "08:00",
+        },
+      ]),
+      /Telma 40 \|/,
+    );
+    assert.equal(
+      medicinesDueTodayText([
+        {
+          id: "med_telma",
+          name: "Telma 40",
+          dose: "",
+          appearance: "",
+          meal: "subah",
+          time_local: "08:00",
+        },
+      ]).includes("()"),
+      false,
+    );
   });
 });

@@ -111,13 +111,19 @@ export function preferredLanguageName(languages: string | null | undefined) {
   return LANGUAGE_NAMES[first] || first;
 }
 
-function medicinesDueTodayText(
+/** Name only when dose is blank — never "Telma 40 ()". */
+export function medicineNameWithDose(name: string, dose: string | null | undefined) {
+  const trimmed = (dose || "").trim();
+  return trimmed ? `${name} (${trimmed})` : name;
+}
+
+export function medicinesDueTodayText(
   rows: { id: string; name: string; dose: string; appearance: string; meal: string; time_local: string | null }[],
 ) {
   if (!rows.length) return "none due today";
   const lines = rows.map((m, i) => {
     const when = m.time_local ? `${m.meal}, ${m.time_local}` : m.meal;
-    return `${i + 1}. id=${m.id} | ${m.name} (${m.dose}) | ${when}`;
+    return `${i + 1}. id=${m.id} | ${medicineNameWithDose(m.name, m.dose)} | ${when}`;
   });
   return lines.join("\n");
 }

@@ -30,6 +30,7 @@ import { weeklyDeskCopy } from "@/lib/weekly";
 import { AddToHome } from "@/components/pwa/register";
 import { ErrandCard } from "@/components/family/errand-card";
 import { FamilyMessageForm } from "@/components/family/family-message-form";
+import { TestCallForm } from "@/components/family/test-call-form";
 import { saveFamilyMessage } from "@/lib/family-messages";
 
 const HERO_TONE = {
@@ -249,12 +250,10 @@ export function TodayPanel({
               {p(t.callMaa)}
             </a>
           ) : state === "calling" ? null : (
-            <form action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=today`} method="POST">
-              <button type="submit" className="btn-primary">
-                <Phone className="size-[18px]" aria-hidden />
-                {p(t.ringNow)}
-              </button>
-            </form>
+            <TestCallForm action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=today`}>
+              <Phone className="size-[18px]" aria-hidden />
+              {p(t.ringNow)}
+            </TestCallForm>
           )}
 
           <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))]">

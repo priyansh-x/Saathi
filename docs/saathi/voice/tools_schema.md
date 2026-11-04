@@ -10,7 +10,7 @@ Mid-call tools: `log_medicine`, `raise_alert`, `relay_message_to_family`, `save_
 - **Not verified:** whether a POST tool sends `param` as a JSON body or a query string (see engineering/bolna_api_notes.md §7). All params below are flat strings, so either works. Test with webhook.site first.
 
 ## Design rules
-1. **Fast and silent.** Elders are put off by dead air. Endpoints should return in under ~300 ms and do slow work (WhatsApp sends, auto-dial) asynchronously. Leave `pre_call_message` empty for `log_medicine` and `save_memory_note`. For `raise_alert`, the agent speaks its own emergency line, so `pre_call_message` stays empty too.
+1. **Fast.** Elders are put off by dead air. Endpoints should return in under ~300 ms and do slow work (WhatsApp sends, auto-dial) asynchronously. While a tool request runs, `pre_call_message` is exactly `जी, एक सेकंड।` for `log_medicine`, `raise_alert`, `relay_message_to_family`, `save_memory_note`, and `record_consent`.
 2. **Idempotent.** Key every write on `call_sid` + a natural key (e.g. `medicine_id`). The LLM may retry.
 3. **Never block safety on a tool failure.** If `raise_alert` errors, the agent has already told the parent to call 112. The post-call extraction (§5) re-checks the transcript for red flags, and the backend compares it with `tool_call_logs` to catch alerts the tool never received (belt and braces).
 4. **Auth.** One Bearer token per environment in `api_token`. Rotate it regularly. Don't commit it.
@@ -25,7 +25,7 @@ Logs one dose per call. The agent calls it once for every dose in today's `{{med
 {
   "name": "log_medicine",
   "description": "Log whether the parent took ONE scheduled medicine dose today. Call exactly once per dose in today's medicine list, right after the parent answers. status: 'taken' = clear yes; 'not_taken' = clear no / forgot / ran out / stopped; 'unsure' = can't remember, contradictory, or dose not yet due. Put the parent's own words in parent_quote.",
-  "pre_call_message": "",
+  "pre_call_message": "जी, एक सेकंड।",
   "parameters": {
     "type": "object",
     "properties": {
@@ -71,7 +71,7 @@ Response: `{"ok": true}`. Backend: upsert on (`call_sid`, `medicine_id`). Comput
 {
   "name": "raise_alert",
   "description": "Raise a safety alert to the family. Call IMMEDIATELY when you hear an EMERGENCY or URGENT red flag (see prompt), before or while speaking the instruction. severity EMERGENCY: chest_pain, breathlessness, fall_injury, stroke_signs, unresponsive, suicidal_talk. severity URGENT: fall_no_injury, confusion, missed_medicine, fever, not_eating, low_mood (hopeless, no intent), scam_risk. quote must be the exact words of the parent or the person reporting. When unsure of tier, choose the higher one. Max one alert per category per call unless severity increases.",
-  "pre_call_message": "",
+  "pre_call_message": "जी, एक सेकंड।",
   "parameters": {
     "type": "object",
     "properties": {
@@ -120,7 +120,7 @@ The WhatsApp alert text above is a template draft. Sending from a WhatsApp Busin
 {
   "name": "relay_message_to_family",
   "description": "Pass a request or message from the parent to their family, e.g. 'tell my son to call me', 'tell Rohit there's pension work', 'ask bahu to bring medicine', or a medical question the parent wants checked with the doctor. Confirm with the parent first, by repeating the message back, then call this.",
-  "pre_call_message": "",
+  "pre_call_message": "जी, एक सेकंड।",
   "parameters": {
     "type": "object",
     "properties": {
@@ -160,7 +160,7 @@ Backend: map `recipient` to a contact (fall back to the primary child). `today` 
 {
   "name": "save_memory_note",
   "description": "Save one short fact worth remembering for future calls: family events, health mentions (non-urgent), routine, preferences (language, address term, call time), interests. Not for trivial chatter. Never mention to the parent that you are saving.",
-  "pre_call_message": "",
+  "pre_call_message": "जी, एक सेकंड।",
   "parameters": {
     "type": "object",
     "properties": {
