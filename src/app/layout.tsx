@@ -5,7 +5,10 @@ import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { Instrument_Serif, Inter, Noto_Sans_Devanagari } from "next/font/google";
 import { AppStyles } from "@/components/app-styles";
+import { DeskUiSync } from "@/components/family/desk-ui-sync";
+import { LangSync } from "@/components/lang-sync";
 import { PwaBoot } from "@/components/pwa/boot";
+import { DESK_UI_BOOT } from "@/lib/desk-ui";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -33,7 +36,7 @@ const devanagari = Noto_Sans_Devanagari({
 
 export const metadata: Metadata = {
   title: "Saathi",
-  description: "A morning phone call for Indian parents. Companionship and reminders — never diagnosis.",
+  description: "A morning phone call for Indian parents. Companionship and reminders, never diagnosis.",
   robots: { index: false, follow: false },
   appleWebApp: { capable: true, title: "Saathi", statusBarStyle: "default" },
   manifest: "/manifest.webmanifest",
@@ -62,19 +65,26 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Light by default; the desk boot script switches it when Dark is chosen.
   themeColor: "#F7F5F0",
 };
 
 function HtmlShell({ children, hi = false }: { children: ReactNode; hi?: boolean }) {
   return (
     <html
-      lang={hi ? "hi" : "en"}
+      // The boot script sets theme / density data attributes before React hydrates.
       suppressHydrationWarning
+      lang={hi ? "hi" : "en"}
       className={`${inter.variable} ${instrument.variable} ${devanagari.variable} h-full overflow-hidden ${hi ? "font-devanagari" : ""}`}
     >
       <body className="flex h-full min-h-0 flex-col overflow-hidden">
+        <script dangerouslySetInnerHTML={{ __html: DESK_UI_BOOT }} />
         <AppStyles />
         <PwaBoot />
+        <DeskUiSync />
+        <Suspense fallback={null}>
+          <LangSync />
+        </Suspense>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </body>
     </html>

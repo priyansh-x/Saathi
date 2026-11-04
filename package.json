@@ -2,7 +2,7 @@
   "name": "saathi",
   "version": "0.1.0",
   "private": true,
-  "description": "Morning phone companion for a parent in India, plus a family desk.",
+  "description": "Daily phone companion for aging parents in India: morning call, WhatsApp briefing, and a family desk.",
   "engines": {
     "node": ">=20"
   },
@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit",
     "seed": "npx --yes tsx src/lib/db/seed-cli.ts",
     "db:migrate": "npx --yes tsx src/lib/db/migrate-cli.ts",
-    "test": "npx --yes tsx --test --test-concurrency=1 \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
+    "test": "npx --yes tsx --test --test-concurrency=1 $(find src scripts -name '*.test.ts' -not -path '*/node_modules/*' | sort)",
     "e2e": "npm run build && playwright test",
     "bolna:sync": "npx --yes tsx scripts/bolna/sync.ts",
     "bolna:test-call": "npx --yes tsx scripts/bolna/test-call.ts",

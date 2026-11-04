@@ -1,6 +1,7 @@
 import { query } from "@/lib/db/client";
 import { flagFromTranscript } from "@/lib/bolna/flag-from-transcript";
 import { applyFamilyMessageFromWebhook } from "@/lib/family-messages";
+import { markErrandFollowupAsked } from "@/lib/partners/errands";
 import { hasRaiseAlert, logMedicine, raiseAlert } from "@/lib/bolna/tools";
 import { coerceBolnaTranscript, transcriptHasParent, transcriptJson, transcriptJsonHasWords } from "@/lib/bolna/transcript";
 import { advanceLadder } from "@/lib/ladder";
@@ -197,15 +198,17 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     if (missingWords || missingMeds || missingAlert) {
       fillingWords = true;
     } else if (hasCompletedData) {
+      const replayStatus = already[0].status === "completed" ? "completed" : incoming;
       await applyFamilyMessageFromWebhook({
         parentId: already[0].parent_id,
         callId: already[0].id,
         durationSec: Number(already[0].duration_sec ?? conversationSeconds(payload)),
-        status: already[0].status === "completed" ? "completed" : incoming,
+        status: replayStatus,
         transcript: transcriptText ?? payload.transcript ?? already[0].transcript_json,
         extractedReply: typeof payload.extracted_data?.reply_to_family === "string" ? payload.extracted_data.reply_to_family : null,
         toolPlayedId: familyPlayedId(payload),
       });
+      await markErrandFollowupAsked(already[0].parent_id, already[0].id, replayStatus);
       return { ok: true as const, call_id: already[0].id, replay: true };
     } else {
       const reopenable = ["missed", "in_progress", "failed"].includes(already[0].status);
@@ -349,15 +352,17 @@ export async function processBolnaWebhook(payload: BolnaWebhook, executionId: st
     });
   }
 
+  const completedStatus = noConvo ? "no_conversation" : "completed";
   await applyFamilyMessageFromWebhook({
     parentId,
     callId,
     durationSec: duration,
-    status: noConvo ? "no_conversation" : "completed",
+    status: completedStatus,
     transcript: transcriptText ?? payload.transcript,
     extractedReply: typeof payload.extracted_data?.reply_to_family === "string" ? payload.extracted_data.reply_to_family : null,
     toolPlayedId: familyPlayedId(payload),
   });
+  await markErrandFollowupAsked(parentId, callId, completedStatus);
 
   await persistCallCost(callId, payload);
   await query(`update webhook_events set processed = true where id = $1`, [eventId]);

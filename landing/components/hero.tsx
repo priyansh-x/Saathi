@@ -1,117 +1,204 @@
 "use client";
 
+import { ArrowUpRight, Pause, Phone, Play } from "lucide-react";
 import Image from "next/image";
-import { ArrowRight, Check, PhoneCall } from "lucide-react";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Crossfade } from "@/lib/crossfade";
+import type { CSSProperties } from "react";
+import { DeviceFrame } from "@/components/kit";
+import { LiveWave, PlayButton, clock, useMorningCall } from "@/components/call-demo";
+import { MiniMark } from "@/components/chrome";
 import { content } from "@/lib/content";
-import { useInView, usePrefersReducedMotion } from "@/lib/use-reveal";
-import { MiniMark } from "./chrome";
-import { Waveform } from "./kit";
 import heroImg from "@/public/images/hero-maa-balcony.jpg";
 
-const d = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
-
-export function Hero() {
+export function Hero({ deskUrl }: { deskUrl: string }) {
   const t = content.hero;
-  const [i, setI] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, 0.2);
-  const reduced = usePrefersReducedMotion();
-  const line = t.voiceLines[reduced ? 0 : i];
-
-  useEffect(() => {
-    if (reduced || !inView) return;
-    const id = window.setInterval(() => setI((n) => (n + 1) % t.voiceLines.length), 3800);
-    return () => window.clearInterval(id);
-  }, [inView, reduced, t.voiceLines.length]);
+  const call = useMorningCall("hi");
+  const { audioRef, playing, done, toggle, time } = call;
 
   return (
-    <section className="relative overflow-hidden pb-20 pt-8 md:pb-28 md:pt-16">
+    <section className="grain relative overflow-hidden pb-16 pt-28 md:pb-24 md:pt-36">
+      <audio ref={audioRef} preload="auto" />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px] bg-[radial-gradient(60%_50%_at_75%_20%,var(--paper-sunk),transparent_70%)]"
+        className="pointer-events-none absolute -right-40 -top-40 -z-10 size-[720px] rounded-full opacity-70 blur-3xl"
+        style={{ background: "radial-gradient(circle, #f6d7a8 0%, rgba(246,215,168,0) 65%)" }}
         aria-hidden
       />
-      <div className="container-site grid items-center gap-12 lg:grid-cols-[1.02fr_1fr] lg:gap-16">
+
+      <div className="container-site grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20">
         <div>
-          <h1 className="h1 rise" style={d(0)}>
-            {t.h1a}
-            <br />
-            {t.h1bLead} {t.h1b} <span className="serif-line">{t.h1accent}</span>
+          <p className="eyebrow rise">
+            <span className="relative flex size-2">
+              <span className="absolute inset-0 animate-ping rounded-full bg-good/60" />
+              <span className="relative size-2 rounded-full bg-good" />
+            </span>
+            <span>{t.kicker}</span>
+          </p>
+          <h1 className="h1 rise mt-7" style={{ "--d": "80ms" } as CSSProperties}>
+            {t.h1a} <em>{t.h1b}</em>
           </h1>
-          <p className="sub rise mt-6" style={d(160)}>
+          <p className="sub rise mt-7" style={{ "--d": "160ms" } as CSSProperties}>
             {t.sub}
           </p>
-          <div className="rise mt-8 flex flex-col gap-3 sm:flex-row" style={d(240)}>
-            <a href="#join" className="btn">
-              {t.cta}
-              <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
-            </a>
-            <a href="#listen" className="btn-ghost">
-              <PhoneCall className="size-4" strokeWidth={1.75} aria-hidden />
+          <div
+            className="rise mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-7"
+            style={{ "--d": "240ms" } as CSSProperties}
+          >
+            <PlayButton
+              playing={playing}
+              done={done}
+              onClick={toggle}
+              labels={{ play: t.cta, pause: t.ctaPlaying, replay: t.ctaDone }}
+            />
+            <a href={deskUrl} className="link-arrow text-[15px]">
               {t.secondary}
+              <ArrowUpRight className="size-4" strokeWidth={2} aria-hidden />
             </a>
           </div>
-          <ul className="rise mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink-2" style={d(320)}>
-            {t.trust.map((x) => (
-              <li key={x} className="flex items-center gap-1.5">
-                <Check className="size-4 text-good" strokeWidth={2} aria-hidden />
-                {x}
-              </li>
-            ))}
-          </ul>
         </div>
 
-        <div ref={ref} className="rise relative mx-auto w-full max-w-[600px] pt-2" style={d(200)}>
-          <div className="art grain relative aspect-[4/3.2] shadow-[var(--shadow-mock)]">
+        <div className="rise relative mx-auto w-full max-w-[540px]" style={{ "--d": "200ms" } as CSSProperties}>
+          <div className="art relative aspect-[4/5] shadow-[var(--shadow-lift)]">
             <Image
               src={heroImg}
               alt={t.imageAlt}
               fill
-              priority
+              loading="eager"
+              fetchPriority="high"
               placeholder="blur"
-              sizes="(min-width: 1024px) 600px, 100vw"
-              className="object-cover object-[70%_center]"
+              sizes="(min-width: 1024px) 540px, 92vw"
+              className="object-cover object-[72%_center]"
             />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-dark/25 via-transparent to-transparent" />
-
-            <div
-              className="float absolute bottom-4 left-3 right-3 w-auto max-w-[340px] rounded-[22px] border border-white/60 bg-bg-elevated/95 p-4 shadow-[var(--shadow-float)] backdrop-blur sm:right-auto"
-              style={{ "--fd": "0s" } as CSSProperties}
-            >
-              <div className="flex items-center gap-3">
-                <span className="ring-pulse grid size-10 shrink-0 place-items-center rounded-full bg-good text-good">
-                  <PhoneCall className="size-4 text-white" strokeWidth={2} aria-hidden />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold leading-tight">{t.callStatus}</p>
-                  <p className="font-mono text-[12px] text-ink-3">
-                    {t.callTitle} · {t.callClock}
-                  </p>
+            <span className="absolute right-4 top-4 rounded-full bg-black/30 px-2.5 py-1 text-[11px] text-white backdrop-blur">
+              {t.example}
+            </span>
+            {done ? (
+              <div
+                className="pop-in absolute bottom-4 right-4 w-[48%] rounded-[18px] bg-bg-elevated/95 p-3.5 shadow-[var(--shadow-lift)] backdrop-blur"
+                role="status"
+              >
+                <div className="flex items-center gap-2 text-[11px] text-ink-3">
+                  <span className="grid size-4 place-items-center rounded-[4px] bg-[#25d366]">
+                    <Phone className="size-2.5 text-white" strokeWidth={3} aria-hidden />
+                  </span>
+                  {t.toastApp}
                 </div>
-                <Waveform bars={9} className="text-ink-2" />
+                <p className="mt-1.5 text-[13px] font-semibold">{t.toastFrom}</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-ink-2">{t.toast}</p>
               </div>
-              <div className="mt-3 rounded-[14px] bg-bg-sunk px-3 py-2.5">
-                <p className={`text-[15px] leading-snug ${line.hi ? "font-deva" : ""}`}>
-                  <Crossfade text={line.text} lang={line.hi ? "hi" : "en"} />
-                </p>
-                <p className="mt-1 text-[11px] uppercase tracking-[0.08em] text-ink-3">{line.lang}</p>
-              </div>
-            </div>
+            ) : null}
+          </div>
 
-            <div
-              className="float absolute right-3 top-3 hidden w-[min(70%,240px)] rounded-[18px] rounded-tr-[6px] bg-wa-out p-3 text-[13px] leading-snug shadow-[var(--shadow-float)] sm:block"
-              style={{ "--fd": "-3s" } as CSSProperties}
-            >
-              <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-wa-head">
-                <MiniMark className="size-4" />
-                Saathi · 8:06 AM
-              </p>
-              {t.briefingShort}
-            </div>
+          {/* The phone sits on the left of the frame, over the city, and leans out past the edge on wide screens. */}
+          <div className="absolute bottom-[6%] left-4 w-[44%] max-w-[230px] lg:left-0 lg:w-[42%] lg:-translate-x-[30%]">
+            <DeviceFrame dark time="8:04">
+              <HeroCallScreen call={call} time={time} />
+            </DeviceFrame>
           </div>
         </div>
       </div>
+
+      <Proof />
     </section>
+  );
+}
+
+function HeroCallScreen({ call, time }: { call: ReturnType<typeof useMorningCall>; time: number }) {
+  const t = content.hero;
+  const { started, playing, done, toggle, cue, index } = call;
+
+  if (!started) {
+    return (
+      <div className="flex h-full flex-col items-center px-3 pb-[12%] pt-[14%] text-dark-ink">
+        <p className="text-[10px] uppercase tracking-[0.14em] text-dark-muted">{t.incoming}</p>
+        <span className="relative mt-[18%] grid place-items-center rounded-[22%] text-accent">
+          <span className="ring-pulse absolute inset-0 rounded-[22%]" aria-hidden />
+          <MiniMark className="relative size-14" />
+        </span>
+        <p className="mt-4 text-[17px] font-medium">{t.caller}</p>
+        <p className="text-[11px] text-dark-muted">{t.callee}</p>
+        <div className="mt-auto flex w-full items-end justify-around">
+          <span className="flex flex-col items-center gap-1.5 text-[10px] text-dark-muted" aria-hidden>
+            <span className="grid size-11 place-items-center rounded-full bg-white/10">
+              <Phone className="size-4 rotate-[135deg]" strokeWidth={2} />
+            </span>
+            {t.later}
+          </span>
+          <button type="button" onClick={toggle} className="flex flex-col items-center gap-1.5 text-[10px] text-dark-ink">
+            <span className="relative grid size-11 place-items-center rounded-full bg-[#2fbf62] text-[#2fbf62]">
+              <span className="ring-pulse absolute inset-0 rounded-full" aria-hidden />
+              <Phone className="wiggle relative size-4 text-white" strokeWidth={2.25} />
+            </span>
+            {t.answer}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const lines = cue.lines.slice(0, done ? cue.lines.length : index + 1).slice(-3);
+  return (
+    <div className="flex h-full min-h-0 flex-col px-2.5 pb-3 text-dark-ink" aria-live="polite">
+      <div className="mt-1 flex items-center gap-2 px-1">
+        <MiniMark className="size-7" />
+        <div className="min-w-0 flex-1 leading-tight">
+          <p className="text-[12px] font-medium">{t.caller}</p>
+          <p className="font-mono text-[10px] text-dark-muted">{done ? `${t.ended} · ${clock(time)}` : clock(time)}</p>
+        </div>
+        <LiveWave live={playing} className="text-[#e8a27c]" />
+      </div>
+      <ol className="mt-2 flex min-h-0 flex-1 flex-col justify-end gap-1.5 overflow-hidden text-[11px] leading-snug">
+        {lines.map((row, i) => {
+          const maa = row.who === "maa";
+          const active = !done && i === lines.length - 1;
+          return (
+            <li key={`${row.start}`} className={`screen-fade flex ${maa ? "justify-end" : "justify-start"}`}>
+              <p
+                lang="hi"
+                className={`max-w-[88%] rounded-[12px] px-2.5 py-1.5 ${
+                  maa ? "rounded-br-[4px] bg-accent text-white" : "rounded-bl-[4px] bg-white/10"
+                } ${active ? "" : "opacity-70"}`}
+              >
+                {row.text}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="mt-2.5 flex justify-center">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={playing ? content.listen.pause : content.listen.play}
+          className="grid size-10 place-items-center rounded-full bg-white/12 transition-colors hover:bg-white/20"
+        >
+          {playing ? (
+            <Pause className="size-4 fill-current" strokeWidth={1.5} aria-hidden />
+          ) : (
+            <Play className="size-4 fill-current" strokeWidth={1.5} aria-hidden />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Proof() {
+  const items = content.proof;
+  return (
+    <div className="marquee mt-20 overflow-hidden border-y border-border py-5 md:mt-28" aria-label="What Saathi does">
+      <ul className="marquee-track">
+        {[...items, ...items].map((x, i) => (
+          <li
+            key={i}
+            aria-hidden={i >= items.length}
+            className="flex shrink-0 items-center gap-10 pr-10 text-[15px] text-ink-2"
+          >
+            <span>{x}</span>
+            <span className="text-accent" aria-hidden>
+              ✺
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

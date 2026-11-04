@@ -4,6 +4,7 @@ import { backfillAlertsFromTranscripts, callNeedsBolnaHydrate, hydrateBolnaCall,
 import { defaultLadder } from "@/lib/config";
 import { deskSnapshotByToken } from "@/lib/db/queries";
 import { latestFamilyReply, pendingFamilyMessage } from "@/lib/family-messages";
+import { syncMockErrandsForParent } from "@/lib/partners/errands";
 import type { Lang } from "@/lib/i18n/messages";
 import type { AlertRow, CallRow } from "@/lib/db/types";
 import { minutesNowIst, parseHhMm } from "@/lib/time";
@@ -91,6 +92,7 @@ export async function loadFamily(token: string, opts?: { allAlerts?: boolean; hy
     neighbour: snap.contacts.find((c) => c.role === "neighbour") ?? null,
     familyMessage: await pendingFamilyMessage(snap.parent.id),
     familyReply: await latestFamilyReply(snap.parent.id),
+    errands: await syncMockErrandsForParent(snap.parent.id),
     neighbourReady: snap.neighbourReady,
     weekly: { monday: snap.day, built: null as null, sent: null as null },
     delivery: null as { name: string; clock: string; line: string } | null,

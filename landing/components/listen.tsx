@@ -1,125 +1,124 @@
 "use client";
 
-import { MicOff, PhoneOff, Volume2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { MiniMark } from "@/components/chrome";
-import { DeviceFrame, ExampleTag, Waveform, WhatsAppBriefing } from "@/components/kit";
-import { content, type LangId } from "@/lib/content";
-import { useInView, usePrefersReducedMotion } from "@/lib/use-reveal";
+import { Pause, Play, RotateCcw } from "lucide-react";
+import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { DeviceFrame, WhatsAppBriefing } from "@/components/kit";
+import { LiveWave, clock, useMorningCall, waveHeights } from "@/components/call-demo";
+import { SectionHead } from "@/components/chrome";
+import { type CallLang } from "@/lib/call-audio";
+import { content } from "@/lib/content";
 
-const CPS = 34;
+const BARS = waveHeights(84, 11);
 
 export function Listen() {
   const t = content.listen;
-  const [lang, setLang] = useState<LangId>("hi");
-  const [turn, setTurn] = useState(0);
-  const [chars, setChars] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, 0.3);
-  const reduced = usePrefersReducedMotion();
-  const lines = t.transcripts[lang];
-  const current = lines[Math.min(turn, lines.length - 1)];
-  const shown = reduced ? lines : lines.slice(0, turn);
-
-  useEffect(() => {
-    if (reduced || !inView || turn >= lines.length) return;
-    const target = lines[turn]?.text.length ?? 0;
-    if (chars < target) {
-      const id = window.setTimeout(() => setChars((n) => n + 1), 1000 / CPS);
-      return () => window.clearTimeout(id);
-    }
-    const id = window.setTimeout(() => {
-      setTurn((n) => n + 1);
-      setChars(0);
-    }, 1100);
-    return () => window.clearTimeout(id);
-  }, [inView, reduced, turn, chars, lines]);
-
-  function pick(id: LangId) {
-    setLang(id);
-    setTurn(reduced ? content.listen.transcripts[id].length : 0);
-    setChars(0);
-  }
+  const [lang, setLang] = useState<CallLang>("hi");
+  const call = useMorningCall(lang);
+  const { audioRef, playing, done, started, toggle, seek, seekLine, cue, index, time } = call;
+  const progress = Math.min(1, time / cue.duration);
 
   return (
-    <section id="listen" className="section pt-12 md:pt-16">
+    <section id="listen" className="section">
+      <audio ref={audioRef} preload="auto" />
       <div className="container-site">
-        <div className="text-center" data-reveal>
-          <p className="eyebrow justify-center">{t.eyebrow}</p>
-          <h2 className="h2 mx-auto mt-4">{t.h2}</h2>
-        </div>
+        <SectionHead eyebrow={t.eyebrow} a={t.h2a} b={t.h2b} sub={t.sub} />
 
         <div
-          ref={ref}
-          className="relative mt-12 overflow-hidden rounded-[32px] border border-border bg-bg-sunk px-4 pb-10 pt-8 md:mt-16 md:px-10 md:pb-14 md:pt-10"
+          className="dark-band grain mt-14 overflow-hidden rounded-[32px] shadow-[var(--shadow-lift)] md:mt-20"
           data-reveal
         >
-          <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-            <div className="seg max-w-full overflow-x-auto" role="group" aria-label="Call language">
-              {t.languages.map((l) => {
-                const id = l.live ? (l.id as LangId) : null;
-                return (
-                  <button
-                    key={l.id}
-                    type="button"
-                    disabled={!id}
-                    aria-pressed={id === lang}
-                    onClick={() => id && pick(id)}
-                    className="disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    {l.label}
-                    {!l.live ? <span className="text-[11px]">{t.soon}</span> : null}
-                  </button>
-                );
-              })}
-            </div>
-            <ExampleTag>{t.tag}</ExampleTag>
-          </div>
-
-          <div className="mt-10 grid items-center justify-items-center gap-8 overflow-hidden lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
-            <DeviceFrame dark time="8:04" className="max-w-[260px] lg:max-w-[280px]">
-              <div className="flex h-full min-h-0 flex-col px-4 pb-5 text-dark-ink" aria-label="Example: morning call transcript">
-                <div className="mt-4 text-center">
-                  <span className="mx-auto grid size-14 place-items-center">
-                    <MiniMark className="size-14" />
-                  </span>
-                  <p className="mt-2 text-[15px] font-medium">{t.caller}</p>
-                  <p className="font-mono text-[12px] text-dark-muted">{t.callClock}</p>
-                  <Waveform bars={16} className="mx-auto mt-2 justify-center text-accent" />
+          <div className="grid grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="flex flex-col p-5 sm:p-8 md:p-10">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="seg seg-dark max-w-full overflow-x-auto" role="group" aria-label="Call language">
+                  {t.languages.map((l) => {
+                    const id = l.live ? (l.id as CallLang) : null;
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        disabled={!id}
+                        aria-pressed={id === lang}
+                        onClick={() => id && setLang(id)}
+                        className="disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {l.label}
+                        {!l.live ? <span className="text-[10px] uppercase tracking-wider">{t.soon}</span> : null}
+                      </button>
+                    );
+                  })}
                 </div>
-                <ol className="mt-4 flex flex-1 flex-col justify-end gap-2.5 overflow-hidden text-[13px] leading-snug">
-                  {shown.slice(-4).map((line, idx) => (
-                    <Bubble key={`${lang}-${idx}-${line.text}`} who={line.who} text={line.text} />
-                  ))}
-                  {!reduced && turn < lines.length && current ? (
-                    <Bubble who={current.who} text={current.text.slice(0, chars)} typing />
-                  ) : null}
-                </ol>
-                <div className="mt-4 flex justify-center gap-5" aria-hidden>
-                  <span className="grid size-10 place-items-center rounded-full bg-white/10">
-                    <MicOff className="size-4" strokeWidth={1.75} />
-                  </span>
-                  <span className="grid size-10 place-items-center rounded-full bg-act">
-                    <PhoneOff className="size-4" strokeWidth={1.75} />
-                  </span>
-                  <span className="grid size-10 place-items-center rounded-full bg-white/10">
-                    <Volume2 className="size-4" strokeWidth={1.75} />
+                <p className="flex items-center gap-2 text-[13px] text-dark-muted">
+                  <LiveWave live={playing} className="text-[#e8a27c]" />
+                  {playing ? t.live : t.tag}
+                </p>
+              </div>
+
+              <ol className="mt-8 space-y-1 md:mt-10" aria-label="Transcript">
+                {cue.lines.map((row, i) => {
+                  const state = !started ? (i === 0 ? "next" : "future") : i === index && !done ? "now" : i < index || done ? "past" : "future";
+                  const maa = row.who === "maa";
+                  return (
+                    <li key={`${lang}-${i}`}>
+                      <button
+                        type="button"
+                        onClick={() => seekLine(i)}
+                        className={`group grid w-full grid-cols-[64px_1fr] gap-3 rounded-[16px] px-3 py-2.5 text-left transition-[background,opacity] duration-300 hover:bg-white/5 sm:grid-cols-[88px_1fr] ${
+                          state === "now" ? "bg-white/6" : ""
+                        } ${state === "future" ? "opacity-35" : state === "past" ? "opacity-60" : ""}`}
+                      >
+                        <span className="pt-1 leading-tight">
+                          <span className={`block text-[12px] font-medium ${maa ? "text-[#e8a27c]" : "text-dark-ink"}`}>
+                            {maa ? t.speakers.maa : t.speakers.saathi}
+                          </span>
+                          <span className="font-mono text-[11px] text-dark-muted">{clock(row.start)}</span>
+                        </span>
+                        <span lang={lang} className="text-[17px] leading-snug sm:text-[20px]">
+                          {row.text}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              <div className="mt-auto pt-8">
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={toggle}
+                    className="grid size-14 shrink-0 place-items-center rounded-full bg-accent text-white shadow-[0_10px_30px_-10px_rgba(176,83,42,0.9)] transition-transform hover:scale-105 active:scale-95"
+                    aria-label={done ? t.replay : playing ? t.pause : t.play}
+                  >
+                    {done ? (
+                      <RotateCcw className="size-5" strokeWidth={2} aria-hidden />
+                    ) : playing ? (
+                      <Pause className="size-5 fill-current" strokeWidth={1.5} aria-hidden />
+                    ) : (
+                      <Play className="ml-0.5 size-5 fill-current" strokeWidth={1.5} aria-hidden />
+                    )}
+                  </button>
+                  <Scrubber
+                    progress={progress}
+                    duration={cue.duration}
+                    onSeek={(r) => seek(r * cue.duration)}
+                    chapters={t.chapters.map((c) => ({ label: c.label, at: cue.lines[c.line].start / cue.duration }))}
+                  />
+                  <span className="hidden w-[84px] shrink-0 text-right font-mono text-[12px] text-dark-muted sm:block">
+                    {clock(time)} / {clock(cue.duration)}
                   </span>
                 </div>
               </div>
-            </DeviceFrame>
-
-            <div className="flex flex-row items-center gap-3 text-[13px] text-ink-2 md:flex-col">
-              <span className="h-px w-10 bg-border md:h-16 md:w-px" />
-              <span className="rounded-full border border-border bg-bg-elevated px-3 py-1.5">{t.toYou}</span>
-              <span className="h-px w-10 bg-border md:h-16 md:w-px" />
             </div>
 
-            <DeviceFrame time="8:06" className="max-w-[260px] lg:max-w-[280px]">
-              <aside className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Example: WhatsApp briefing">
-                <WhatsAppBriefing />
-              </aside>
-            </DeviceFrame>
+            <div className="relative flex flex-col items-center justify-center gap-4 border-t border-white/8 bg-white/[0.02] px-6 py-10 lg:border-l lg:border-t-0">
+              <p className="text-[13px] text-dark-muted">{t.toYou}</p>
+              <DeviceFrame time="8:06" className="max-w-[260px]">
+                <aside className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Example: WhatsApp briefing">
+                  <WhatsAppBriefing landed={done} />
+                </aside>
+              </DeviceFrame>
+            </div>
           </div>
         </div>
       </div>
@@ -127,19 +126,78 @@ export function Listen() {
   );
 }
 
-function Bubble({ who, text, typing = false }: { who: "saathi" | "maa"; text: string; typing?: boolean }) {
-  const maa = who === "maa";
+function Scrubber({
+  progress,
+  duration,
+  onSeek,
+  chapters,
+}: {
+  progress: number;
+  duration: number;
+  onSeek: (ratio: number) => void;
+  chapters: { label: string; at: number }[];
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  function ratioAt(clientX: number) {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return 0;
+    return Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+  }
+
+  function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    onSeek(ratioAt(e.clientX));
+  }
+
+  function onPointerMove(e: PointerEvent<HTMLDivElement>) {
+    if (e.buttons !== 1) return;
+    onSeek(ratioAt(e.clientX));
+  }
+
+  function onKey(e: KeyboardEvent<HTMLDivElement>) {
+    const stepR = 2 / duration;
+    if (e.key === "ArrowRight") onSeek(Math.min(1, progress + stepR));
+    else if (e.key === "ArrowLeft") onSeek(Math.max(0, progress - stepR));
+    else return;
+    e.preventDefault();
+  }
+
   return (
-    <li className={`screen-fade flex ${maa ? "justify-end" : "justify-start"}`}>
-      <p
-        lang="hi"
-        className={`max-w-[85%] rounded-[14px] px-3 py-2 ${
-          maa ? "rounded-br-[4px] bg-accent text-white" : "rounded-bl-[4px] bg-white/10 text-dark-ink"
-        }`}
+    <div className="min-w-0 flex-1">
+      <div
+        ref={ref}
+        role="slider"
+        tabIndex={0}
+        aria-label="Call position"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(duration)}
+        aria-valuenow={Math.round(progress * duration)}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onKeyDown={onKey}
+        className="relative flex h-12 cursor-pointer touch-none items-center gap-[2px] rounded-[8px]"
       >
-        {text}
-        {typing ? <span className="caret !bg-current" aria-hidden /> : null}
-      </p>
-    </li>
+        {BARS.map((h, i) => {
+          const on = i / BARS.length < progress;
+          return (
+            <span
+              key={i}
+              className={`flex-1 rounded-full transition-colors duration-150 ${on ? "bg-[#e8a27c]" : "bg-white/15"}`}
+              style={{ height: `${Math.round(h * 100)}%` }}
+              aria-hidden
+            />
+          );
+        })}
+      </div>
+      <div className="relative mt-1.5 h-4 text-[11px] text-dark-muted" aria-hidden>
+        {chapters.map((c) => (
+          <span key={c.label} className="absolute -translate-x-0 whitespace-nowrap" style={{ left: `${c.at * 100}%` }}>
+            <span className="mr-1 inline-block h-2 w-px translate-y-[1px] bg-white/30" />
+            {c.label}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

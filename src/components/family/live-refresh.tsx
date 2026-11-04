@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 export function LiveRefresh({ token, stamp }: { token: string; stamp: string }) {
   const router = useRouter();
   const stampRef = useRef(stamp);
-  stampRef.current = stamp;
+  useEffect(() => {
+    stampRef.current = stamp;
+  }, [stamp]);
 
   useEffect(() => {
     let timer = 0;

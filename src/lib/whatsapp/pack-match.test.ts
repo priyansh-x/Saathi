@@ -122,7 +122,7 @@ describe("runtime WhatsApp sends match the pack", () => {
     }
   });
 
-  it("uses *_solo safety templates when the neighbour has not opted in", async () => {
+  it("sends safety_alert_emergency without a prefix even when the neighbour has not opted in", async () => {
     await seed();
     await query(`update consents set granted = false where kind = 'neighbour_whatsapp'`);
     mockLoggedWhatsapp.length = 0;
@@ -137,12 +137,12 @@ describe("runtime WhatsApp sends match the pack", () => {
     const paired = mockLoggedWhatsapp.filter((row) => row.name === "safety_alert_emergency");
     const solo = mockLoggedWhatsapp.filter((row) => row.name === "safety_alert_emergency_solo");
     const responder = mockLoggedWhatsapp.filter((row) => row.name.startsWith("responder_alert"));
-    assert.equal(paired.length, 0);
+    assert.equal(solo.length, 0);
     assert.equal(responder.length, 0);
-    assert.ok(solo[0]);
-    assert.equal(solo[0]!.vars.length, 5);
-    assert.match(solo[0]!.vars[4] ?? "", /\/d\//);
-    assertAgainstPack(solo[0]!);
+    assert.ok(paired[0]);
+    assert.equal(paired[0]!.vars.length, 5);
+    assert.match(paired[0]!.vars[4] ?? "", /\/d\//);
+    assertAgainstPack(paired[0]!);
     await query(`update consents set granted = true where kind = 'neighbour_whatsapp'`);
   });
 });

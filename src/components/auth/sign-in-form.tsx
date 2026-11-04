@@ -80,7 +80,10 @@ export function SignInForm({ lang }: { lang: Lang }) {
 
   return (
     <main className="app-shell">
-      <div className="app-shell-scroll px-5 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div
+        className="app-shell-scroll px-5 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+        style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top))" }}
+      >
         <div className="flex items-center justify-between">
           <BrandMark />
           <Link href={`/signin?lang=${other}`} className="text-sm font-medium text-primary">
@@ -91,6 +94,14 @@ export function SignInForm({ lang }: { lang: Lang }) {
         <h1 className="app-title mt-2">{t.signInTitle}</h1>
         <p className="mt-3 text-[16px] text-muted-foreground">{t.signInBody}</p>
 
+        <form
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (saving || !email.trim() || (sent && code.length < 6)) return;
+            void (sent ? verify() : sendCode());
+          }}
+        >
         <label className="mt-6 block text-sm font-medium" htmlFor="email">
           {t.setupEmail}
         </label>
@@ -102,6 +113,9 @@ export function SignInForm({ lang }: { lang: Lang }) {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           autoComplete="email"
+          inputMode="email"
+          autoCapitalize="none"
+          enterKeyHint={sent ? "next" : "go"}
         />
 
         {sent ? (
@@ -119,20 +133,27 @@ export function SignInForm({ lang }: { lang: Lang }) {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
               placeholder="000000"
+              enterKeyHint="go"
+              autoFocus
             />
           </>
         ) : null}
 
-        {error ? <p className="mt-3 text-sm text-alert">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="mt-3 text-sm text-alert">
+            {error}
+          </p>
+        ) : null}
 
         <button
-          type="button"
+          type="submit"
           className="btn-primary mt-6"
           disabled={saving || !email.trim() || (sent && code.length < 6)}
-          onClick={() => void (sent ? verify() : sendCode())}
+          aria-busy={saving}
         >
           {saving ? t.opening : sent ? t.setupContinue : t.signInCta}
         </button>
+        </form>
 
         <AddToHome lang={lang} />
 

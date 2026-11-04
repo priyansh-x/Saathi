@@ -42,7 +42,7 @@ export default async function DemoPage({
     return <RecordPlayer lang={lang} scenes={buildRecordScenes(lang)} audioUrl={audioUrl} />;
   }
   const t = WALK_COPY[lang];
-  const STEPS = ["start", "call", "meds", "brief", "missed", "ladder", "red", "going", "ok"] as const;
+  const STEPS = ["start", "call", "meds", "brief", "next_morning", "missed", "ladder", "red", "going", "ok"] as const;
   const stepIndex = Math.max(1, STEPS.indexOf(step as (typeof STEPS)[number]) + 1);
   const stepTotal = 4;
   const data = await loadFamily(EXAMPLE_TOKEN);
@@ -78,6 +78,12 @@ export default async function DemoPage({
     "use server";
     if (!demoModeAllowed()) notFound();
     redirect(`/demo?lang=${lang}&step=brief`);
+  }
+
+  async function nextMorning() {
+    "use server";
+    if (!demoModeAllowed()) notFound();
+    redirect(`/demo?lang=${lang}&step=next_morning`);
   }
 
   async function nextMissed() {
@@ -185,7 +191,12 @@ export default async function DemoPage({
             title={`${t.child} · EN`}
             body={previews.missed_soft_en.replace("Needs a look", "Good morning").replace("No answer yet.", "Neend theek thi.")}
           />
-          <form action={nextMissed} className="mt-6">
+          <form action={nextMorning} className="mt-6">
+            <button type="submit" className="btn-primary">
+              {t.nextMorning}
+            </button>
+          </form>
+          <form action={nextMissed} className="mt-3">
             <button type="submit" className="btn-secondary">
               {t.optionalMissed}
             </button>
@@ -195,6 +206,18 @@ export default async function DemoPage({
               {t.optionalRed}
             </button>
           </form>
+          <Link href={`/d/${EXAMPLE_TOKEN}?lang=${lang}`} className="btn-primary mt-3">
+            {t.openToday}
+          </Link>
+        </section>
+      ) : null}
+
+      {step === "next_morning" ? (
+        <section className="mt-8 space-y-3">
+          <h2 className="text-2xl font-semibold">{t.nextMorningTitle}</h2>
+          <p className="text-lg leading-relaxed">{t.nextMorningBody}</p>
+          <p className="text-[15px] text-muted-foreground">आपकी दवाई पहुँच गई?</p>
+          <p className="text-[15px] text-muted-foreground">Has your medicine arrived?</p>
           <Link href={`/d/${EXAMPLE_TOKEN}?lang=${lang}`} className="btn-primary mt-3">
             {t.openToday}
           </Link>

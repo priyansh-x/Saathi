@@ -16,8 +16,8 @@ export function toolAuthorized(req: Request) {
 
 /**
  * Live Bolna webhooks: require the Authorization header (Bolna dashboard
- * Extractions → Add headers). The v2 agent API has webhook_url only — no
- * webhook_headers field — so Priyansh sets
+ * Extractions → Add headers). The v2 agent API has webhook_url only, no
+ * webhook_headers field, so Priyansh sets
  * `{"Authorization":"Bearer <BOLNA_WEBHOOK_SECRET>"}` in the dashboard.
  * Docs also list source IPs; we use the documented custom header first.
  * Requests without the header are rejected.

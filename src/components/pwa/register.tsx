@@ -20,14 +20,18 @@ export function AddToHome({ lang }: { lang: Lang }) {
   const [promptEvent, setPromptEvent] = useState<{ prompt: () => Promise<void> } | null>(null);
 
   useEffect(() => {
-    if (isStandalone()) {
-      setMode("hidden");
-      return;
-    }
     const ua = navigator.userAgent;
-    if (isInAppBrowser(ua)) setMode("inapp");
-    else if (isIosLike(ua, navigator.maxTouchPoints)) setMode("ios");
-    else setMode("hint");
+    const next = isStandalone()
+      ? "hidden"
+      : isInAppBrowser(ua)
+        ? "inapp"
+        : isIosLike(ua, navigator.maxTouchPoints)
+          ? "ios"
+          : "hint";
+    // Standalone / UA cannot be known during SSR without a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- detect install surface after mount
+    setMode(next);
+    if (next === "hidden") return;
 
     const onPrompt = (event: Event) => {
       event.preventDefault();

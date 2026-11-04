@@ -21,8 +21,7 @@ Researched 17 Oct 2026 (IST) from public docs. Voice names and IDs below come fr
 | Script sensitivity in Bolna | On v4 Flash the spoken language follows the **script of the text**, not the `language` field [1] | Language follows `language`/`locale`; one language per request, except Hinglish, where mixing is supported [12] |
 | Pace / prosody | Bolna exposes `speed` 0.5–2.0 only (no temperature/dict) [1]. Sarvam's API also has pitch/loudness on v4 Flash and recommends pace 0.8–0.9 for accessibility content [10] | Bolna exposes speaking rate and volume [2] |
 | Telephony | Sarvam supports 8 kHz output [10] | Fast enough for live phone calls per Bolna [2] |
-| Voice cloning | Not exposed via Bolna (Bolna custom-voice upload is ElevenLabs/Cartesia only) [13] | Custom voice upload/cloning supported in Bolna [13]. **Don't** clone a family member's voice for the demo; it conflicts with "never pretend to be the child" |
-| Sponsor angle | Sarvam is a buildathon sponsor (context.md) | Cartesia is a buildathon sponsor (context.md) |
+| Voice cloning | Not exposed via Bolna (Bolna custom-voice upload is ElevenLabs/Cartesia only) [13] | Custom voice upload/cloning supported in Bolna [13]. **Don't** clone a family member's voice; it conflicts with "never pretend to be the child" |
 
 **Lifecycle note:** Sarvam announced Bulbul **v3 end-of-life on Sarvam's own Voice Agents product on 10 Nov 2026** (v3 stays on Sarvam's TTS API) [14]. Bolna still lists v3 [1]. Start on v4 Flash anyway, so the demo isn't affected if Bolna follows.
 

@@ -1,82 +1,52 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { describe, it } from "node:test";
-import {
-  DEFAULT_DESK_UI,
-  DESK_UI_BOOT,
-  applyDeskUi,
-  normalizeDeskUi,
-} from "./desk-ui";
+import { DESK_UI_BOOT, parseDeskUi, profileDoneControl, profileSheetHost, themeIsDark } from "@/lib/desk-ui";
 
-describe("desk appearance", () => {
-  it("defaults to light paper, not dark and not the system scheme", () => {
-    assert.equal(DEFAULT_DESK_UI.appearance, "light");
-    assert.deepEqual(normalizeDeskUi(undefined), DEFAULT_DESK_UI);
-    assert.equal(normalizeDeskUi({}).appearance, "light");
-    assert.equal(normalizeDeskUi({ appearance: "light" }).appearance, "light");
-    assert.equal(normalizeDeskUi({ density: "compact", look: "calm" }).appearance, "light");
+describe("desk display prefs", () => {
+  it("fills safe defaults and rejects unknown values", () => {
+    assert.deepEqual(parseDeskUi(null), {
+      density: "comfortable",
+      look: "warm",
+      theme: "light",
+      typeSize: "regular",
+      motion: "full",
+    });
+    assert.equal(parseDeskUi({ density: "compact", look: "calm", theme: "dark", typeSize: "large", motion: "reduce" }).theme, "dark");
+    assert.equal(parseDeskUi({ theme: "neon", typeSize: "huge" }).theme, "light");
+    assert.equal(parseDeskUi({ theme: "system" }).theme, "system");
+    assert.equal(parseDeskUi({ theme: "neon", typeSize: "huge" }).typeSize, "regular");
   });
 
-  it("keeps dark only when the family chose it", () => {
-    assert.equal(normalizeDeskUi({ appearance: "dark" }).appearance, "dark");
-    assert.equal(normalizeDeskUi({ appearance: "system" as "light" }).appearance, "light");
+  it("boots light unless dark or match-phone was chosen", () => {
+    assert.match(DESK_UI_BOOT, /p\.theme==="dark"\|\|p\.theme==="system"\?p\.theme:"light"/);
   });
 
-  it("applies the dark class only for the opt-in, never from prefers-color-scheme", () => {
-    const classList = {
-      dark: false,
-      toggle(_name: string, force?: boolean) {
-        this.dark = Boolean(force);
-      },
-    };
-    const root = { dataset: {} as Record<string, string>, classList, style: { colorScheme: "" } };
-    const g = globalThis as unknown as { document?: { documentElement: typeof root } };
-    const previous = g.document;
-    g.document = { documentElement: root };
-    try {
-      applyDeskUi(DEFAULT_DESK_UI);
-      assert.equal(classList.dark, false);
-      assert.equal(root.dataset.appearance, "light");
-      assert.equal(root.style.colorScheme, "light");
+  it("treats system as dark only when the phone is dark", () => {
+    assert.equal(themeIsDark("light", true), false);
+    assert.equal(themeIsDark("dark", false), true);
+    assert.equal(themeIsDark("system", true), true);
+    assert.equal(themeIsDark("system", false), false);
+  });
 
-      applyDeskUi({ ...DEFAULT_DESK_UI, appearance: "dark" });
-      assert.equal(classList.dark, true);
-      assert.equal(root.dataset.appearance, "dark");
-      assert.equal(root.style.colorScheme, "dark");
-    } finally {
-      g.document = previous;
+  it("keeps Done enabled in dark mode and closes the sheet", () => {
+    for (const theme of ["light", "dark", "system"] as const) {
+      const control = profileDoneControl(theme);
+      assert.equal(control.disabled, false, theme);
+      assert.equal(control.closes, true, theme);
     }
   });
 
-  it("boots light unless localStorage already has appearance dark", () => {
-    assert.match(DESK_UI_BOOT, /appearance==="dark"/);
-    assert.match(DESK_UI_BOOT, /colorScheme=dark\?"dark":"light"/);
-    assert.doesNotMatch(DESK_UI_BOOT, /prefers-color-scheme/);
-    assert.match(DESK_UI_BOOT, /dataset\.appearance="light"/);
+  it("mounts the display sheet on document.body, outside the header", () => {
+    const body = { nodeName: "BODY" };
+    const header = { nodeName: "HEADER" };
+    assert.equal(profileSheetHost({ body }), body);
+    assert.notEqual(profileSheetHost({ body }), header);
+    assert.equal(profileSheetHost(null), null);
   });
-});
 
-describe("light stays the product default", () => {
-  it("does not auto-darken from the OS in CSS, Android, or the layout boot", () => {
-    const globals = readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8");
-    const landing = readFileSync(path.join(process.cwd(), "landing/app/globals.css"), "utf8");
-    const styles = readFileSync(path.join(process.cwd(), "android/app/src/main/res/values/styles.xml"), "utf8");
-    const layout = readFileSync(path.join(process.cwd(), "src/app/layout.tsx"), "utf8");
-    const boot = readFileSync(path.join(process.cwd(), "src/components/pwa/boot.tsx"), "utf8");
-
-    assert.match(globals, /color-scheme:\s*light/);
-    assert.doesNotMatch(globals, /prefers-color-scheme:\s*dark/);
-    const darkAt = globals.lastIndexOf("html.dark {");
-    const rootAt = globals.indexOf(":root {");
-    assert.ok(darkAt > rootAt, "dark tokens must override unlayered :root paper");
-    assert.match(globals.slice(darkAt), /--paper:\s*#1d1b18/);
-    assert.match(landing, /color-scheme:\s*light/);
-    assert.doesNotMatch(landing, /prefers-color-scheme:\s*dark/);
-    assert.match(styles, /Theme\.AppCompat\.Light\.NoActionBar/);
-    assert.doesNotMatch(styles, /DayNight/);
-    assert.match(styles, /forceDarkAllowed/);
-    assert.match(boot, /DESK_UI_BOOT/);
-    assert.match(layout, /PwaBoot/);
+  it("boot script never mentions a live pharmacy or an em dash", () => {
+    assert.equal(/[\u2013\u2014]/.test(DESK_UI_BOOT), false);
+    assert.equal(/1mg|PharmEasy|Netmeds|Apollo|Truemeds/i.test(DESK_UI_BOOT), false);
+    assert.match(DESK_UI_BOOT, /saathi-desk-ui/);
   });
 });

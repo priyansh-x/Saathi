@@ -53,7 +53,7 @@ function PilotTable({ rows }: { rows: PilotHouseholdMetrics[] }) {
             <td className="py-2 pr-3 tabular">{row.dials}</td>
             <td className="py-2 pr-3 tabular">{row.answered}</td>
             <td className="py-2 pr-3 tabular">{pct(row.answerRate)}</td>
-            <td className="py-2 pr-3 tabular">{row.medianCallSeconds ?? "—"}</td>
+            <td className="py-2 pr-3 tabular">{row.medianCallSeconds ?? "-"}</td>
             <td className="py-2 pr-3 tabular">{row.answeredDays}</td>
             <td className="py-2 pr-3 tabular">{row.answeredStreak}</td>
             <td className="py-2 pr-3 tabular">{row.deskViewsPerDay.toFixed(2)}</td>
@@ -209,7 +209,7 @@ export default async function AdminPage({
                     {row.owner_email ? ` · ${row.owner_email}` : ""}
                   </p>
                   <p className="mt-0.5 text-xs text-ink-3">
-                    last {row.last_call_at || "—"} {row.last_call_status ? `· ${row.last_call_status}` : ""}
+                    last {row.last_call_at || "-"} {row.last_call_status ? `· ${row.last_call_status}` : ""}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Link href={next} className="btn-secondary">

@@ -8,7 +8,7 @@ import type { AlertRow } from "@/lib/db/types";
 import { qs } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { categoryWords, humanQuote } from "@/lib/today";
-import { formatFriendlyTime, formatHeaderDate, formatUpdated } from "@/lib/time";
+import { formatClock, formatFriendlyTime, formatHeaderDate, formatUpdated } from "@/lib/time";
 import type { DeskTab } from "@/lib/desk-tabs";
 
 export function ExamplePill({ lang }: { lang: Lang }) {
@@ -69,7 +69,7 @@ export function ActBanner({
   const time = created.includes("T") ? created.slice(11, 16) : "";
   const hh = time.slice(0, 2);
   const mm = time.slice(3, 5);
-  const clock = hh ? `${Number(hh) % 12 || 12}:${mm} ${Number(hh) < 12 ? "AM" : "PM"}` : formatFriendlyTime(first.created_at, lang);
+  const clock = hh ? formatClock(Number(hh), Number(mm), lang) : formatFriendlyTime(first.created_at, lang);
   return (
     <Link
       href={`/d/${token}/alerts/${first.id}${qs({ lang })}`}
@@ -128,7 +128,7 @@ export function TopBar({
       <Link
         href={qs({ ...extraQuery, lang: next })}
         aria-label={lang === "en" ? "हिंदी में देखें" : "View in English"}
-        className="inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-3 text-sm font-medium"
+        className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-3 text-sm font-medium transition-opacity active:opacity-60"
       >
         <Languages className="size-4 text-ink-3" aria-hidden />
         {lang === "en" ? "हिं" : "EN"}
@@ -232,10 +232,37 @@ export function EmptyState({
 export function BackLink({ href, children }: { href: string; children: React.ReactNode }) {
   const label = typeof children === "string" ? children.replace(/^←\s*/, "") : children;
   return (
-    <Link href={href} className="-ml-2 inline-flex h-11 items-center gap-0.5 pr-3 text-[15px] font-medium text-primary">
+    <Link
+      href={href}
+      className="-ml-2 inline-flex h-11 items-center gap-0.5 pr-3 text-[15px] font-medium text-brand-text transition-opacity active:opacity-60"
+    >
       <ChevronLeft className="size-5" aria-hidden />
       {label}
     </Link>
+  );
+}
+
+/** Pushed screens (a call, an alert): glass bar with a real back chevron that clears the status bar. */
+export function DetailShell({
+  back,
+  children,
+  extra,
+}: {
+  back?: { href: string; label: string };
+  children: React.ReactNode;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <main className="app-shell">
+      {extra}
+      <header
+        className="glass z-20 flex shrink-0 items-center px-4 pb-1"
+        style={{ paddingTop: "max(8px, env(safe-area-inset-top))" }}
+      >
+        {back ? <BackLink href={back.href}>{back.label}</BackLink> : <span className="h-11" />}
+      </header>
+      <div className="app-shell-scroll px-4 pt-2 pb-[max(2rem,env(safe-area-inset-bottom))]">{children}</div>
+    </main>
   );
 }
 
@@ -281,14 +308,17 @@ export function FamilyFrame({
 export function ExpiredLink({ lang = "en" }: { lang?: Lang }) {
   const t = messages[lang];
   return (
-    <main className="app-shell justify-center px-6 py-16">
+    <main
+      className="app-shell justify-center px-6 py-16"
+      style={{ paddingTop: "max(4rem, env(safe-area-inset-top))" }}
+    >
       <span className="grid size-14 place-items-center rounded-full bg-brand-soft text-brand-deep">
         <Link2Off className="size-6" aria-hidden />
       </span>
       <h1 className="app-title mt-5">{t.linkExpired}</h1>
       <p className="mt-3 text-[16px] text-muted-foreground">{t.linkExpiredHint}</p>
-      <Link href="/" className="btn-secondary mt-8">
-        Saathi
+      <Link href={lang === "hi" ? "/?lang=hi" : "/"} className="btn-secondary mt-8">
+        {t.goHome}
       </Link>
     </main>
   );

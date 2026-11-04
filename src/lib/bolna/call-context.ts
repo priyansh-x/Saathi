@@ -1,5 +1,6 @@
 import { extractSystemPrompt } from "@/lib/bolna/agent-config";
 import { familyMessageContext } from "@/lib/family-messages";
+import { errandFollowupLine, pendingErrandFollowup } from "@/lib/partners/errands";
 import { query } from "@/lib/db/client";
 import { contactsFor, medicinesWithTimes } from "@/lib/db/queries";
 import { neighbourOptedIn } from "@/lib/neighbour";
@@ -110,13 +111,19 @@ export function preferredLanguageName(languages: string | null | undefined) {
   return LANGUAGE_NAMES[first] || first;
 }
 
-function medicinesDueTodayText(
+/** Name only when dose is blank — never "Telma 40 ()". */
+export function medicineNameWithDose(name: string, dose: string | null | undefined) {
+  const trimmed = (dose || "").trim();
+  return trimmed ? `${name} (${trimmed})` : name;
+}
+
+export function medicinesDueTodayText(
   rows: { id: string; name: string; dose: string; appearance: string; meal: string; time_local: string | null }[],
 ) {
   if (!rows.length) return "none due today";
   const lines = rows.map((m, i) => {
     const when = m.time_local ? `${m.meal}, ${m.time_local}` : m.meal;
-    return `${i + 1}. id=${m.id} | ${m.name} (${m.dose}) | ${when}`;
+    return `${i + 1}. id=${m.id} | ${medicineNameWithDose(m.name, m.dose)} | ${when}`;
   });
   return lines.join("\n");
 }
@@ -162,6 +169,7 @@ export async function buildCallContext(parentId: string): Promise<CallContext> {
   const due = await medicinesWithTimes(parentId);
   const memory = await lastCallSummary(parentId);
   const family = await familyMessageContext(parentId);
+  const followup = await pendingErrandFollowup(parentId);
   const context: CallContext = {
     parent_id: parentId,
     parent_name: names.parent_name,
@@ -185,6 +193,7 @@ export async function buildCallContext(parentId: string): Promise<CallContext> {
     family_message: family.family_message,
     family_from: family.family_from,
     family_message_id: family.family_message_id,
+    errand_followup: errandFollowupLine(followup),
     name: family.name,
     medicines: medicinesDueTodayText(due),
     medicines_due_today: medicinesDueTodayFlat(due),

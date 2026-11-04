@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
@@ -22,9 +23,9 @@ export default async function OpsPage() {
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-16">
         <h1 className="text-2xl font-semibold">{t.opsForbidden}</h1>
         <p className="mt-3 text-sm text-muted-foreground">{t.opsForbiddenHint}</p>
-        <a href="/" className="btn-secondary mt-8 inline-flex justify-center">
+        <Link href="/" className="btn-secondary mt-8 inline-flex justify-center">
           Saathi
-        </a>
+        </Link>
       </main>
     );
   }
@@ -65,7 +66,7 @@ export default async function OpsPage() {
 
       <section className="card mt-6 p-4">
         <h2 className="text-sm font-medium text-ink-3">Kill switch</h2>
-        <p className="mt-1 text-lg font-medium">{snap.killSwitch.on ? "On — nothing goes out" : "Off — outbound follows allowlists"}</p>
+        <p className="mt-1 text-lg font-medium">{snap.killSwitch.on ? "On. Nothing goes out" : "Off. Outbound follows allowlists"}</p>
         {snap.killSwitch.env ? <p className="mt-1 text-sm text-alert">SAATHI_KILL_SWITCH=1 in env still forces on.</p> : null}
         <div className="mt-4 flex gap-3">
           <form action={turnOn} className="flex-1">

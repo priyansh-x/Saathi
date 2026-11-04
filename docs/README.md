@@ -19,13 +19,11 @@ Start here. Product specs in `saathi/` win when a file disagrees with older note
 
 ## Folders
 
-- `saathi/product/` — UX, onboarding, WhatsApp templates, wireframes
-- `saathi/engineering/` — Bolna, cron, Android, deploy
-- `saathi/voice/` — agent prompt, tools, consent line
-- `saathi/brand/` — identity and press kit
+- `saathi/product/` - UX, onboarding, WhatsApp templates, wireframes
+- `saathi/engineering/` - Bolna, cron, Android, deploy
+- `saathi/voice/` - agent prompt, tools, consent line
+- `saathi/brand/` - identity and press kit
 
 ## Background (do not treat as current build orders)
 
-- [saathi/product/prd.md](./saathi/product/prd.md) — original PRD
-- [saathi/context.md](./saathi/context.md) — hackathon notes
-- `saathi/engineering/cursor_*.md` — old agent prompts
+- [saathi/product/prd.md](./saathi/product/prd.md) - original PRD

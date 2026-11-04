@@ -26,23 +26,33 @@ export function useInView(ref: RefObject<HTMLElement | null>, threshold = 0.35) 
   return on;
 }
 
-/** Marks `[data-reveal]` and `.draw` nodes with `data-in` once they scroll into view. */
+/** Marks `[data-reveal]` nodes with `data-in` once they scroll into view. */
 export function useReveal() {
   useEffect(() => {
     document.documentElement.classList.add("js");
-    const nodes = document.querySelectorAll<HTMLElement>("[data-reveal], .draw, [data-stagger]");
+    const nodes = [...document.querySelectorAll<HTMLElement>("[data-reveal], .draw, [data-stagger]")];
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const show = (el: Element) => el.setAttribute("data-in", "");
+    if (reduced) {
+      nodes.forEach(show);
+      return;
+    }
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            entry.target.setAttribute("data-in", "");
+            show(entry.target);
             io.unobserve(entry.target);
           }
         }
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+      { threshold: 0.01, rootMargin: "0px 0px -4% 0px" },
     );
     nodes.forEach((n) => io.observe(n));
-    return () => io.disconnect();
+    const fallback = window.setTimeout(() => nodes.forEach(show), 1200);
+    return () => {
+      window.clearTimeout(fallback);
+      io.disconnect();
+    };
   }, []);
 }

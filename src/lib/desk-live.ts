@@ -14,6 +14,7 @@ export function deskLiveStamp(input: {
   alertId?: string | null;
   hasWords?: boolean;
   meds?: string | null;
+  errands?: string | null;
 }) {
   return [
     input.callId || "",
@@ -22,5 +23,6 @@ export function deskLiveStamp(input: {
     input.alertId || "",
     input.hasWords ? "1" : "0",
     input.meds || "",
+    input.errands || "",
   ].join("|");
 }

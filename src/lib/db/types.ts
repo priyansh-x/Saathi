@@ -103,3 +103,24 @@ export type AlertEvent = {
   actor: string | null;
   note: string | null;
 };
+
+export type ErrandStatus = "open" | "ordered" | "out_for_delivery" | "delivered";
+
+export type ErrandRow = {
+  id: string;
+  parent_id: string;
+  call_id: string | null;
+  kind: string;
+  medicine_name: string;
+  quantity: number;
+  status: ErrandStatus;
+  partner_order_id: string | null;
+  desk_token: string | null;
+  delivery_day: string | null;
+  ordered_at: string | null;
+  out_for_delivery_at: string | null;
+  delivered_at: string | null;
+  told_parent_call_id: string | null;
+  created_at: string;
+  is_example: boolean;
+};

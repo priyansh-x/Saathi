@@ -11,7 +11,7 @@ export function WhatsappPreviewPanel({ preview }: { preview: WhatsappPreview | n
   return (
     <div className="mt-3">
       <button type="button" className="btn-secondary" onClick={() => setOpen((value) => !value)}>
-        Preview only — sends nothing
+        Preview only. Sends nothing
       </button>
       {open ? (
         <div className="mt-3 space-y-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm">

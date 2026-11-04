@@ -9,6 +9,7 @@ import { TodayPanel } from "@/components/family/today-panel";
 import type { DeskTab } from "@/lib/desk-tabs";
 import { clientSafe } from "@/lib/client-safe";
 import { deskLiveStamp, deskMedsStamp } from "@/lib/desk-live";
+import { errandStamp } from "@/lib/partners/errands";
 import { loadFamily } from "@/lib/family-load";
 import type { Lang } from "@/lib/i18n/messages";
 import { toIsoString } from "@/lib/time";
@@ -52,6 +53,7 @@ export async function DeskScreen({
         alertId: data.actAlerts[0]?.id,
         hasWords: Boolean(data.call?.transcript_json),
         meds: deskMedsStamp(data.doses),
+        errands: errandStamp(data.errands),
       })}
       extraQuery={days === 7 ? { days: "7" } : undefined}
       today={<TodayPanel token={token} lang={lang} data={data} callParam={callParam} />}

@@ -48,7 +48,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           style={{ paddingTop: "max(16px, env(safe-area-inset-top))" }}
         >
           <BrandMark tone="light" />
-          <Link href={hi ? "/" : "/?lang=hi"} className="text-sm font-medium text-white">
+          <Link
+            href={hi ? "/?lang=en" : "/?lang=hi"}
+            aria-label={hi ? "View in English" : "हिंदी में देखें"}
+            className="-mr-2 inline-flex size-11 items-center justify-center rounded-full text-sm font-medium text-white transition-opacity active:opacity-60"
+          >
             {hi ? "EN" : "हिं"}
           </Link>
         </div>
@@ -95,7 +99,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             <ArrowRight className="size-[18px]" aria-hidden />
           </Link>
           <Link href={`/signin?lang=${lang}`} className="btn-secondary">
-            {hi ? "साइन इन — परिवार डेस्क" : "Sign in to your family desk"}
+            {hi ? "साइन इन। परिवार डेस्क" : "Sign in to your family desk"}
           </Link>
           <Link href={`/d/example-kamla?lang=${lang}`} className="btn-secondary">
             {hi ? "उदाहरण परिवार देखें" : "See an example family"}

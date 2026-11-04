@@ -7,18 +7,19 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+const serif = Instrument_Serif({
+  variable: "--font-instrument",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const instrument = Instrument_Serif({
-  variable: "--font-instrument",
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
 });
 
 const deva = Noto_Sans_Devanagari({
@@ -49,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} ${instrument.variable} ${deva.variable} h-full antialiased`}
+      className={`${inter.variable} ${serif.variable} ${geistMono.variable} ${deva.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg text-ink">
         <WaitlistProvider>{children}</WaitlistProvider>

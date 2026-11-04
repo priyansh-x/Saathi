@@ -6,11 +6,16 @@ import {
   logTestRing,
   postBolnaCall,
   prepareMorningCall,
+  type PlaceCallResult,
 } from "@/lib/calls/prepare";
 import { placeCall } from "@/lib/calls/provider";
 import { query } from "@/lib/db/client";
+import { reuseRecentPlacedCall } from "@/lib/bolna/recent-call";
 
 export { bolnaAgentLanguage, minutesUsedToday } from "@/lib/calls/prepare";
+export { reuseRecentPlacedCall, TEST_CALL_REUSE_MS } from "@/lib/bolna/recent-call";
+
+const inflightTestCalls = new Map<string, Promise<PlaceCallResult>>();
 
 async function finishIfSimulatedExample(
   parentId: string,
@@ -32,6 +37,20 @@ export async function placeMorningCall(parentId: string, clock: Date = new Date(
 
 /** Desk Settings test ring. Skips the once-a-day cap; still gated. */
 export async function placeTestCall(parentId: string, clock: Date = new Date()) {
+  const reused = await reuseRecentPlacedCall(parentId, clock);
+  if (reused) return reused;
+  const pending = inflightTestCalls.get(parentId);
+  if (pending) return pending;
+  const work = placeTestCallOnce(parentId, clock).finally(() => {
+    if (inflightTestCalls.get(parentId) === work) inflightTestCalls.delete(parentId);
+  });
+  inflightTestCalls.set(parentId, work);
+  return work;
+}
+
+async function placeTestCallOnce(parentId: string, clock: Date): Promise<PlaceCallResult> {
+  const reused = await reuseRecentPlacedCall(parentId, clock);
+  if (reused) return reused;
   const prepared = await prepareMorningCall(parentId, clock, { forceTest: true });
   if (!isPreparedCall(prepared)) return prepared;
   if (callProviderName() === "bolna") {

@@ -7,11 +7,16 @@ describe("demo walkthrough previews", () => {
     assert.deepEqual(Object.keys(WALK_COPY.en).sort(), Object.keys(WALK_COPY.hi).sort());
   });
 
+  it("shows the next-morning medicine line", () => {
+    assert.match(WALK_COPY.en.nextMorningBody, /Has your medicine arrived\?/);
+    assert.match(WALK_COPY.hi.nextMorningBody, /आपकी दवाई पहुँच गई\?/);
+  });
+
   it("renders EXAMPLE family and neighbour copy from the live templates", () => {
     const previews = exampleWhatsappPreviews();
     assert.match(previews.safety_en, /Saathi alert for Rohit/);
     assert.match(previews.safety_en, /Kamla/);
-    assert.match(previews.safety_hi, /साथी अलर्ट/);
+    assert.match(previews.safety_hi, /Saathi अलर्ट/);
     assert.match(previews.responder_hi, /देख सकते हैं/);
     assert.match(previews.ack_en, /Rohit is on it/);
     assert.match(previews.missed_soft_en, /Couldn't reach/);

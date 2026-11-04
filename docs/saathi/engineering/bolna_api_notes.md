@@ -1,4 +1,4 @@
-# Bolna API notes for Saathi (reference for PR review)
+# Bolna API notes for Saathi
 
 Compiled Sat 17 Oct 2026 (IST) from the live Bolna docs (`https://www.bolna.ai/docs/llms-full.txt` and the per-page `.md` files with embedded OpenAPI). Raw copies are in `engineering/_research/`.
 **Legend:** ✅ = stated in the docs (source linked). ⚠️ = NOT verified, or inferred. Test it on the trial account before relying on it.
@@ -63,11 +63,11 @@ Compiled Sat 17 Oct 2026 (IST) from the live Bolna docs (`https://www.bolna.ai/d
 - ✅ `POST /batches` is **multipart/form-data** (`agent_id`, `file=@csv`, optional `retry_config` JSON string) and returns **201** `{batch_id, state:"created"}`. The CSV needs `contact_number` (E.164). Every other column becomes a prompt variable and is stored in `context_details.recipient_data`. [Create batch](https://www.bolna.ai/docs/api-reference/batches/create)
 - ✅ `POST /batches/{batch_id}/schedule` takes form field `scheduled_at` with a numeric offset (`Z` is rejected). The time must be at least 2 min ahead and at most 30 days ahead. Bolna rounds up to the next 10-minute mark, and anything under 10 min ahead dispatches immediately. [Schedule batch](https://www.bolna.ai/docs/api-reference/batches/schedule), [Limits](https://www.bolna.ai/docs/api-reference/limits)
 - ✅ `GET /batches/{batch_id}/executions` returns a **bare array**, not `{data:[...]}`.
-- ✅ **Bolna has no recurring (daily) schedule.** Batches and scheduled calls are one-shot. A daily Saathi call therefore needs our own cron or scheduler, which calls POST /call (optionally with `scheduled_at`) once a day. For PR review, check that the repo does this.
+- ✅ **Bolna has no recurring (daily) schedule.** Batches and scheduled calls are one-shot. A daily Saathi call therefore needs our own cron or scheduler, which calls POST /call (optionally with `scheduled_at`) once a day. Confirm the repo does this.
 
 ## 7. Mid-call custom tools (our backend webhooks)
 ✅ [Custom functions](https://www.bolna.ai/docs/tool-calling/custom-function-calls), [Schema](https://www.bolna.ai/docs/tool-calling/custom-function-schema), [Variables](https://www.bolna.ai/docs/tool-calling/custom-function-variables)
-- Tools use the OpenAI function-calling format plus Bolna extensions. In the dashboard JSON, the required fields are `name`, `description`, `parameters`, `key:"custom_task"` (exactly this value) and `value:{method, url, param, api_token?, headers?}`. `pre_call_message` is optional and is what the agent says while the request runs.
+- Tools use the OpenAI function-calling format plus Bolna extensions. In the dashboard JSON, the required fields are `name`, `description`, `parameters`, `key:"custom_task"` (exactly this value) and `value:{method, url, param, api_token?, headers?}`. `pre_call_message` is optional and is what the agent says while the request runs. Saathi sets it to exactly `जी, एक सेकंड।` on `log_medicine`, `raise_alert`, `relay_message_to_family`, `save_memory_note`, and `record_consent` (never the English filler "Just give me a moment, I'll be back with you.").
 - `param` maps arguments with Python format specifiers: `"dose_id":"%(dose_id)s"`, plus `%(n)i` for integers and `%(x)f` for floats. Names must match `properties` exactly (case-sensitive). Methods: GET/POST/PUT/PATCH/DELETE. `api_token` is sent as the Authorization header value (e.g. `"Bearer <secret>"`). Use it to authenticate Bolna to our backend.
 - Via API (`tools_config.api_tools`): `tools: [ {name, description, parameters, pre_call_message} ]` + `tools_params: { "<name>": {url, method, param, headers} }`. The keys in `tools_params` must match `name`. (Example taken from [Graph agent tools](https://www.bolna.ai/docs/graph-agent/tools-and-rag). The OpenAPI schema itself only types the transfer tool.)
 - The flow: the LLM decides to call the tool → Bolna makes the HTTP request → **whatever JSON our endpoint returns is fed back to the LLM** (no required response schema). Keep responses short and natural, e.g. `{"ok":true,"say":"Noted, thank you"}`.
@@ -111,7 +111,7 @@ Compiled Sat 17 Oct 2026 (IST) from the live Bolna docs (`https://www.bolna.ai/d
 - ✅ The wallet must have balance. When it runs out, executions end with status `balance-low`.
 - ⚠️ Not verified: the maximum number of Verified Numbers, any per-call duration cap on trial, whether inbound calls are possible without buying a number (assume no), and how many minutes $5 actually buys.
 
-## 11. PR-review checklist (common mistakes)
+## 11. Integration checklist (common mistakes)
 1. Uses `/v2/agent`, expects **201** and reads `state`.
 2. `pipelines` is an array of arrays. Sarvam languages are plain codes (`hi`), and synth `provider_config.language` is set.
 3. Timestamps use a `+00:00` / `+05:30` offset, never `Z`.

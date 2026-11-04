@@ -49,7 +49,6 @@
 }
 
 :root {
-  color-scheme: light;
   --background: var(--paper);
   --foreground: var(--ink);
   --card: var(--paper-elevated);
@@ -66,6 +65,7 @@
   --secondary: var(--brand-soft);
   --secondary-foreground: var(--ink);
   --amber-ink: var(--look);
+  color-scheme: light;
   --amber-soft: var(--look-soft);
   --amber-line: var(--look-line);
   --alert: var(--act);
@@ -76,29 +76,65 @@
   --shadow-float: 0 1px 0 rgba(29, 27, 24, 0.05), 0 18px 40px -18px rgba(29, 27, 24, 0.35);
 }
 
+/* Unlayered so these beat the :root tokens above. Inside @layer base they never apply. */
 html.dark {
-  color-scheme: dark;
-  --paper: #1d1b18;
-  --paper-elevated: #2a2622;
-  --paper-sunk: #241c16;
-  --ink: #f4efe6;
-  --ink-2: #c4bdb2;
-  --ink-3: #c4bdb2;
-  --border: #3a342e;
+  --paper: #1a1816;
+  --paper-elevated: #24211e;
+  --paper-sunk: #141210;
+  --ink: #f4efe8;
+  --ink-2: #c9bdb0;
+  --ink-3: #c9bdb0;
+  --border: #3d372f;
+  --background: #1a1816;
+  --foreground: #f4efe8;
+  --card: #24211e;
+  --card-foreground: #f4efe8;
+  --muted: #141210;
+  --muted-foreground: #c9bdb0;
+  --input: #141210;
+  --accent: #3d2418;
+  --accent-foreground: #f4efe8;
+  --secondary: #3d2418;
+  --secondary-foreground: #f4efe8;
   --brand-soft: #3d2418;
-  --brand-text: #e8b49a;
+  --brand-text: #f0c2a8;
   --good-soft: #1c3326;
-  --look-soft: #3a2e18;
-  --act-soft: #3a221e;
+  --amber-soft: #3a2c14;
+  --alert-soft: #3a1f1b;
   --sage-soft: #243028;
-  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.35), 0 12px 28px -16px rgba(0, 0, 0, 0.55);
-  --shadow-float: 0 1px 0 rgba(0, 0, 0, 0.4), 0 18px 40px -14px rgba(0, 0, 0, 0.6);
+  --sunk: #141210;
+  /* Status inks are lifted in dark so they hold 4.5:1 on their soft fills and on cards. */
+  --good: #6fcf97;
+  --look: #f2c36b;
+  --look-line: #d99a2b;
+  --act: #ff8a7a;
+  --brand-deep: #f0c2a8;
+  --sage: #9db8a1;
+  --wa: #4fc3a1;
+  color-scheme: dark;
+  --shadow-card: 0 1px 0 rgba(255, 252, 247, 0.04), 0 12px 28px -18px rgba(0, 0, 0, 0.65);
+  --shadow-float: 0 1px 0 rgba(255, 252, 247, 0.05), 0 18px 40px -16px rgba(0, 0, 0, 0.72);
+}
+
+/* Solid status fills carry white text; keep them deep in both themes. */
+html.dark .bg-good,
+html.dark .bg-alert,
+html.dark .bg-amber-line {
+  --good: #276b43;
+  --act: #b23a2a;
+  --alert: #b23a2a;
+  --look-line: #b7791f;
+  --amber-line: #b7791f;
 }
 
 html.dark[data-look="calm"] {
-  --background: #1c2124;
-  --card: #252b2e;
-  --brand-soft: #2a3336;
+  --background: #16191b;
+  --card: #1e2326;
+  --brand-soft: #243033;
+}
+
+html.dark .action-tile {
+  background: rgba(36, 33, 30, 0.88);
 }
 
 @layer base {
@@ -113,6 +149,7 @@ html.dark[data-look="calm"] {
   }
   body {
     @apply bg-background text-foreground font-sans text-base antialiased;
+    -webkit-tap-highlight-color: transparent;
     height: 100%;
     line-height: 1.5;
     min-width: 0;
@@ -130,6 +167,17 @@ html.dark[data-look="calm"] {
     --background: #eef2f4;
     --card: #f7fafb;
     --brand-soft: #dce8ea;
+  }
+  html[data-type-size="large"] {
+    font-size: 18px;
+  }
+  html[data-motion="reduce"] *,
+  html[data-motion="reduce"] *::before,
+  html[data-motion="reduce"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
   .app-shell {
     display: flex;
@@ -267,8 +315,19 @@ html.dark[data-look="calm"] {
     font-weight: 500;
     text-wrap: nowrap;
   }
+  .field::placeholder,
+  textarea::placeholder,
+  input::placeholder {
+    color: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
+  }
+  .field:focus-visible,
+  .field:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 22%, transparent);
+  }
   .field {
-    height: 54px;
+    height: 48px;
     width: 100%;
     border-radius: 16px;
     border: 1px solid var(--border);
@@ -315,8 +374,41 @@ html.dark[data-look="calm"] {
     color: #fff;
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 10px 24px -12px rgba(142, 63, 29, 0.7);
   }
-  .btn-primary:hover {
-    background: var(--brand-deep);
+  @media (hover: hover) {
+    .btn-primary:hover {
+      background: #8e3f1d;
+    }
+    .btn-secondary:hover {
+      background: var(--muted);
+    }
+  }
+  .btn-primary,
+  .btn-secondary,
+  .btn-quiet,
+  .choice,
+  .action-tile {
+    transition:
+      transform 120ms var(--ease),
+      background-color 120ms var(--ease),
+      opacity 120ms var(--ease);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .btn-primary:active:not(:disabled),
+  .btn-secondary:active:not(:disabled),
+  .choice:active,
+  .action-tile:active {
+    transform: scale(0.97);
+  }
+  .btn-quiet:active {
+    opacity: 0.6;
+  }
+  .btn-primary:disabled,
+  .btn-secondary:disabled,
+  .btn-quiet:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
   }
   .btn-secondary {
     display: inline-flex;

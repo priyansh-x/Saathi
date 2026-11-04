@@ -1,37 +1,48 @@
 export type DeskDensity = "comfortable" | "compact";
 export type DeskLook = "warm" | "calm";
-export type DeskAppearance = "light" | "dark";
+export type DeskTheme = "light" | "dark" | "system";
+export type DeskTypeSize = "regular" | "large";
+export type DeskMotion = "full" | "reduce";
 
 export type DeskUi = {
   density: DeskDensity;
   look: DeskLook;
-  appearance: DeskAppearance;
+  theme: DeskTheme;
+  typeSize: DeskTypeSize;
+  motion: DeskMotion;
 };
 
-export const DEFAULT_DESK_UI: DeskUi = {
+export const DESK_UI_KEY = "saathi-desk-ui";
+
+export const DESK_UI_DEFAULTS: DeskUi = {
   density: "comfortable",
   look: "warm",
-  appearance: "light",
+  // Light paper by default. Dark, or following the phone, is an explicit choice.
+  theme: "light",
+  typeSize: "regular",
+  motion: "full",
 };
 
-const KEY = "saathi-desk-ui";
+const KEY = DESK_UI_KEY;
 
-export function normalizeDeskUi(parsed: Partial<DeskUi> | null | undefined): DeskUi {
+export function parseDeskUi(raw: unknown): DeskUi {
+  const parsed = raw && typeof raw === "object" ? (raw as Partial<DeskUi>) : {};
   return {
-    density: parsed?.density === "compact" ? "compact" : "comfortable",
-    look: parsed?.look === "calm" ? "calm" : "warm",
-    appearance: parsed?.appearance === "dark" ? "dark" : "light",
+    density: parsed.density === "compact" ? "compact" : "comfortable",
+    look: parsed.look === "calm" ? "calm" : "warm",
+    theme: parsed.theme === "dark" || parsed.theme === "system" ? parsed.theme : "light",
+    typeSize: parsed.typeSize === "large" ? "large" : "regular",
+    motion: parsed.motion === "reduce" ? "reduce" : "full",
   };
 }
 
 export function readDeskUi(): DeskUi {
-  if (typeof window === "undefined") return { ...DEFAULT_DESK_UI };
+  if (typeof window === "undefined") return { ...DESK_UI_DEFAULTS };
   try {
     const raw = window.localStorage.getItem(KEY);
-    const parsed = raw ? (JSON.parse(raw) as Partial<DeskUi>) : {};
-    return normalizeDeskUi(parsed);
+    return parseDeskUi(raw ? JSON.parse(raw) : {});
   } catch {
-    return { ...DEFAULT_DESK_UI };
+    return { ...DESK_UI_DEFAULTS };
   }
 }
 
@@ -40,17 +51,43 @@ export function writeDeskUi(next: DeskUi) {
   applyDeskUi(next);
 }
 
-export function applyDeskUi(prefs: DeskUi = readDeskUi()) {
-  if (typeof document === "undefined") return;
-  const dark = prefs.appearance === "dark";
-  const root = document.documentElement;
-  root.dataset.density = prefs.density;
-  root.dataset.look = prefs.look;
-  root.dataset.appearance = prefs.appearance;
-  root.classList.toggle("dark", dark);
-  root.style.colorScheme = dark ? "dark" : "light";
+export function themeIsDark(theme: DeskTheme, darkQuery = false) {
+  return theme === "dark" || (theme === "system" && darkQuery);
 }
 
-/** First-paint boot: paper/light unless this phone already chose dark. */
-export const DESK_UI_BOOT =
-  '(()=>{try{var p=JSON.parse(localStorage.getItem("saathi-desk-ui")||"{}");var dark=p&&p.appearance==="dark";var r=document.documentElement;r.classList.toggle("dark",!!dark);r.dataset.appearance=dark?"dark":"light";r.style.colorScheme=dark?"dark":"light";}catch(e){document.documentElement.classList.remove("dark");document.documentElement.dataset.appearance="light";document.documentElement.style.colorScheme="light";}})();';
+/** Done stays enabled in every theme, including dark, and always closes the sheet. */
+export function profileDoneControl(theme: DeskTheme) {
+  const known = theme === "light" || theme === "dark" || theme === "system";
+  return { disabled: !known, closes: true as const };
+}
+
+/**
+ * Mount the display sheet on document.body.
+ * The desk header uses backdrop-filter, which traps a fixed child in that
+ * header's stacking context, under the tab bar.
+ */
+export function profileSheetHost<T>(doc: { body: T } | null | undefined): T | null {
+  return doc?.body ?? null;
+}
+
+export function applyDeskUi(prefs: DeskUi = readDeskUi()) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const darkQuery =
+    typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = themeIsDark(prefs.theme, darkQuery);
+  root.dataset.density = prefs.density;
+  root.dataset.look = prefs.look;
+  root.dataset.theme = prefs.theme;
+  root.dataset.typeSize = prefs.typeSize;
+  root.dataset.motion = prefs.motion;
+  root.classList.toggle("dark", dark);
+  // Next emits one theme-color per scheme; an explicit desk theme must win over the OS.
+  document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+    meta.removeAttribute("media");
+    meta.setAttribute("content", dark ? "#1A1816" : "#F7F5F0");
+  });
+}
+
+/** Runs before paint so the first frame matches saved display prefs. */
+export const DESK_UI_BOOT = `(function(){try{var p={};try{p=JSON.parse(localStorage.getItem("${DESK_UI_KEY}")||"{}")||{};}catch(e){}var d=document.documentElement;d.dataset.density=p.density==="compact"?"compact":"comfortable";d.dataset.look=p.look==="calm"?"calm":"warm";d.dataset.typeSize=p.typeSize==="large"?"large":"regular";d.dataset.motion=p.motion==="reduce"?"reduce":"full";var theme=p.theme==="dark"||p.theme==="system"?p.theme:"light";d.dataset.theme=theme;var dark=theme==="dark"||(theme==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);d.classList.toggle("dark",dark);var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].removeAttribute("media");m[i].setAttribute("content",dark?"#1A1816":"#F7F5F0");}}catch(e){}})();`;

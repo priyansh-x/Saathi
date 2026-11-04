@@ -43,7 +43,7 @@ const medicineSchema = z.object({
 
 export const onboardSchema = z
   .object({
-    childName: z.string().trim().min(1, "Add your name — the briefing comes to you."),
+    childName: z.string().trim().min(1, "Add your name. The briefing comes to you."),
     childWhatsapp: e164,
     parentName: z.string().trim().min(1, "Add your parent's name."),
     addressTerm: z.string().trim().min(1, "Tell us what you call them."),

@@ -1,149 +1,146 @@
-import { CheckCheck, PhoneIncoming, PhoneMissed } from "lucide-react";
-import type { CSSProperties } from "react";
-import { Waveform } from "@/components/kit";
+"use client";
+
+import { DoorOpen, MessageCircle, PhoneMissed, Pill } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { LiveWave } from "@/components/call-demo";
+import { MiniMark, SectionHead } from "@/components/chrome";
 import { content } from "@/lib/content";
-import { Eyebrow, MiniMark } from "./chrome";
+import { useInView } from "@/lib/use-reveal";
+import nightImg from "@/public/images/problem-night-child.jpg";
 
-function Strip() {
-  return (
-    <div className="grid w-fit grid-cols-5 gap-1.5 rounded-[12px] bg-[#e9e2d8] p-2 ring-1 ring-black/5" aria-hidden>
-      {Array.from({ length: 10 }).map((_, i) => (
-        <span
-          key={i}
-          className={`grid size-5 place-items-center rounded-full ${i < 3 ? "bg-bg-elevated shadow-[inset_0_-2px_0_rgba(0,0,0,0.08)]" : "border border-dashed border-ink-3/40"}`}
-        >
-          {i < 3 ? <span className="h-1.5 w-3 rounded-full bg-[#f3d9c9]" /> : null}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function Window() {
-  return (
-    <div className="relative h-[76px] w-[88px] rounded-[10px] bg-dark p-1.5" aria-hidden>
-      <div className="grid h-full grid-cols-2 gap-1">
-        <span className="rounded-[4px] bg-[#f4c27a] shadow-[0_0_18px_rgba(244,194,122,0.7)]" />
-        <span className="rounded-[4px] bg-[#f4c27a]/85" />
-        <span className="rounded-[4px] bg-[#f4c27a]/85" />
-        <span className="rounded-[4px] bg-[#f4c27a]" />
-      </div>
-    </div>
-  );
-}
+const icons = { wa: MessageCircle, phone: PhoneMissed, door: DoorOpen, meds: Pill } as const;
 
 export function Why() {
   const t = content.why;
-  const visuals = [
-    <div key="wa" className="w-full rounded-[14px] bg-wa-bg p-2.5">
-      <div className="flex items-center gap-2">
-        <span className="size-7 rounded-full bg-[#d9cbb9]" aria-hidden />
-        <span>
-          <span className="block text-[13px] font-medium">Maa</span>
-          <span className="block text-[11px] text-ink-3">{t.cards[0].body}</span>
-        </span>
-      </div>
-      <p className="ml-auto mt-2 w-fit rounded-[10px] bg-wa-out px-2.5 py-1 text-[12px]">
-        All ok? <CheckCheck className="inline size-3.5 text-ink-3" strokeWidth={2} aria-hidden />
-      </p>
-    </div>,
-    <ul key="calls" className="w-full divide-y divide-border rounded-[14px] border border-border bg-bg text-[13px]">
-      {[
-        { icon: PhoneMissed, label: "Maa", time: "9:40", miss: true },
-        { icon: PhoneMissed, label: "Maa", time: "19:10", miss: true },
-        { icon: PhoneIncoming, label: "Office", time: "18:02", miss: false },
-      ].map((c, i) => (
-        <li key={i} className="flex items-center gap-2 px-3 py-1.5">
-          <c.icon className={`size-3.5 ${c.miss ? "text-act" : "text-ink-3"}`} strokeWidth={2} aria-hidden />
-          <span className={`flex-1 ${c.miss ? "text-act" : ""}`}>{c.label}</span>
-          <span className="font-mono text-[11px] text-ink-3">{c.time}</span>
-        </li>
-      ))}
-    </ul>,
-    <div key="light" className="flex items-center gap-3">
-      <Window />
-      <p className="rounded-[12px] rounded-bl-[4px] bg-bg px-3 py-2 text-[13px] ring-1 ring-border">{t.cards[2].body}</p>
-    </div>,
-    <div key="strip" className="flex items-center gap-3">
-      <Strip />
-      <span className="text-[13px] text-ink-2">{t.cards[3].body}</span>
-    </div>,
-  ];
-
   return (
-    <section id="why" className="section">
+    <section id="why" className="dark-band grain section relative overflow-hidden" data-band="dark">
+      <div
+        className="pointer-events-none absolute left-1/2 top-[55%] -z-10 h-[520px] w-[900px] -translate-x-1/2 rounded-full opacity-40 blur-3xl"
+        style={{ background: "radial-gradient(closest-side, rgba(176,83,42,0.55), rgba(176,83,42,0))" }}
+        aria-hidden
+      />
       <div className="container-site">
-        <Eyebrow n={t.eyebrowN} label={t.eyebrow} />
-        <h2 className="h2 mt-6" data-reveal>
-          {t.h2a}
-          <br />
-          <span className="serif-line accent-phrase">{t.h2b}</span>
-        </h2>
+        <div className="grid items-end gap-12 lg:grid-cols-[1.1fr_1fr]">
+          <SectionHead eyebrow={t.eyebrow} a={t.h2a} b={t.h2b} sub={t.sub} />
+          <figure className="art relative aspect-[4/3] bg-dark-2" data-reveal>
+            <Image
+              src={nightImg}
+              alt={t.imageAlt}
+              fill
+              placeholder="blur"
+              sizes="(min-width: 1024px) 520px, 100vw"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-dark/70 via-transparent to-transparent" aria-hidden />
+            <figcaption className="absolute bottom-4 left-4 rounded-full bg-black/40 px-3 py-1.5 font-mono text-[12px] text-dark-ink backdrop-blur">
+              11:42 PM
+            </figcaption>
+          </figure>
+        </div>
 
-        <div className="relative mt-12 md:mt-16" aria-label="Example: partial signals around one morning">
-          <svg
-            className="draw pointer-events-none absolute inset-0 hidden h-full w-full text-accent/40 lg:block"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden
-          >
-            {["M 30 25 C 40 25, 40 50, 50 50", "M 30 75 C 40 75, 40 50, 50 50", "M 70 25 C 60 25, 60 50, 50 50", "M 70 75 C 60 75, 60 50, 50 50"].map((d, i) => (
-              <path
-                key={d}
-                d={d}
-                pathLength={1}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.25"
-                strokeDasharray="1"
-                vectorEffect="non-scaling-stroke"
-                style={{ "--i": i } as CSSProperties}
-              />
-            ))}
-          </svg>
-
-          <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1.1fr_1fr] lg:grid-rows-2 lg:gap-x-16 lg:gap-y-6">
-            {t.cards.map((c, i) => (
-              <article
-                key={c.title}
-                className={`mock-card lift flex flex-col gap-4 p-5 ${
-                  ["lg:col-start-1 lg:row-start-1", "lg:col-start-1 lg:row-start-2", "lg:col-start-3 lg:row-start-1", "lg:col-start-3 lg:row-start-2"][i]
-                }`}
+        <ul className="mt-16 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 md:mt-20">
+          {t.cards.map((c, i) => {
+            const Icon = icons[c.id];
+            return (
+              <li
+                key={c.id}
+                className="slice group rounded-[24px] border border-white/8 bg-dark-2 p-6 transition-colors hover:border-white/15"
                 data-reveal
                 style={{ "--rd": `${i * 90}ms` } as CSSProperties}
               >
-                <p className="text-[13px] font-medium text-ink-2">{c.title}</p>
-                <div className="flex min-h-[78px] items-center">{visuals[i]}</div>
-                <p className="serif-line text-[18px] text-ink-3">{t.captions[i]}</p>
-              </article>
-            ))}
+                <div className="flex items-center gap-2.5 text-[13px] text-dark-muted">
+                  <span className="grid size-8 place-items-center rounded-full bg-white/6">
+                    <Icon className="size-4" strokeWidth={1.75} aria-hidden />
+                  </span>
+                  {c.title}
+                </div>
+                <p className="mt-8 text-[20px] font-medium tracking-tight">
+                  <span className="strike">{c.body}</span>
+                </p>
+                <p className="display mt-6 border-t border-white/8 pt-4 text-[21px] leading-snug text-dark-muted transition-colors group-hover:text-dark-ink">
+                  {c.caption}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
 
-            <article
-              className="relative flex flex-col justify-center overflow-hidden rounded-[28px] bg-dark p-7 text-dark-ink shadow-[var(--shadow-float)] sm:col-span-2 lg:col-span-1 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:p-9"
-              data-reveal
-              style={{ "--rd": "360ms" } as CSSProperties}
-            >
-              <div className="halo pointer-events-none absolute inset-0 opacity-70" aria-hidden />
-              <div className="relative">
-                <p className="flex items-center gap-2 text-[13px] text-dark-muted">
-                  <MiniMark className="size-6" />
-                  {t.nodeTitle}
-                </p>
-                <Waveform bars={16} className="mt-6 text-accent" />
-                <p className="font-deva mt-5 text-[26px] leading-snug lg:text-[30px]" lang="hi">
-                  {t.nodeQuote}
-                </p>
-                <p className="mt-2 text-[14px] italic text-dark-muted">{t.nodeTranslit}</p>
-                <p className="mt-8 border-t border-white/10 pt-4 text-[13px] text-dark-muted">Heard in her own words, every morning.</p>
+        <div
+          className="relative mt-3 overflow-hidden rounded-[28px] p-[1px]"
+          style={{ background: "linear-gradient(120deg, rgba(232,162,124,0.7), rgba(224,154,58,0.25) 40%, rgba(255,255,255,0.06))" }}
+          data-reveal
+        >
+          <div className="grid gap-8 rounded-[27px] bg-dark-2 p-6 md:grid-cols-[auto_1fr_auto] md:items-center md:gap-10 md:p-10">
+            <div className="flex items-center gap-3">
+              <MiniMark className="size-11" />
+              <div className="leading-tight">
+                <p className="font-medium">{t.nodeTitle}</p>
+                <p className="mt-0.5 text-[13px] text-dark-muted">{content.hero.example}</p>
               </div>
-            </article>
+            </div>
+            <blockquote>
+              <p className="font-deva text-[clamp(1.5rem,3vw,2.25rem)] leading-snug" lang="hi">
+                {t.nodeQuote}
+              </p>
+              <p className="mt-2 text-[15px] text-dark-muted">
+                {t.nodeTranslit} <span className="opacity-70">· {t.nodeEn}</span>
+              </p>
+            </blockquote>
+            <LiveWave live bars={9} className="hidden h-8 text-[#e8a27c] md:inline-flex" />
           </div>
         </div>
-
-        <p className="mt-10 max-w-xl text-[18px] text-ink-2" data-reveal>
+        <p className="display mt-8 text-center text-[22px] text-dark-muted md:text-[26px]" data-reveal>
           {t.close}
         </p>
+
+        <dl className="mt-20 grid gap-10 border-t border-white/10 pt-12 md:mt-28 md:grid-cols-3">
+          {t.facts.map((f, i) => (
+            <div key={f.source} data-reveal style={{ "--rd": `${i * 100}ms` } as CSSProperties}>
+              <dt className="sr-only">{f.source}</dt>
+              <dd>
+                <p className="display text-[64px] leading-none tracking-tight md:text-[84px]">
+                  <CountUp value={f.value} />
+                  <span className="text-[#e8a27c]">{f.suffix}</span>
+                </p>
+                <p className="mt-4 max-w-[28ch] text-[16px] leading-relaxed text-dark-muted">{f.body}</p>
+                <a
+                  href={f.href}
+                  className="mt-3 inline-block text-[13px] text-dark-muted underline decoration-white/20 underline-offset-4 hover:text-dark-ink"
+                >
+                  {f.source}
+                </a>
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );
+}
+
+function CountUp({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, 0.01);
+  const [n, setN] = useState(value);
+  const ran = useRef(false);
+  const decimals = Number.isInteger(value) ? 0 : 1;
+
+  useEffect(() => {
+    if (!inView || ran.current) return;
+    ran.current = true;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    const start = performance.now();
+    const dur = 1800;
+    const step = (now: number) => {
+      const p = Math.min(1, (now - start) / dur);
+      setN(value * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [inView, value]);
+
+  return <span ref={ref}>{n.toFixed(decimals)}</span>;
 }

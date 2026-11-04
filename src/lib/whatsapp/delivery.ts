@@ -1,4 +1,5 @@
 import { query } from "@/lib/db/client";
+import { familyTemplateLanguage, quoteParam } from "@/lib/whatsapp/quote-param";
 import { childrenFor } from "@/lib/members";
 import { neighbourOptedIn } from "@/lib/neighbour";
 import { nowIstStamp } from "@/lib/time";
@@ -256,8 +257,8 @@ async function alertVars(args: {
   locale?: "en" | "hi";
   alertId?: string | null;
 }) {
-  const parent = await query<{ first_name: string; address_term: string | null; phone: string }>(
-    `select first_name, address_term, phone from parents where id = $1`,
+  const parent = await query<{ first_name: string; address_term: string | null; phone: string; languages: string }>(
+    `select first_name, address_term, phone, languages from parents where id = $1`,
     [args.parentId],
   );
   const neighbour = await query<{ first_name: string; phone: string }>(
@@ -267,7 +268,7 @@ async function alertVars(args: {
   const who = parent[0]?.address_term?.trim() || parent[0]?.first_name || "family";
   const stamp = args.at.includes("T") ? args.at : "";
   const time = stamp.slice(11, 16) || "08:33";
-  const quote = args.quote?.trim() || "—";
+  const quote = quoteParam(args.quote, familyTemplateLanguage(parent[0]?.languages));
   const tries = args.callId
     ? await query<{ n: number }>(`select count(*)::int as n from call_attempts where call_id = $1`, [args.callId])
     : [{ n: 1 }];

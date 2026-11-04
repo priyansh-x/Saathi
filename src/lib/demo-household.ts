@@ -1,6 +1,6 @@
 import type { Household } from "@/lib/types";
 
-/** Fictional only. Safe to show judges. Do not replace with a real parent. */
+/** Fictional only. Safe to show. Do not replace with a real parent. */
 export const DEMO_HOUSEHOLD: Household = {
   childName: "Rohit",
   childWhatsapp: "+910000000001",

@@ -1,7 +1,7 @@
 import { opsKillSwitchLatched } from "@/lib/ops/flags";
 import { whatsappTemplatePack } from "@/lib/whatsapp/template-pack";
 
-/** Product defaults. Change via env — do not hard-code elsewhere. */
+/** Product defaults. Change via env; do not hard-code elsewhere. */
 export const PRODUCT_NAME = process.env.PRODUCT_NAME || "Saathi";
 export const BRIEFING_CHANNEL = process.env.BRIEFING_CHANNEL || "whatsapp";
 export const LANGUAGES = (process.env.LANGUAGES || "hi,en").split(",");
@@ -97,6 +97,16 @@ export function whatsappVerifyToken() {
 
 export function killSwitchOn() {
   return process.env.SAATHI_KILL_SWITCH === "1" || opsKillSwitchLatched();
+}
+
+/** Demo pharmacy only. Default mock. Never set PARTNER_MODE=link. */
+export function partnerMode(): "mock" | "off" {
+  const named = (process.env.PARTNER_MODE ?? "mock").trim().toLowerCase();
+  return named === "mock" || named === "" ? "mock" : "off";
+}
+
+export function isPartnerMock() {
+  return partnerMode() === "mock";
 }
 
 export function voiceAlertChild() {
