@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { DetailShell, ExpiredLink } from "@/components/family/chrome";
 import { connection } from "next/server";
 import { LiveRefresh } from "@/components/family/live-refresh";
 import { deskLiveStamp, deskMedsStamp } from "@/lib/desk-live";
@@ -24,25 +24,18 @@ export async function generateMetadata({
 function CallShell({
   token,
   stamp,
+  back,
   children,
 }: {
   token?: string;
   stamp?: string;
+  back?: { href: string; label: string };
   children: React.ReactNode;
 }) {
   return (
-    <main className="app-shell">
-      {token && stamp ? <LiveRefresh token={token} stamp={stamp} /> : null}
-      <div className="app-shell-scroll px-4 pt-3 pb-8">{children}</div>
-    </main>
-  );
-}
-
-function BackTo({ href, label }: { href: string; label: string }) {
-  return (
-    <Link href={href} className="-ml-2 inline-flex h-11 items-center pr-3 text-[15px] font-medium text-primary">
-      {label}
-    </Link>
+    <DetailShell back={back} extra={token && stamp ? <LiveRefresh token={token} stamp={stamp} /> : null}>
+      {children}
+    </DetailShell>
   );
 }
 
@@ -113,6 +106,7 @@ export default async function CallDetailPage({
   const backHref =
     sp.from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/history${qs({ lang, days: sp.days })}`;
   const backLabel = sp.from === "today" ? t.backToday : t.backHistory;
+  const back = { href: backHref, label: backLabel };
 
   let loaded: Awaited<ReturnType<typeof loadCallDetail>>;
   try {
@@ -122,21 +116,12 @@ export default async function CallDetailPage({
   }
 
   if (loaded.kind === "expired") {
-    return (
-      <CallShell>
-        <h1 className="app-title mt-8">{t.linkExpired}</h1>
-        <p className="mt-3 text-[16px] text-muted-foreground">{t.linkExpiredHint}</p>
-        <Link href="/" className="btn-secondary mt-8">
-          Saathi
-        </Link>
-      </CallShell>
-    );
+    return <ExpiredLink lang={lang} />;
   }
 
   if (loaded.kind === "empty") {
     return (
-      <CallShell>
-        <BackTo href={backHref} label={backLabel} />
+      <CallShell back={back}>
         <p className="mt-4">{t.emptyCall}</p>
       </CallShell>
     );
@@ -144,8 +129,7 @@ export default async function CallDetailPage({
 
   if (loaded.kind === "waiting") {
     return (
-      <CallShell token={token} stamp={loaded.stamp}>
-        <BackTo href={backHref} label={backLabel} />
+      <CallShell token={token} stamp={loaded.stamp} back={back}>
         {placedNote ? <p className="mt-4 text-sm text-muted-foreground">{placedNote}</p> : null}
         <p className="mt-4">{t.waitingTranscript}</p>
       </CallShell>
@@ -163,8 +147,8 @@ export default async function CallDetailPage({
         hasWords: lines.length > 0,
         meds: deskMedsStamp(doses),
       })}
+      back={back}
     >
-      <BackTo href={backHref} label={backLabel} />
       {placedNote && call.status === "in_progress" ? (
         <p className="mt-3 text-sm text-muted-foreground">{placedNote}</p>
       ) : null}
@@ -211,7 +195,7 @@ export default async function CallDetailPage({
       ) : null}
 
       <details className="card mt-5 px-4 py-3" open={lines.length > 0}>
-        <summary className="cursor-pointer min-h-11">{t.showConversation}</summary>
+        <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t.showConversation}</summary>
         {lines.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">{t.waitingTranscript}</p>
         ) : (

@@ -81,9 +81,12 @@ export function applyDeskUi(prefs: DeskUi = readDeskUi()) {
   root.dataset.typeSize = prefs.typeSize;
   root.dataset.motion = prefs.motion;
   root.classList.toggle("dark", dark);
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", dark ? "#1A1816" : "#F7F5F0");
+  // Next emits one theme-color per scheme; an explicit desk theme must win over the OS.
+  document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+    meta.removeAttribute("media");
+    meta.setAttribute("content", dark ? "#1A1816" : "#F7F5F0");
+  });
 }
 
 /** Runs before paint so the first frame matches saved display prefs. */
-export const DESK_UI_BOOT = `(function(){try{var p={};try{p=JSON.parse(localStorage.getItem("${DESK_UI_KEY}")||"{}")||{};}catch(e){}var d=document.documentElement;d.dataset.density=p.density==="compact"?"compact":"comfortable";d.dataset.look=p.look==="calm"?"calm":"warm";d.dataset.typeSize=p.typeSize==="large"?"large":"regular";d.dataset.motion=p.motion==="reduce"?"reduce":"full";var theme=p.theme==="dark"||p.theme==="light"?p.theme:"system";d.dataset.theme=theme;var dark=theme==="dark"||(theme==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);d.classList.toggle("dark",dark);}catch(e){}})();`;
+export const DESK_UI_BOOT = `(function(){try{var p={};try{p=JSON.parse(localStorage.getItem("${DESK_UI_KEY}")||"{}")||{};}catch(e){}var d=document.documentElement;d.dataset.density=p.density==="compact"?"compact":"comfortable";d.dataset.look=p.look==="calm"?"calm":"warm";d.dataset.typeSize=p.typeSize==="large"?"large":"regular";d.dataset.motion=p.motion==="reduce"?"reduce":"full";var theme=p.theme==="dark"||p.theme==="light"?p.theme:"system";d.dataset.theme=theme;var dark=theme==="dark"||(theme==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);d.classList.toggle("dark",dark);var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].removeAttribute("media");m[i].setAttribute("content",dark?"#1A1816":"#F7F5F0");}}catch(e){}})();`;

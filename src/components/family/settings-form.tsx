@@ -11,6 +11,43 @@ type Med = { id: string; name: string; meal: string; time_local: string | null }
 
 const fieldClass = "field";
 
+const MEALS = [
+  { value: "with food", en: "With food", hi: "खाने के साथ" },
+  { value: "without food", en: "Without food", hi: "खाने के बिना" },
+  { value: "after breakfast", en: "After breakfast", hi: "नाश्ते के बाद" },
+  { value: "after lunch", en: "After lunch", hi: "दोपहर के खाने के बाद" },
+  { value: "after dinner", en: "After dinner", hi: "रात के खाने के बाद" },
+] as const;
+
+type Section = "call" | "meds" | "neighbour";
+type Status = { section: Section; kind: "ok" | "error"; text: string } | null;
+
+function SectionStatus({ status, section }: { status: Status; section: Section }) {
+  if (!status || status.section !== section) return null;
+  return (
+    <p
+      role={status.kind === "error" ? "alert" : "status"}
+      className={`rounded-xl px-3 py-2 text-sm ${
+        status.kind === "error" ? "bg-alert-soft text-alert" : "bg-good-soft text-good"
+      }`}
+    >
+      {status.text}
+    </p>
+  );
+}
+
+function MealOptions({ lang }: { lang: Lang }) {
+  return (
+    <>
+      {MEALS.map((meal) => (
+        <option key={meal.value} value={meal.value}>
+          {meal[lang]}
+        </option>
+      ))}
+    </>
+  );
+}
+
 export function SettingsForm({
   token,
   lang,
@@ -30,41 +67,42 @@ export function SettingsForm({
 }) {
   const router = useRouter();
   const t = messages[lang];
-  const [error, setError] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<Status>(null);
+  const [busy, setBusy] = useState<Section | null>(null);
   const selected = languages.split(",").map((c) => c.trim()).filter(Boolean);
 
-  async function post(body: Record<string, unknown>) {
-    setBusy(true);
-    setError(null);
-    setNote(null);
+  /** Send one or more changes in order; stop at the first failure. Feedback lands next to the section. */
+  async function post(section: Section, ...bodies: Record<string, unknown>[]) {
+    setBusy(section);
+    setStatus(null);
     try {
-      const res = await fetch(`/api/d/${token}/settings`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok) {
-        setError(data.error || "Could not save.");
-        return;
+      for (const body of bodies) {
+        const res = await fetch(`/api/d/${token}/settings`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+        if (!res.ok) {
+          setStatus({ section, kind: "error", text: data.error || t.couldNotSave });
+          return false;
+        }
       }
-      setNote(t.settingsHint);
+      setStatus({ section, kind: "ok", text: t.saved });
       router.refresh();
+      return true;
     } catch {
-      setError("Could not save.");
+      setStatus({ section, kind: "error", text: t.couldNotSave });
+      return false;
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
+  const saving = busy !== null;
+
   return (
     <div className="space-y-6">
-      {error ? (
-        <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-      ) : null}
-      {note ? <p className="text-sm text-muted-foreground">{note}</p> : null}
 
       <section className="card space-y-4 px-4 py-4">
         <h2 className="font-semibold">{t.callSection}</h2>
@@ -73,8 +111,16 @@ export function SettingsForm({
           onSubmit={async (e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
-            await post({ action: "call_time", callTime: String(fd.get("callTime") || "") });
-            await post({ action: "languages", languages: fd.getAll("lang").map(String) });
+            const picked = fd.getAll("lang").map(String);
+            if (picked.length === 0) {
+              setStatus({ section: "call", kind: "error", text: t.pickOneLanguage });
+              return;
+            }
+            await post(
+              "call",
+              { action: "call_time", callTime: String(fd.get("callTime") || "") },
+              { action: "languages", languages: picked },
+            );
           }}
         >
           <Label htmlFor="callTime">{t.morningTime}</Label>
@@ -88,17 +134,20 @@ export function SettingsForm({
               <option value={callTime}>{callTime} IST</option>
             )}
           </select>
-          <p className="text-sm font-medium">{t.languagesLabel}</p>
+          <fieldset>
+          <legend className="mb-2 text-sm font-medium">{t.languagesLabel}</legend>
           <div className="flex flex-wrap gap-2">
             {LANGUAGE_OPTIONS.map((opt) => (
-              <label key={opt.code} className="inline-flex h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm">
-                <input type="checkbox" name="lang" value={opt.code} defaultChecked={selected.includes(opt.code)} className="size-4" />
+              <label key={opt.code} className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-border px-4 text-sm has-[:checked]:border-foreground">
+                <input type="checkbox" name="lang" value={opt.code} defaultChecked={selected.includes(opt.code)} className="size-4 accent-[var(--primary)]" />
                 {opt.code === "hi" ? (lang === "hi" ? "हिंदी" : "Hindi") : opt.code === "en" ? (lang === "hi" ? "अंग्रेज़ी" : "English") : opt.code === "mr" ? (lang === "hi" ? "मराठी" : "Marathi") : opt.label}
               </label>
             ))}
           </div>
-          <button type="submit" disabled={busy} className="btn-secondary">
-            {t.saveTime}
+          </fieldset>
+          <SectionStatus status={status} section="call" />
+          <button type="submit" disabled={saving} className="btn-secondary">
+            {busy === "call" ? t.saving : t.saveTime}
           </button>
         </form>
         <p className="text-sm text-muted-foreground">{t.settingsHint}</p>
@@ -115,7 +164,7 @@ export function SettingsForm({
                 onSubmit={(e) => {
                   e.preventDefault();
                   const fd = new FormData(e.currentTarget);
-                  post({
+                  void post("meds", {
                     action: "medicine_edit",
                     id: med.id,
                     name: String(fd.get("name") || ""),
@@ -124,27 +173,36 @@ export function SettingsForm({
                   });
                 }}
               >
-                <Label htmlFor={`med-${med.id}`}>{med.name}</Label>
-                <Input id={`med-${med.id}`} name="name" defaultValue={med.name} />
-                <Input name="time" type="time" defaultValue={med.time_local || "08:30"} aria-label={t.morningTime} />
-                <select name="meal" defaultValue={med.meal} className={fieldClass} aria-label={med.name}>
-                  <option value="with food">{lang === "hi" ? "खाने के साथ" : "With food"}</option>
-                  <option value="without food">{lang === "hi" ? "खाने के बिना" : "Without food"}</option>
-                  <option value="after breakfast">{lang === "hi" ? "नाश्ते के बाद" : "After breakfast"}</option>
-                  <option value="after lunch">{lang === "hi" ? "दोपहर के बाद" : "After lunch"}</option>
-                  <option value="after dinner">{lang === "hi" ? "रात के खाने के बाद" : "After dinner"}</option>
-                </select>
+                <p className="text-[15px] font-semibold">{med.name}</p>
+                <Label htmlFor={`med-${med.id}`}>{t.medName}</Label>
+                <Input id={`med-${med.id}`} name="name" defaultValue={med.name} required autoComplete="off" />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`med-time-${med.id}`}>{t.medTime}</Label>
+                    <Input id={`med-time-${med.id}`} name="time" type="time" defaultValue={med.time_local || "08:30"} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`med-meal-${med.id}`}>{t.medMeal}</Label>
+                    <select id={`med-meal-${med.id}`} name="meal" defaultValue={med.meal} className={fieldClass}>
+                      <MealOptions lang={lang} />
+                      {MEALS.some((m) => m.value === med.meal) ? null : <option value={med.meal}>{med.meal}</option>}
+                    </select>
+                  </div>
+                </div>
                 <div className="flex items-center justify-between gap-3">
                   <button
                     type="button"
-                    disabled={busy}
-                    className="text-sm text-muted-foreground underline-offset-2 hover:underline"
-                    onClick={() => post({ action: "medicine_remove", id: med.id })}
+                    disabled={saving}
+                    className="btn-quiet -ml-3 text-alert"
+                    onClick={() => {
+                      if (!window.confirm(t.confirmRemoveMed.replace("{name}", med.name))) return;
+                      void post("meds", { action: "medicine_remove", id: med.id });
+                    }}
                   >
                     {t.remove}
                   </button>
-                  <button type="submit" disabled={busy} className="btn-secondary w-auto min-w-28 px-4">
-                    {t.saveChanges}
+                  <button type="submit" disabled={saving} className="btn-secondary w-auto min-w-28 px-4">
+                    {busy === "meds" ? t.saving : t.saveChanges}
                   </button>
                 </div>
               </form>
@@ -153,27 +211,37 @@ export function SettingsForm({
         </ul>
         <form
           className="space-y-2 border-t border-border pt-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            const fd = new FormData(e.currentTarget);
-            post({
+            const formEl = e.currentTarget;
+            const fd = new FormData(formEl);
+            const ok = await post("meds", {
               action: "medicine_add",
-              name: String(fd.get("name") || ""),
+              name: String(fd.get("name") || "").trim(),
               time: String(fd.get("time") || callTime),
               meal: String(fd.get("meal") || "with food"),
             });
-            e.currentTarget.reset();
+            if (ok) formEl.reset();
           }}
         >
-          <p className="text-sm font-medium">{t.addTablet}</p>
-          <Input name="name" placeholder="Amlodipine" aria-label={t.addTablet} />
-          <Input name="time" type="time" defaultValue={callTime} aria-label={t.morningTime} />
-          <select name="meal" className={fieldClass}>
-            <option value="with food">{lang === "hi" ? "खाने के साथ" : "With food"}</option>
-            <option value="without food">{lang === "hi" ? "खाने के बिना" : "Without food"}</option>
-          </select>
-          <button type="submit" disabled={busy} className="btn-secondary">
-            {t.addTablet}
+          <p className="text-[15px] font-semibold">{t.addTablet}</p>
+          <Label htmlFor="med-new">{t.medName}</Label>
+          <Input id="med-new" name="name" placeholder="Amlodipine" required autoComplete="off" />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="med-new-time">{t.medTime}</Label>
+              <Input id="med-new-time" name="time" type="time" defaultValue={callTime} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="med-new-meal">{t.medMeal}</Label>
+              <select id="med-new-meal" name="meal" className={fieldClass}>
+                <MealOptions lang={lang} />
+              </select>
+            </div>
+          </div>
+          <SectionStatus status={status} section="meds" />
+          <button type="submit" disabled={saving} className="btn-secondary">
+            {busy === "meds" ? t.saving : t.addTablet}
           </button>
         </form>
       </section>
@@ -185,13 +253,28 @@ export function SettingsForm({
           onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
-            post({ action: "neighbour", name: String(fd.get("name") || ""), phone: String(fd.get("phone") || "") });
+            void post("neighbour", {
+              action: "neighbour",
+              name: String(fd.get("name") || "").trim(),
+              phone: String(fd.get("phone") || "").trim(),
+            });
           }}
         >
-          <Input name="name" defaultValue={neighbourName} placeholder="Sunita" aria-label={t.neighbour} />
-          <Input name="phone" defaultValue={neighbourPhone} placeholder="+910000000002" aria-label={t.neighbour} />
-          <button type="submit" disabled={busy} className="btn-secondary">
-            {t.saveChanges}
+          <Label htmlFor="neighbour-name">{t.neighbourName}</Label>
+          <Input id="neighbour-name" name="name" defaultValue={neighbourName} placeholder="Sunita" autoComplete="off" />
+          <Label htmlFor="neighbour-phone">{t.neighbourPhone}</Label>
+          <Input
+            id="neighbour-phone"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            defaultValue={neighbourPhone}
+            placeholder="+910000000002"
+            autoComplete="off"
+          />
+          <SectionStatus status={status} section="neighbour" />
+          <button type="submit" disabled={saving} className="btn-secondary">
+            {busy === "neighbour" ? t.saving : t.saveChanges}
           </button>
         </form>
       </section>

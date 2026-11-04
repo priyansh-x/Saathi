@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import setupImg from "../../../public/images/setup-child-phone.jpg";
 import neighbourImg from "../../../public/images/neighbour-knock.jpg";
+import { ChevronLeft } from "lucide-react";
 import { BrandMark } from "@/components/brand";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,6 +78,15 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
   const [token, setToken] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState("");
+  // Hold the first frame until we know if they're signed in, so the sign-in step never flashes.
+  const [checked, setChecked] = useState(false);
+  const scroller = useRef<HTMLDivElement>(null);
+  const heading = useRef<HTMLDivElement>(null);
+  const firstStep = useRef(true);
+  const stepRef = useRef(step);
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -88,7 +98,35 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
           setStep((s) => (s === "sign" ? "you" : s));
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => setChecked(true));
+  }, []);
+
+  // Each step starts at the top, with focus on its content for screen readers.
+  useEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
+    scroller.current?.scrollTo({ top: 0 });
+    heading.current?.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
+  }, [step]);
+
+  // Hardware / browser back walks the wizard backwards instead of leaving it.
+  useEffect(() => {
+    const onPop = (event: PopStateEvent) => {
+      const target = (event.state as { saathiStep?: Step } | null)?.saathiStep;
+      if (!target) return;
+      // Setup is finished: skip the old wizard entries instead of re-entering them.
+      if (stepRef.current === "done") {
+        window.history.back();
+        return;
+      }
+      setError(null);
+      setStep(target);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
 
   useEffect(() => {
@@ -115,12 +153,21 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
         return;
       }
       setSignedEmail(email.trim().toLowerCase());
-      setStep("you");
+      goTo("you");
     } catch {
       setError(t.setupSignFail);
     } finally {
       setSaving(false);
     }
+  }
+
+  function goTo(nextStep: Step) {
+    setError(null);
+    // Sign-in is a one-way door: replace it so back never lands on the code screen again.
+    const state = { ...(window.history.state ?? {}), saathiStep: nextStep };
+    if (step === "sign" || nextStep === "done") window.history.replaceState(state, "");
+    else window.history.pushState(state, "");
+    setStep(nextStep);
   }
 
   async function signIn() {
@@ -136,7 +183,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
       if (!res.ok) {
         if (data.error === "Email sign-in is not configured.") {
           setSignedEmail(email.trim().toLowerCase());
-          setStep("you");
+          goTo("you");
           return;
         }
         setError(data.error || t.setupSignFail);
@@ -147,7 +194,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
         return;
       }
       setSignedEmail(email.trim().toLowerCase());
-      setStep("you");
+      goTo("you");
     } catch {
       setError(t.setupSignFail);
     } finally {
@@ -157,14 +204,23 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
 
   function next() {
     const i = FLOW.indexOf(step);
-    if (i >= 0 && i < FLOW.length - 1) setStep(FLOW[i + 1]!);
+    if (i >= 0 && i < FLOW.length - 1) goTo(FLOW[i + 1]!);
   }
 
+  const canGoBack = step !== "done" && step !== "sign" && !(step === "you" && signedEmail);
+
   function back() {
-    if (step === "done") return;
+    if (!canGoBack) return;
+    // Let the history entry pushed for this step drive it, so Android back and this button agree.
+    if ((window.history.state as { saathiStep?: Step } | null)?.saathiStep === step) {
+      window.history.back();
+      return;
+    }
     const i = FLOW.indexOf(step);
-    if (i <= 0) return;
-    setStep(FLOW[i - 1]!);
+    if (i > 0) {
+      setError(null);
+      setStep(FLOW[i - 1]!);
+    }
   }
 
   async function submit() {
@@ -193,7 +249,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
       saveDeskToken(data.token);
       sessionStorage.removeItem(DRAFT_KEY);
       setToken(data.token);
-      setStep("done");
+      goTo("done");
     } catch {
       setError(t.setupSaveFail);
     } finally {
@@ -212,19 +268,25 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
             <Image src={setupImg} alt="Setting up a morning call on a phone at home" fill priority className="object-cover" sizes="(max-width: 480px) 100vw, 480px" />
           </div>
           <p className="eyebrow">{t.setupSignKicker}</p>
-          <h1 className="app-title mt-2">{t.setupSignTitle}</h1>
+          <h1 tabIndex={-1} className="app-title mt-2 outline-none">{t.setupSignTitle}</h1>
           <p className="mt-3 text-muted-foreground">
             {fromEmail ? t.setupSignBodyFrom.replace("{email}", fromEmail) : t.setupSignBody}
           </p>
-          <Field label={t.setupEmail} htmlFor="email">
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </Field>
+          <div className="mt-6">
+            <Field label={t.setupEmail} htmlFor="email">
+              <Input
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                enterKeyHint="go"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </Field>
+          </div>
           {sent ? (
             <div className="mt-4 space-y-3">
               <p className="text-sm">
@@ -239,6 +301,8 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
                   placeholder="000000"
+                  enterKeyHint="go"
+                  autoFocus
                 />
               </Field>
             </div>
@@ -253,11 +317,13 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
             {t.setupYouKicker}
             {signedEmail ? ` · ${signedEmail}` : ""}
           </p>
-          <h1 className="app-title mt-2">{t.setupYouTitle}</h1>
+          <h1 tabIndex={-1} className="app-title mt-2 outline-none">{t.setupYouTitle}</h1>
           <div className="mt-6 space-y-4">
             <Field label={t.setupYourName} htmlFor="childName">
               <Input
                 id="childName"
+                autoComplete="given-name"
+                enterKeyHint="next"
                 value={form.childName}
                 onChange={(e) => patch("childName", e.target.value)}
                 placeholder="Ananya"
@@ -266,6 +332,9 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
             <Field label={t.setupYourWhatsapp} htmlFor="childWhatsapp">
               <Input
                 id="childWhatsapp"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 value={form.childWhatsapp}
                 onChange={(e) => patch("childWhatsapp", e.target.value)}
                 placeholder="+910000000001"
@@ -279,18 +348,19 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
       return (
         <>
           <p className="text-sm text-muted-foreground">{t.setupParentKicker}</p>
-          <h1 className="app-title mt-2">{t.setupParentTitle}</h1>
+          <h1 tabIndex={-1} className="app-title mt-2 outline-none">{t.setupParentTitle}</h1>
           <div className="mt-6 space-y-4">
             <Field label={t.setupFullName} htmlFor="parentName">
               <Input
                 id="parentName"
+                autoComplete="off"
                 value={form.parentName}
                 onChange={(e) => patch("parentName", e.target.value)}
                 placeholder="Kamla Sharma"
               />
             </Field>
             <Field label={t.setupWhatYouCall} htmlFor="addressTerm">
-              <div className="flex flex-wrap gap-2">
+              <div id="addressTerm" role="group" className="flex flex-wrap gap-2">
                 {ADDRESS_TERMS.map((term) => (
                   <Chip
                     key={term}
@@ -305,6 +375,9 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
             <Field label={t.setupTheirPhone} htmlFor="parentPhone">
               <Input
                 id="parentPhone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="off"
                 value={form.parentPhone}
                 onChange={(e) => patch("parentPhone", e.target.value)}
                 placeholder="+910000000000"
@@ -340,7 +413,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
       return (
         <>
           <p className="text-sm text-muted-foreground">{t.setupMorningKicker}</p>
-          <h1 className="app-title mt-2">{fill(t.setupMorningTitle, { who })}</h1>
+          <h1 tabIndex={-1} className="app-title mt-2 outline-none">{fill(t.setupMorningTitle, { who })}</h1>
           <div className="mt-6 flex flex-wrap gap-2">
             {CALL_TIMES.map((time) => (
               <Chip key={time} on={form.callTime === time} onClick={() => patch("callTime", time)}>
@@ -355,14 +428,16 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
       return (
         <>
           <p className="text-sm text-muted-foreground">{t.setupMedsKicker}</p>
-          <h1 className="app-title mt-2">{t.setupMedsTitle}</h1>
+          <h1 tabIndex={-1} className="app-title mt-2 outline-none">{t.setupMedsTitle}</h1>
           <p className="mt-3 text-muted-foreground">{t.setupMedsBody}</p>
           <ul className="mt-6 space-y-4">
             {form.medicines.map((med, index) => (
-              <li key={index} className="space-y-2 rounded-2xl border border-border p-3">
+              <li key={index} className="card space-y-3 p-4">
                 <Field label={t.setupMedName} htmlFor={`med-name-${index}`}>
                   <Input
                     id={`med-name-${index}`}
+                    autoComplete="off"
+                    autoFocus={!med.name && index === form.medicines.length - 1}
                     value={med.name}
                     onChange={(e) => patch("medicines", replaceMed(form.medicines, index, { ...med, name: e.target.value }))}
                   />
@@ -391,7 +466,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
                 </div>
                 <button
                   type="button"
-                  className="text-sm text-muted-foreground"
+                  className="btn-quiet -ml-3 text-alert"
                   onClick={() => patch("medicines", form.medicines.filter((_, i) => i !== index))}
                 >
                   {t.setupRemove}
@@ -401,7 +476,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
           </ul>
           <button
             type="button"
-            className="mt-4 text-sm font-medium"
+            className="btn-secondary mt-4"
             onClick={() =>
               patch("medicines", [...form.medicines, { name: "", time: form.callTime, withFood: true }])
             }
@@ -418,7 +493,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
             <Image src={neighbourImg} alt="A neighbour at the door, the person who can knock if a call is missed" fill className="object-cover" sizes="(max-width: 480px) 100vw, 480px" />
           </div>
           <p className="eyebrow">{t.setupMedsKicker}</p>
-          <h1 className="app-title mt-2">{t.setupNeighbourTitle}</h1>
+          <h1 tabIndex={-1} className="app-title mt-2 outline-none">{t.setupNeighbourTitle}</h1>
           <p className="mt-3 text-muted-foreground">{t.setupNeighbourBody}</p>
           <div className="mt-6 space-y-4">
             <Field label={t.setupNeighbourName} htmlFor="neighborName">
@@ -432,6 +507,9 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
             <Field label={t.setupNeighbourPhone} htmlFor="neighborPhone">
               <Input
                 id="neighborPhone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="off"
                 value={form.neighborPhone}
                 onChange={(e) => patch("neighborPhone", e.target.value)}
                 placeholder="+910000000009"
@@ -445,7 +523,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
       return (
         <>
           <p className="text-sm text-muted-foreground">{t.setupConsentKicker}</p>
-          <h1 className="app-title mt-2">{fill(t.setupConsentTitle, { who })}</h1>
+          <h1 tabIndex={-1} className="app-title mt-2 outline-none">{fill(t.setupConsentTitle, { who })}</h1>
           <p className="mt-3 text-muted-foreground">{fill(t.setupConsentBody, { who })}</p>
           <label className="mt-6 flex items-start gap-3 text-sm leading-6">
             <input
@@ -467,32 +545,52 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
     return (
       <>
         <p className="text-sm text-muted-foreground">{t.setupDoneKicker}</p>
-        <h1 className="app-title mt-2">
+        <h1 tabIndex={-1} className="app-title mt-2 outline-none">
           {fill(t.setupDoneTitle, { who, time: clockLabel(form.callTime) })}
         </h1>
         <p className="mt-3 text-muted-foreground">{t.setupDoneBody}</p>
       </>
     );
-  }, [step, form, email, signedEmail, langs, sent, code, who, t, lang]);
+  }, [step, form, email, signedEmail, langs, sent, code, who, t, lang, fromEmail]);
 
   const primary = (() => {
     if (step === "sign") {
       if (sent) {
         return {
-          label: saving ? "…" : lang === "hi" ? "कोड डालें" : "Enter the code",
+          label: saving ? t.opening : lang === "hi" ? "कोड डालें" : "Enter the code",
           action: verifyCode,
           disabled: saving || code.length < 6,
         };
       }
-      return { label: saving ? "…" : t.setupContinue, action: signIn, disabled: saving || !email.trim() };
+      return { label: saving ? t.opening : t.setupContinue, action: signIn, disabled: saving || !email.trim() };
+    }
+    if (step === "you") {
+      return {
+        label: t.setupContinue,
+        action: next,
+        disabled: saving || !form.childName.trim() || form.childWhatsapp.replace(/\D/g, "").length < 10,
+      };
+    }
+    if (step === "parent") {
+      return {
+        label: t.setupContinue,
+        action: next,
+        disabled: saving || !form.parentName.trim() || form.parentPhone.replace(/\D/g, "").length < 10,
+      };
     }
     if (step === "medicines") {
-      return { label: form.medicines.length ? t.setupContinue : t.setupNoTablet, action: next, disabled: saving };
+      return {
+        label: form.medicines.length ? t.setupContinue : t.setupNoTablet,
+        action: next,
+        disabled: saving || form.medicines.some((med) => !med.name.trim()),
+      };
     }
     if (step === "neighbour") {
       return { label: form.neighborName.trim() ? t.setupContinue : t.setupSkip, action: next, disabled: saving };
     }
-    if (step === "consent") return { label: saving ? "…" : t.setupLooksRight, action: submit, disabled: saving };
+    if (step === "consent") {
+      return { label: saving ? t.saving : t.setupLooksRight, action: submit, disabled: saving || !form.toldParent };
+    }
     if (step === "done") {
       return {
         label: t.setupOpenDesk,
@@ -503,33 +601,85 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
     return { label: t.setupContinue, action: next, disabled: saving };
   })();
 
+  const stepIndex = FLOW.indexOf(step);
+  const showProgress = step !== "sign" && step !== "done";
+
   return (
-    <div className={`app-shell ${lang === "hi" ? "font-devanagari" : ""}`}>
-      <div className="flex shrink-0 flex-wrap items-center gap-2 px-4 pt-8">
-        {step !== "done" && step !== "sign" ? (
-          <button type="button" onClick={back} className="btn-quiet -ml-3 text-primary">
+    <form
+      noValidate
+      className={`app-shell ${lang === "hi" ? "font-devanagari" : ""}`}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!primary.disabled) void primary.action();
+      }}
+    >
+      <div
+        className="flex shrink-0 flex-wrap items-center gap-2 px-4"
+        style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}
+      >
+        {canGoBack ? (
+          <button type="button" onClick={back} className="btn-quiet -ml-3 gap-0.5 pl-2 text-brand-text">
+            <ChevronLeft className="size-5" aria-hidden />
             {t.setupBack}
           </button>
         ) : (
           <BrandMark />
         )}
         <span className="flex-1" />
-        <Link href={`/onboard?lang=${other}`} className="btn-quiet text-primary">
+        <Link href={`/onboard?lang=${other}`} className="btn-quiet text-brand-text">
           {lang === "en" ? "हिं" : "EN"}
         </Link>
       </div>
-      <div className="app-shell-scroll px-4 pt-4 pb-4">{body}</div>
+      {showProgress ? (
+        <div className="shrink-0 px-4 pt-2">
+          <div
+            role="progressbar"
+            aria-valuemin={1}
+            aria-valuemax={FLOW.length - 1}
+            aria-valuenow={stepIndex}
+            aria-label={t.stepOf.replace("{n}", String(stepIndex)).replace("{total}", String(FLOW.length - 1))}
+            className="h-1 overflow-hidden rounded-full bg-muted"
+          >
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+              style={{ width: `${(stepIndex / (FLOW.length - 1)) * 100}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+      <div ref={scroller} className="app-shell-scroll px-4 pt-4 pb-4">
+        <div ref={heading}>
+          {checked ? (
+            body
+          ) : (
+            <div aria-busy className="space-y-4">
+              <div className="aspect-[4/3] animate-pulse rounded-[28px] bg-muted" />
+              <div className="h-8 w-3/4 animate-pulse rounded-full bg-muted" />
+              <div className="h-12 animate-pulse rounded-2xl bg-muted" />
+            </div>
+          )}
+        </div>
+      </div>
       {error ? (
-        <p className="mx-4 mb-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p
+          role="alert"
+          className="mx-4 mb-3 rounded-xl bg-alert-soft px-3 py-2 text-sm text-alert"
+        >
           {error}
         </p>
       ) : null}
-      <div className="shrink-0 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <button type="button" disabled={primary.disabled} className="btn-primary" onClick={primary.action}>
+      <div className="shrink-0 px-4 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <button
+          type={step === "done" ? "button" : "submit"}
+          disabled={primary.disabled || !checked}
+          aria-busy={saving}
+          className="btn-primary"
+          onClick={step === "done" ? primary.action : undefined}
+        >
           {primary.label}
         </button>
       </div>
-    </div>
+    </form>
   );
 }
 
