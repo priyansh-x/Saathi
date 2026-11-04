@@ -19,7 +19,7 @@ test("installability: manifest and service worker", async ({ page }) => {
 test("onboarding reaches the family desk", async ({ page }) => {
   const stamp = String(Date.now()).slice(-8);
   await page.goto("/onboard");
-  await page.getByLabel("Email").fill(`e2e.${stamp}@example.com`);
+  await page.getByLabel("Email").fill("e2e.onboard@example.com");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Your name").fill("Ananya");
   await page.getByLabel("Your WhatsApp").fill(`98${stamp}`);

@@ -6,7 +6,10 @@ const PARENT_TABLES = [
   "calls",
   "consents",
   "contacts",
+  "desk_views",
   "dose_logs",
+  "errands",
+  "family_messages",
   "audit_events",
   "family_invites",
   "family_config",
@@ -57,6 +60,9 @@ export async function deleteFamily(parentId: string) {
   await query(`delete from family_config where parent_id = $1`, [parentId]);
   await query(`delete from push_subscriptions where parent_id = $1`, [parentId]);
   await query(`delete from tool_call_logs where parent_id = $1`, [parentId]);
+  await query(`delete from desk_views where parent_id = $1`, [parentId]);
+  await query(`delete from family_messages where parent_id = $1`, [parentId]);
+  await query(`delete from errands where parent_id = $1`, [parentId]);
   await query(`delete from webhook_events where payload like $1`, [`%${parentId}%`]);
   await query(`delete from parents where id = $1`, [parentId]);
   await query(`insert into deleted_events values ($1,$2,$3)`, [

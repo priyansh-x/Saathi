@@ -27,6 +27,8 @@ export default defineConfig({
       MOCK_WHATSAPP: "1",
       CALL_PROVIDER: "simulated",
       SAATHI_KILL_SWITCH: "0",
+      // Onboarding signs in with this address; the pilot is invite-only.
+      ALLOWED_EMAILS: "e2e.onboard@example.com",
       PGLITE_PATH: ".data/saathi-e2e",
       // next start is NODE_ENV=production; public hosts have no dev-* fallbacks.
       SESSION_SECRET: "e2e-session-secret-32chars-minimum",

@@ -238,6 +238,22 @@ describe("delete family", () => {
       "en",
       false,
     ]);
+    // Rows the desk writes once a family uses it: a view, a message, an errand.
+    await query(`insert into desk_views (id, parent_id, member_id, at) values ($1,$2,$3,now())`, [
+      "view_tmp",
+      "parent_tmp",
+      "contact_tmp",
+    ]);
+    await query(
+      `insert into family_messages (id, parent_id, from_member_id, from_name, text, created_at) values ($1,$2,$3,$4,$5,$6)`,
+      ["msg_tmp", "parent_tmp", "contact_tmp", "Tmp", "Hello", "2026-11-04T09:00:00+05:30"],
+    );
+    await query(`insert into errands (id, parent_id, medicine_name, created_at) values ($1,$2,$3,$4)`, [
+      "errand_tmp",
+      "parent_tmp",
+      "Tmp tablet",
+      "2026-11-04T09:00:00+05:30",
+    ]);
     await deleteFamily("parent_tmp");
     const leftover = await leftoverParentRows("parent_tmp");
     assert.equal(Object.values(leftover).every((n) => n === 0), true);
