@@ -19,7 +19,9 @@ export async function reuseRecentPlacedCall(
   const row = rows[0];
   if (!row) return null;
   const started = Date.parse(row.started_at);
-  if (!Number.isFinite(started) || clock.getTime() - started >= TEST_CALL_REUSE_MS) return null;
+  const age = clock.getTime() - started;
+  // A row stamped later than now (the example seed's 10:05 call, read just after midnight) was not just placed.
+  if (!Number.isFinite(started) || age < 0 || age >= TEST_CALL_REUSE_MS) return null;
   const execution_id = row.bolna_execution_id || row.id;
   const mock = execution_id.startsWith("mock_") || row.id.startsWith("mock_");
   return { ok: true, execution_id, mock };

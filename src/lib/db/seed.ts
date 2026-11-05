@@ -2,7 +2,7 @@ import { isLiveBolnaExecutionId } from "@/lib/bolna/example-desk";
 import { EXAMPLE_TOKEN } from "@/lib/config";
 import { query } from "@/lib/db/client";
 import { latchOpsKillSwitch } from "@/lib/ops/flags";
-import { istDayOffset, istStamp, istStampFromOffset, nowIstStamp } from "@/lib/time";
+import { istDayOffset, istStamp, istStampFromOffset, minutesNowIst, nowIstStamp } from "@/lib/time";
 import { buildWeeklyNote } from "@/lib/weekly";
 
 export { EXAMPLE_TOKEN };
@@ -217,7 +217,17 @@ async function refreshExampleHistoryIfStale() {
   await stampExampleRev();
 }
 
+/**
+ * Today's example call sits at 10:05 IST, or 5 minutes ago if 10:05 has not come yet.
+ * A call stamped in the future reads as "just placed" and outranks a real test call.
+ */
+export function exampleTodaySlot(minutesNow: number) {
+  const at = minutesNow >= 10 * 60 + 10 ? 10 * 60 + 5 : Math.max(0, minutesNow - 5);
+  return { hour: Math.floor(at / 60), minute: at % 60 };
+}
+
 async function seedExampleHistory() {
+  const todaySlot = exampleTodaySlot(minutesNowIst());
   for (let i = 0; i < 30; i += 1) {
     const day = istDayOffset(i - 29);
     const slot = i % 7;
@@ -248,8 +258,8 @@ async function seedExampleHistory() {
       alertDay,
       openAlert: false,
       variant,
-      hour: isToday ? 10 : isYesterday ? 17 : 8,
-      minute: isToday ? 5 : isYesterday ? 8 : 30,
+      hour: isToday ? todaySlot.hour : isYesterday ? 17 : 8,
+      minute: isToday ? todaySlot.minute : isYesterday ? 8 : 30,
     });
   }
 
