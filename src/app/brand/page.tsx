@@ -22,7 +22,7 @@ export default async function BrandPage() {
         {PRODUCT_NAME} / {PRODUCT_NAME_HI}
       </h1>
       <p className="mt-3 text-muted-foreground">{TAGLINE_EN}</p>
-      <div className="mt-8 size-24 overflow-hidden rounded-[22px]">
+      <div className="mt-8 size-24 overflow-hidden rounded-3xl">
         <MarkSvg className="size-24" />
       </div>
       <p className="mt-4 text-lg font-semibold">{WORDMARK_HI}</p>

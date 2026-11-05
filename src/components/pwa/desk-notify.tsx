@@ -27,7 +27,7 @@ export function DeskNotifyPrompt({ token, lang }: { token: string; lang: Lang })
   }
 
   return (
-    <div className="mx-4 mb-3 rounded-[22px] border border-border bg-card px-4 py-3">
+    <div className="mx-4 mb-3 rounded-3xl border border-border bg-card px-4 py-3">
       <p className="font-medium">{t.notifyThisPhone}</p>
       <p className="mt-1 text-sm text-muted-foreground">
         {push === "denied" ? t.notifyDenied : t.notifyThisPhoneOff}

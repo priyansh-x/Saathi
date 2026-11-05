@@ -107,7 +107,7 @@ export function ProfileSheet({
             aria-modal="true"
             aria-labelledby={titleId}
             tabIndex={-1}
-            className="relative z-10 mb-0 flex max-h-[min(92dvh,720px)] w-full max-w-[480px] flex-col overflow-hidden rounded-t-[28px] bg-card shadow-[var(--shadow-float)] outline-none sm:mb-8 sm:rounded-[28px]"
+            className="relative z-10 mb-0 flex max-h-[min(92dvh,720px)] w-full max-w-[480px] flex-col overflow-hidden rounded-t-3xl bg-card shadow-[var(--shadow-float)] outline-none sm:mb-8 sm:rounded-3xl"
           >
             <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-3">
               <p id={titleId} className="text-[19px] font-semibold">

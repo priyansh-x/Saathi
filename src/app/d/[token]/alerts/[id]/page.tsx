@@ -4,7 +4,7 @@ import { titled } from "@/lib/page-title";
 import { qs } from "@/lib/history";
 import { ackAlert } from "@/lib/whatsapp/ack";
 import { alertById, alertEvents, contactsFor, parentByToken, resolveAlert } from "@/lib/db/queries";
-import { alertLife, alertQuoteLine, alertTitle, eventLine, statusPill } from "@/lib/alerts";
+import { alertLife, alertQuoteLine, alertTitle, eventLine, statusPill, ALERT_PILL_TONE } from "@/lib/alerts";
 import { readLang } from "@/lib/family-load";
 import { messages } from "@/lib/i18n/messages";
 import { formatFriendlyTime } from "@/lib/time";
@@ -12,12 +12,7 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const PILL_TONE = {
-  neutral: "bg-sunk text-muted-foreground",
-  good: "bg-good-soft text-good",
-  look: "bg-amber-soft text-amber-ink",
-  open: "bg-alert-soft text-alert",
-} as const;
+const PILL_TONE = ALERT_PILL_TONE;
 
 export async function generateMetadata({
   searchParams,

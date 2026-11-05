@@ -6,9 +6,11 @@ import { useRef, useState } from "react";
 export function TestCallForm({
   action,
   children,
+  variant = "primary",
 }: {
   action: string;
   children: React.ReactNode;
+  variant?: "primary" | "secondary";
 }) {
   const [pending, setPending] = useState(false);
   const locked = useRef(false);
@@ -25,7 +27,7 @@ export function TestCallForm({
         setPending(true);
       }}
     >
-      <button type="submit" className="btn-primary disabled:opacity-60" disabled={pending}>
+      <button type="submit" className={variant === "primary" ? "btn-primary" : "btn-secondary"} disabled={pending}>
         {children}
       </button>
     </form>

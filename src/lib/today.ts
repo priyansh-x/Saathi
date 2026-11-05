@@ -93,13 +93,6 @@ export function slotLabel(meal: string | undefined, lang: Lang) {
   return t.slotMorning;
 }
 
-export function doseMark(status: DoseLog["status"], lang: Lang) {
-  const t = messages[lang];
-  if (status === "taken") return `${t.taken} ✓`;
-  if (status === "not_taken") return `${t.notTaken} –`;
-  if (status === "not_sure") return `${t.notSure} ?`;
-  return t.notAsked;
-}
 
 export function reachSteps(args: {
   attempts: AttemptRow[];

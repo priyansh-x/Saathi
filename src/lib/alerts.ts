@@ -28,6 +28,14 @@ export function severityChip(alert: AlertRow, lang: Lang) {
   return { label: t.checkIn, tone: "look" as const };
 }
 
+/** One colour per alert state, shared by the list and the detail page. */
+export const ALERT_PILL_TONE = {
+  neutral: "bg-sunk text-muted-foreground",
+  good: "bg-good-soft text-good",
+  look: "bg-amber-soft text-amber-ink",
+  open: "bg-alert-soft text-alert",
+} as const;
+
 export function statusPill(alert: AlertRow, lang: Lang) {
   const t = messages[lang];
   const life = alertLife(alert);

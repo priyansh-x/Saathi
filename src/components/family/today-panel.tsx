@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -12,7 +11,6 @@ import {
   Minus,
   Pause,
   Phone,
-  Quote,
   ShieldCheck,
   UserRound,
   X,
@@ -33,11 +31,19 @@ import { FamilyMessageForm } from "@/components/family/family-message-form";
 import { TestCallForm } from "@/components/family/test-call-form";
 import { saveFamilyMessage } from "@/lib/family-messages";
 
-const HERO_TONE = {
-  good: "bg-good-soft text-good",
-  look: "bg-amber-soft text-amber-ink",
-  act: "bg-alert-soft text-alert",
-  neutral: "bg-card text-foreground",
+/** The card stays neutral; only an alert fills it, so an alert reads as different at a glance. */
+const HERO_SURFACE = {
+  good: "border-border bg-card",
+  look: "border-border bg-card",
+  act: "border-alert/25 bg-alert-soft",
+  neutral: "border-border bg-card",
+} as const;
+
+const HERO_CHIP_TEXT = {
+  good: "text-good",
+  look: "text-amber-ink",
+  act: "text-alert",
+  neutral: "text-muted-foreground",
 } as const;
 
 const HERO_ICON_BG = {
@@ -47,7 +53,7 @@ const HERO_ICON_BG = {
   neutral: "bg-brand-soft text-brand-deep",
 } as const;
 
-function DosePill({ status, lang, later }: { status: DoseLog["status"]; lang: Lang; later?: boolean }) {
+export function DosePill({ status, lang, later }: { status: DoseLog["status"]; lang: Lang; later?: boolean }) {
   const t = messages[lang];
   if (status === "taken") {
     return (
@@ -163,30 +169,28 @@ export function TodayPanel({
       </p>
 
       <section
-        className={`grain mt-3 overflow-hidden rounded-[28px] border border-black/[0.04] p-5 shadow-[var(--shadow-card)] ${HERO_TONE[tone]}`}
+        className={`mt-3 overflow-hidden rounded-3xl border p-5 shadow-[var(--shadow-card)] ${HERO_SURFACE[tone]}`}
       >
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className={`grid size-9 shrink-0 place-items-center rounded-full ${HERO_ICON_BG[tone]} ${state === "act" || state === "trying" || state === "calling" ? "ring-pulse" : ""}`}>
-            <Icon className="size-[18px]" strokeWidth={2.4} aria-hidden />
+          <span className={`grid size-7 shrink-0 place-items-center rounded-full ${HERO_ICON_BG[tone]}`}>
+            <Icon className="size-4" strokeWidth={2.5} aria-hidden />
           </span>
-          <span className="min-w-0 text-[15px] font-semibold break-words">{copy.chip}</span>
+          <span className={`min-w-0 text-[14px] font-semibold break-words ${HERO_CHIP_TEXT[tone]}`}>{copy.chip}</span>
         </div>
 
         <h1 className="mt-4 text-[26px] leading-[1.15] font-semibold tracking-tight break-words text-foreground">{p(copy.headline)}</h1>
         {heroQuote ? (
           <p className="font-devanagari mt-3 text-[19px] leading-[1.5] text-foreground">
-            <span className="serif-line text-2xl text-alert">“</span>
-            {heroQuote}
-            <span className="serif-line text-2xl text-alert">”</span>
+            “{heroQuote}”
           </p>
         ) : null}
-        {copy.sub ? <p className="mt-2 text-[15px] text-foreground/75">{p(copy.sub)}</p> : null}
+        {copy.sub ? <p className="mt-2 text-[15px] text-muted-foreground">{p(copy.sub)}</p> : null}
         {data.couldntReach ? (
           <p className="mt-2 text-[15px] font-medium text-alert">
             {t.couldntReach.replace("{name}", data.couldntReach.name)}
           </p>
         ) : data.delivery ? (
-          <p className="mt-2 text-[15px] text-foreground/75">
+          <p className="mt-2 text-[15px] text-muted-foreground">
             {t.deliveredTo.replace("{name}", data.delivery.name).replace("{time}", data.delivery.clock)}
           </p>
         ) : null}
@@ -213,7 +217,7 @@ export function TodayPanel({
                   ) : null}
                   <span
                     className={`relative z-10 grid size-6 place-items-center rounded-full ${
-                      step.done ? "bg-current" : step.current ? "border-2 border-current bg-white" : "border border-current/30 bg-white/60"
+                      step.done ? "bg-current" : step.current ? "border-2 border-current bg-card" : "border border-current/30 bg-card"
                     }`}
                   >
                     {step.done ? (
@@ -250,13 +254,17 @@ export function TodayPanel({
               {p(t.callMaa)}
             </a>
           ) : state === "calling" ? null : (
-            <TestCallForm action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=today`}>
+            // Nothing needs doing: ringing now is an option, not the headline, so it is secondary.
+            <TestCallForm
+              action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=today`}
+              variant="secondary"
+            >
               <Phone className="size-[18px]" aria-hidden />
               {p(t.ringNow)}
             </TestCallForm>
           )}
 
-          <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))]">
+          <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(5.25rem,1fr))]">
             {state === "trying" || state === "scheduled" || state === "skipped" ? null : (
               <a href={`tel:${tel}`} className="action-tile text-foreground">
                 <Phone className="size-5" aria-hidden />
@@ -297,7 +305,7 @@ export function TodayPanel({
       </section>
 
       {firstRun ? (
-        <section className="rise mt-6" style={{ "--d": "120ms" } as CSSProperties}>
+        <section className="mt-6">
           <p className="section-label">{t.setupChecklist}</p>
           <ol className="list-group mt-2">
             {[
@@ -319,7 +327,7 @@ export function TodayPanel({
       ) : null}
 
       {state === "scheduled" && data.yesterday ? (
-        <section className="rise mt-6" style={{ "--d": "120ms" } as CSSProperties}>
+        <section className="mt-6">
           <p className="section-label">{t.seeYesterday}</p>
           <Link href={`/d/${token}/calls/${encodeURIComponent(data.yesterday.id)}?lang=${lang}&from=today`} className="card mt-2 flex items-center gap-3 p-4">
             <p className="flex-1 text-[15px] leading-6 text-muted-foreground">
@@ -331,12 +339,12 @@ export function TodayPanel({
       ) : null}
 
       {data.doses.length > 0 ? (
-        <section className="rise mt-6" style={{ "--d": "160ms" } as CSSProperties}>
+        <section className="mt-6">
           <p className="section-label">{t.medicinesToday}</p>
           <ul className="list-group mt-2">
             {data.doses.map((dose) => (
               <li key={`${dose.medicine_id}-${dose.meal}`} className="list-row">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-sage-soft text-sage">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-sunk text-ink-2">
                   <IconMedicine className="size-5" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -357,7 +365,7 @@ export function TodayPanel({
       ) : null}
 
       {data.errands.length > 0 ? (
-        <section className="rise mt-6" style={{ "--d": "180ms" } as CSSProperties}>
+        <section className="mt-6">
           <p className="section-label">{ERRAND_DESK_COPY[lang].heading}</p>
           <ul>
             {data.errands.map((errand) => (
@@ -368,11 +376,10 @@ export function TodayPanel({
       ) : null}
 
       {showQuote ? (
-        <section className="rise mt-6" style={{ "--d": "200ms" } as CSSProperties}>
+        <section className="mt-6">
           <p className="section-label">{t.inHerWords}</p>
-          <figure className="card grain mt-2 p-5">
-            <Quote className="size-6 text-primary/40" aria-hidden />
-            <blockquote className="font-devanagari mt-2 text-[20px] leading-[1.55]">{quote}</blockquote>
+          <figure className="card mt-2 p-5">
+            <blockquote className="font-devanagari text-[19px] leading-[1.55]">“{quote}”</blockquote>
             <figcaption className="mt-3 text-[13px] leading-5 text-ink-3">
               {t.fromTodaysCall}. {p(t.moodCaption)}
             </figcaption>
@@ -380,7 +387,7 @@ export function TodayPanel({
         </section>
       ) : null}
 
-      <section className="rise mt-6" style={{ "--d": "210ms" } as CSSProperties}>
+      <section className="mt-6">
         {data.familyReply?.reply_to_family ? (
           <p className="mb-3 text-[15px] leading-6">
             {t.familyParentReplied
@@ -392,7 +399,7 @@ export function TodayPanel({
       </section>
 
       {data.weekly.built ? (
-        <section className="rise mt-6" style={{ "--d": "220ms" } as CSSProperties}>
+        <section className="mt-6">
           <p className="section-label">{t.weeklyNote}</p>
           <div className="card mt-2 p-4">
             <p className="text-[15px] leading-relaxed">{weeklyDeskCopy(data.weekly.built, lang)}</p>
@@ -403,7 +410,7 @@ export function TodayPanel({
         </section>
       ) : null}
 
-      <section className="rise mt-6" style={{ "--d": "240ms" } as CSSProperties}>
+      <section className="mt-6">
         <div className="flex items-baseline justify-between px-1">
           <p className="section-label px-0">{t.thisWeek}</p>
           <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="text-[14px] font-medium text-primary">

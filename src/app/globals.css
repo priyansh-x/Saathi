@@ -43,7 +43,14 @@
   --color-sage-soft: var(--sage-soft);
   --color-sunk: var(--sunk);
   --color-wa: var(--wa);
-  --radius-lg: 16px;
+  /* Shape rule: actions, chips, avatars are pills; cards, lists, sheets 20; inputs, tiles, insets 14. */
+  --radius-md: 14px;
+  --radius-lg: 14px;
+  --radius-xl: 14px;
+  --radius-2xl: 14px;
+  --radius-3xl: 20px;
+  --radius-card: 20px;
+  --radius-control: 14px;
   --shadow-card: var(--shadow-card);
   --shadow-float: var(--shadow-float);
 }
@@ -133,9 +140,6 @@ html.dark[data-look="calm"] {
   --brand-soft: #243033;
 }
 
-html.dark .action-tile {
-  background: rgba(36, 33, 30, 0.88);
-}
 
 @layer base {
   * {
@@ -241,22 +245,12 @@ html.dark .action-tile {
 }
 
 @layer components {
-  .serif-line {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.01em;
-  }
   .app-title {
     font-weight: 600;
     font-size: 1.75rem;
     line-height: 1.12;
     letter-spacing: -0.03em;
     text-wrap: balance;
-  }
-  .app-title .serif-line {
-    font-size: 1.08em;
-    color: var(--primary);
   }
   .eyebrow {
     font-size: 13px;
@@ -270,7 +264,7 @@ html.dark .action-tile {
     padding-inline: 4px;
   }
   .list-group {
-    border-radius: 22px;
+    border-radius: var(--radius-card);
     border: 1px solid var(--border);
     background: var(--card);
     box-shadow: var(--shadow-card);
@@ -295,8 +289,9 @@ html.dark .action-tile {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.7);
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border);
+    background: var(--card);
     padding: 8px 6px;
     font-size: 13px;
     font-weight: 500;
@@ -329,7 +324,7 @@ html.dark .action-tile {
   .field {
     height: 48px;
     width: 100%;
-    border-radius: 16px;
+    border-radius: var(--radius-control);
     border: 1px solid var(--border);
     background: var(--card);
     padding: 0 16px;
@@ -354,7 +349,7 @@ html.dark .action-tile {
     color: var(--background);
   }
   .card {
-    border-radius: 22px;
+    border-radius: var(--radius-card);
     border: 1px solid var(--border);
     background: var(--card);
     box-shadow: var(--shadow-card);
@@ -372,11 +367,10 @@ html.dark .action-tile {
     font-size: 16px;
     font-weight: 500;
     color: #fff;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 10px 24px -12px rgba(142, 63, 29, 0.7);
   }
   @media (hover: hover) {
     .btn-primary:hover {
-      background: #8e3f1d;
+      background: color-mix(in oklab, var(--primary) 88%, black);
     }
     .btn-secondary:hover {
       background: var(--muted);
@@ -465,64 +459,6 @@ html.dark .action-tile {
     backdrop-filter: saturate(1.4) blur(16px);
     -webkit-backdrop-filter: saturate(1.4) blur(16px);
   }
-  .grain {
-    position: relative;
-    isolation: isolate;
-  }
-  .grain::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    opacity: 0.35;
-    pointer-events: none;
-    border-radius: inherit;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0 0.1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-  .rise {
-    animation: rise 600ms var(--ease) both;
-    animation-delay: var(--d, 0ms);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .rise,
-    .ring-pulse::after {
-      animation: none;
-    }
-  }
-  .ring-pulse {
-    position: relative;
-  }
-  .ring-pulse::after {
-    content: "";
-    position: absolute;
-    inset: -5px;
-    border-radius: 999px;
-    border: 1.5px solid currentColor;
-    opacity: 0;
-    animation: ring 2.4s var(--ease) infinite;
-  }
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes ring {
-  0% {
-    opacity: 0.5;
-    transform: scale(0.85);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.35);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -595,7 +531,7 @@ html.record .record-stage {
 }
 
 .record-line {
-  border-radius: 22px;
+  border-radius: var(--radius-card);
   background: var(--card);
   box-shadow: var(--shadow-card);
   padding: 1rem 1.15rem;
@@ -631,7 +567,7 @@ html.record .record-stage {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border-radius: 22px;
+  border-radius: var(--radius-card);
   background: var(--card);
   box-shadow: var(--shadow-card);
   padding: 1.1rem 1.2rem;

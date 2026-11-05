@@ -264,7 +264,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
     if (step === "sign") {
       return (
         <>
-          <div className="grain relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-[28px]">
+          <div className="relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-3xl">
             <Image src={setupImg} alt="Setting up a morning call on a phone at home" fill priority className="object-cover" sizes="(max-width: 480px) 100vw, 480px" />
           </div>
           <p className="eyebrow">{t.setupSignKicker}</p>
@@ -490,7 +490,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
     if (step === "neighbour") {
       return (
         <>
-          <div className="grain relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-[28px]">
+          <div className="relative -mx-4 mb-6 aspect-[4/3] overflow-hidden rounded-3xl">
             <Image src={neighbourImg} alt="A neighbour at the door, the person who can knock if a call is missed" fill className="object-cover" sizes="(max-width: 480px) 100vw, 480px" />
           </div>
           <p className="eyebrow">{t.setupMedsKicker}</p>
@@ -654,7 +654,7 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
             body
           ) : (
             <div aria-busy className="space-y-4">
-              <div className="aspect-[4/3] animate-pulse rounded-[28px] bg-muted" />
+              <div className="aspect-[4/3] animate-pulse rounded-3xl bg-muted" />
               <div className="h-8 w-3/4 animate-pulse rounded-full bg-muted" />
               <div className="h-12 animate-pulse rounded-2xl bg-muted" />
             </div>

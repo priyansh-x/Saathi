@@ -211,7 +211,7 @@ export const messages = {
     ringFail: "Could not place the call.",
     testCall: "Test call",
     testCallHint:
-      "Ring their phone now to try the agent. The transcript, medicines, and any alerts show on History and Today even if this is not the morning call. The number must be on the allowlist. On a Bolna trial it must also be a Verified Number in Bolna.",
+      "Saathi rings Maa now, the same way as the morning call. What she says shows on Today and History.",
     ringExample: "The example desk does not place a live call. Open your family desk.",
     audioConsentOn: "Recording consent is on; no file attached in this example.",
     audioConsentOff: "No audio. She did not consent to recording.",
@@ -541,7 +541,7 @@ export const messages = {
     ringFail: "कॉल नहीं लग सकी।",
     testCall: "टेस्ट कॉल",
     testCallHint:
-      "अभी उनके फ़ोन पर साथी से कॉल लगवाएँ। बात, दवा और अलर्ट इतिहास और आज पर दिखेंगे, सुबह की कॉल न हो तब भी। नंबर अनुमति सूची में होना चाहिए। Bolna ट्रायल पर वह Verified Number भी होना चाहिए।",
+      "साथी अभी माँ को कॉल करेगा, बिल्कुल सुबह की कॉल की तरह। जो वो कहेंगी, आज और इतिहास में दिखेगा।",
     ringExample: "यह उदाहरण डेस्क है, असली कॉल नहीं लगेगी। अपना परिवार डेस्क खोलें।",
     audioConsentOn: "ऑडियो सहमति है, फ़ाइल नहीं जुड़ी।",
     audioConsentOff: "ऑडियो नहीं। सहमति नहीं है।",
