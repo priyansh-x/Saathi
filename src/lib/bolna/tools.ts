@@ -3,7 +3,7 @@ import { query } from "@/lib/db/client";
 import { markFamilyMessagePlayed, saveFamilyReply } from "@/lib/family-messages";
 import { istDayKey, istStamp, nowIstStamp } from "@/lib/time";
 
-function sha(text: string) {
+export function sha(text: string) {
   return createHash("sha256").update(text).digest("hex").slice(0, 24);
 }
 
@@ -12,7 +12,7 @@ export function nowIst() {
   return istStamp(day, 8, 34);
 }
 
-async function rememberTool(args: {
+export async function rememberTool(args: {
   callSid: string;
   parentId: string;
   tool: string;

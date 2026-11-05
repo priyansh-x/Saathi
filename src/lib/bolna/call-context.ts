@@ -1,3 +1,4 @@
+import { reachableContacts } from "@/lib/bolna/assist-tools";
 import { extractSystemPrompt } from "@/lib/bolna/agent-config";
 import { familyMessageContext } from "@/lib/family-messages";
 import { errandFollowupLine, pendingErrandFollowup } from "@/lib/partners/errands";
@@ -138,6 +139,11 @@ function medicinesDueTodayFlat(
 }
 
 /** Per-call Bolna user_data. Values are flat strings. EXAMPLE households only in tests. */
+/** The People you can message list the agent reads; matches what send_whatsapp_message accepts. */
+export function familyContactsLine(rows: { label: string }[]) {
+  return rows.length ? rows.map((row) => row.label).join(", ") : "Nobody yet";
+}
+
 export async function buildCallContext(parentId: string): Promise<CallContext> {
   const parents = await query<{
     first_name: string;
@@ -197,6 +203,7 @@ export async function buildCallContext(parentId: string): Promise<CallContext> {
     name: family.name,
     medicines: medicinesDueTodayText(due),
     medicines_due_today: medicinesDueTodayFlat(due),
+    family_contacts: familyContactsLine(await reachableContacts(parentId)),
   };
   return context;
 }

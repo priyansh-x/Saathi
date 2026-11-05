@@ -12,17 +12,36 @@ export const TOOL_TOKEN_PLACEHOLDER = "Bearer ${BOLNA_TOOL_TOKEN}";
 /** Spoken while a mid-call tool request runs. Must match the live Bolna agent. */
 export const TOOL_PRE_CALL_MESSAGE = "जी, एक सेकंड।";
 
+/** Spoken while a lookup (weather, search, news) runs; these can take a second or two. */
+export const LOOKUP_PRE_CALL_MESSAGE = "जी, अभी देखती हूँ।";
+
 const SPOKEN_PRE_CALL_TOOLS = new Set([
   "log_medicine",
   "raise_alert",
   "relay_message_to_family",
   "save_memory_note",
   "record_consent",
+  "send_whatsapp_message",
 ]);
+
+export const LOOKUP_TOOLS = new Set(["get_weather", "web_search", "get_news"]);
 
 function preCallMessageFor(name: string, fromSchema?: string) {
   if (SPOKEN_PRE_CALL_TOOLS.has(name)) return TOOL_PRE_CALL_MESSAGE;
+  if (LOOKUP_TOOLS.has(name)) return LOOKUP_PRE_CALL_MESSAGE;
   return fromSchema ?? "";
+}
+
+/**
+ * The agent's LLM. Defaults match the committed snapshot. Set BOLNA_LLM_PROVIDER and
+ * BOLNA_LLM_MODEL to the exact names Bolna shows for your model (for example the Grok
+ * model picked in the dashboard), or `bolna:sync --apply` would switch it back.
+ */
+export function bolnaLlmConfig(env: Record<string, string | undefined> = process.env) {
+  return {
+    provider: (env.BOLNA_LLM_PROVIDER || "").trim() || "openai",
+    model: (env.BOLNA_LLM_MODEL || "").trim() || "gpt-4.1-mini",
+  };
 }
 
 const TOOL_PATHS: Record<string, string> = {
@@ -34,6 +53,12 @@ const TOOL_PATHS: Record<string, string> = {
   save_family_reply: "/api/tools/save_family_reply",
   family_message_played: "/api/tools/family_message_played",
   request_refill: "/api/tools/request_refill",
+  send_whatsapp_message: "/api/tools/send_whatsapp_message",
+  get_weather: "/api/tools/get_weather",
+  web_search: "/api/tools/web_search",
+  get_news: "/api/tools/get_news",
+  get_date_time: "/api/tools/get_date_time",
+  get_medicine_schedule: "/api/tools/get_medicine_schedule",
 };
 
 export type JsonSchemaProperty = {
@@ -147,8 +172,13 @@ function extractJsonBlocks(md: string): unknown[] {
   while ((match = re.exec(md))) {
     try {
       blocks.push(JSON.parse(match[1]));
-    } catch {
-      /* skip extraction examples that are not standalone JSON */
+    } catch (err) {
+      // Extraction examples need not be standalone JSON, but a broken tool definition must
+      // not vanish from the agent without anyone noticing.
+      if (/"key"\s*:\s*"custom_task"/.test(match[1])) {
+        const name = match[1].match(/"name"\s*:\s*"([^"]+)"/)?.[1] ?? "unknown";
+        throw new Error(`tools_schema.md: tool ${name} is not valid JSON (${(err as Error).message})`);
+      }
     }
   }
   return blocks;
@@ -276,7 +306,11 @@ export function lineByLineDiff(built: string, snapshot: string) {
   return out;
 }
 
-export function buildBolnaAgent(root = process.cwd(), base = publicBaseUrl()): BolnaAgentV2 {
+export function buildBolnaAgent(
+  root = process.cwd(),
+  base = publicBaseUrl(),
+  env: Record<string, string | undefined> = process.env,
+): BolnaAgentV2 {
   const promptMd = readFileSync(path.join(root, SYSTEM_PROMPT_PATH), "utf8");
   const toolsMd = readFileSync(path.join(root, TOOLS_SCHEMA_PATH), "utf8");
   const prompt = injectConsentLines(extractSystemPrompt(promptMd));
@@ -302,10 +336,7 @@ export function buildBolnaAgent(root = process.cwd(), base = publicBaseUrl()): B
             llm_agent: {
               agent_type: "simple_llm_agent",
               agent_flow_type: "streaming",
-              llm_config: {
-                provider: "openai",
-                model: "gpt-4.1-mini",
-              },
+              llm_config: bolnaLlmConfig(env),
             },
             synthesizer: {
               provider: "sarvam",
@@ -406,7 +437,7 @@ export async function runBolnaSync(
   const env = opts.env ?? process.env;
   const { apply } = parseSyncArgs(argv);
   const base = (env.PUBLIC_BASE_URL || publicBaseUrl()).replace(/\/$/, "");
-  const agent = buildBolnaAgent(opts.root, base);
+  const agent = buildBolnaAgent(opts.root, base, env);
   const built = prettyAgent(agent);
   const snapshot = loadAgentSnapshot(opts.root);
   const snapText = snapshot ? prettyAgent(snapshot) : "";
