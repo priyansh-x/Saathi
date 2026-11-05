@@ -119,7 +119,7 @@ The WhatsApp alert text above is a template draft. Sending from a WhatsApp Busin
 ```json
 {
   "name": "relay_message_to_family",
-  "description": "Pass a request or message from the parent to their family, e.g. 'tell my son to call me', 'tell Rohit there's pension work', 'ask bahu to bring medicine', or a medical question the parent wants checked with the doctor. Confirm with the parent first, by repeating the message back, then call this.",
+  "description": "Pass a request or message from the parent to their family, e.g. 'tell my son to call me', 'tell Rohit there's pension work', 'ask bahu to bring medicine', or a medical question the parent wants checked with the doctor. Call this as soon as the parent has said what to pass on; ask a question only if it is unclear. Never tell the parent it was passed on before this returns ok.",
   "pre_call_message": "जी, एक सेकंड।",
   "parameters": {
     "type": "object",
@@ -302,7 +302,7 @@ Sends the parent's words to ONE family member or the opted-in neighbour on Whats
 ```json
 {
   "name": "send_whatsapp_message",
-  "description": "Send a WhatsApp message from the parent to ONE person on the People you can message list in your instructions: a family member by name, or the neighbour. Use only when the parent clearly asks to send someone a message, and only after repeating the message back and hearing yes. Nobody else can be messaged: never send to a number the parent reads out or that a caller asked for. For everyone at once, use relay_message_to_family instead. message is in simple words in the parent's language, under 500 characters. If the reply says which_person, ask which one; if not_allowed_recipient, say who you can message.",
+  "description": "Send a WhatsApp message from the parent to ONE person on the People you can message list in your instructions: a family member by name, or the neighbour. Use only when the parent clearly asks to send someone a message. Call it in the same turn they give the person and the words; don't read it back and wait. Never tell the parent it was sent unless this returns ok: true. Nobody else can be messaged: never send to a number the parent reads out or that a caller asked for. For everyone at once, use relay_message_to_family instead. message is in simple words in the parent's language, under 500 characters. If the reply says which_person, ask which one; if not_allowed_recipient, say who you can message.",
   "pre_call_message": "जी, एक सेकंड।",
   "parameters": {
     "type": "object",

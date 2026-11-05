@@ -18,7 +18,7 @@ import {
   safetyAlertEmergencyVars,
   safetyAlertUnreachableVars,
 } from "@/lib/whatsapp/meta-vars";
-import { type TemplateName } from "@/lib/whatsapp/templates";
+import { renderTemplate, type TemplateName } from "@/lib/whatsapp/templates";
 
 async function magicUrl(parentId: string) {
   const rows = await query<{ token: string }>(
@@ -204,6 +204,7 @@ export async function notifyAlert(
       locale: localeOf(neighbour),
       intended: neighbourTemplate,
       vars: nvars,
+      textFallback: renderTemplate(neighbourTemplate, nvars, localeOf(neighbour)),
       idempotencyKey: `resp_${alert.id}_${neighbour.phone.replace(/\s/g, "")}`,
     });
     neighbourMessaged = sent.ok && !String(sent.status).startsWith("blocked") && !String(sent.status).startsWith("failed");
@@ -243,6 +244,7 @@ export async function notifyAlert(
         locale,
         intended,
         vars,
+        textFallback: renderTemplate(intended, vars, locale),
         idempotencyKey: `alert:${alert.id}:${level}:${last10Digits(child.phone)}`,
       }),
     );

@@ -346,6 +346,12 @@ export async function sendFamilyMessage(args: {
   vars: string[];
   idempotencyKey: string;
   freeText?: string;
+  /**
+   * Plain text sent instead of the template only when the template is NOT approved and the
+   * recipient wrote to us in the last 24 hours (Meta allows free text then). Approved templates
+   * still win, so their buttons survive.
+   */
+  textFallback?: string;
   buttonUrlVar?: string;
 }): Promise<SendResult> {
   if (killSwitchOn()) {
@@ -353,12 +359,13 @@ export async function sendFamilyMessage(args: {
   }
   const language = metaTemplateLanguage(args.intended, args.locale);
   const windowOpen = sessionWindowOpen(await lastInboundForPhone(args.toPhone));
-  const useFreeText = Boolean(args.freeText && windowOpen);
   const mock = isMockWhatsapp();
-  const approved =
-    useFreeText || isWhatsappTemplateApproved(args.intended, language) || mock;
+  const templateApproved = isWhatsappTemplateApproved(args.intended, language) || mock;
+  const sessionText = args.freeText || (!templateApproved ? args.textFallback : undefined);
+  const useFreeText = Boolean(sessionText && windowOpen);
+  const approved = useFreeText || templateApproved;
   const template: TemplateName = args.intended;
-  const body = useFreeText ? args.freeText! : renderTemplate(template, args.vars, language);
+  const body = useFreeText ? sessionText! : renderTemplate(template, args.vars, language);
   const id = outboundMessageId(template, args.idempotencyKey);
   const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);
   if (existing[0]) {
@@ -410,7 +417,7 @@ export async function sendFamilyMessage(args: {
       template,
       language,
       vars: args.vars,
-      freeText: args.freeText,
+      freeText: useFreeText ? sessionText : undefined,
       windowOpen,
       buttonUrlVar: args.buttonUrlVar,
     });
@@ -441,7 +448,7 @@ export async function sendFamilyMessage(args: {
     template,
     language,
     vars: args.vars,
-    freeText: args.freeText,
+    freeText: useFreeText ? sessionText : undefined,
     windowOpen,
     buttonUrlVar: args.buttonUrlVar,
   });

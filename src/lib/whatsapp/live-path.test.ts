@@ -39,7 +39,7 @@ const family: OnboardInput = {
   toldParent: true,
 };
 
-type Sent = { to: string; type: string; name?: string };
+type Sent = { to: string; type: string; name?: string; text?: string };
 let sent: Sent[] = [];
 let metaReply: () => Response = () => new Response(JSON.stringify({ messages: [{ id: "wamid.TEST" }] }), { status: 200 });
 const saved: Record<string, string | undefined> = {};
@@ -73,8 +73,13 @@ beforeEach(() => {
   sent = [];
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     if (String(input).includes("graph.facebook.com")) {
-      const body = JSON.parse(String(init?.body ?? "{}")) as { to: string; type: string; template?: { name: string } };
-      sent.push({ to: body.to, type: body.type, name: body.template?.name });
+      const body = JSON.parse(String(init?.body ?? "{}")) as {
+        to: string;
+        type: string;
+        template?: { name: string };
+        text?: { body: string };
+      };
+      sent.push({ to: body.to, type: body.type, name: body.template?.name, text: body.text?.body });
       return metaReply();
     }
     return originalFetch(input, init);
@@ -191,5 +196,68 @@ describe("live WhatsApp path", () => {
     );
     assert.equal(row[0]?.whatsapp_opt_in, true);
     assert.equal(row[0]?.whatsapp_opted_out_at, null);
+  });
+
+  describe("alerts whose template Meta has not approved", () => {
+    // safety_alert_emergency is not on LIVE_ENV's approved list, like production on 5 Nov.
+    async function emergencyFor(childPhone: string, parentPhone: string, email: string) {
+      const created = await createHousehold(
+        { ...family, childWhatsapp: childPhone, parentPhone, neighborName: "", neighborPhone: "" },
+        email,
+      );
+      const alertId = `live_emerg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      return { parentId: created.parentId, alertId };
+    }
+
+    it("go out as plain text when the member wrote to us in the last 24 hours", async () => {
+      const phone = "+910000000041";
+      process.env.ALLOWED_PHONE_NUMBERS = `${LIVE_ENV.ALLOWED_PHONE_NUMBERS},${phone}`;
+      const { parentId, alertId } = await emergencyFor(phone, "+910000000042", "window@example.com");
+      await query(`update contacts set last_inbound_at = $2 where parent_id = $1 and role = 'child'`, [
+        parentId,
+        new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      ]);
+      sent = [];
+      await notifyAlert(parentId, { id: alertId, quote: "chest mein dard", created_at: "2026-11-05T18:26:00+05:30", category: "EMERGENCY", level: "act" });
+      const text = sent.find((row) => row.to === "910000000041");
+      assert.ok(text, `nothing sent: ${JSON.stringify(sent)}`);
+      assert.equal(text.type, "text");
+      assert.match(text.text ?? "", /chest mein dard/);
+      assert.match(text.text ?? "", /112/);
+      const rows = await query<{ status: string }>(
+        `select status from outbound_messages where parent_id = $1 and channel = 'whatsapp'`,
+        [parentId],
+      );
+      assert.deepEqual(rows.map((row) => row.status), ["sent"]);
+    });
+
+    it("are still blocked, and pushed instead, when the 24-hour window is closed", async () => {
+      const phone = "+910000000043";
+      process.env.ALLOWED_PHONE_NUMBERS = `${LIVE_ENV.ALLOWED_PHONE_NUMBERS},${phone}`;
+      const { parentId, alertId } = await emergencyFor(phone, "+910000000044", "closed@example.com");
+      sent = [];
+      await notifyAlert(parentId, { id: alertId, quote: "chest mein dard", created_at: "2026-11-05T18:26:00+05:30", category: "EMERGENCY", level: "act" });
+      assert.deepEqual(sent, []);
+      const rows = await query<{ status: string }>(
+        `select status from outbound_messages where parent_id = $1 and channel = 'whatsapp'`,
+        [parentId],
+      );
+      assert.deepEqual(rows.map((row) => row.status), ["blocked_unapproved_template"]);
+    });
+
+    it("an approved template still wins inside the window, so its buttons survive", async () => {
+      const phone = "+910000000045";
+      process.env.ALLOWED_PHONE_NUMBERS = `${LIVE_ENV.ALLOWED_PHONE_NUMBERS},${phone}`;
+      const { parentId, alertId } = await emergencyFor(phone, "+910000000046", "approved@example.com");
+      await query(`update contacts set last_inbound_at = $2 where parent_id = $1 and role = 'child'`, [
+        parentId,
+        new Date().toISOString(),
+      ]);
+      sent = [];
+      await notifyAlert(parentId, { id: alertId, quote: "No answer", created_at: "2026-11-05T08:40:00+05:30", category: "MISSED", level: "look" });
+      const row = sent.find((r) => r.to === "910000000045");
+      assert.equal(row?.type, "template");
+      assert.equal(row?.name, "safety_alert_unreachable");
+    });
   });
 });

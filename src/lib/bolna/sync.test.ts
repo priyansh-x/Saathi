@@ -88,6 +88,17 @@ describe("bolna:sync agent JSON", () => {
     }
   });
 
+  it("tells the agent to send messages in the turn it has them, and never claim a send that did not happen", () => {
+    const agent = buildBolnaAgent(process.cwd(), "https://saathi.test", {});
+    const prompt = JSON.stringify(agent);
+    // 5 Nov: the agent read "hello ananya" back, waited for a "haan" that never came, and nothing was sent.
+    assert.doesNotMatch(prompt, /wait for \\"haan\\"/);
+    assert.doesNotMatch(prompt, /after repeating the message back and hearing yes/);
+    assert.match(prompt, /call `send_whatsapp_message` in that same turn/);
+    assert.match(prompt, /Never end your turn with \\"I'll send it\\"/);
+    assert.match(prompt, /unless the tool replied `ok: true`/);
+  });
+
   it("keeps the committed snapshot in sync with the builder", () => {
     const agent = buildBolnaAgent(process.cwd(), "http://127.0.0.1:43147");
     const snapshot = loadAgentSnapshot();
