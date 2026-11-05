@@ -113,7 +113,7 @@ export async function sendPushToFamily(parentId: string, title: string, body: st
   const results = [];
   for (const child of children) {
     const gate = gateOutbound("push", child.phone);
-    const id = `out_push_${idempotencyKey}_${child.phone.replace(/\s/g, "")}`.slice(0, 80);
+    const id = `out_push_${idempotencyKey}_${child.phone.replace(/\s/g, "")}`.slice(0, 160);
     const existing = await query<{ id: string }>(`select id from outbound_messages where id = $1`, [id]);
     if (existing[0]) {
       results.push({ ok: true, id, status: "duplicate" });

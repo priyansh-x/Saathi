@@ -329,9 +329,10 @@ export function OnboardWizard({ lang, fromEmail = "" }: { lang: Lang; fromEmail?
                 placeholder="Ananya"
               />
             </Field>
-            <Field label={t.setupYourWhatsapp} htmlFor="childWhatsapp">
+            <Field label={t.setupYourWhatsapp} htmlFor="childWhatsapp" hint={t.setupWhatsappHint}>
               <Input
                 id="childWhatsapp"
+                aria-describedby="childWhatsapp-hint"
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
@@ -712,16 +713,24 @@ function toHousehold(form: OnboardInput): Household {
 function Field({
   label,
   htmlFor,
+  hint,
   children,
 }: {
   label: string;
   htmlFor: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
+  const hintId = hint ? `${htmlFor}-hint` : undefined;
   return (
     <div className="space-y-1.5">
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
+      {hint ? (
+        <p id={hintId} className="text-[13px] leading-snug text-muted-foreground">
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }

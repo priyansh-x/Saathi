@@ -66,8 +66,9 @@ export async function createHousehold(input: OnboardInput, childEmail: string) {
   );
 
   await query(
-    `insert into contacts (id, parent_id, role, full_name, first_name, phone, locale, is_example, email, is_owner)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+    // whatsapp_opt_in: they typed their own number under "we send the morning note and alerts here".
+    `insert into contacts (id, parent_id, role, full_name, first_name, phone, locale, is_example, email, is_owner, whatsapp_opt_in)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true)`,
     [
       id("contact"),
       parentId,

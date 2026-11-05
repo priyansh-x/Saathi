@@ -1,3 +1,4 @@
+import { last10Digits } from "@/lib/phone";
 import { contactsFor, dosesOnDay, openActAlerts } from "@/lib/db/queries";
 import { childrenFor } from "@/lib/members";
 import { neighbourOptedIn } from "@/lib/neighbour";
@@ -156,7 +157,8 @@ export async function sendDailyBriefing(
         intended,
         vars,
         buttonUrlVar: token,
-        idempotencyKey: `briefing:${call.id}`,
+        // One row per member: a family-wide key made everyone after the first a "duplicate".
+        idempotencyKey: `briefing:${call.id}:${last10Digits(child.phone)}`,
       }),
     );
   }
@@ -241,7 +243,7 @@ export async function notifyAlert(
         locale,
         intended,
         vars,
-        idempotencyKey: `alert:${alert.id}:${level}`,
+        idempotencyKey: `alert:${alert.id}:${level}:${last10Digits(child.phone)}`,
       }),
     );
   }

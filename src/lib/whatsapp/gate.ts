@@ -36,8 +36,18 @@ export function isWhatsappOptOutText(text: string) {
   return t === "stop" || t === "band" || t === "बंद";
 }
 
+/** Meta wants the country code. A stored 10-digit Indian mobile gets 91 in front. */
+/** START / शुरू after a STOP turns WhatsApp back on for that number. */
+export function isWhatsappOptInText(text: string) {
+  const t = text.trim().toLowerCase();
+  return t === "start" || t === "shuru" || t === "शुरू";
+}
+
 export function metaRecipientDigits(phone: string) {
-  return phone.replace(/\D/g, "");
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) return `91${digits}`;
+  if (digits.length === 11 && digits.startsWith("0")) return `91${digits.slice(1)}`;
+  return digits;
 }
 
 export function maskPhoneLast4(phone: string) {
