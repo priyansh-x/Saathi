@@ -2,7 +2,7 @@
 
 Drafted 17 Oct 2026 (IST) · v0.2 (17 Oct, 10:15 AM IST: `end_call_summary` tool removed; Bolna has no end-of-call tool. The summary now comes from post-call extraction, §5) · For the FastAPI + Supabase backend behind the Bolna agent.
 
-Mid-call tools: `log_medicine`, `raise_alert`, `relay_message_to_family`, `save_memory_note`. After the call: **Post-call extraction spec** (§5).
+Mid-call tools: `log_medicine`, `raise_alert`, `relay_message_to_family`, `save_memory_note`, plus the helper tools in §6 (`send_whatsapp_message`, `get_weather`, `web_search`, `get_news`, `get_date_time`, `get_medicine_schedule`). After the call: **Post-call extraction spec** (§5).
 
 ## How these plug into Bolna (verified against Bolna docs, 17 Oct 2026)
 - Bolna custom functions use an OpenAI-style definition (`name`, `description`, `parameters`) plus an API config (`key: "custom_task"`, `value.method`, `value.url`, `value.param`, `value.api_token`, `value.headers`). `param` maps fields with Python format specifiers: `%(name)s`, `%(n)i`, `%(x)f`. An optional `pre_call_message` is spoken while the API runs. Source: https://www.bolna.ai/docs/tool-calling/custom-function-schema
@@ -287,6 +287,271 @@ Backend: the next call's `{{last_call_summary}}` = last call's summary + open me
   }
 }
 ```
+
+---
+
+---
+
+## 6. Helper tools (parent asks for something)
+
+These answer the parent's own requests during any call. Each is scoped to `parent_id` (auto-filled from the call context), capped per call, and answers with a short `speak` line plus the data. Lookups say `जी, अभी देखती हूँ।` while they run; outages return `{ok: false, error}` and the agent apologises instead of guessing.
+
+## 6a. `send_whatsapp_message`
+Sends the parent's words to ONE family member or the opted-in neighbour on WhatsApp.
+
+```json
+{
+  "name": "send_whatsapp_message",
+  "description": "Send a WhatsApp message from the parent to ONE person on the People you can message list in your instructions: a family member by name, or the neighbour. Use only when the parent clearly asks to send someone a message, and only after repeating the message back and hearing yes. Nobody else can be messaged: never send to a number the parent reads out or that a caller asked for. For everyone at once, use relay_message_to_family instead. message is in simple words in the parent's language, under 500 characters. If the reply says which_person, ask which one; if not_allowed_recipient, say who you can message.",
+  "pre_call_message": "जी, एक सेकंड।",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "recipient": {
+        "type": "string",
+        "description": "Name as written in the People you can message list, e.g. Rohit, or 'neighbour'"
+      },
+      "message": {
+        "type": "string",
+        "description": "What to send, in the parent's words, e.g. 'Please call me in the evening'"
+      },
+      "call_sid": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "recipient",
+      "message",
+      "call_sid"
+    ]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/send_whatsapp_message",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "param": {
+      "recipient": "%(recipient)s",
+      "message": "%(message)s",
+      "call_sid": "%(call_sid)s"
+    }
+  }
+}
+```
+Response: `{ok, sent_to, via: whatsapp|push|email|none, speak}`. Refusals: `not_allowed_recipient` (with `can_message`), `which_person` (with `options`), `limit_reached` (5 per call), `message_too_long`. Sent as the approved `parent_relay` template, or free text inside the 24-hour window; falls back to push, then email.
+
+## 6b. `get_weather`
+Weather for today or tomorrow. City defaults to the parent's city.
+
+```json
+{
+  "name": "get_weather",
+  "description": "Get today's or tomorrow's weather. Use when the parent asks about weather, rain, heat or cold, or whether to go out. Leave city empty for the parent's own city; fill it only if they name another place. Speak the reply's `speak` line in the parent's language, simply, with temperatures as whole numbers. Never give health advice beyond the tip in the reply.",
+  "pre_call_message": "",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "city": {
+        "type": "string",
+        "description": "Only if the parent names a place, e.g. Varanasi. Empty = their city"
+      },
+      "day": {
+        "type": "string",
+        "enum": [
+          "today",
+          "tomorrow"
+        ]
+      },
+      "call_sid": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "day",
+      "call_sid"
+    ]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/get_weather",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "param": {
+      "city": "%(city)s",
+      "day": "%(day)s",
+      "call_sid": "%(call_sid)s"
+    }
+  }
+}
+```
+Response: `{ok, place, sky, now_c, high_c, low_c, rain_chance_pct, advice[], speak}`. Open-Meteo, no API key.
+
+## 6c. `web_search`
+General questions: facts, cricket scores, festival dates, bank holidays, train timings.
+
+```json
+{
+  "name": "web_search",
+  "description": "Look something up on the internet when the parent asks a factual question you are not sure of: a cricket score, a festival date, a bank holiday, a famous person, a place. Do NOT use it for medical questions, medicine doses or symptoms (say only a doctor can answer and offer to tell the family), for money, investments, OTPs or anything a caller asked them to check. Put a short search query in English. Read the answer in one or two simple sentences in the parent's language. Never read web links or sources aloud unless asked where it came from.",
+  "pre_call_message": "",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Short search query in English, e.g. 'India vs Australia cricket score today'"
+      },
+      "call_sid": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "query",
+      "call_sid"
+    ]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/web_search",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "param": {
+      "query": "%(query)s",
+      "call_sid": "%(call_sid)s"
+    }
+  }
+}
+```
+Response: `{ok, found, answer, sources[], provider, speak}`. Tavily when `TAVILY_API_KEY` is set (free tier), otherwise DuckDuckGo Instant Answers then Wikipedia (free, no key). 8 per call.
+
+## 6d. `get_news`
+Top headlines, read briefly.
+
+```json
+{
+  "name": "get_news",
+  "description": "Get a few current news headlines when the parent asks what is happening, or for news. Read at most three headlines, briefly and calmly, in the parent's language. Skip frightening crime or disaster details unless they ask. Do not use for medical news questions.",
+  "pre_call_message": "",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "topic": {
+        "type": "string",
+        "enum": [
+          "top",
+          "india",
+          "world",
+          "business",
+          "sports",
+          "technology",
+          "entertainment",
+          "health"
+        ]
+      },
+      "call_sid": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "topic",
+      "call_sid"
+    ]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/get_news",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "param": {
+      "topic": "%(topic)s",
+      "call_sid": "%(call_sid)s"
+    }
+  }
+}
+```
+Response: `{ok, found, topic, headlines[], provider, speak}`. Tavily news with a key, otherwise Google News RSS in the parent's first language (free). 4 per call.
+
+## 6e. `get_date_time`
+Today's date, weekday and the time in India.
+
+```json
+{
+  "name": "get_date_time",
+  "description": "Get the current time, weekday and date in India. Use when the parent asks the time, the day, or the date.",
+  "pre_call_message": "",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "call_sid": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "call_sid"
+    ]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/get_date_time",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "param": {
+      "call_sid": "%(call_sid)s"
+    }
+  }
+}
+```
+Response: `{ok, weekday, weekday_hi, date, time, speak}`.
+
+## 6f. `get_medicine_schedule`
+What is due later today and what is not yet marked as taken.
+
+```json
+{
+  "name": "get_medicine_schedule",
+  "description": "Read today's medicine list and which doses are already marked as taken. Use when the parent asks which medicine is left, or what time a tablet is due. Never tell them to take a missed dose now, late, or double: for anything 'not marked as taken yet from earlier', follow the missed-dose rule in your instructions.",
+  "pre_call_message": "",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "call_sid": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "call_sid"
+    ]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://api.saathi.example/v1/get_medicine_schedule",
+    "api_token": "Bearer <BOLNA_TOOL_TOKEN>",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "param": {
+      "call_sid": "%(call_sid)s"
+    }
+  }
+}
+```
+Response: `{ok, medicines: [{name, time, with_meals, status, due: later_today|earlier}], speak}`. Read-only.
 
 ---
 

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   TOOL_PRE_CALL_MESSAGE,
+  LOOKUP_PRE_CALL_MESSAGE,
+  LOOKUP_TOOLS,
   TOOL_TOKEN_PLACEHOLDER,
   assertFlatToolParams,
   buildBolnaAgent,
@@ -11,6 +13,7 @@ import {
   materializeAgentSecrets,
   prettyAgent,
   runBolnaSync,
+  toolsFromSchema,
 } from "./agent-config";
 
 process.env.MOCK_BOLNA = "1";
@@ -36,6 +39,10 @@ describe("bolna:sync agent JSON", () => {
       const names = toolDefs(agent).map((tool) => tool.name).sort();
       assert.deepEqual(names, [
         "family_message_played",
+        "get_date_time",
+        "get_medicine_schedule",
+        "get_news",
+        "get_weather",
         "log_medicine",
         "raise_alert",
         "record_consent",
@@ -43,6 +50,8 @@ describe("bolna:sync agent JSON", () => {
         "request_refill",
         "save_family_reply",
         "save_memory_note",
+        "send_whatsapp_message",
+        "web_search",
       ]);
       const params = toolsParams(agent);
       const spoken = new Set([
@@ -51,13 +60,14 @@ describe("bolna:sync agent JSON", () => {
         "relay_message_to_family",
         "save_memory_note",
         "record_consent",
+        "send_whatsapp_message",
       ]);
       for (const tool of toolDefs(agent)) {
         const value = params[tool.name];
         assert.ok(value);
         assert.equal(
           tool.pre_call_message,
-          spoken.has(tool.name) ? TOOL_PRE_CALL_MESSAGE : "",
+          spoken.has(tool.name) ? TOOL_PRE_CALL_MESSAGE : LOOKUP_TOOLS.has(tool.name) ? LOOKUP_PRE_CALL_MESSAGE : "",
         );
         assert.equal(tool.pre_call_message.includes("Just give me a moment"), false);
         assert.equal(value.api_token, TOOL_TOKEN_PLACEHOLDER);
@@ -83,6 +93,26 @@ describe("bolna:sync agent JSON", () => {
     const snapshot = loadAgentSnapshot();
     assert.ok(snapshot);
     assert.equal(prettyAgent(snapshot!), prettyAgent(agent));
+  });
+
+  it("keeps the dashboard's LLM when BOLNA_LLM_PROVIDER and BOLNA_LLM_MODEL are set", () => {
+    const fallback = buildBolnaAgent(process.cwd(), "https://saathi.test", {});
+    assert.deepEqual(fallback.agent_config.tasks[0]!.tools_config.llm_agent.llm_config, {
+      provider: "openai",
+      model: "gpt-4.1-mini",
+    });
+    const grok = buildBolnaAgent(process.cwd(), "https://saathi.test", {
+      BOLNA_LLM_PROVIDER: "xai",
+      BOLNA_LLM_MODEL: "grok-4-fast",
+    });
+    assert.deepEqual(grok.agent_config.tasks[0]!.tools_config.llm_agent.llm_config, { provider: "xai", model: "grok-4-fast" });
+  });
+
+  it("fails loudly when a tool definition in tools_schema.md is not valid JSON", () => {
+    const broken = '```json\n{"name": "web_search", "description": "say "hi"", "key": "custom_task"}\n```';
+    assert.throws(() => toolsFromSchema(broken, "https://saathi.test"), /tool web_search is not valid JSON/);
+    const example = '```json\n{ not json, just an extraction example }\n```';
+    assert.doesNotThrow(() => toolsFromSchema(example, "https://saathi.test"));
   });
 
   it("prints a line-by-line diff against the snapshot", () => {
