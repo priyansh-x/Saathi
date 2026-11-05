@@ -1,4 +1,5 @@
 import type { AlertRow, AttemptRow, CallRow, DoseLog } from "@/lib/db/types";
+import { testRingDailyCap } from "@/lib/config";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { clockFromMinutes, formatClock, formatDuration, formatFriendlyTime, parseHhMm, parseIstParts } from "@/lib/time";
 
@@ -250,6 +251,7 @@ export function ringCopy(reason: string | undefined, lang: Lang) {
   if (reason === "missing_bolna_key") return t.ringBolnaAuth;
   if (reason === "kill_switch") return t.ringFail;
   if (reason === "ring_rate_limit") return t.ringWait.replace("{n}", "10");
+  if (reason === "ring_daily_cap") return t.ringDailyCap.replace("{n}", String(testRingDailyCap()));
   const wait = /^wait_(\d+)$/.exec(reason);
   if (wait) return t.ringWait.replace("{n}", wait[1]);
   return t.ringFail;

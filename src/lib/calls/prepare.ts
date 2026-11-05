@@ -1,3 +1,4 @@
+import { testRingDailyCap as testRingDailyCapFromConfig } from "@/lib/config";
 import { bolnaPlaceReason } from "@/lib/calls/bolna-error";
 import {
   allowBolnaGuardrailBypass,
@@ -158,7 +159,7 @@ export function isPreparedCall(value: PlaceCallResult | PreparedCall): value is 
   return "payload" in value && "parentId" in value;
 }
 
-export const TEST_RING_DAILY_CAP = 3;
+export { TEST_RING_DAILY_CAP_DEFAULT, testRingDailyCap } from "@/lib/config";
 export const TEST_RING_COOLDOWN_MIN = 10;
 
 export async function testRingsPlacedToday(parentId: string, clock: Date = new Date()) {
@@ -184,21 +185,16 @@ export async function lastTestRingAt(parentId: string, clock: Date = new Date())
   return rows[0]?.at ?? null;
 }
 
-function minutesUntilIstMidnight(clock: Date) {
-  const { end } = istDayBounds(istDayKey(clock));
-  return Math.max(1, Math.ceil((Date.parse(end) - clock.getTime()) / 60_000));
-}
-
 export async function testRingLimit(
   parentId: string,
   phone: string,
   clock: Date = new Date(),
 ): Promise<PlaceCallResult | { ok: true }> {
   const placed = await testRingsPlacedToday(parentId, clock);
-  if (placed >= TEST_RING_DAILY_CAP) {
-    const retryInMin = minutesUntilIstMidnight(clock);
-    await rememberBlockedDial(parentId, phone, "ring_rate_limit", clock);
-    return { ok: false as const, reason: "ring_rate_limit", retryInMin };
+  if (placed >= testRingDailyCapFromConfig()) {
+    // Not "try again in N min": the wait is until midnight, which reads as a bug in minutes.
+    await rememberBlockedDial(parentId, phone, "ring_daily_cap", clock);
+    return { ok: false as const, reason: "ring_daily_cap" };
   }
   const last = await lastTestRingAt(parentId, clock);
   if (last) {
