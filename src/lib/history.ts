@@ -183,3 +183,94 @@ export function callLanguageLabel(lang: Lang, spoken?: string | null) {
   const hi = spoken === "hi" || spoken?.startsWith("hi");
   return hi ? (lang === "hi" ? "हिंदी" : "Hindi") : lang === "hi" ? "अंग्रेज़ी" : "English";
 }
+
+/* ---------- Month calendar ---------- */
+
+export type DayStatus = "answered" | "missed" | "skipped" | "none";
+
+/** "2026-11" from "2026-11-05". */
+export function monthKeyOf(day: string) {
+  return day.slice(0, 7);
+}
+
+export function shiftMonth(monthKey: string, delta: number) {
+  const [y, m] = monthKey.split("-").map(Number);
+  const index = y * 12 + (m - 1) + delta;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+}
+
+export function daysInMonth(monthKey: string) {
+  const [y, m] = monthKey.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+
+/** Monday-first weeks; null pads the leading and trailing cells. */
+export function monthGrid(monthKey: string): (string | null)[] {
+  const first = `${monthKey}-01`;
+  const lead = mondayIndex(first);
+  const total = daysInMonth(monthKey);
+  const cells: (string | null)[] = Array.from({ length: lead }, () => null);
+  for (let d = 1; d <= total; d++) cells.push(`${monthKey}-${String(d).padStart(2, "0")}`);
+  while (cells.length % 7) cells.push(null);
+  return cells;
+}
+
+const MONTH_LONG_EN = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const MONTH_LONG_HI = [
+  "जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून",
+  "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर",
+];
+
+export function monthTitle(monthKey: string, lang: Lang) {
+  const [y, m] = monthKey.split("-").map(Number);
+  return `${(lang === "hi" ? MONTH_LONG_HI : MONTH_LONG_EN)[m - 1]} ${y}`;
+}
+
+/** Column heads, Monday first. */
+export function weekdayInitials(lang: Lang) {
+  return lang === "hi" ? ["सो", "मं", "बु", "गु", "शु", "श", "र"] : ["M", "T", "W", "T", "F", "S", "S"];
+}
+
+/** One answered call makes the day answered; otherwise a missed call makes it missed. */
+export function dayStatus(dayCalls: CallRow[]): DayStatus {
+  if (dayCalls.some((c) => c.status === "completed")) return "answered";
+  if (dayCalls.some((c) => c.status === "missed" || c.status === "failed" || c.status === "in_progress")) return "missed";
+  if (dayCalls.length) return "skipped";
+  return "none";
+}
+
+export function dayAlerts(alerts: AlertRow[], calls: CallRow[], day: string) {
+  const ids = new Set(callsOnDay(calls, day).map((c) => c.id));
+  return alerts.filter((a) => a.created_at.startsWith(day) || (a.call_id != null && ids.has(a.call_id)));
+}
+
+/** Totals for the days of a month that have happened, from the first loaded day on. */
+export function monthStats(
+  monthKey: string,
+  today: string,
+  firstDay: string,
+  calls: CallRow[],
+  doses: DoseLog[],
+  alerts: AlertRow[],
+  medicineIds: string[],
+) {
+  let answered = 0;
+  let placed = 0;
+  let taken = 0;
+  let expected = 0;
+  let alertDays = 0;
+  for (const day of monthGrid(monthKey)) {
+    if (!day || day > today || day < firstDay) continue;
+    const dayCalls = callsOnDay(calls, day);
+    placed += dayCalls.length;
+    answered += dayCalls.filter((c) => c.status === "completed").length;
+    const meds = medsOnDay(doses, day, medicineIds);
+    taken += meds.taken;
+    expected += meds.total;
+    if (dayAlerts(alerts, calls, day).length) alertDays += 1;
+  }
+  return { answered, placed, taken, expected, alertDays };
+}
