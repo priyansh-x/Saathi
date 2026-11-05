@@ -45,7 +45,7 @@ export function Avatar({
   return (
     <span
       aria-hidden
-      className="grid shrink-0 place-items-center rounded-full bg-brand-soft font-serif text-brand-deep ring-2 ring-card"
+      className="grid shrink-0 place-items-center rounded-full bg-brand-soft font-semibold text-brand-deep ring-2 ring-card"
       style={{ width: size, height: size, fontSize: size * 0.48 }}
     >
       {initial}
@@ -75,7 +75,7 @@ export function ActBanner({
       href={`/d/${token}/alerts/${first.id}${qs({ lang })}`}
       className="mx-4 mb-3 flex min-h-12 items-center gap-3 rounded-full bg-alert py-2 pr-4 pl-2 text-sm text-white shadow-[var(--shadow-float)]"
     >
-      <span className="ring-pulse grid size-8 shrink-0 place-items-center rounded-full bg-white/15">
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/15">
         <IconAlert className="size-4" />
       </span>
       <span className="min-w-0 flex-1 truncate">
@@ -221,7 +221,7 @@ export function EmptyState({
   body?: string;
 }) {
   return (
-    <div className="card grain flex flex-col items-center px-6 py-10 text-center">
+    <div className="card flex flex-col items-center px-6 py-10 text-center">
       <MarkSvg className="mb-4 size-12" />
       <p className="text-[17px] font-semibold">{title}</p>
       {body ? <p className="mt-1.5 max-w-[30ch] text-[15px] text-muted-foreground">{body}</p> : null}
@@ -328,8 +328,8 @@ export function PaneBusy() {
   return (
     <div className="pt-4" aria-busy>
       <div className="h-8 w-32 animate-pulse rounded-full bg-muted" />
-      <div className="mt-4 h-40 animate-pulse rounded-[22px] bg-card" />
-      <div className="mt-3 h-24 animate-pulse rounded-[22px] bg-card" />
+      <div className="mt-4 h-40 animate-pulse rounded-3xl bg-card" />
+      <div className="mt-3 h-24 animate-pulse rounded-3xl bg-card" />
     </div>
   );
 }
@@ -342,9 +342,9 @@ export function LoadingState({ lang = "en" }: { lang?: Lang }) {
         <div className="h-4 w-32 animate-pulse rounded-full bg-muted" />
       </div>
       <p className="sr-only">{messages[lang].opening}</p>
-      <div className="mt-6 h-52 animate-pulse rounded-[28px] bg-card" />
-      <div className="mt-4 h-24 animate-pulse rounded-[22px] bg-card" />
-      <div className="mt-4 h-24 animate-pulse rounded-[22px] bg-card" />
+      <div className="mt-6 h-52 animate-pulse rounded-3xl bg-card" />
+      <div className="mt-4 h-24 animate-pulse rounded-3xl bg-card" />
+      <div className="mt-4 h-24 animate-pulse rounded-3xl bg-card" />
     </div>
   );
 }

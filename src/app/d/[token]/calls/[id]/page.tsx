@@ -9,7 +9,8 @@ import { readLang } from "@/lib/family-load";
 import { callBullets, callLanguageLabel, callTranscriptLines, qs } from "@/lib/history";
 import { messages, type Lang } from "@/lib/i18n/messages";
 import { formatCallHeader, toIsoString } from "@/lib/time";
-import { doseMark, ringCopy, slotLabel } from "@/lib/today";
+import { ringCopy, slotLabel } from "@/lib/today";
+import { DosePill } from "@/components/family/today-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -171,16 +172,18 @@ export default async function CallDetailPage({
       </section>
 
       {doses.length > 0 ? (
-        <section className="card mt-5 px-4 py-3">
-          <p className="text-sm text-muted-foreground">{t.medicinesToday}</p>
-          <ul className="mt-2 space-y-2">
+        <section className="mt-5">
+          <p className="section-label">{t.medicinesToday}</p>
+          <ul className="list-group mt-2">
             {doses.map((dose) => (
-              <li key={String(dose.medicine_id || dose.id)} className="flex items-baseline justify-between gap-3">
-                <span>
-                  {String(dose.name || "")}{" "}
-                  <span className="text-sm text-muted-foreground">{slotLabel(String(dose.meal || ""), lang)}</span>
+              <li key={String(dose.medicine_id || dose.id)} className="list-row">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[16px] font-medium">{String(dose.name || "")}</span>
+                  <span className="block text-[13px] text-ink-3">{slotLabel(String(dose.meal || ""), lang)}</span>
                 </span>
-                <span className="text-sm">{doseMark(dose.status, lang)}</span>
+                <span className="shrink-0">
+                  <DosePill status={dose.status} lang={lang} />
+                </span>
               </li>
             ))}
           </ul>

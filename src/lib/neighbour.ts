@@ -47,6 +47,12 @@ export async function recordNeighbourReply(parentId: string, yes: boolean) {
     yes ? "whatsapp_yes" : "whatsapp_no",
     false,
   ]);
+  // The send gate reads the contact row, not consents. Without this a neighbour's yes never let an alert through.
+  await query(
+    `update contacts set whatsapp_opt_in = $2, whatsapp_opted_out_at = case when $2 then null else whatsapp_opted_out_at end
+      where parent_id = $1 and role = 'neighbour'`,
+    [parentId, yes],
+  );
   return { ok: true as const, granted: yes };
 }
 

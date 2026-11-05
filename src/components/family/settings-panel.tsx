@@ -24,9 +24,9 @@ import { ringCopy } from "@/lib/today";
 
 function optLabel(granted: boolean | undefined, lang: Lang) {
   const t = messages[lang];
-  if (granted === true) return `✓ ${t.optReady}`;
-  if (granted === false) return `✕ ${t.optDeclined}`;
-  return `⏳ ${t.optWaiting}`;
+  if (granted === true) return t.optReady;
+  if (granted === false) return t.optDeclined;
+  return t.optWaiting;
 }
 
 export async function SettingsPanel({
@@ -103,17 +103,8 @@ export async function SettingsPanel({
         {t.settings}
       </PageTitle>
 
-      <section className="card mt-4 space-y-3 px-4 py-4">
-        <h2 className="font-semibold">{t.testCall}</h2>
-        <p className="text-sm text-muted-foreground">{t.testCallHint}</p>
-        {ringNote ? <p className="text-sm font-medium">{ringNote}</p> : null}
-        <TestCallForm action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=settings`}>
-          <Phone className="size-[18px]" aria-hidden />
-          {personal(t.ringNow, term, lang)}
-        </TestCallForm>
-      </section>
-
-      <div className="mt-6">
+      {/* The schedule is what families come here for; a test call is an occasional extra below it. */}
+      <div className="mt-4">
         <SettingsForm
           token={token}
           lang={lang}
@@ -126,11 +117,25 @@ export async function SettingsPanel({
       </div>
 
       <section className="card mt-6 space-y-3 px-4 py-4">
+        <h2 className="font-semibold">{t.testCall}</h2>
+        <p className="text-sm text-muted-foreground">{personal(t.testCallHint, term, lang)}</p>
+        {ringNote ? (
+          <p role="status" className="text-sm font-medium">
+            {ringNote}
+          </p>
+        ) : null}
+        <TestCallForm action={`/api/d/${encodeURIComponent(token)}/ring?lang=${lang}&from=settings`} variant="secondary">
+          <Phone className="size-[18px]" aria-hidden />
+          {personal(t.ringNow, term, lang)}
+        </TestCallForm>
+      </section>
+
+      <section className="card mt-6 space-y-3 px-4 py-4">
         <h2 className="font-semibold">{t.familySection}</h2>
         <ul className="list-group">
           {members.map((member) => (
             <li key={member.id} className="list-row">
-              <span className="grid size-10 place-items-center rounded-full bg-brand-soft font-serif text-brand-deep">
+              <span className="grid size-10 place-items-center rounded-full bg-brand-soft font-semibold text-brand-deep">
                 {(member.full_name.trim()[0] || "स").toUpperCase()}
               </span>
               <span className="min-w-0 flex-1 text-sm">

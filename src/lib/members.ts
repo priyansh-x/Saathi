@@ -85,8 +85,9 @@ export async function acceptInvite(token: string, input: { email: string; name: 
   const email = input.email.trim().toLowerCase();
   const id = `contact_${randomBytes(6).toString("hex")}`;
   await query(
-    `insert into contacts (id, parent_id, role, full_name, first_name, phone, locale, is_example, email, is_owner)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+    // The invite page says they will get the morning WhatsApp note and alerts on this number.
+    `insert into contacts (id, parent_id, role, full_name, first_name, phone, locale, is_example, email, is_owner, whatsapp_opt_in)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true)`,
     [id, invite.parent_id, "child", name, firstName(name), phone, "en", invite.is_example, email, false],
   );
   await query(`update family_invites set consumed_at = $2 where token = $1`, [token, nowIstStamp()]);

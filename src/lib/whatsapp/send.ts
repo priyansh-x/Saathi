@@ -22,7 +22,9 @@ export function outboundMessageId(template: string, idempotencyKey: string) {
     const id = `${idempotencyKey}_${template}`;
     return id.length <= 80 ? id : idempotencyKey.slice(0, 80);
   }
-  return `out_${template}_${idempotencyKey}`.slice(0, 80);
+  // 160, not 80: keys carry the alert id and the recipient, and a cut key collides
+  // between family members (the second person's message reads as a duplicate).
+  return `out_${template}_${idempotencyKey}`.slice(0, 160);
 }
 
 export async function logOutbound(row: {
@@ -263,7 +265,22 @@ async function postMeta(payload: ReturnType<typeof buildWhatsappPayload>) {
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) return { ok: false as const, error: `meta_${res.status}` };
+  if (!res.ok) {
+    // Keep Meta's error code: "meta_400" alone cannot tell a bad number from an unapproved template.
+    let code = "";
+    let message = "";
+    try {
+      const data = (await res.json()) as { error?: { code?: number; error_subcode?: number; message?: string } };
+      code = [data.error?.code, data.error?.error_subcode].filter((n) => n != null).join("_");
+      message = data.error?.message ?? "";
+    } catch {
+      // Body was not JSON.
+    }
+    console.error(
+      `[whatsapp] Meta rejected ${payload.type} ${payload.template?.name ?? ""}: ${res.status} ${code} ${message}`.trim(),
+    );
+    return { ok: false as const, error: code ? `meta_${res.status}_${code}` : `meta_${res.status}` };
+  }
   let wamid: string | undefined;
   try {
     const data = (await res.json()) as { messages?: { id?: string }[] };
@@ -348,7 +365,11 @@ export async function sendFamilyMessage(args: {
     return { ok: true, id, channel: "whatsapp", template, status: "duplicate" };
   }
 
-  const { optedIn, optedOut } = await contactWhatsappState(args.toPhone, mock);
+  const state = await contactWhatsappState(args.toPhone, mock);
+  const { optedOut } = state;
+  // responder_optin is the message that asks a neighbour for their yes, so it cannot wait for it.
+  // STOP still wins.
+  const optedIn = state.optedIn || (args.intended === "responder_optin" && !optedOut);
   const gate = gateOutbound("whatsapp", args.toPhone);
   const decision = evaluateWhatsappGate({
     killSwitch: false,

@@ -74,11 +74,12 @@ describe("family members", () => {
     const briefCount = await query<{ n: number }>(
       `select count(*)::int as n from outbound_messages where id like '%briefing:mem_brief%'`,
     );
-    assert.equal(briefCount[0]?.n, 1);
+    // One briefing per member, not one per family.
+    assert.equal(briefCount[0]?.n, MAX_FAMILY_MEMBERS);
     const alertCount = await query<{ n: number }>(
       `select count(*)::int as n from outbound_messages where id like '%alert:mem_alert%' or id like '%alert_mem_alert%'`,
     );
-    assert.ok((alertCount[0]?.n ?? 0) >= 1);
+    assert.ok((alertCount[0]?.n ?? 0) >= MAX_FAMILY_MEMBERS);
     void alerts;
   });
 });

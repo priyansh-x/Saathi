@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -31,7 +30,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
       <ResumeDesk lang={lang}>
       <div className="app-shell-scroll flex min-h-0 flex-1 flex-col">
       <div className="relative">
-        <div className="grain relative aspect-[4/3.6] overflow-hidden rounded-b-[36px]">
+        <div className="relative aspect-[4/3.6] overflow-hidden rounded-b-3xl">
           <Image
             src={hero}
             alt="An older woman on her balcony, answering her phone in the morning"
@@ -41,7 +40,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             sizes="(max-width: 480px) 100vw, 480px"
             className="object-cover object-[70%_center]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/0 to-black/10" />
+          {/* Top scrim only, so the white logo and language link stay legible on a bright sky. */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/25 to-transparent" />
         </div>
         <div
           className="absolute inset-x-0 top-0 flex items-center justify-between px-5"
@@ -56,8 +56,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             {hi ? "EN" : "हिं"}
           </Link>
         </div>
-        <div className="absolute right-4 bottom-4 left-4 flex items-center gap-3 rounded-[22px] border border-white/50 bg-card/95 p-3.5 shadow-[var(--shadow-float)] backdrop-blur">
-          <span className="ring-pulse grid size-10 shrink-0 place-items-center rounded-full bg-good text-white">
+        <div className="absolute right-4 bottom-4 left-4 flex items-center gap-3 rounded-3xl border border-border bg-card p-3.5 shadow-[var(--shadow-float)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-good text-white">
             <IconCall className="size-[18px]" />
           </span>
           <div className="min-w-0">
@@ -68,26 +68,26 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
       </div>
 
       <div className="flex flex-1 flex-col px-6 pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <h1 className="app-title rise text-[2rem]">
+        <h1 className="app-title text-[2rem]">
           {hi ? (
             <>
-              माँ के लिए सुबह की कॉल, <span className="serif-line">उसी फ़ोन पर जो उनके पास है।</span>
+              माँ के लिए सुबह की कॉल, <span className="text-muted-foreground">उसी फ़ोन पर जो उनके पास है।</span>
             </>
           ) : (
             <>
-              A morning call for Maa, <span className="serif-line">on the phone she has.</span>
+              A morning call for Maa, <span className="text-muted-foreground">on the phone she has.</span>
             </>
           )}
         </h1>
-        <p className="rise mt-3 text-[16px] leading-6 text-muted-foreground" style={{ "--d": "80ms" } as CSSProperties}>
+        <p className="mt-3 text-[16px] leading-6 text-muted-foreground">
           {hi
             ? "वे फ़ोन उठाती हैं और बात करती हैं। आपको व्हाट्सऐप पर दो शांत पंक्तियाँ मिलती हैं। कुछ गड़बड़ हो तो पहले आपको पता चलता है।"
             : "She picks up and talks. You get two calm lines on WhatsApp. If something is wrong, you hear first."}
         </p>
-        <ul className="rise mt-5 grid grid-cols-2 gap-2" style={{ "--d": "140ms" } as CSSProperties}>
+        <ul className="mt-6 space-y-3">
           {PROMISE[lang].map((item) => (
-            <li key={item} className="card flex min-h-[64px] items-center gap-2.5 px-3.5 py-3 text-[13.5px] leading-snug text-foreground">
-              <Check className="mt-0.5 size-4 shrink-0 text-good" strokeWidth={2.5} aria-hidden />
+            <li key={item} className="flex items-center gap-3 text-[15px] leading-snug text-foreground">
+              <Check className="size-[18px] shrink-0 text-good" strokeWidth={2.5} aria-hidden />
               <span>{item}</span>
             </li>
           ))}

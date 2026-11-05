@@ -103,5 +103,9 @@ export const MIGRATION_SOURCES: { id: string; sql: string }[] = [
   {
     "id": "026_errands",
     "sql": "create table if not exists errands (\n  id text primary key,\n  parent_id text not null references parents(id),\n  call_id text,\n  kind text not null default 'refill',\n  medicine_name text not null,\n  quantity integer not null default 1,\n  status text not null default 'open',\n  partner_order_id text,\n  desk_token text,\n  delivery_day text,\n  ordered_at text,\n  out_for_delivery_at text,\n  delivered_at text,\n  told_parent_call_id text,\n  created_at text not null,\n  is_example boolean not null default false\n);\n\ncreate index if not exists errands_parent_status on errands (parent_id, status, created_at desc);\n\nalter table if exists errands enable row level security;\n"
-  }
+  },
+  {
+    "id": "027_whatsapp_opt_in_backfill",
+    "sql": "-- Nothing in the app set whatsapp_opt_in before this, so every live send was blocked as not_opted_in.\n-- Members typed their own WhatsApp number at setup or on the invite page; a neighbour said yes on WhatsApp.\nupdate contacts set whatsapp_opt_in = true\n where role = 'child' and whatsapp_opted_out_at is null;\n\nupdate contacts set whatsapp_opt_in = true\n where role = 'neighbour' and whatsapp_opted_out_at is null\n   and parent_id in (select parent_id from consents where kind = 'neighbour_whatsapp' and granted = true);\n"
+  },
 ];

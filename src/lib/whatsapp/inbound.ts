@@ -1,7 +1,7 @@
 import { query } from "@/lib/db/client";
 import { parseNeighbourIntent, recordNeighbourReply } from "@/lib/neighbour";
 import { ackAlert, parseAckIntent, parseAlertId } from "@/lib/whatsapp/ack";
-import { isWhatsappOptOutText } from "@/lib/whatsapp/gate";
+import { isWhatsappOptInText, isWhatsappOptOutText } from "@/lib/whatsapp/gate";
 import { nowIstStamp } from "@/lib/time";
 
 export type WaMessage = {
@@ -71,27 +71,50 @@ export async function processInboundMessages(messages: WaMessage[]) {
       results.push({ ok: true, opted_out: true });
       continue;
     }
+    if (digits && isWhatsappOptInText(text)) {
+      await query(
+        `update contacts
+            set whatsapp_opt_in = true, whatsapp_opted_out_at = null
+          where regexp_replace(phone, '[^0-9]', '', 'g') like $1`,
+        [`%${digits}`],
+      );
+      results.push({ ok: true, opted_in: true });
+      continue;
+    }
+    if (!digits) {
+      // Without a sender we cannot tell whose family this is; never act on it.
+      results.push({ ok: true, ignored: true });
+      continue;
+    }
+    const sender = await query<{ parent_id: string; role: string; full_name: string; first_name: string }>(
+      `select parent_id, role, full_name, first_name from contacts
+        where regexp_replace(phone, '[^0-9]', '', 'g') like $1`,
+      [`%${digits}`],
+    );
     const neighbourIntent = parseNeighbourIntent(text, payload);
     if (neighbourIntent) {
-      const neighbour = await query<{ parent_id: string; phone: string }>(
-        `select parent_id, phone from contacts where role = 'neighbour'`,
-      );
-      const match = neighbour.find((c) => c.phone.replace(/\D/g, "").endsWith(digits));
+      const match = sender.find((c) => c.role === "neighbour");
       if (match) {
         results.push(await recordNeighbourReply(match.parent_id, neighbourIntent === "yes"));
         continue;
       }
     }
     const intent = parseAckIntent(text) || (payload.toLowerCase().startsWith("ack") ? "ack" : null);
-    const alertId =
-      parseAlertId(payload) ||
-      (await query<{ id: string }>(`select id from alerts where resolved_at is null order by created_at desc limit 1`))[0]
-        ?.id;
+    // Only the sender's own family's alerts. The old fallback took the newest open alert of any family.
+    const families = [...new Set(sender.map((c) => c.parent_id))];
+    const payloadAlert = parseAlertId(payload);
+    const alertId = families.length
+      ? (
+          await query<{ id: string }>(
+            payloadAlert
+              ? `select id from alerts where id = $2 and parent_id = any($1) limit 1`
+              : `select id from alerts where parent_id = any($1) and resolved_at is null order by created_at desc limit 1`,
+            payloadAlert ? [families, payloadAlert] : [families],
+          )
+        )[0]?.id
+      : undefined;
     if (intent === "ack" && alertId) {
-      const contacts = await query<{ full_name: string; first_name: string; phone: string }>(
-        `select full_name, first_name, phone from contacts`,
-      );
-      const match = contacts.find((c) => c.phone.replace(/\D/g, "").endsWith(digits));
+      const match = sender[0];
       const actor = match?.first_name || match?.full_name || "family";
       results.push(await ackAlert(alertId, actor));
     } else {
