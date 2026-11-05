@@ -303,3 +303,11 @@ export function emailFromAddress() {
 export function allowBolnaGuardrailBypass() {
   return process.env.ALLOW_BOLNA_GUARDRAIL_BYPASS === "1";
 }
+
+/** Test rings per parent per IST day. TEST_RING_DAILY_CAP overrides; the daily minute budget still applies. */
+export const TEST_RING_DAILY_CAP_DEFAULT = 10;
+
+export function testRingDailyCap(env: Record<string, string | undefined> = process.env) {
+  const n = Number.parseInt((env.TEST_RING_DAILY_CAP || "").trim(), 10);
+  return Number.isFinite(n) && n > 0 ? n : TEST_RING_DAILY_CAP_DEFAULT;
+}

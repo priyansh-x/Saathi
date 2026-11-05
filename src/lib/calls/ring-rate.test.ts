@@ -12,6 +12,8 @@ import {
   rememberBlockedDial,
   testRingLimit,
 } from "./prepare";
+import { testRingDailyCap } from "../config";
+import { ringCopy } from "../today";
 
 process.env.MOCK_BOLNA = "1";
 process.env.MOCK_WHATSAPP = "1";
@@ -29,21 +31,43 @@ after(async () => {
 });
 
 describe("ring now limits", () => {
-  it("blocks a 4th test ring the same IST day", async () => {
+  it("allows 10 test rings a day, then says the limit is for today, not a wait in minutes", async () => {
     await query(`delete from outbound_messages where parent_id = 'parent_kamla' and template = 'ring_now'`);
-    await logTestRing("parent_kamla", "+910000000000", T0);
-    await logTestRing("parent_kamla", "+910000000000", new Date(T0.getTime() + 11 * 60_000));
-    await logTestRing("parent_kamla", "+910000000000", new Date(T0.getTime() + 22 * 60_000));
-    const fourth = await prepareMorningCall("parent_kamla", new Date(T0.getTime() + 33 * 60_000), { forceTest: true });
-    assert.equal("ok" in fourth && fourth.ok, false);
-    if ("ok" in fourth && !fourth.ok) {
-      assert.equal(fourth.reason, "ring_rate_limit");
-      assert.ok((fourth.retryInMin ?? 0) >= 1);
+    // 5 Nov: the 4th ring of the day showed "Try again in 252 min" (minutes to midnight).
+    for (let i = 0; i < 10; i += 1) {
+      await logTestRing("parent_kamla", "+910000000000", new Date(T0.getTime() + i * 11 * 60_000));
+    }
+    const fourth = await testRingLimit("parent_kamla", "+910000000000", new Date(T0.getTime() + 3 * 11 * 60_000 + 60_000));
+    assert.equal(fourth.ok, false, "cooldown still applies between rings");
+    const eleventh = await prepareMorningCall("parent_kamla", new Date(T0.getTime() + 121 * 60_000), { forceTest: true });
+    assert.equal("ok" in eleventh && eleventh.ok, false);
+    if ("ok" in eleventh && !eleventh.ok) {
+      assert.equal(eleventh.reason, "ring_daily_cap");
+      assert.equal(eleventh.retryInMin, undefined);
     }
     const blocked = await query<{ n: number }>(
-      `select count(*)::int as n from outbound_messages where parent_id = 'parent_kamla' and status = 'blocked_ring_rate_limit'`,
+      `select count(*)::int as n from outbound_messages where parent_id = 'parent_kamla' and status = 'blocked_ring_daily_cap'`,
     );
     assert.ok((blocked[0]?.n ?? 0) >= 1);
+  });
+
+  it("lets a 4th test ring through once the cooldown has passed", async () => {
+    await query(`delete from outbound_messages where parent_id = 'parent_kamla' and template in ('ring_now','place_call')`);
+    for (let i = 0; i < 3; i += 1) {
+      await logTestRing("parent_kamla", "+910000000000", new Date(T0.getTime() + i * 11 * 60_000));
+    }
+    const fourth = await testRingLimit("parent_kamla", "+910000000000", new Date(T0.getTime() + 33 * 60_000));
+    assert.equal(fourth.ok, true);
+  });
+
+  it("reads TEST_RING_DAILY_CAP and shows the daily-limit copy", () => {
+    assert.equal(testRingDailyCap({}), 10);
+    assert.equal(testRingDailyCap({ TEST_RING_DAILY_CAP: "25" }), 25);
+    assert.equal(testRingDailyCap({ TEST_RING_DAILY_CAP: "0" }), 10);
+    assert.equal(testRingDailyCap({ TEST_RING_DAILY_CAP: "lots" }), 10);
+    assert.equal(ringCopy("ring_daily_cap", "en"), "You've used today's 10 test calls. Test calls open again after midnight.");
+    assert.doesNotMatch(ringCopy("ring_daily_cap", "hi") ?? "", /मिनट/);
+    assert.equal(ringCopy("wait_7", "en"), "Try again in 7 min.");
   });
 
   it("blocks a test ring inside the 10-minute cooldown", async () => {
