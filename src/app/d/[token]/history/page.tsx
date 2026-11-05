@@ -16,11 +16,11 @@ export default async function HistoryPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ lang?: string; days?: string }>;
+  searchParams: Promise<{ lang?: string; days?: string; view?: string }>;
 }) {
   const { token } = await params;
   const sp = await searchParams;
   return (
-    <DeskScreen token={token} lang={readLang(sp.lang)} active="history" days={sp.days === "7" ? 7 : 30} />
+    <DeskScreen token={token} lang={readLang(sp.lang)} active="history" view={sp.view === "list" ? "list" : "calendar"} />
   );
 }

@@ -202,6 +202,11 @@ export function DeskPager({
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!start.current) return;
+      // A mouse that moves with no button held lost its pointerup somewhere: drop the drag, never strand the pager.
+      if (event.pointerType === "mouse" && event.buttons === 0) {
+        end();
+        return;
+      }
       move(event.clientX, event.clientY, event, event.pointerId);
     };
     const onClickCapture = (event: Event) => {

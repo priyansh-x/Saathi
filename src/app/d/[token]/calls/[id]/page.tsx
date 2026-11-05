@@ -96,7 +96,7 @@ export default async function CallDetailPage({
   searchParams,
 }: {
   params: Promise<{ token: string; id: string }>;
-  searchParams: Promise<{ lang?: string; from?: string; days?: string; call?: string }>;
+  searchParams: Promise<{ lang?: string; from?: string; view?: string; call?: string }>;
 }) {
   await connection();
   const { token, id } = await params;
@@ -105,7 +105,7 @@ export default async function CallDetailPage({
   const t = messages[lang];
   const placedNote = ringCopy(sp.call, lang);
   const backHref =
-    sp.from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/history${qs({ lang, days: sp.days })}`;
+    sp.from === "today" ? `/d/${token}${qs({ lang })}` : `/d/${token}/history${qs({ lang, view: sp.view === "list" ? "list" : undefined })}`;
   const backLabel = sp.from === "today" ? t.backToday : t.backHistory;
   const back = { href: backHref, label: backLabel };
 

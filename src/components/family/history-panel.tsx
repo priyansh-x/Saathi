@@ -8,12 +8,12 @@ export async function HistoryPanel({
   token,
   lang,
   data,
-  days,
+  view,
 }: {
   token: string;
   lang: Lang;
   data: FamilyDesk;
-  days: 7 | 30;
+  view: "calendar" | "list";
 }) {
   const hist = await historyDays(data.parent.id, 80);
   const medicines = await medicinesFor(data.parent.id);
@@ -21,7 +21,7 @@ export async function HistoryPanel({
     <HistoryView
       token={token}
       lang={lang}
-      initialDays={days}
+      initialMode={view}
       calls={clientSafe(hist.calls)}
       doses={clientSafe(hist.doses)}
       alerts={clientSafe(hist.alerts)}

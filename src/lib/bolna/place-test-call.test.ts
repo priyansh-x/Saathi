@@ -92,5 +92,19 @@ describe("placeTestCall 60-second guard", () => {
 
     const later = await reuseRecentPlacedCall(PARENT, new Date(clock.getTime() + TEST_CALL_REUSE_MS));
     assert.equal(later, null);
+
+    // Read from before the row's start (the seeded 10:05 call, just after midnight): not a recent placement.
+    const earlier = await reuseRecentPlacedCall(PARENT, new Date(clock.getTime() - 60 * 60 * 1000));
+    assert.equal(earlier, null);
+  });
+});
+
+describe("example seed today slot", () => {
+  it("never stamps today's example call in the future", async () => {
+    const { exampleTodaySlot } = await import("../db/seed");
+    assert.deepEqual(exampleTodaySlot(12 * 60), { hour: 10, minute: 5 });
+    assert.deepEqual(exampleTodaySlot(7), { hour: 0, minute: 2 });
+    assert.deepEqual(exampleTodaySlot(2), { hour: 0, minute: 0 });
+    assert.deepEqual(exampleTodaySlot(10 * 60 + 9), { hour: 10, minute: 4 });
   });
 });

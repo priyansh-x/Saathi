@@ -289,7 +289,7 @@ export function TodayPanel({
                 {t.seeYesterday}
               </Link>
             ) : (
-              <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="action-tile text-foreground">
+              <Link href={`/d/${token}/history?lang=${lang}`} className="action-tile text-foreground">
                 <CalendarDays className="size-5" aria-hidden />
                 {t.history}
               </Link>
@@ -403,7 +403,7 @@ export function TodayPanel({
           <p className="section-label">{t.weeklyNote}</p>
           <div className="card mt-2 p-4">
             <p className="text-[15px] leading-relaxed">{weeklyDeskCopy(data.weekly.built, lang)}</p>
-            <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="mt-3 inline-block text-[14px] font-medium text-primary">
+            <Link href={`/d/${token}/history?lang=${lang}`} className="mt-3 inline-block text-[14px] font-medium text-primary">
               {t.weeklySeeHistory}
             </Link>
           </div>
@@ -413,11 +413,11 @@ export function TodayPanel({
       <section className="mt-6">
         <div className="flex items-baseline justify-between px-1">
           <p className="section-label px-0">{t.thisWeek}</p>
-          <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="text-[14px] font-medium text-primary">
+          <Link href={`/d/${token}/history?lang=${lang}`} className="text-[14px] font-medium text-primary">
             {t.history}
           </Link>
         </div>
-        <Link href={`/d/${token}/history?lang=${lang}&days=7`} className="card mt-2 block p-4">
+        <Link href={`/d/${token}/history?lang=${lang}`} className="card mt-2 block p-4">
           <ol className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {Array.from({ length: 7 }, (_, i) => {
               const [y, m, d] = data.day.split("-").map(Number);

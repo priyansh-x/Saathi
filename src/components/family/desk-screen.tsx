@@ -19,14 +19,14 @@ export async function DeskScreen({
   lang,
   active,
   callParam,
-  days = 30,
+  view = "calendar",
   confirm,
 }: {
   token: string;
   lang: Lang;
   active: DeskTab;
   callParam?: string;
-  days?: 7 | 30;
+  view?: "calendar" | "list";
   confirm?: string;
 }) {
   const data = await loadFamily(token, { allAlerts: false, hydrateBolna: false });
@@ -55,11 +55,11 @@ export async function DeskScreen({
         meds: deskMedsStamp(data.doses),
         errands: errandStamp(data.errands),
       })}
-      extraQuery={days === 7 ? { days: "7" } : undefined}
+      extraQuery={view === "list" ? { view: "list" } : undefined}
       today={<TodayPanel token={token} lang={lang} data={data} callParam={callParam} />}
       history={
         <Suspense fallback={<PaneBusy />}>
-          <HistoryPanel token={token} lang={lang} data={data} days={days} />
+          <HistoryPanel token={token} lang={lang} data={data} view={view} />
         </Suspense>
       }
       alertsPage={

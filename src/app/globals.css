@@ -454,6 +454,33 @@ html.dark[data-look="calm"] {
     color: var(--foreground);
     box-shadow: var(--shadow-card);
   }
+  .seg-sm {
+    gap: 2px;
+    padding: 3px;
+  }
+  .seg-sm > * {
+    min-height: 36px;
+    gap: 5px;
+    padding: 0 11px;
+    font-size: 13px;
+  }
+  .sheet-panel {
+    animation: sheet-up 280ms var(--ease) both;
+  }
+  .sheet-backdrop {
+    animation: sheet-fade 200ms ease-out both;
+  }
+  @keyframes sheet-up {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+  }
+  @keyframes sheet-fade {
+    from {
+      opacity: 0;
+    }
+  }
   .glass {
     background: color-mix(in oklab, var(--background) 82%, transparent);
     backdrop-filter: saturate(1.4) blur(16px);
